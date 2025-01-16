@@ -43,9 +43,11 @@
 - T5, BERT - 자연어 처리 모델
 - M2M100 - 다국어 번역 모델
 - CLIP, Llama3.2 Vision, Qwen2VL - 비전 언어 모델
-- OpenAI GPT4o, DALL E3, Google Gemini 1.5 Pro - API
+- OpenAI GPT4o, DALL E3, Google Gemini 1.5 Pro – API
 - ComfyUI - 백엔드
 - Colab Pro+ - 클라우드 컴퓨팅 시스템
+- Ngrok - 네트워크 터널링 프로그램
+
 
 ## 역할 분담
 
