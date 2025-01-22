@@ -44,7 +44,7 @@ def convert_folder_to_modelid(folder_name: str) -> str:
     """로컬 디렉토리 이름을 HuggingFace 모델 ID로 변환"""
     return folder_name.replace("__", "/")
 
-def scan_local_models(root="./models", model_type=None):
+def scan_local_models(root="./models/llm", model_type=None):
     """로컬에 저장된 모델 목록을 유형별로 스캔"""
     if not os.path.isdir(root):
         os.makedirs(root, exist_ok=True)
@@ -79,9 +79,9 @@ def remove_hf_cache(model_id):
     """HuggingFace 캐시 폴더 제거"""
     if "/" in model_id:
         user, name = model_id.split("/", maxsplit=1)
-        cache_dirname = f"./models/{user}__{name}"
+        cache_dirname = f"./models/llm/{user}__{name}"
     else:
-        cache_dirname = f"./models/{model_id}"
+        cache_dirname = f"./models/llm/{model_id}"
 
     cache_path = os.path.join(cache_dirname, ".cache")
     if os.path.isdir(cache_path):
@@ -113,7 +113,7 @@ def download_model_from_hf(hf_repo_id: str, target_dir: str, model_type: str = "
     if model_type not in ["transformers", "gguf", "mlx"]:
         model_type = "transformers"  # 기본값 설정
 
-    target_base_dir = os.path.join("./models", model_type)
+    target_base_dir = os.path.join("./models/llm", model_type)
     os.makedirs(target_base_dir, exist_ok=True)
     target_dir = os.path.join(target_base_dir, make_local_dir_name(hf_repo_id))
 
@@ -159,7 +159,7 @@ async def download_model_from_hf_async(
     try:
         # 기본 저장 경로 설정
         if not target_dir:
-            target_dir = os.path.join("./models", make_local_dir_name(repo_id))
+            target_dir = os.path.join("./models/llm", make_local_dir_name(repo_id))
             
         # 이미 다운로드된 경우 확인
         if os.path.exists(target_dir) and any(os.scandir(target_dir)):
@@ -223,9 +223,9 @@ def ensure_model_available(model_id, local_model_path=None, model_type=None):
     """
     # model_type을 사용하여 모델 경로 결정 또는 다운로드 로직 수정
     if model_type:
-        model_dir = os.path.join("./models", model_type, make_local_dir_name(model_id))
+        model_dir = os.path.join("./models/llm", model_type, make_local_dir_name(model_id))
     else:
-        model_dir = os.path.join("./models", "transformers", make_local_dir_name(model_id))
+        model_dir = os.path.join("./models/llm", "transformers", make_local_dir_name(model_id))
     
     if not os.path.exists(model_dir):
         try:
@@ -255,7 +255,7 @@ def convert_and_save(model_id, output_dir, push_to_hub, quant_type, model_type="
     if not model_id:
         return "모델 ID를 입력해주세요."
 
-    base_output_dir = os.path.join("./models", model_type)
+    base_output_dir = os.path.join("./models/llm", model_type)
     os.makedirs(base_output_dir, exist_ok=True)
 
     if quant_type == 'float8':
@@ -300,7 +300,7 @@ def build_model_cache_key(model_id: str, model_type: str, quantization_bit: str 
         return f"api::{model_id}"
     else:
         local_dirname = make_local_dir_name(model_id)
-        local_dirpath = os.path.join("./models", model_type, local_dirname)
+        local_dirpath = os.path.join("./models/llm", model_type, local_dirname)
         if quantization_bit:
             return f"auto::{model_type}::{local_dirpath}::hf::{model_id}::{quantization_bit}"
         else:
@@ -362,7 +362,7 @@ def clear_all_model_cache():
     cache_deleted = 0
     for subdir, models in get_all_local_models().items():
         for folder in models:
-            folder_path = os.path.join(LOCAL_MODELS_ROOT, subdir, folder)
+            folder_path = os.path.join('./models/llm', subdir, folder)
             if os.path.isdir(folder_path):
                 cache_path = os.path.join(folder_path, ".cache")
                 if os.path.isdir(cache_path):
