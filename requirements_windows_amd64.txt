@@ -14,6 +14,7 @@ tiktoken
 anthropic
 gguf
 llama-cpp-python
+ollama
 langchain
 langchain-core
 langchain-openai
