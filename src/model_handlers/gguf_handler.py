@@ -13,7 +13,7 @@ class GGUFModelHandler:
         self.model_id = model_id
         self.quantization_bit = quantization_bit
         self.model_type = model_type
-        self.local_model_path = local_model_path or os.path.join("./models", model_type, self.make_local_dir_name(model_id, quantization_bit))
+        self.local_model_path = local_model_path or os.path.join("./models/llm", model_type, self.make_local_dir_name(model_id, quantization_bit))
         self.llm = None
         self.load_model()
     
