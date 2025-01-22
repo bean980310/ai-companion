@@ -92,3 +92,20 @@
 - 프로그래밍, 프롬프트에 대한 지식이 없어도 생성형 AI를 다룰수 있도록 하는 환경 조성
 - 개인용 컴퓨터에서도 부담이 없는 구동을 통한 생성형 AI 대중화
 - 비즈니스, 교육, 엔터테인먼트 등에서 AI가 단순 도구를 넘어 동료로써 서로 협력하면서 업무에 활용
+
+## 맥에서 xformers 설치시 주의사항!
+
+```zsh
+brew update
+brew install gcc cmake llvm
+```
+
+```zsh
+export PATH="/opt/homebrew/opt/llvm/bin:/$PATH"
+export CC="/opt/homebrew/opt/llvm/bin/clang"
+export CXX="/opt/homebrew/opt/llvm/bin/clang++"
+```
+
+```zsh
+pip install xformers
+```
