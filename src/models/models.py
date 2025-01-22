@@ -19,7 +19,10 @@ import anthropic
 
 from langchain.chains.llm import LLMChain
 from langchain.prompts import PromptTemplate
-from langchain_community.llms import OpenAI, LlamaCpp, Ollama, HuggingFacePipeline
+from langchain_community.llms.openai import OpenAI
+from langchain_community.llms.llamacpp import LlamaCpp
+from langchain_community.llms.ollama import Ollama
+from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 
 logger = logging.getLogger(__name__)
 

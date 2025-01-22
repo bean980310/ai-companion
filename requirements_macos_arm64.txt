@@ -14,5 +14,15 @@ tiktoken
 anthropic
 gguf
 llama-cpp-python
+langchain
+langchain-core
+langchain-openai
+langchain-anthropic
+langchain-community
+xformers
+bitsandbytes
+onnx
+onnxruntime
 mlx
 mlx_lm
+mlx_vlm

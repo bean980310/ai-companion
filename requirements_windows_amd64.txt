@@ -19,5 +19,7 @@ langchain-core
 langchain-openai
 langchain-anthropic
 langchain-community
+xformers
+bitsandbytes
 onnx
-onnxruntime
+onnxruntime-gpu

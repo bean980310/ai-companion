@@ -19,5 +19,9 @@ langchain-core
 langchain-openai
 langchain-anthropic
 langchain-community
+bitsandbytes
 onnx
 onnxruntime
+mlx
+mlx_lm
+mlx_vlm
