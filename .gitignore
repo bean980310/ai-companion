@@ -1,0 +1,10 @@
+.DS_Store
+debug.ipynb
+app.log*
+.env
+.gradio
+__pycache__
+chat_history.db
+chat_history_backup.db
+translations/
+persona_state.db

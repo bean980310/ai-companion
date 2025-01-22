@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Easy-LLM Chat Interface</title>
+    <style>
+        /* 제공된 CSS 내용 시작 */
+        /* 테마 변수 정의 */
+        :root {
+            /* Light Theme Colors */
+            --background-primary: #f8fafc;
+            --background-secondary: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            
+            /* Component Specific Colors */
+            --message-user-bg: #f0f9ff;
+            --message-assistant-bg: #f8fafc;
+            --button-secondary-bg: #f3f4f6;
+            --button-secondary-hover: #e5e7eb;
+            --button-danger-hover: #fee2e2;
+            --button-danger-text: #dc2626;
+        }
+        
+        /* Dark Theme Colors */
+        [data-theme="dark"] {
+            --background-primary: #1a1a1a;
+            --background-secondary: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --border-color: #404040;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            
+            /* Component Specific Colors */
+            --message-user-bg: #3b4252;
+            --message-assistant-bg: #2e3440;
+            --button-secondary-bg: #374151;
+            --button-secondary-hover: #4b5563;
+            --button-danger-hover: #7f1d1d;
+            --button-danger-text: #ef4444;
+        }
+        
+        /* Layout Components */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            background-color: var(--background-primary);
+            min-height: 100vh;
+            color: var(--text-primary);
+            font-family: Arial, sans-serif;
+        }
+        
+        .header-container {
+            background-color: var(--background-secondary);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .session-container, .model-container, .chat-interface {
+            background-color: var(--background-secondary);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow);
+        }
+        
+        /* Interactive Elements */
+        .session-dropdown, .model-dropdown, .language-selector, 
+        .character-dropdown, .preset-dropdown {
+            background-color: var(--background-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.5rem;
+            color: var(--text-primary);
+            margin-right: 0.5rem;
+        }
+        
+        .icon-button {
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: none;
+            background-color: var(--button-secondary-bg);
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-primary);
+        }
+        
+        .icon-button:hover {
+            background-color: var(--button-secondary-hover);
+        }
+        
+        .icon-button-delete:hover {
+            background-color: var(--button-danger-hover);
+            color: var(--button-danger-text);
+        }
+        
+        /* Chat Components */
+        .chat-window {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--background-secondary);
+            padding: 1rem;
+            height: 500px;
+            overflow-y: auto;
+        }
+        
+        .chat-window .user-message {
+            background-color: var(--message-user-bg);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            align-self: flex-end;
+            max-width: 70%;
+        }
+        
+        .chat-window .assistant-message {
+            background-color: var(--message-assistant-bg);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            align-self: flex-start;
+            max-width: 70%;
+        }
+        
+        .system-message {
+            background-color: var(--background-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            text-align: center;
+            font-style: italic;
+        }
+        
+        /* Input Areas */
+        .input-area {
+            margin-top: 1rem;
+            background-color: var(--background-primary);
+            border-radius: 8px;
+            padding: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .message-input {
+            flex: 1;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            background-color: var(--background-secondary);
+            color: var(--text-primary);
+            resize: none;
+        }
+        
+        /* Buttons */
+        .send-button {
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: 8px;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .send-button:hover {
+            background-color: var(--accent-hover);
+        }
+        
+        /* Status Bar */
+        .status-bar {
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background-color: var(--background-primary);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        /* Settings Popup */
+        .settings-popup {
+            background-color: var(--background-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: var(--shadow);
+            display: none; /* Hidden by default */
+            z-index: 1000;
+        }
+        
+        .settings-popup.active {
+            display: block;
+        }
+        
+        /* Confirm Dialog */
+        .confirm-dialog {
+            background-color: var(--background-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: var(--shadow);
+            display: none; /* Hidden by default */
+            z-index: 1000;
+        }
+        
+        .confirm-dialog.active {
+            display: block;
+        }
+        
+        /* Theme Toggle Button */
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.5rem;
+            cursor: pointer;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .theme-toggle:hover {
+            background-color: var(--button-secondary-hover);
+        }
+        
+        .icon-button:focus, .send-button:focus, .theme-toggle:focus {
+            outline: 2px solid var(--accent-hover);
+            outline-offset: 2px;
+        }
+        
+        /* 추가 스타일 */
+        .chat-messages {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 미디어 쿼리 for Responsive Design */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+            .chat-window {
+                height: 300px;
+            }
+            .header-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .session-dropdown, .model-dropdown, .language-selector, 
+            .character-dropdown, .preset-dropdown {
+                margin-bottom: 0.5rem;
+            }
+        }
+        /* 제공된 CSS 내용 끝 */
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- 헤더 -->
+        <div class="header-container">
+            <div class="header-title">Easy-LLM Chat</div>
+            <button class="theme-toggle" id="theme-toggle">
+                🌓 테마 전환
+            </button>
+        </div>
+        
+        <!-- 세션 및 모델 선택 -->
+        <div class="session-container">
+            <select class="session-dropdown">
+                <option>세션 선택</option>
+                <option>세션 1</option>
+                <option>세션 2</option>
+            </select>
+            <select class="model-dropdown">
+                <option>모델 선택</option>
+                <option>모델 A</option>
+                <option>모델 B</option>
+            </select>
+        </div>
+        
+        <!-- 채팅 인터페이스 -->
+        <div class="chat-interface">
+            <div class="chat-window" id="chat-window">
+                <div class="system-message">시스템 메시지: 환영합니다!</div>
+                <div class="chat-messages">
+                    <div class="user-message">안녕하세요!</div>
+                    <div class="assistant-message">안녕하세요! 무엇을 도와드릴까요?</div>
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <textarea class="message-input" id="message-input" rows="2" placeholder="메시지를 입력하세요..."></textarea>
+                <button class="send-button" id="send-button">보내기</button>
+            </div>
+        </div>
+        
+        <!-- 상태 표시줄 -->
+        <div class="status-bar">
+            온라인 상태: 연결됨
+        </div>
+    </div>
+    
+    <!-- 설정 팝업 (예시) -->
+    <div class="settings-popup" id="settings-popup">
+        <h2>설정</h2>
+        <p>여기에 설정 옵션을 추가하세요.</p>
+        <button class="icon-button" id="close-settings">닫기</button>
+    </div>
+    
+    <!-- 확인 다이얼로그 (예시) -->
+    <div class="confirm-dialog" id="confirm-dialog">
+        <p>정말로 삭제하시겠습니까?</p>
+        <button class="send-button" id="confirm-yes">예</button>
+        <button class="icon-button icon-button-delete" id="confirm-no">아니오</button>
+    </div>
+    
+    <script>
+        // 테마 전환 스크립트
+        const themeToggle = document.getElementById('theme-toggle');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            let theme = document.documentElement.getAttribute('data-theme');
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        // 메시지 전송 스크립트 (예시)
+        const sendButton = document.getElementById('send-button');
+        const messageInput = document.getElementById('message-input');
+        const chatMessages = document.querySelector('.chat-messages');
+
+        sendButton.addEventListener('click', () => {
+            const message = messageInput.value.trim();
+            if (message !== '') {
+                const userMessage = document.createElement('div');
+                userMessage.classList.add('user-message');
+                userMessage.textContent = message;
+                chatMessages.appendChild(userMessage);
+                messageInput.value = '';
+
+                // 예시로 어시스턴트 메시지 추가
+                const assistantMessage = document.createElement('div');
+                assistantMessage.classList.add('assistant-message');
+                assistantMessage.textContent = '이것은 예시 응답입니다.';
+                chatMessages.appendChild(assistantMessage);
+
+                // 채팅 창 스크롤
+                const chatWindow = document.getElementById('chat-window');
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }
+        });
+
+        // 설정 팝업 예시 스크립트
+        const settingsPopup = document.getElementById('settings-popup');
+        const closeSettingsButton = document.getElementById('close-settings');
+
+        // 예를 들어 헤더에 설정 버튼 추가하고 여기에 이벤트 리스너 추가
+        // 현재 예제에서는 설정 팝업을 직접 열지는 않습니다.
+
+        closeSettingsButton.addEventListener('click', () => {
+            settingsPopup.classList.remove('active');
+        });
+
+        // 확인 다이얼로그 예시 스크립트
+        const confirmDialog = document.getElementById('confirm-dialog');
+        const confirmYes = document.getElementById('confirm-yes');
+        const confirmNo = document.getElementById('confirm-no');
+
+        // 예를 들어 삭제 버튼을 클릭하면 다이얼로그 열기
+        // 현재 예제에서는 다이얼로그를 직접 열지는 않습니다.
+
+        confirmYes.addEventListener('click', () => {
+            // 실제 삭제 로직을 여기에 추가
+            confirmDialog.classList.remove('active');
+            alert('삭제되었습니다.');
+        });
+
+        confirmNo.addEventListener('click', () => {
+            confirmDialog.classList.remove('active');
+        });
+    </script>
+</body>
+</html>

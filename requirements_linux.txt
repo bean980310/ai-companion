@@ -1,0 +1,17 @@
+transformers
+huggingface_hub
+datasets
+safetensors
+tokenizers
+diffusers
+gradio
+torch
+torchvision
+torchaudio
+accelerate
+openai
+tiktoken
+anthropic
+gguf
+llama-cpp-python
+vllm

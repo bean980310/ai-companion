@@ -1,0 +1,14 @@
+*.safetensors
+*.json
+*.model
+*.py
+assets/
+*.ipynb
+*.png
+*.jpg
+*.gguf
+*.h5
+*.keras
+*.txt
+*.ckpt
+*.pt
