@@ -4,6 +4,7 @@ datasets
 safetensors
 tokenizers
 diffusers
+peft
 gradio
 torch
 torchvision
