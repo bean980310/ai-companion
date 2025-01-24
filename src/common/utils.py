@@ -44,6 +44,24 @@ def convert_folder_to_modelid(folder_name: str) -> str:
     """로컬 디렉토리 이름을 HuggingFace 모델 ID로 변환"""
     return folder_name.replace("__", "/")
 
+def scan_diffusion_models(root="./models/diffusion", model_type=None):
+    if not os.path.isdir(root):
+        os.makedirs(root, exist_ok=True)
+        
+    local_model_ids=[]
+    subdirs=['checkpoints', 'clip', 'configs', 'controlnet', 'diffusers', 'embeddings', 'loras', 'unet', 'vae', 'vae_approx']
+    for subdir in subdirs:
+        subdir_path=os.path.join(root, subdir)
+        if not os.path.isdir(subdir_path):
+            continue
+        for folder in os.listdir(subdir_path):
+            full_path=os.path.join(subdir_path, folder)
+            if os.path.isdir(full_path) and 'config.json' in os.listdir(full_path):
+                model_id=convert_folder_to_modelid(folder)
+                local_model_ids.append({"model_id": model_id, "model_type": subdir})
+                
+    return local_model_ids
+    
 def scan_local_models(root="./models/llm", model_type=None):
     """로컬에 저장된 모델 목록을 유형별로 스캔"""
     if not os.path.isdir(root):
@@ -73,6 +91,13 @@ def get_all_local_models():
         "transformers": transformers,
         "gguf": gguf,
         "mlx": mlx
+    }
+
+def get_all_diffusion_models():
+    models=scan_diffusion_models()
+    diffusers=[m['model_id'] for m in models if m['model_type']=="diffusers"]
+    return {
+        "diffusers": diffusers
     }
     
 def remove_hf_cache(model_id):

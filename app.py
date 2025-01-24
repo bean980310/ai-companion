@@ -461,7 +461,7 @@ with gr.Blocks(css=css) as demo:
                     with gr.Column(scale=8):
                         diffusion_model_type_dropdown = gr.Radio(
                             label=_("model_type_label"),
-                            choices=["all", "api", "local"],
+                            choices=["all", "api", "diffusers", "checkpoints"],
                             value="all",
                             elem_classes="model-dropdown"
                         )
