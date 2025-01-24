@@ -2,7 +2,7 @@ import os
 import torch
 import logging
 import traceback
-from transformers import AutoTokenizer, AutoModelForCausalLM, QuantoConfig
+from transformers import AutoTokenizer, AutoModelForCausalLM
 from src.common.utils import make_local_dir_name
 
 logger = logging.getLogger(__name__)
@@ -25,20 +25,11 @@ class Aya23Handler:
             )
             
             logger.info(f"[*] Loading model from {self.model_dir}")
-            if "fp8" in self.model_dir:
-                from transformers import BitsAndBytesConfig
-                quantization_config = BitsAndBytesConfig(load_in_8bit=True)
-                self.model = AutoModelForCausalLM.from_pretrained(
-                    self.model_dir,
-                    quantization_config=quantization_config,
-                    trust_remote_code=True,
-                ).to(self.device)
-            else:
-                self.model = AutoModelForCausalLM.from_pretrained(
-                    self.model_dir,
-                    trust_remote_code=True,
-                    device_map="auto"
-                ).to(self.device)
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.model_dir,
+                trust_remote_code=True,
+                torch_dtype=torch.bfloat16,
+            ).to(self.device)
             logger.info(f"[*] Model loaded successfully: {self.model_dir}")
         except Exception as e:
             logger.error(f"Failed to load GLM4 Model: {str(e)}\n\n{traceback.format_exc()}")

@@ -21,15 +21,10 @@ class QwenHandler:
             logger.info(f"[*] Loading tokenizer from {self.model_dir}")
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_dir, trust_remote_code=True)
             logger.info(f"[*] Loading model from {self.model_dir}")
-            if "float8" in self.model_dir or "int8" in self.model_dir or "int4" in self.model_dir:
-                self.model=QuantizedModelForCausalLM.from_pretrained(
-                    self.model_dir
-                ).to(self.device)
-            else:
-                self.model = AutoModelForCausalLM.from_pretrained(
-                    self.model_dir,
-                    torch_dtype=torch.bfloat16,
-                ).to(self.device)
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.model_dir,
+                torch_dtype=torch.bfloat16,
+            ).to(self.device)
             logger.info(f"[*] Model loaded successfully: {self.model_dir}")
         except Exception as e:
             logger.error(f"Failed to load Qwen Model: {str(e)}\n\n{traceback.format_exc()}")

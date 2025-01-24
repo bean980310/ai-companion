@@ -27,7 +27,7 @@ class OtherModelHandler:
             ).to(self.device)
             logger.info(f"[*] Model loaded successfully: {self.model_dir}")
         except Exception as e:
-            logger.error(f"Failed to load GLM4 Model: {str(e)}\n\n{traceback.format_exc()}")
+            logger.error(f"Failed to load Model: {str(e)}\n\n{traceback.format_exc()}")
             raise
     def generate_answer(self, history):
         prompt_messages = [{"role": msg['role'], "content": msg['content']} for msg in history]

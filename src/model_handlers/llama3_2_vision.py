@@ -26,21 +26,11 @@ class VisionModelHandler:
             self.processor = AutoProcessor.from_pretrained(self.model_dir, trust_remote_code=True)
             
             logger.info(f"[*] Loading model from {self.model_dir}")
-            if 'fp8' in self.model_dir:
-                from transformers import BitsAndBytesConfig
-                bnb_config = BitsAndBytesConfig(load_in_8bit=True,)
-                self.model = AutoModel.from_pretrained(
-                    self.model_dir,
-                    quantization_config=bnb_config,
-                    torch_dtype=torch.bfloat16,
-                    trust_remote_code=True
-                ).to(self.device)
-            else:
-                self.model = AutoModel.from_pretrained(
-                    self.model_dir,
-                    torch_dtype=torch.bfloat16,
-                    trust_remote_code=True
-                ).to(self.device)
+            self.model = AutoModel.from_pretrained(
+                self.model_dir,
+                torch_dtype=torch.bfloat16,
+                trust_remote_code=True
+            ).to(self.device)
             logger.info(f"[*] Model loaded successfully: {self.model_dir}")
         except Exception as e:
             logger.error(f"Failed to load Vision Model: {str(e)}\n\n{traceback.format_exc()}")
