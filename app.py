@@ -38,6 +38,8 @@ from src.tabs.main_tab import (
     create_delete_session_modal
 )
 
+from src.common.utils import get_all_loras
+
 from src.tabs.cache_tab import create_cache_tab
 from src.tabs.download_tab import create_download_tab
 from src.tabs.util_tab import create_util_tab
@@ -354,13 +356,15 @@ with gr.Blocks(css=css) as demo:
                             visible=False,
                             elem_classes="api-key-input"
                         )
-                    with gr.Column() as lora_row:
-                        use_lora = gr.Checkbox(label="LoRA 사용", value=False)
-                        lora_path = gr.Textbox(
-                            label="LoRA 가중치 경로",
-                            placeholder="예: ./lora_weights/my_lora.bin",
-                            visible=False
+                        lora_dropdown = gr.Dropdown(
+                            label="LoRA 모델 선택",
+                            choices=get_all_loras(),
+                            value="None",
+                            interactive=True,
+                            visible=False,
+                            elem_classes="model-dropdown"
                         )
+
                 with gr.Row(elem_classes="chat-interface"):
                     with gr.Column(scale=7):
                         system_message_box = gr.Textbox(
@@ -644,16 +648,11 @@ with gr.Blocks(css=css) as demo:
     model_dropdown.change(
         fn=lambda selected_model: (
             main_tab.toggle_api_key_visibility(selected_model),
-            main_tab.toggle_image_input_visibility(selected_model)
+            main_tab.toggle_image_input_visibility(selected_model),
+            main_tab.toggle_lora_visibility(selected_model)
         ),
         inputs=[model_dropdown],
-        outputs=[api_key_text, image_input]
-    )
-    
-    use_lora.change(
-        fn=lambda x: gr.update(visible=x),
-        inputs=[use_lora],
-        outputs=[lora_path]
+        outputs=[api_key_text, image_input, lora_dropdown]
     )
         
     model_type_dropdown.change(
@@ -667,10 +666,11 @@ with gr.Blocks(css=css) as demo:
     demo.load(
         fn=lambda selected_model: (
             main_tab.toggle_api_key_visibility(selected_model),
-            main_tab.toggle_image_input_visibility(selected_model)
+            main_tab.toggle_image_input_visibility(selected_model),
+            main_tab.toggle_lora_visibility(selected_model)
         ),
         inputs=[model_dropdown],
-        outputs=[api_key_text, image_input]
+        outputs=[api_key_text, image_input, lora_dropdown]
     )
         
     def update_character_languages(selected_language, selected_character):

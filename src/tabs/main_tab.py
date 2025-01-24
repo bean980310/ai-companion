@@ -505,6 +505,13 @@ class MainTab:
         )
         return gr.update(visible=image_visible)
 
+    def toggle_lora_visibility(self, selected_model):
+        """
+        LORA 파일 경로 입력 필드의 가시성을 제어합니다.
+        """
+        lora_visible = selected_model in transformers_local or selected_model in mlx_local
+        return gr.update(visible=lora_visible)
+
     def update_model_list(self, selected_type):
         local_models_data = get_all_local_models()
         transformers_local = local_models_data["transformers"]
