@@ -472,7 +472,7 @@ with gr.Blocks(css=css) as demo:
                             value=diffusion_choices[0] if len(diffusion_choices) > 0 else None,
                             elem_classes="model-dropdown"
                         )
-                        api_key_text = gr.Textbox(
+                        diffusion_api_key_text = gr.Textbox(
                             label=_("api_key_label"),
                             placeholder="sk-...",
                             visible=False,
