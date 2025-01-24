@@ -12,6 +12,8 @@ from src.model_handlers import (
 from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models
 import gradio as gr
 
+from peft import PeftModel, PeftConfig
+
 import logging
 import traceback
 import openai
