@@ -11,3 +11,7 @@ api_models = [
     "claude-3-5-sonnet-20241022"
     # 필요 시 추가
 ]
+
+diffusion_api_models=[
+    "dall-e-3"
+]

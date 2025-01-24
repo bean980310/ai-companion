@@ -28,11 +28,8 @@ from src.characters.persona_speech_manager import PersonaSpeechManager
 from src.common.args import parse_args
 from src.common.default_language import default_language
 
+from src.models import api_models, transformers_local, gguf_local, mlx_local, diffusion_api_models
 from src.tabs.main_tab import (
-    api_models, 
-    transformers_local, 
-    gguf_local, 
-    mlx_local,
     MainTab,
     characters,
     get_speech_manager,
@@ -302,6 +299,8 @@ with gr.Blocks(css=css) as demo:
     initial_choices = list(dict.fromkeys(initial_choices))
     initial_choices = sorted(initial_choices)  # 정렬 추가
     
+    diffusion_choices = diffusion_api_models
+    
     with gr.Column(elem_classes="main-container"):
         with gr.Row(elem_classes="header-container"):
             with gr.Column(scale=3):
@@ -458,6 +457,28 @@ with gr.Blocks(css=css) as demo:
                         reset_all_yes_btn = gr.Button("✅ 예", variant="danger")
                         reset_all_no_btn = gr.Button("❌ 아니요", variant="secondary")
             with gr.Tab('Image Generation'):
+                with gr.Row(elem_classes="model-container"):
+                    with gr.Column(scale=8):
+                        model_type_dropdown = gr.Radio(
+                            label=_("model_type_label"),
+                            choices=["all", "api", "local"],
+                            value="all",
+                            elem_classes="model-dropdown"
+                        )
+                    with gr.Column(scale=10):
+                        model_dropdown = gr.Dropdown(
+                            label=_("model_select_label"),
+                            choices=diffusion_choices,
+                            value=diffusion_choices[0] if len(diffusion_choices) > 0 else None,
+                            elem_classes="model-dropdown"
+                        )
+                        api_key_text = gr.Textbox(
+                            label=_("api_key_label"),
+                            placeholder="sk-...",
+                            visible=False,
+                            elem_classes="api-key-input"
+                        )
+                        
                 with gr.Row(elem_classes="chat-interface"):
                     with gr.Column(scale=7):
                         prompt_input = gr.Textbox(
