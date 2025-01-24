@@ -354,6 +354,13 @@ with gr.Blocks(css=css) as demo:
                             visible=False,
                             elem_classes="api-key-input"
                         )
+                    with gr.Column() as lora_row:
+                        use_lora = gr.Checkbox(label="LoRA 사용", value=False)
+                        lora_path = gr.Textbox(
+                            label="LoRA 가중치 경로",
+                            placeholder="예: ./lora_weights/my_lora.bin",
+                            visible=False
+                        )
                 with gr.Row(elem_classes="chat-interface"):
                     with gr.Column(scale=7):
                         system_message_box = gr.Textbox(
@@ -641,6 +648,12 @@ with gr.Blocks(css=css) as demo:
         ),
         inputs=[model_dropdown],
         outputs=[api_key_text, image_input]
+    )
+    
+    use_lora.change(
+        fn=lambda x: gr.update(visible=x),
+        inputs=[use_lora],
+        outputs=[lora_path]
     )
         
     model_type_dropdown.change(

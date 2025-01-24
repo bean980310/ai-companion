@@ -61,7 +61,7 @@ def refresh_model_list():
     return gr.update(choices=new_choices), "모델 목록을 새로고침했습니다."
 
 
-def load_model(selected_model, model_type, quantization_bit="Q8_0", local_model_path=None, api_key=None, device="cpu"):
+def load_model(selected_model, model_type, quantization_bit="Q8_0", local_model_path=None, api_key=None, device="cpu", lora_path=None):
     """
     모델 로드 함수. 특정 모델에 대한 로드 로직을 외부 핸들러로 분리.
     """
@@ -139,6 +139,7 @@ def load_model(selected_model, model_type, quantization_bit="Q8_0", local_model_
             handler = VisionModelHandler(
                 model_id=model_id,
                 local_model_path=local_model_path,
+                lora_path=lora_path,
                 model_type=model_type,
                 device=device
             )
@@ -201,6 +202,7 @@ def load_model(selected_model, model_type, quantization_bit="Q8_0", local_model_
             handler = Aya23Handler(
                 model_id=model_id,  # model_id가 정의되어 있어야 합니다.
                 local_model_path=local_model_path,
+                lora_path=lora_path,
                 model_type=model_type,
                 device=device
             )
@@ -213,6 +215,7 @@ def load_model(selected_model, model_type, quantization_bit="Q8_0", local_model_
             handler = QwenHandler(
                 model_id=model_id,  # model_id가 정의되어 있어야 합니다.
                 local_model_path=local_model_path,
+                lora_path=lora_path,
                 model_type=model_type,
                 device=device
             )
@@ -222,11 +225,11 @@ def load_model(selected_model, model_type, quantization_bit="Q8_0", local_model_
             if not ensure_model_available(model_id, local_model_path, model_type):
                 logger.error(f"모델 '{model_id}'을(를) 다운로드할 수 없습니다.")
                 return None
-            handler = OtherModelHandler(model_id, local_model_path=local_model_path, model_type=model_type,device=device)
+            handler = OtherModelHandler(model_id, local_model_path=local_model_path, lora_path=lora_path, model_type=model_type,device=device)
             models_cache[build_model_cache_key(model_id, model_type)] = handler
             return handler
 
-def generate_answer(history, selected_model, model_type, local_model_path=None, image_input=None, api_key=None, device="cpu", seed=42, character_language='ko'):
+def generate_answer(history, selected_model, model_type, local_model_path=None, lora_path=None, image_input=None, api_key=None, device="cpu", seed=42, character_language='ko'):
     """
     사용자 히스토리를 기반으로 답변 생성.
     """
@@ -326,7 +329,7 @@ def generate_answer(history, selected_model, model_type, local_model_path=None, 
     else:
         if not handler:
             logger.info(f"[*] 모델 로드 중: {selected_model}")
-            handler = load_model(selected_model, model_type, local_model_path=local_model_path, device=device)
+            handler = load_model(selected_model, model_type, local_model_path=local_model_path, device=device, lora_path=lora_path)
         
         if not handler:
             logger.error("모델 핸들러가 로드되지 않았습니다.")
