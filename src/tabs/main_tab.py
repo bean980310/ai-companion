@@ -107,7 +107,7 @@ class MainTab:
         else:
             return history, gr.update(value=content), None
 
-    def process_message(self, user_input, session_id, history, system_msg, selected_model, custom_path, image, api_key, device, seed, language, selected_character):
+    def process_message(self, user_input, session_id, history, system_msg, selected_model, selected_lora, custom_path, image, api_key, device, seed, language, selected_character):
         """
         사용자 메시지를 처리하고 봇 응답을 생성하는 통합 함수.
 
@@ -164,7 +164,9 @@ class MainTab:
                 history=history,
                 selected_model=selected_model,
                 model_type=self.determine_model_type(selected_model),
+                selected_lora=selected_lora if selected_lora != "None" else None,
                 local_model_path=custom_path if selected_model == "사용자 지정 모델 경로 변경" else None,
+                lora_path=None,
                 image_input=image,  # image 인자 전달
                 api_key=api_key,
                 device=device,
