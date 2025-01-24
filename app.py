@@ -459,14 +459,14 @@ with gr.Blocks(css=css) as demo:
             with gr.Tab('Image Generation'):
                 with gr.Row(elem_classes="model-container"):
                     with gr.Column(scale=8):
-                        model_type_dropdown = gr.Radio(
+                        diffusion_model_type_dropdown = gr.Radio(
                             label=_("model_type_label"),
                             choices=["all", "api", "local"],
                             value="all",
                             elem_classes="model-dropdown"
                         )
                     with gr.Column(scale=10):
-                        model_dropdown = gr.Dropdown(
+                        diffusion_model_dropdown = gr.Dropdown(
                             label=_("model_select_label"),
                             choices=diffusion_choices,
                             value=diffusion_choices[0] if len(diffusion_choices) > 0 else None,
