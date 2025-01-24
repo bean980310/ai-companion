@@ -1,6 +1,8 @@
 # app.py
 
 import importlib
+import random
+import pandas as pd
 from pathlib import Path
 from typing import List, Dict, Any, Tuple
 import argparse
@@ -315,144 +317,184 @@ with gr.Blocks(css=css) as demo:
                     container=False,
                     elem_classes="custom-dropdown"
                 )
-        with gr.Row(elem_classes="session-container"):
-            session_select_dropdown = gr.Dropdown(
-                label="세션 선택",
-                choices=[],  # 앱 시작 시 혹은 별도의 로직으로 세션 목록을 채움
-                value=None,
-                interactive=True,
-                container=False,
-                scale=8,
-                elem_classes="session-dropdown"
-            )
-            add_session_icon_btn = gr.Button("📝", elem_classes="icon-button", scale=1, variant="secondary")
-            delete_session_icon_btn = gr.Button("🗑️", elem_classes="icon-button-delete", scale=1, variant="stop")
-            
-            delete_modal, delete_message, delete_cancel_btn, delete_confirm_btn = create_delete_session_modal()
-        
-        with gr.Row(elem_classes="model-container"):
-            with gr.Column(scale=8):
-                model_type_dropdown = gr.Radio(
-                    label=_("model_type_label"),
-                    choices=["all", "api", "transformers", "gguf", "mlx"],
-                    value="all",
-                    elem_classes="model-dropdown"
-                )
-            with gr.Column(scale=10):
-                model_dropdown = gr.Dropdown(
-                    label=_("model_select_label"),
-                    choices=initial_choices,
-                    value=initial_choices[0] if len(initial_choices) > 0 else None,
-                    elem_classes="model-dropdown"
-                )
-                api_key_text = gr.Textbox(
-                    label=_("api_key_label"),
-                    placeholder="sk-...",
-                    visible=False,
-                    elem_classes="api-key-input"
-                )
-        with gr.Row(elem_classes="chat-interface"):
-            with gr.Column(scale=7):
-                system_message_box = gr.Textbox(
-                    label=_("system_message"),
-                    value=_("system_message_default"),
-                    placeholder=_("system_message_placeholder"),
-                    elem_classes="system-message"
-                )
-                
-                chatbot = gr.Chatbot(
-                    height=400, 
-                    label="Chatbot", 
-                    type="messages", 
-                    elem_classes=["chat-messages"]
-                )
-                
-                with gr.Row(elem_classes="input-area"):
-                    msg = gr.Textbox(
-                    label=_("message_input_label"),
-                    placeholder=_("message_placeholder"),
-                    scale=9,
-                    show_label=False,
-                    elem_classes="message-input"
-                    )
-                    send_btn = gr.Button(
-                        value=_("send_button"),
-                        scale=1,
-                        variant="primary",
-                        elem_classes="send-button"
-                    )
-                    image_input = gr.Image(label=_("image_upload_label"), type="pil", visible=False)
-            with gr.Column(scale=3, elem_classes="side-panel"):
-                profile_image = gr.Image(
-                    label=_('profile_image_label'),
-                    visible=True,
-                    interactive=False,
-                    show_label=True,
-                    width=400,
-                    height=400,
-                    value=characters[list(characters.keys())[0]]["profile_image"],
-                    elem_classes="profile-image"
-                )
-                character_dropdown = gr.Dropdown(
-                    label=_('character_select_label'),
-                    choices=list(characters.keys()),
-                    value=list(characters.keys())[0],
-                    interactive=True,
-                    info=_('character_select_info'),
-                    elem_classes='profile-image'
-                )
-                advanced_setting=gr.Accordion(_("advanced_setting"), open=False)
-                with advanced_setting:
-                    seed_input = gr.Number(
-                        label=_("seed_label"),
-                        value=42,
-                        precision=0,
-                        step=1,
+        with gr.Tabs() as tabs:
+            with gr.Tab('Chat'):
+                with gr.Row(elem_classes="session-container"):
+                    session_select_dropdown = gr.Dropdown(
+                        label="세션 선택",
+                        choices=[],  # 앱 시작 시 혹은 별도의 로직으로 세션 목록을 채움
+                        value=None,
                         interactive=True,
-                        info=_("seed_info"),
-                        elem_classes="seed-input"
+                        container=False,
+                        scale=8,
+                        elem_classes="session-dropdown"
                     )
-                    reset_modal, single_reset_content, all_reset_content, cancel_btn, confirm_btn = create_reset_confirm_modal()
-                    preset_dropdown = gr.Dropdown(
-                        label="프리셋 선택",
-                        choices=get_preset_choices(default_language),
-                        value=list(get_preset_choices(default_language))[0] if get_preset_choices(default_language) else None,
-                        interactive=True,
-                        elem_classes="preset-dropdown"
-                    )
-                    change_preset_button = gr.Button("프리셋 변경")
-                    character_conversation_dropdown = gr.CheckboxGroup(
-                        label="대화할 캐릭터 선택",
-                        choices=get_preset_choices(default_language),  # 추가 캐릭터 이름
-                        value=list(get_preset_choices(default_language))[0] if get_preset_choices(default_language) else None,
-                        interactive=True
-                    )
-                    start_conversation_button = gr.Button("대화 시작")
-                    reset_btn = gr.Button(
-                        value=_("reset_session_button"),  # "세션 초기화"에 해당하는 번역 키
-                        variant="secondary",
-                        scale=1
-                    )
-                    reset_all_btn = gr.Button(
-                        value=_("reset_all_sessions_button"),  # "모든 세션 초기화"에 해당하는 번역 키
-                        variant="secondary",
-                        scale=1
-                    )
+                    add_session_icon_btn = gr.Button("📝", elem_classes="icon-button", scale=1, variant="secondary")
+                    delete_session_icon_btn = gr.Button("🗑️", elem_classes="icon-button-delete", scale=1, variant="stop")
                     
-        with gr.Row(elem_classes="status-bar"):
-            status_text = gr.Markdown("Ready", elem_id="status_text")
-            image_info = gr.Markdown("", visible=False)
-            session_select_info = gr.Markdown(_('select_session_info'))
-            # 초기화 확인 메시지 및 버튼 추가 (숨김 상태로 시작)
-            with gr.Row(visible=False) as reset_confirm_row:
-                reset_confirm_msg = gr.Markdown("⚠️ **정말로 현재 세션을 초기화하시겠습니까? 모든 대화 기록이 삭제됩니다.**")
-                reset_yes_btn = gr.Button("✅ 예", variant="danger")
-                reset_no_btn = gr.Button("❌ 아니요", variant="secondary")
+                    delete_modal, delete_message, delete_cancel_btn, delete_confirm_btn = create_delete_session_modal()
+                
+                with gr.Row(elem_classes="model-container"):
+                    with gr.Column(scale=8):
+                        model_type_dropdown = gr.Radio(
+                            label=_("model_type_label"),
+                            choices=["all", "api", "transformers", "gguf", "mlx"],
+                            value="all",
+                            elem_classes="model-dropdown"
+                        )
+                    with gr.Column(scale=10):
+                        model_dropdown = gr.Dropdown(
+                            label=_("model_select_label"),
+                            choices=initial_choices,
+                            value=initial_choices[0] if len(initial_choices) > 0 else None,
+                            elem_classes="model-dropdown"
+                        )
+                        api_key_text = gr.Textbox(
+                            label=_("api_key_label"),
+                            placeholder="sk-...",
+                            visible=False,
+                            elem_classes="api-key-input"
+                        )
+                with gr.Row(elem_classes="chat-interface"):
+                    with gr.Column(scale=7):
+                        system_message_box = gr.Textbox(
+                            label=_("system_message"),
+                            value=_("system_message_default"),
+                            placeholder=_("system_message_placeholder"),
+                            elem_classes="system-message"
+                        )
+                        
+                        chatbot = gr.Chatbot(
+                            height=400, 
+                            label="Chatbot", 
+                            type="messages", 
+                            elem_classes=["chat-messages"]
+                        )
+                        
+                        with gr.Row(elem_classes="input-area"):
+                            msg = gr.Textbox(
+                            label=_("message_input_label"),
+                            placeholder=_("message_placeholder"),
+                            scale=9,
+                            show_label=False,
+                            elem_classes="message-input"
+                            )
+                            send_btn = gr.Button(
+                                value=_("send_button"),
+                                scale=1,
+                                variant="primary",
+                                elem_classes="send-button"
+                            )
+                            image_input = gr.Image(label=_("image_upload_label"), type="pil", visible=False)
+                    with gr.Column(scale=3, elem_classes="side-panel"):
+                        profile_image = gr.Image(
+                            label=_('profile_image_label'),
+                            visible=True,
+                            interactive=False,
+                            show_label=True,
+                            width=400,
+                            height=400,
+                            value=characters[list(characters.keys())[0]]["profile_image"],
+                            elem_classes="profile-image"
+                        )
+                        character_dropdown = gr.Dropdown(
+                            label=_('character_select_label'),
+                            choices=list(characters.keys()),
+                            value=list(characters.keys())[0],
+                            interactive=True,
+                            info=_('character_select_info'),
+                            elem_classes='profile-image'
+                        )
+                        advanced_setting=gr.Accordion(_("advanced_setting"), open=False)
+                        with advanced_setting:
+                            seed_input = gr.Number(
+                                label=_("seed_label"),
+                                value=42,
+                                precision=0,
+                                step=1,
+                                interactive=True,
+                                info=_("seed_info"),
+                                elem_classes="seed-input"
+                            )
+                            reset_modal, single_reset_content, all_reset_content, cancel_btn, confirm_btn = create_reset_confirm_modal()
+                            preset_dropdown = gr.Dropdown(
+                                label="프리셋 선택",
+                                choices=get_preset_choices(default_language),
+                                value=list(get_preset_choices(default_language))[0] if get_preset_choices(default_language) else None,
+                                interactive=True,
+                                elem_classes="preset-dropdown"
+                            )
+                            change_preset_button = gr.Button("프리셋 변경")
+                            character_conversation_dropdown = gr.CheckboxGroup(
+                                label="대화할 캐릭터 선택",
+                                choices=get_preset_choices(default_language),  # 추가 캐릭터 이름
+                                value=list(get_preset_choices(default_language))[0] if get_preset_choices(default_language) else None,
+                                interactive=True
+                            )
+                            start_conversation_button = gr.Button("대화 시작")
+                            reset_btn = gr.Button(
+                                value=_("reset_session_button"),  # "세션 초기화"에 해당하는 번역 키
+                                variant="secondary",
+                                scale=1
+                            )
+                            reset_all_btn = gr.Button(
+                                value=_("reset_all_sessions_button"),  # "모든 세션 초기화"에 해당하는 번역 키
+                                variant="secondary",
+                                scale=1
+                            )
+                            
+                with gr.Row(elem_classes="status-bar"):
+                    status_text = gr.Markdown("Ready", elem_id="status_text")
+                    image_info = gr.Markdown("", visible=False)
+                    session_select_info = gr.Markdown(_('select_session_info'))
+                    # 초기화 확인 메시지 및 버튼 추가 (숨김 상태로 시작)
+                    with gr.Row(visible=False) as reset_confirm_row:
+                        reset_confirm_msg = gr.Markdown("⚠️ **정말로 현재 세션을 초기화하시겠습니까? 모든 대화 기록이 삭제됩니다.**")
+                        reset_yes_btn = gr.Button("✅ 예", variant="danger")
+                        reset_no_btn = gr.Button("❌ 아니요", variant="secondary")
 
-            with gr.Row(visible=False) as reset_all_confirm_row:
-                reset_all_confirm_msg = gr.Markdown("⚠️ **정말로 모든 세션을 초기화하시겠습니까? 모든 대화 기록이 삭제됩니다.**")
-                reset_all_yes_btn = gr.Button("✅ 예", variant="danger")
-                reset_all_no_btn = gr.Button("❌ 아니요", variant="secondary")
+                    with gr.Row(visible=False) as reset_all_confirm_row:
+                        reset_all_confirm_msg = gr.Markdown("⚠️ **정말로 모든 세션을 초기화하시겠습니까? 모든 대화 기록이 삭제됩니다.**")
+                        reset_all_yes_btn = gr.Button("✅ 예", variant="danger")
+                        reset_all_no_btn = gr.Button("❌ 아니요", variant="secondary")
+            with gr.Tab('Image Generation'):
+                with gr.Row(elem_classes="chat-interface"):
+                    with gr.Column(scale=7):
+                        prompt_input = gr.Textbox(
+                            label="Image Prompt",
+                            placeholder="Enter your image prompt...",
+                            lines=3,
+                            elem_classes="message-input"
+                        )
+                        
+                        with gr.Row():
+                            style_dropdown = gr.Dropdown(
+                                label="Style",
+                                choices=["Photographic", "Digital Art", "Oil Painting", "Watercolor"],
+                                value="Photographic"
+                            )
+                            size_dropdown = gr.Dropdown(
+                                label="Size",
+                                choices=["512x512", "768x768", "1024x1024"],
+                                value="512x512"
+                            )
+                        
+                        with gr.Row():
+                            random_prompt_btn = gr.Button("🎲 Random Prompt", variant="secondary")
+                            generate_btn = gr.Button("🎨 Generate", variant="primary")
+                        
+                        gallery = gr.Gallery(
+                            label="Generated Images",
+                            columns=2,
+                            rows=2,
+                            height="400px"
+                        )
+
+                    with gr.Column(scale=3, elem_classes="side-panel"):
+                        image_history = gr.Dataframe(
+                            headers=["Prompt", "Style", "Size"],
+                            label="Generation History"
+                        )
 
     # 아래는 변경 이벤트 등록
     def apply_session_immediately(chosen_sid):
@@ -610,7 +652,36 @@ with gr.Blocks(css=css) as demo:
             speech_manager.current_language = characters[selected_character]["default_language"]
         return gr.update()
 
-        
+    def generate_images(prompt, style, size):
+        """이미지 생성 함수"""
+        try:
+            # 여기에 실제 이미지 생성 로직 구현
+            generated_images = []  # 생성된 이미지 경로 리스트
+            history_entry = {"Prompt": prompt, "Style": style, "Size": size}
+            return generated_images, pd.DataFrame([history_entry])
+        except Exception as e:
+            return [], None
+
+    def get_random_prompt():
+        """랜덤 프롬프트 생성 함수"""
+        prompts = [
+            "A serene mountain landscape at sunset",
+            "A futuristic cityscape with flying cars",
+            "A mystical forest with glowing mushrooms"
+        ]
+        return random.choice(prompts)
+
+    # 이벤트 핸들러 연결
+    generate_btn.click(
+        fn=generate_images,
+        inputs=[prompt_input, style_dropdown, size_dropdown],
+        outputs=[gallery, image_history]
+    )
+
+    random_prompt_btn.click(
+        fn=get_random_prompt,
+        outputs=[prompt_input]
+    )
     def change_language(selected_lang, selected_character):
         """언어 변경 처리 함수"""
         lang_map = {
