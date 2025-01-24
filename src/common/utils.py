@@ -82,7 +82,7 @@ def scan_local_models(root="./models/llm", model_type=None):
     return local_model_ids
 
 def get_all_loras(lora_root="./models/llm/loras"):
-    if not os.path.exist(lora_root):
+    if not os.path.isdir(lora_root):
         os.makedirs(lora_root, exist_ok=True)
         
     lora_model_ids = ["None"]
