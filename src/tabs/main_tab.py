@@ -175,7 +175,8 @@ class MainTab:
                 seed=seed,
                 character_language=language
             )
-
+            
+            speech_manager = get_speech_manager(session_id)
             styled_answer = speech_manager.generate_response(answer)
             
             # 응답을 히스토리에 추가
@@ -195,7 +196,7 @@ class MainTab:
         # 업데이트된 히스토리를 Chatbot 형식으로 변환
         chatbot_history = self.filter_messages_for_chatbot(history)
 
-        return "", history, chatbot_history, status
+        return history, chatbot_history, status
     
     def determine_model_type(self, selected_model):
         if selected_model in api_models:

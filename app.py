@@ -800,13 +800,12 @@ with gr.Blocks(css=css) as demo:
             history_state,
             system_message_box,
             character_dropdown,
-            language_dropdown
+            selected_language_state
         ],
         outputs=[
             msg,            # 사용자 입력 필드 초기화
             history_state,  # 히스토리 업데이트
             chatbot,        # Chatbot UI 업데이트
-            status_text     # 상태 메시지 업데이트
         ],
         queue=False
     ).then(
@@ -821,7 +820,7 @@ with gr.Blocks(css=css) as demo:
             api_key_text,
             selected_device_state,
             seed_state,
-            language_dropdown
+            selected_language_state
         ],
         outputs=[
             history_state,
@@ -839,13 +838,12 @@ with gr.Blocks(css=css) as demo:
             history_state,
             system_message_box,
             character_dropdown,
-            language_dropdown
+            selected_language_state
         ],
         outputs=[
             msg,            # 사용자 입력 필드 초기화
             history_state,  # 히스토리 업데이트
             chatbot,        # Chatbot UI 업데이트
-            status_text     # 상태 메시지 업데이트
         ],
         queue=False
     ).then(
@@ -860,7 +858,7 @@ with gr.Blocks(css=css) as demo:
             api_key_text,
             selected_device_state,
             seed_state,
-            language_dropdown
+            selected_language_state
         ],
         outputs=[
             history_state,
