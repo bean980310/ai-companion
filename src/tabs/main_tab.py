@@ -107,7 +107,7 @@ class MainTab:
         else:
             return history, gr.update(value=content), None
 
-    def process_message(self, user_input, session_id, history, system_msg, selected_model, selected_lora, custom_path, image, api_key, device, seed, language, selected_character):
+    def process_message_user(self, user_input, session_id, history, system_msg, selected_character, language):
         """
         사용자 메시지를 처리하고 봇 응답을 생성하는 통합 함수.
 
@@ -143,7 +143,6 @@ class MainTab:
             history = [system_message]
 
         speech_manager = get_speech_manager(session_id)
-        
         try:
             speech_manager.set_character_and_language(selected_character, language)
         except ValueError as e:
@@ -157,7 +156,10 @@ class MainTab:
         history.append({"role": "user", "content": user_input})
         
         speech_manager.update_tone(user_input)
-
+        
+        return "", history, self.filter_messages_for_chatbot(history)
+    
+    def process_message_bot(self, session_id, history, selected_model, selected_lora, custom_path, image, api_key, device, seed, language):
         try:
             # 봇 응답 생성
             answer = generate_answer(

@@ -793,21 +793,14 @@ with gr.Blocks(css=css) as demo:
     
         # 메시지 전송 시 함수 연결
     msg.submit(
-        fn=main_tab.process_message,
+        fn=main_tab.process_message_user,
         inputs=[
             msg,  # 사용자 입력
             session_id_state,
             history_state,
             system_message_box,
-            model_dropdown,
-            lora_dropdown,
-            custom_model_path_state,
-            image_input,
-            api_key_text,
-            selected_device_state,
-            seed_state,
-            selected_language_state,
-            character_dropdown
+            character_dropdown,
+            language_dropdown
         ],
         outputs=[
             msg,            # 사용자 입력 필드 초기화
@@ -817,41 +810,64 @@ with gr.Blocks(css=css) as demo:
         ],
         queue=False
     ).then(
-        fn=main_tab.filter_messages_for_chatbot,
-        inputs=[history_state],
-        outputs=chatbot,
-        queue=False
+        fn=main_tab.process_message_bot,
+        inputs=[
+            session_id_state,
+            history_state,
+            model_dropdown,
+            lora_dropdown,
+            custom_model_path_state,
+            image_input,
+            api_key_text,
+            selected_device_state,
+            seed_state,
+            language_dropdown
+        ],
+        outputs=[
+            history_state,
+            chatbot,
+            status_text  # 상태 메시지
+        ],
+        queue=True  # 모델 추론이 들어가므로 True
     )
 
     send_btn.click(
-        fn=main_tab.process_message,
+        fn=main_tab.process_message_user,
         inputs=[
-            msg, 
-            session_id_state, 
-            history_state, 
-            system_message_box, 
-            model_dropdown,
-            lora_dropdown,
-            custom_model_path_state, 
-            image_input, 
-            api_key_text, 
-            selected_device_state, 
-            seed_state,
-            selected_language_state,
-            character_dropdown
+            msg,  # 사용자 입력
+            session_id_state,
+            history_state,
+            system_message_box,
+            character_dropdown,
+            language_dropdown
         ],
         outputs=[
-            msg, 
-            history_state, 
-            chatbot, 
-            status_text
+            msg,            # 사용자 입력 필드 초기화
+            history_state,  # 히스토리 업데이트
+            chatbot,        # Chatbot UI 업데이트
+            status_text     # 상태 메시지 업데이트
         ],
         queue=False
     ).then(
-        fn=main_tab.filter_messages_for_chatbot,            # 추가된 부분
-        inputs=[history_state],
-        outputs=chatbot,                           # chatbot에 최종 전달
-        queue=False
+        fn=main_tab.process_message_bot,
+        inputs=[
+            session_id_state,
+            history_state,
+            model_dropdown,
+            lora_dropdown,
+            custom_model_path_state,
+            image_input,
+            api_key_text,
+            selected_device_state,
+            seed_state,
+            language_dropdown
+        ],
+        outputs=[
+            history_state,
+            chatbot,
+            status_text  # 상태 메시지
+        ],
+        queue=True  # 모델 추론이 들어가므로 True
     )
         
     start_conversation_button.click(
