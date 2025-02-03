@@ -23,6 +23,6 @@ class MlxModelHandler:
             tokenize=False,
             add_generation_prompt=True
         )
-        response = generate(self.model, self.tokenizer, prompt=text, verbose=True, top_p=0.8, max_new_tokens=2048)
+        response = generate(self.model, self.tokenizer, prompt=text, verbose=True, max_tokens=2048)
         
         return response
