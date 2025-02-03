@@ -261,7 +261,7 @@ def insert_default_presets(translation_manager, overwrite=True) -> None:
                 for lang in languages:
                     try:
                         # translation_manager에서 프리셋 내용 가져오기
-                        content = translation_manager.get_character_setting(preset_config.character_key)
+                        content = translation_manager.get_character_setting(preset_config.character_key, lang=lang)
                         
                         if overwrite:
                             # 프리셋 업데이트

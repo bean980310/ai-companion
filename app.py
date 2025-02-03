@@ -364,7 +364,11 @@ with gr.Blocks(css=css) as demo:
                             visible=False,
                             elem_classes="model-dropdown"
                         )
-
+                with gr.Row():
+                    chat_title_box=gr.Textbox(
+                        value="",
+                        interactive=False
+                    )
                 with gr.Row(elem_classes="chat-interface"):
                     with gr.Column(scale=7):
                         system_message_box = gr.Textbox(
@@ -825,7 +829,8 @@ with gr.Blocks(css=css) as demo:
         outputs=[
             history_state,
             chatbot,
-            status_text  # 상태 메시지
+            status_text,  # 상태 메시지
+            chat_title_box
         ],
         queue=True  # 모델 추론이 들어가므로 True
     )
@@ -863,7 +868,8 @@ with gr.Blocks(css=css) as demo:
         outputs=[
             history_state,
             chatbot,
-            status_text  # 상태 메시지
+            status_text,  # 상태 메시지
+            chat_title_box
         ],
         queue=True  # 모델 추론이 들어가므로 True
     )

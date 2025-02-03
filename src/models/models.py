@@ -50,7 +50,19 @@ default_device = get_default_device()
 logger.info(f"Default device set to: {default_device}")
 def refresh_model_list():
     new_local_models = get_all_local_models()
-    api_models = ["gpt-3.5-turbo", "gpt-4o-mini", "gpt-4o"]
+    api_models = [
+        "gpt-3.5-turbo",
+        "gpt-4",
+        "gpt-4-turbo",
+        "gpt-4o-mini",
+        "gpt-4o",
+        "claude-3-haiku-20240307",
+        "claude-3-sonnet-20240229",
+        "claude-3-opus-20240229",
+        "claude-3-5-haiku-20241022",
+        "claude-3-5-sonnet-20241022"
+        # 필요 시 추가
+    ]
     local_models = (
         new_local_models["transformers"] + 
         new_local_models["gguf"] + 
@@ -349,6 +361,34 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
         except Exception as e:
             logger.error(f"모델 추론 오류: {str(e)}\n\n{traceback.format_exc()}")
             return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+        
+def generate_chat_title(first_message, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, device="cpu"):
+    """
+    첫 번째 메시지를 기반으로 채팅 제목을 생성하는 함수.
+    모델 핸들러에 generate_chat_title 메서드가 구현되어 있어야 함.
+    """
+    cache_key = build_model_cache_key(selected_model, model_type, selected_lora, local_path=local_model_path)
+    handler = models_cache.get(cache_key)
+    
+    if not handler:
+        logger.info(f"[*] 모델 로드 중: {selected_model}")
+        handler = load_model(selected_model, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path)
+    
+    if not handler:
+        logger.error("모델 핸들러가 로드되지 않았습니다.")
+        return "모델 핸들러가 로드되지 않았습니다."
+    
+    logger.info(f"[*] Generating chat title using {handler.__class__.__name__}")
+    try:
+        if hasattr(handler, "generate_chat_title"):
+            title = handler.generate_chat_title(first_message)
+            return title
+        else:
+            logger.error("모델 핸들러에 채팅 제목 생성 기능이 없습니다.")
+            return "채팅 제목 생성 기능이 없습니다."
+    except Exception as e:
+        logger.error(f"채팅 제목 생성 오류: {str(e)}\n\n{traceback.format_exc()}")
+        return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
         
 # models.py
 

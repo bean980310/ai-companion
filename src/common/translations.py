@@ -53,22 +53,25 @@ class TranslationManager:
             logger.error(f"Failed to load translations: {e}")
             raise TranslationError(f"Failed to load translations: {e}")
                 
-    def get_character_setting(self, character: str = 'minami_asuka') -> str:
+    def get_character_setting(self, character: str = 'minami_asuka', lang: Optional[str] = None) -> str:
         """현재 언어의 캐릭터 설정 가져오기"""
         try:
+            if lang is None:
+                lang = self.current_language
+                
             if character not in self.character_settings:
                 logger.warning(f"Character {character} not found, using minami_asuka")
                 character = 'minami_asuka'
             
             preset = self.character_settings[character]
-            if self.current_language not in preset:
+            if lang not in preset:
                 logger.warning(
                     f"Language {self.current_language} not found for character {character}, "
                     f"using {self.default_language}"
                 )
                 return preset[self.default_language]
             
-            return preset[self.current_language]
+            return preset[lang]
             
         except KeyError as e:
             error_msg = f"Character setting not found: {e}"
@@ -601,6 +604,6 @@ def _(key: str, **kwargs) -> str:
     """UI 텍스트 번역을 위한 단축 함수"""
     return translation_manager.get(key, **kwargs)
 
-def get_character_message(character: str = 'minami_asuka') -> str:
+def get_character_message(character: str = 'minami_asuka', lang: Optional[str]=None) -> str:
     """캐릭터 설정 메시지 반환"""
-    return translation_manager.get_character_setting(character)
+    return translation_manager.get_character_setting(character, lang=lang)

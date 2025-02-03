@@ -26,3 +26,17 @@ class MlxModelHandler:
         response = generate(self.model, self.tokenizer, prompt=text, verbose=True, max_tokens=2048)
         
         return response
+    
+    def generate_chat_title(self, first_message: str)->str:
+        prompt=(
+            "Summarize the following message in one sentence and create an appropriate chat title:\n\n"
+            f"{first_message}\n\n"
+            "Chat Title:"
+        )
+        logger.info(f"채팅 제목 생성 프롬프트: {prompt}")
+        
+        title_response=generate(self.model, self.tokenizer, prompt=prompt, verbose=True, max_tokens=20)
+        
+        title=title_response.strip()
+        logger.info(f"생성된 채팅 제목: {title}")
+        return title

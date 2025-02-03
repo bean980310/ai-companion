@@ -4,7 +4,7 @@ import os
 import secrets
 import sqlite3
 
-from src.models.models import get_all_local_models, generate_answer
+from src.models.models import get_all_local_models, generate_answer, generate_chat_title
 from src.common.database import save_chat_history_db, delete_session_history, delete_all_sessions, get_preset_choices, load_system_presets, get_existing_sessions, load_chat_from_db, update_system_message_in_db
 from src.common.translations import TranslationManager, translation_manager
 
@@ -69,6 +69,7 @@ class MainTab:
         self.default_profile_image=DEFAULT_PROFILE_IMAGE
         self.characters=characters
         self.reset_type = None
+        self.chat_titles={}
         
     def handle_change_preset(self, new_preset_name, history, language):
         """
@@ -160,7 +161,19 @@ class MainTab:
         return "", history, self.filter_messages_for_chatbot(history)
     
     def process_message_bot(self, session_id, history, selected_model, selected_lora, custom_path, image, api_key, device, seed, language):
+        chat_title=self.chat_titles.get(session_id)
         try:
+            if chat_title is None and len(history)==2:
+                chat_title=generate_chat_title(
+                    first_message=history[1]["content"],
+                    selected_model=selected_model,
+                    model_type=self.determine_model_type(selected_model),
+                    selected_lora=selected_lora if selected_lora != "None" else None,
+                    local_model_path=custom_path if selected_model == "사용자 지정 모델 경로 변경" else None,
+                    lora_path=None,
+                    device=device
+
+                )
             # 봇 응답 생성
             answer = generate_answer(
                 history=history,
@@ -196,7 +209,7 @@ class MainTab:
         # 업데이트된 히스토리를 Chatbot 형식으로 변환
         chatbot_history = self.filter_messages_for_chatbot(history)
 
-        return history, chatbot_history, status
+        return history, chatbot_history, status, chat_title
     
     def determine_model_type(self, selected_model):
         if selected_model in api_models:
