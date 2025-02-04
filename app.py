@@ -496,9 +496,15 @@ with gr.Blocks(css=css) as demo:
                         
                 with gr.Row(elem_classes="chat-interface"):
                     with gr.Column(scale=7):
-                        prompt_input = gr.Textbox(
-                            label="Image Prompt",
-                            placeholder="Enter your image prompt...",
+                        positive_prompt_input = gr.Textbox(
+                            label="Positive Prompt",
+                            placeholder="Enter positive prompt...",
+                            lines=3,
+                            elem_classes="message-input"
+                        )
+                        negative_prompt_input = gr.Textbox(
+                            label="Negative Prompt",
+                            placeholder="Enter negative prompt...",
                             lines=3,
                             elem_classes="message-input"
                         )
@@ -509,10 +515,30 @@ with gr.Blocks(css=css) as demo:
                                 choices=["Photographic", "Digital Art", "Oil Painting", "Watercolor"],
                                 value="Photographic"
                             )
-                            size_dropdown = gr.Dropdown(
-                                label="Size",
-                                choices=["512x512", "768x768", "1024x1024"],
-                                value="512x512"
+                            
+                        with gr.Row():
+                            width_slider = gr.Slider(
+                                label="Width",
+                                minimum=128,
+                                maximum=2048,
+                                step=64,
+                                value=512
+                            )
+                            height_slider = gr.Slider(
+                                label="Height",
+                                minimum=128,
+                                maximum=2048,
+                                step=64,
+                                value=512
+                            )
+                        
+                        with gr.Row():
+                            generation_step=gr.Slider(
+                                label="Generation Step",
+                                minimum=1,
+                                maximum=50,
+                                step=1,
+                                value=20
                             )
                         
                         with gr.Row():
@@ -528,9 +554,49 @@ with gr.Blocks(css=css) as demo:
 
                     with gr.Column(scale=3, elem_classes="side-panel"):
                         image_history = gr.Dataframe(
-                            headers=["Prompt", "Style", "Size"],
+                            headers=["Prompt", "Negative Prompt", "Style", "Width", "Height"],
                             label="Generation History"
                         )
+                        
+                        with gr.Accordion("Advanced Settings", open=False):
+                            sampler_dropdown = gr.Dropdown(
+                                label="Sampler",
+                                choices=["Euler", "Euler Ancestral", "Heun", "DPM 2", "DPM 2 Ancestral", "DPM Fast", "DPM Adaptive", "DPM++ 2S Ancestral", "DPM++ SDE", "DPM++ SDE GPU", "DPM++ 2M", "DPM++ 2M SDE", "DPM++ 2M SDE GPU", "DPM++ 3M SDE", "DPM++ 3M SDE GPU", "LCM", "DDIM"],
+                                value="Euler"
+                            )
+                            scheduler_dropdown = gr.Dropdown(
+                                label="Scheduler",
+                                choices=["Normal", "Karras", "Exponential", "SGM Uniform", "Simple", "DDIM Uniform", "Beta", "Linear Quadratic", "KL Optimal"],  # 실제 옵션에 맞게 변경
+                                value="Normal"
+                            )
+                            cfg_slider = gr.Slider(
+                                label="CFG Scale",
+                                minimum=1,
+                                maximum=20,
+                                step=0.5,
+                                value=7.5
+                            )
+                            with gr.Row():
+                                seed_input = gr.Number(
+                                    label="Seed",
+                                    value=42,
+                                    precision=0
+                                )
+                                random_seed_checkbox = gr.Checkbox(
+                                    label="Random Seed",
+                                    value=True
+                                )
+                            with gr.Row():
+                                batch_size_input = gr.Number(
+                                    label="Batch Size",
+                                    value=1,
+                                    precision=0
+                                )
+                                batch_count_input = gr.Number(
+                                    label="Batch Count",
+                                    value=1,
+                                    precision=0
+                                )
 
     # 아래는 변경 이벤트 등록
     def apply_session_immediately(chosen_sid):
@@ -690,12 +756,12 @@ with gr.Blocks(css=css) as demo:
             speech_manager.current_language = characters[selected_character]["default_language"]
         return gr.update()
 
-    def generate_images(prompt, style, size):
+    def generate_images(prompt, negative_prompt, style, width, height):
         """이미지 생성 함수"""
         try:
             # 여기에 실제 이미지 생성 로직 구현
             generated_images = []  # 생성된 이미지 경로 리스트
-            history_entry = {"Prompt": prompt, "Style": style, "Size": size}
+            history_entry = {"Prompt": prompt, "Negative Prompt": negative_prompt, "Style": style, "Width": width, "Height": height}
             return generated_images, pd.DataFrame([history_entry])
         except Exception as e:
             return [], None
@@ -712,13 +778,13 @@ with gr.Blocks(css=css) as demo:
     # 이벤트 핸들러 연결
     generate_btn.click(
         fn=generate_images,
-        inputs=[prompt_input, style_dropdown, size_dropdown],
+        inputs=[positive_prompt_input, negative_prompt_input, style_dropdown, width_slider, height_slider],
         outputs=[gallery, image_history]
     )
 
     random_prompt_btn.click(
         fn=get_random_prompt,
-        outputs=[prompt_input]
+        outputs=[positive_prompt_input]
     )
     def change_language(selected_lang, selected_character):
         """언어 변경 처리 함수"""
