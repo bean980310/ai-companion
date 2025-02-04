@@ -25,6 +25,9 @@ xformers
 bitsandbytes
 onnx
 onnxruntime
+Pillow
+numpy
+websocket-client
 mlx
 mlx_lm
 mlx_vlm

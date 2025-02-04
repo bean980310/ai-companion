@@ -25,3 +25,6 @@ xformers
 bitsandbytes
 onnx
 onnxruntime-gpu
+Pillow
+numpy
+websocket-client

@@ -17,6 +17,12 @@ import traceback
 from src.characters.persona_speech_manager import PersonaSpeechManager
 from src.common.args import parse_args
 
+import requests
+import base64
+from io import BytesIO
+from PIL import Image
+import pandas as pd
+
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -670,3 +676,34 @@ def create_delete_session_modal():
                 
     return delete_modal, message, cancel_btn, confirm_btn
     
+def generate_images_with_comfyui(prompt, style, size):
+    # 실제 payload 형식은 ComfyUI API 문서를 참고해서 맞춰줘
+    payload = {
+        "prompt": prompt,
+        "style": style,
+        "size": size,  # 예: "512x512" 등
+        # 필요한 다른 파라미터 추가
+    }
+    # ComfyUI 서버의 API 엔드포인트 (주소와 포트는 환경에 맞게 조정)
+    url = "http://localhost:8000/generate"  
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()  # 오류 발생 시 예외 처리
+        data = response.json()
+
+        # 예시: 응답 데이터에 "images"라는 키로 base64 인코딩된 이미지 리스트가 있다고 가정
+        images_data = data.get("images", [])
+        images = []
+        for img_str in images_data:
+            # base64 문자열을 디코딩해서 PIL 이미지로 변환
+            img_data = base64.b64decode(img_str)
+            img = Image.open(BytesIO(img_data))
+            images.append(img)
+
+        # 기록을 위한 DataFrame 생성 (기록 항목은 필요에 따라 수정)
+        history_entry = {"Prompt": prompt, "Style": style, "Size": size}
+        history_df = pd.DataFrame([history_entry])
+        return images, history_df
+    except Exception as e:
+        print("이미지 생성 중 오류 발생:", e)
+        return [], None
