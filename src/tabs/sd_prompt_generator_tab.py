@@ -1,6 +1,6 @@
 import gradio as gr
 from src.models.models import generate_stable_diffusion_prompt_cached
-from src.tabs.main_tab import generator_choices
+from src.main.chatbot.chatbot import generator_choices
 from src.models.api_models import api_models
 from src.models.local_models import transformers_local, gguf_local, mlx_local
 

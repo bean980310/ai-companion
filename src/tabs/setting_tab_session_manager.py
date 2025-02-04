@@ -1,6 +1,6 @@
 import gradio as gr
 from typing import Tuple
-from src.tabs.main_tab import MainTab
+from src.main.chatbot.chatbot import MainTab
 
 main_tab=MainTab()
 

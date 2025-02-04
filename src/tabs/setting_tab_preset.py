@@ -1,6 +1,6 @@
 import gradio as gr
 from src.common.database import preset_exists, handle_add_preset, load_system_presets, save_chat_history_db, get_preset_choices, handle_delete_preset
-from src.tabs.main_tab import MainTab
+from src.main.chatbot.chatbot import MainTab
 import logging
 
 from src.characters.preset_images import PRESET_IMAGES

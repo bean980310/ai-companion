@@ -5,7 +5,7 @@ import traceback
 import gradio as gr
 from huggingface_hub import HfApi
 
-from src.tabs.main_tab import MainTab
+from src.main.chatbot.chatbot import MainTab
 from src.models.api_models import api_models
 from src.models.known_hf_models import known_hf_models
 

@@ -29,7 +29,7 @@ from src.common.args import parse_args
 from src.common.default_language import default_language
 
 from src.models import api_models, transformers_local, gguf_local, mlx_local, diffusion_api_models
-from src.tabs.main_tab import (
+from src.main.chatbot.chatbot import (
     MainTab,
     characters,
     get_speech_manager,
