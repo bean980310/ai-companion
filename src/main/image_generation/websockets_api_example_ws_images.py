@@ -150,10 +150,10 @@ images = get_images(ws, prompt)
 ws.close() # for in case this example is used in an environment where it will be repeatedly called, like in a Gradio app. otherwise, you'll randomly receive connection timeouts
 #Commented out code to display the output images:
 
-# for node_id in images:
-#     for image_data in images[node_id]:
-#         from PIL import Image
-#         import io
-#         image = Image.open(io.BytesIO(image_data))
-#         image.show()
+for node_id in images:
+    for image_data in images[node_id]:
+        from PIL import Image
+        import io
+        image = Image.open(io.BytesIO(image_data))
+        image.show()
 
