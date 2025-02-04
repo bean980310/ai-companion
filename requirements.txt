@@ -25,4 +25,5 @@ onnx
 onnxruntime
 Pillow
 numpy
+websocket
 websocket-client

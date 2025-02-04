@@ -27,6 +27,7 @@ onnx
 onnxruntime-gpu
 Pillow
 numpy
+websocket
 websocket-client
 vllm
 triton
