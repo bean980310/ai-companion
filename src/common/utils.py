@@ -98,6 +98,23 @@ def get_all_loras(lora_root="./models/llm/loras"):
                 
     return lora_model_ids
 
+def get_diffusion_vae(vae_root="./models/diffusion/vae"):
+    if not os.path.isdir(vae_root):
+        os.makedirs(vae_root, exist_ok=True)
+    
+    vae_model_ids = ["None"]
+    for folder in vae_root:
+        vae_dir=os.path.join(vae_root, folder)
+        if not os.path.isdir(vae_dir):
+            continue
+        for file in os.listdir(vae_dir):
+            full_path=os.path.join(vae_dir, file)
+            if os.path.isdir(full_path) and file.endswith((".safetensors", ".bin", ".pt", ".pth")):
+                vae_model_id=convert_folder_to_modelid(vae_dir)
+                vae_model_ids.append(vae_model_id)
+                
+    return vae_model_ids
+
 def get_diffusion_loras(lora_root="./models/diffusion/loras"):
     if not os.path.isdir(lora_root):
         os.makedirs(lora_root, exist_ok=True)

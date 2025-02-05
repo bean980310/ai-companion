@@ -38,7 +38,7 @@ from src.main.chatbot.chatbot import (
     create_delete_session_modal
 )
 
-from src.common.utils import get_all_loras, get_diffusion_loras
+from src.common.utils import get_all_loras, get_diffusion_loras, get_diffusion_vae
 
 from src.tabs.cache_tab import create_cache_tab
 from src.tabs.download_tab import create_download_tab
@@ -492,6 +492,17 @@ with gr.Blocks(css=css) as demo:
                             placeholder="sk-...",
                             visible=False,
                             elem_classes="api-key-input"
+                        )
+                        
+                with gr.Row(elem_classes="model-container"):
+                    with gr.Accordion('VAE Settings', open=False):
+                        vae_dropdown=gr.Dropdown(
+                            label="Select VAE Model",
+                            choices=get_diffusion_vae(),
+                            value="None",
+                            interactive=True,
+                            info="Select VAE model to apply to the diffusion model.",
+                            elem_classes="model-dropdown"
                         )
                         
                 with gr.Row(elem_classes="model-container"):
