@@ -4,6 +4,7 @@ import os
 from src.common.utils import make_local_dir_name
 
 from mlx_lm import load, generate
+from mlx_lm.sample_utils import make_sampler, make_logits_processors
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,12 @@ class MlxModelHandler:
             tokenize=False,
             add_generation_prompt=True
         )
-        response = generate(self.model, self.tokenizer, prompt=text, verbose=True, max_tokens=2048)
+        sampler = make_sampler(
+            temperature=0.7,
+            top_p=0.9,
+            top_k=40
+        )
+        response = generate(self.model, self.tokenizer, prompt=text, verbose=True, sampler=sampler, logits_processors=make_logits_processors(repetition_penalty=0.8), max_tokens=2048)
         
         return response
     

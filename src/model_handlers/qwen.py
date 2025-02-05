@@ -56,7 +56,10 @@ class QwenHandler:
         try:
             outputs = self.model.generate(
                 **model_inputs,
-                max_new_tokens=512,
+                max_new_tokens=1024,
+                temperature=0.6,
+                top_p=0.9,
+                repetition_penalty=0.8
             )
             logger.info("[*] 모델 생성 완료")
         except Exception as e:

@@ -61,7 +61,8 @@ class OtherModelHandler:
                 eos_token_id=terminators,
                 do_sample=True,
                 temperature=0.6,
-                top_p=0.9
+                top_p=0.9,
+                repetition_penalty=0.8
             )
             logger.info("[*] 모델 생성 완료")
         except Exception as e:

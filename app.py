@@ -38,7 +38,7 @@ from src.main.chatbot.chatbot import (
     create_delete_session_modal
 )
 
-from src.common.utils import get_all_loras
+from src.common.utils import get_all_loras, get_diffusion_loras
 
 from src.tabs.cache_tab import create_cache_tab
 from src.tabs.download_tab import create_download_tab
@@ -494,6 +494,19 @@ with gr.Blocks(css=css) as demo:
                             elem_classes="api-key-input"
                         )
                         
+                with gr.Row(elem_classes="model-container"):
+                    with gr.Accordion("LoRA Settings", open=False):
+                        diffusion_lora_multiselect=gr.Dropdown(
+                            label="Select LoRA Models",
+                            choices=get_diffusion_loras(),
+                            value=[],
+                            interactive=True,
+                            multiselect=True,
+                            info="Select LoRA models to apply to the diffusion model.",
+                            elem_classes="model-dropdown"
+                        )
+                        diffusion_lora_weights_container=gr.Column()
+                                
                 with gr.Row(elem_classes="chat-interface"):
                     with gr.Column(scale=7):
                         positive_prompt_input = gr.Textbox(
@@ -755,6 +768,29 @@ with gr.Blocks(css=css) as demo:
             # 지원하지 않는 언어일 경우 기본 언어로 설정
             speech_manager.current_language = characters[selected_character]["default_language"]
         return gr.update()
+    
+    def generate_diffusion_lora_weight_sliders(selected_loras: List[str]):
+        slider_rows=[]
+        if not selected_loras:
+            return []
+        for lora in selected_loras:
+            text_encoder_slider=gr.Slider(
+                label=f"{lora} - Text Encoder Weight",
+                minimum=-2.0,
+                maximum=2.0,
+                step=0.01,
+                value=1
+            )
+            unet_slider=gr.Slider(
+                label=f"{lora} - U-Net Weight",
+                minimum=-2.0,
+                maximum=2.0,
+                step=0.01,
+                value=1
+            )
+            slider_rows.append(gr.Row([text_encoder_slider, unet_slider]))
+            
+        return slider_rows
 
     def generate_images(prompt, negative_prompt, style, width, height):
         """이미지 생성 함수"""
@@ -774,6 +810,12 @@ with gr.Blocks(css=css) as demo:
             "A mystical forest with glowing mushrooms"
         ]
         return random.choice(prompts)
+    
+    diffusion_lora_multiselect.change(
+        fn=generate_diffusion_lora_weight_sliders,
+        inputs=[diffusion_lora_multiselect],
+        outputs=[diffusion_lora_weights_container]
+    )
 
     # 이벤트 핸들러 연결
     generate_btn.click(

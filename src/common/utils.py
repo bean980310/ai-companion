@@ -98,6 +98,23 @@ def get_all_loras(lora_root="./models/llm/loras"):
                 
     return lora_model_ids
 
+def get_diffusion_loras(lora_root="./models/diffusion/loras"):
+    if not os.path.isdir(lora_root):
+        os.makedirs(lora_root, exist_ok=True)
+        
+    lora_model_ids = ["None"]
+    for folder in lora_root:
+        lora_dir=os.path.join(lora_root, folder)
+        if not os.path.isdir(lora_dir):
+            continue
+        for file in os.listdir(lora_dir):
+            full_path=os.path.join(lora_dir, file)
+            if os.path.isdir(full_path) and file.endswith((".safetensors", ".bin", ".pt", ".pth")):
+                lora_model_id=convert_folder_to_modelid(lora_dir)
+                lora_model_ids.append(lora_model_id)
+                
+    return lora_model_ids
+
 def get_all_local_models():
     """모든 모델 유형별 로컬 모델 목록을 가져옴"""
     models = scan_local_models()  # 모든 유형 스캔
