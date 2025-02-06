@@ -493,6 +493,13 @@ with gr.Blocks(css=css) as demo:
                             visible=False,
                             elem_classes="api-key-input"
                         )
+                        clip_skip_slider = gr.Slider(
+                            label="Clip Skip",
+                            minimum=1,
+                            maximum=10,
+                            step=1,
+                            value=1
+                        )
                         
                 with gr.Row(elem_classes="model-container"):
                     with gr.Accordion('VAE Settings', open=False):
