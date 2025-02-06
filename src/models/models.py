@@ -245,7 +245,7 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
 
-def generate_answer(history, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, image_input=None, api_key=None, device="cpu", seed=42, temperature=0.6, top_k=50, top_p=0.9, repetition_penalty=0.8, character_language='ko'):
+def generate_answer(history, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, image_input=None, api_key=None, device="cpu", seed=42, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0, character_language='ko'):
     """
     사용자 히스토리를 기반으로 답변 생성.
     """

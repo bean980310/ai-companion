@@ -21,7 +21,7 @@ class MlxVisionHandler:
         self.model, self.processor = load(self.model_dir)
         self.config = load_config(self.model_dir)
         
-    def generate_answer(self, history, *image_inputs, temperature=0.6, top_k=50, top_p=0.9, repetition_penalty=0.8):
+    def generate_answer(self, history, *image_inputs, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
         # 1) prompt 문자열 생성 대신 history 그대로 사용
         # prompt = self.history_to_prompt(history)  # 주석 처리 혹은 삭제
         images = image_inputs if image_inputs else []

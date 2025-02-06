@@ -45,7 +45,7 @@ class VisionModelHandler:
             logger.error(f"Failed to load Vision Model: {str(e)}\n\n{traceback.format_exc()}")
             raise
 
-    def generate_answer(self, history, image_input=None, temperature=0.6, top_k=50, top_p=0.9, repetition_penalty=0.8):
+    def generate_answer(self, history, image_input=None, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
         try:
             prompt_messages = []
             for msg in history:

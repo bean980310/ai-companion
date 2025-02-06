@@ -18,7 +18,7 @@ class MlxModelHandler:
     def load_model(self):
         self.model, self.tokenizer = load(self.model_dir, tokenizer_config={"eos_token": "<|im_end|>"})
     
-    def generate_answer(self, history, temperature=0.6, top_k=50, top_p=0.9, repetition_penalty=0.8):
+    def generate_answer(self, history, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
         text = self.tokenizer.apply_chat_template(
             conversation=history,
             tokenize=False,
