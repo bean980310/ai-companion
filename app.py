@@ -601,7 +601,7 @@ with gr.Blocks(css=css) as demo:
                                 value=7.5
                             )
                             with gr.Row():
-                                seed_input = gr.Number(
+                                diffusion_seed_input = gr.Number(
                                     label="Seed",
                                     value=42,
                                     precision=0
