@@ -245,7 +245,7 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
 
-def generate_answer(history, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, image_input=None, api_key=None, device="cpu", seed=42, character_language='ko'):
+def generate_answer(history, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, image_input=None, api_key=None, device="cpu", seed=42, temperature=0.6, top_k=50, top_p=0.9, repetition_penalty=0.8, character_language='ko'):
     """
     사용자 히스토리를 기반으로 답변 생성.
     """
@@ -354,9 +354,9 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
         logger.info(f"[*] Generating answer using {handler.__class__.__name__}")
         try:
             if isinstance(handler, VisionModelHandler):
-                answer = handler.generate_answer(history, image_input)
+                answer = handler.generate_answer(history, image_input, temperature, top_k, top_p, repetition_penalty)
             else:
-                answer = handler.generate_answer(history)
+                answer = handler.generate_answer(history, temperature, top_k, top_p, repetition_penalty)
             return answer
         except Exception as e:
             logger.error(f"모델 추론 오류: {str(e)}\n\n{traceback.format_exc()}")

@@ -18,18 +18,18 @@ class MlxModelHandler:
     def load_model(self):
         self.model, self.tokenizer = load(self.model_dir, tokenizer_config={"eos_token": "<|im_end|>"})
     
-    def generate_answer(self, history):
+    def generate_answer(self, history, temperature=0.6, top_k=50, top_p=0.9, repetition_penalty=0.8):
         text = self.tokenizer.apply_chat_template(
             conversation=history,
             tokenize=False,
             add_generation_prompt=True
         )
         sampler = make_sampler(
-            temperature=0.7,
-            top_p=0.9,
-            top_k=40
+            temp=temperature,
+            top_p=top_p,
+            top_k=top_k
         )
-        response = generate(self.model, self.tokenizer, prompt=text, verbose=True, sampler=sampler, logits_processors=make_logits_processors(repetition_penalty=0.8), max_tokens=2048)
+        response = generate(self.model, self.tokenizer, prompt=text, verbose=True, sampler=sampler, logits_processors=make_logits_processors(repetition_penalty=repetition_penalty), max_tokens=2048)
         
         return response
     

@@ -166,7 +166,7 @@ class MainTab:
         
         return "", history, self.filter_messages_for_chatbot(history)
     
-    def process_message_bot(self, session_id, history, selected_model, selected_lora, custom_path, image, api_key, device, seed, language):
+    def process_message_bot(self, session_id, history, selected_model, selected_lora, custom_path, image, api_key, device, seed, temperature, top_k, top_p, repetition_penalty, language):
         chat_title=self.chat_titles.get(session_id)
         try:
             if chat_title is None and len(history)==2:
@@ -192,6 +192,10 @@ class MainTab:
                 api_key=api_key,
                 device=device,
                 seed=seed,
+                temperature=temperature,
+                top_k=top_k,
+                top_p=top_p,
+                repetition_penalty=repetition_penalty,
                 character_language=language
             )
             
@@ -468,7 +472,7 @@ class MainTab:
         return gr.update(choices=presets, value=presets[0] if presets else None)
 
 
-    def process_character_conversation(self, history, selected_characters, model_type, selected_model, custom_path, image, api_key, device, seed):
+    def process_character_conversation(self, history, selected_characters, model_type, selected_model, custom_path, image, api_key, device, seed, temperature, top_k, top_p, repetition_penalty):
         try:
             for i, character in enumerate(selected_characters):
                 # 각 캐릭터의 시스템 메시지 설정
@@ -487,7 +491,12 @@ class MainTab:
                     image_input=image,
                     api_key=api_key,
                     device=device,
-                    seed=seed
+                    seed=seed,
+                    temperature=temperature,
+                    top_k=top_k,
+                    top_p=top_p,
+                    repetition_penalty=repetition_penalty,
+                    character_language=translation_manager.current_language
                 )
                 
                 history.append({

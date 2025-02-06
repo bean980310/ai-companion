@@ -289,9 +289,13 @@ with gr.Blocks(css=css) as demo:
 
     # 단일 history_state와 selected_device_state 정의 (중복 제거)
     custom_model_path_state = gr.State("")
-    session_id_state = gr.State()
+    session_id_state = gr.State(session_id)
     selected_device_state = gr.State(default_device)
     seed_state = gr.State(args.seed)  # 시드 상태 전역 정의
+    temperature_state = gr.State(0.6)
+    top_k_state = gr.State(50)
+    top_p_state = gr.State(0.9)
+    repetition_penalty_state = gr.State(0.8)
     selected_language_state = gr.State(default_language)
     
     reset_confirmation = gr.State(False)
@@ -429,6 +433,38 @@ with gr.Blocks(css=css) as demo:
                                 interactive=True,
                                 info=_("seed_info"),
                                 elem_classes="seed-input"
+                            )
+                            temperature_slider=gr.Slider(
+                                label=_("temperature_label"),
+                                minimum=0.0,
+                                maximum=1.0,
+                                value=0.6,
+                                step=0.1,
+                                interactive=True
+                            )
+                            top_k_slider=gr.Slider(
+                                label=_("top_k_label"),
+                                minimum=0,
+                                maximum=100,
+                                value=50,
+                                step=1,
+                                interactive=True
+                            )
+                            top_p_slider=gr.Slider(
+                                label=_("top_p_label"),
+                                minimum=0.0,
+                                maximum=1.0,
+                                value=0.9,
+                                step=0.1,
+                                interactive=True
+                            )
+                            repetition_penalty_slider=gr.Slider(
+                                label=_("repetition_penalty_label"),
+                                minimum=0.0,
+                                maximum=2.0,
+                                value=0.8,
+                                step=0.1,
+                                interactive=True
                             )
                             reset_modal, single_reset_content, all_reset_content, cancel_btn, confirm_btn = create_reset_confirm_modal()
                             preset_dropdown = gr.Dropdown(
@@ -730,6 +766,26 @@ with gr.Blocks(css=css) as demo:
         inputs=[seed_input],
         outputs=[seed_state]
     )
+    temperature_slider.change(
+        fn=lambda temp: temp if temp is not None else 0.6,
+        inputs=[temperature_slider],
+        outputs=[temperature_state]
+    )
+    top_k_slider.change(
+        fn=lambda top_k: top_k if top_k is not None else 50,
+        inputs=[top_k_slider],
+        outputs=[top_k_state]
+    )
+    top_p_slider.change(
+        fn=lambda top_p: top_p if top_p is not None else 0.9,
+        inputs=[top_p_slider],
+        outputs=[top_p_state]
+    )
+    repetition_penalty_slider.change(
+        fn=lambda repetition_penalty: repetition_penalty if repetition_penalty is not None else 0.8,
+        inputs=[repetition_penalty_slider],
+        outputs=[repetition_penalty_state]
+    )
             
     # 프리셋 변경 버튼 클릭 시 호출될 함수 연결
     change_preset_button.click(
@@ -949,6 +1005,10 @@ with gr.Blocks(css=css) as demo:
             api_key_text,
             selected_device_state,
             seed_state,
+            temperature_state,
+            top_k_state,
+            top_p_state,
+            repetition_penalty_state,
             selected_language_state
         ],
         outputs=[
@@ -988,6 +1048,10 @@ with gr.Blocks(css=css) as demo:
             api_key_text,
             selected_device_state,
             seed_state,
+            temperature_state,
+            top_k_state,
+            top_p_state,
+            repetition_penalty_state,
             selected_language_state
         ],
         outputs=[
@@ -1010,7 +1074,11 @@ with gr.Blocks(css=css) as demo:
             image_input,
             api_key_text,
             selected_device_state,
-            seed_state
+            seed_state,
+            temperature_state,
+            top_k_state,
+            top_p_state,
+            repetition_penalty_state,
         ],
         outputs=[history_state, profile_image]
     ).then(

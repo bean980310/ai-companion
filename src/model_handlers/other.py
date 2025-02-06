@@ -38,7 +38,7 @@ class OtherModelHandler:
         except Exception as e:
             logger.error(f"Failed to load Model: {str(e)}\n\n{traceback.format_exc()}")
             raise
-    def generate_answer(self, history):
+    def generate_answer(self, history, temperature=0.6, top_k=50, top_p=0.9, repetition_penalty=0.8):
         prompt_messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
         logger.info(f"[*] Prompt messages for other models: {prompt_messages}")
         
@@ -60,9 +60,10 @@ class OtherModelHandler:
                 max_new_tokens=1024,
                 eos_token_id=terminators,
                 do_sample=True,
-                temperature=0.6,
-                top_p=0.9,
-                repetition_penalty=0.8
+                temperature=temperature,
+                top_k=top_k,
+                top_p=top_p,
+                repetition_penalty=repetition_penalty,
             )
             logger.info("[*] 모델 생성 완료")
         except Exception as e:
