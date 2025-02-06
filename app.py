@@ -493,24 +493,6 @@ with gr.Blocks(css=css) as demo:
                             visible=False,
                             elem_classes="api-key-input"
                         )
-                        clip_skip_slider = gr.Slider(
-                            label="Clip Skip",
-                            minimum=1,
-                            maximum=10,
-                            step=1,
-                            value=1
-                        )
-                        
-                with gr.Row(elem_classes="model-container"):
-                    with gr.Accordion('VAE Settings', open=False):
-                        vae_dropdown=gr.Dropdown(
-                            label="Select VAE Model",
-                            choices=get_diffusion_vae(),
-                            value="None",
-                            interactive=True,
-                            info="Select VAE model to apply to the diffusion model.",
-                            elem_classes="model-dropdown"
-                        )
                         
                 with gr.Row(elem_classes="model-container"):
                     with gr.Accordion("LoRA Settings", open=False):
@@ -616,6 +598,23 @@ with gr.Blocks(css=css) as demo:
                                 random_seed_checkbox = gr.Checkbox(
                                     label="Random Seed",
                                     value=True
+                                )
+                            with gr.Row():
+                                vae_dropdown=gr.Dropdown(
+                                    label="Select VAE Model",
+                                    choices=get_diffusion_vae(),
+                                    value="None",
+                                    interactive=True,
+                                    info="Select VAE model to apply to the diffusion model.",
+                                    elem_classes="model-dropdown"
+                                )
+                            with gr.Row():
+                                clip_skip_slider = gr.Slider(
+                                    label="Clip Skip",
+                                    minimum=1,
+                                    maximum=10,
+                                    step=1,
+                                    value=1
                                 )
                             with gr.Row():
                                 batch_size_input = gr.Number(
