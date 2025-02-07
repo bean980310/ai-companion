@@ -37,6 +37,7 @@ from src.main.chatbot.chatbot import (
     create_reset_confirm_modal,
     create_delete_session_modal
 )
+from src.main.image_generation.diffusion_models import generate_images
 
 from src.common.utils import get_all_loras, get_diffusion_loras, get_diffusion_vae
 
@@ -865,16 +866,6 @@ with gr.Blocks(css=css) as demo:
             
         return slider_rows
 
-    def generate_images(prompt, negative_prompt, style, width, height):
-        """이미지 생성 함수"""
-        try:
-            # 여기에 실제 이미지 생성 로직 구현
-            generated_images = []  # 생성된 이미지 경로 리스트
-            history_entry = {"Prompt": prompt, "Negative Prompt": negative_prompt, "Style": style, "Width": width, "Height": height}
-            return generated_images, pd.DataFrame([history_entry])
-        except Exception as e:
-            return [], None
-
     def get_random_prompt():
         """랜덤 프롬프트 생성 함수"""
         prompts = [
@@ -893,7 +884,17 @@ with gr.Blocks(css=css) as demo:
     # 이벤트 핸들러 연결
     generate_btn.click(
         fn=generate_images,
-        inputs=[positive_prompt_input, negative_prompt_input, style_dropdown, width_slider, height_slider],
+        inputs=[
+            positive_prompt_input,       # Positive Prompt
+            negative_prompt_input,       # Negative Prompt
+            style_dropdown,              # Style
+            width_slider,                # Width
+            height_slider,               # Height
+            diffusion_model_dropdown,    # 선택한 이미지 생성 모델 (체크포인트 파일명 또는 diffusers model id)
+            diffusion_model_type_dropdown,  # "checkpoint" 또는 "diffusers" 선택 (라디오 버튼 등)
+            diffusion_lora_multiselect,  # 선택한 LoRA 모델 리스트
+            vae_dropdown                 # 선택한 VAE 모델
+        ],
         outputs=[gallery, image_history]
     )
 
