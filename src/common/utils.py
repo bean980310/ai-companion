@@ -44,93 +44,160 @@ def convert_folder_to_modelid(folder_name: str) -> str:
     """로컬 디렉토리 이름을 HuggingFace 모델 ID로 변환"""
     return folder_name.replace("__", "/")
 
-def scan_diffusion_models(root="./models/diffusion", model_type=None):
+def has_required_files(filenames, required_names=None, required_extensions=None):
+    """
+    파일 목록(filenames) 중에 필수 파일명이 존재하거나,
+    필수 확장자(extension)를 가진 파일이 존재하는지 확인.
+    기본적으로 config.json이나 (.safetensors, .ckpt, .pt, .pth) 파일을 체크.
+    """
+    if required_names is None:
+        required_names = {"config.json"}
+    if required_extensions is None:
+        required_extensions = {".safetensors", ".ckpt", ".pt", ".pth"}
+    for fname in filenames:
+        lower_fname = fname.lower()
+        if lower_fname in required_names:
+            return True
+        for ext in required_extensions:
+            if lower_fname.endswith(ext):
+                return True
+    return False
+
+def scan_files_with_extension(root: str, allowed_extensions: set) -> list:
+    """
+    지정된 root 디렉토리부터 재귀적으로 파일을 탐색하여,
+    allowed_extensions에 해당하는 파일들의 상대경로 목록을 반환.
+    """
+    results = []
+    for dirpath, _, filenames in os.walk(root):
+        for fname in filenames:
+            if any(fname.lower().endswith(ext) for ext in allowed_extensions):
+                # root로부터의 상대경로 (하위 디렉토리 포함)
+                rel_path = os.path.relpath(os.path.join(dirpath, fname), root)
+                results.append(rel_path)
+    return results
+
+def scan_diffusion_models(root="./models/diffusion"):
+    """
+    diffusion 폴더 내의 모델들을 재귀적으로 스캔.
+    - diffusers 모델은 기존처럼 폴더(디렉토리) 단위로 모델을 표시
+    - 그 외(예: checkpoints, clip, controlnet, vae 등)는 폴더 내의 모델 파일(확장자를 가진 파일)을
+      하위 디렉토리 구조와 함께 표시
+    """
     if not os.path.isdir(root):
         os.makedirs(root, exist_ok=True)
-        
-    local_model_ids=[]
-    subdirs=['checkpoints', 'clip', 'configs', 'controlnet', 'diffusers', 'embeddings', 'loras', 'unet', 'vae', 'vae_approx']
-    for subdir in subdirs:
-        subdir_path=os.path.join(root, subdir)
-        if not os.path.isdir(subdir_path):
+    
+    local_models = []
+    # 모델 타입 디렉토리 목록
+    model_types = ['checkpoints', 'clip', 'configs', 'controlnet', 'diffusers', 'embeddings', 'loras', 'unet', 'vae', 'vae_approx']
+    allowed_exts = {".safetensors", ".ckpt", ".pt", ".pth"}
+    
+    for mtype in model_types:
+        mtype_path = os.path.join(root, mtype)
+        if not os.path.isdir(mtype_path):
             continue
-        for folder in os.listdir(subdir_path):
-            full_path=os.path.join(subdir_path, folder)
-            if os.path.isdir(full_path) and 'config.json' in os.listdir(full_path):
-                model_id=convert_folder_to_modelid(folder)
-                local_model_ids.append({"model_id": model_id, "model_type": subdir})
-                
-    return local_model_ids
+
+        if mtype == "diffusers":
+            # diffusers는 기존대로 디렉토리 단위로 스캔
+            for dirpath, _, filenames in os.walk(mtype_path):
+                if has_required_files(filenames):
+                    rel_path = os.path.relpath(dirpath, mtype_path)
+                    model_id = mtype if rel_path == "." else os.path.join(mtype, rel_path)
+                    local_models.append({"model_id": model_id, "model_type": mtype})
+        else:
+            # diffusers를 제외한 나머지는 파일 단위로 스캔하여 모델 파일 자체를 목록에 표시
+            files = scan_files_with_extension(mtype_path, allowed_exts)
+            for f in files:
+                # 모델 아이디에 mtype 디렉토리 이름을 접두어로 붙임
+                model_id = os.path.join(mtype, f)
+                local_models.append({"model_id": model_id, "model_type": mtype})
+    
+    return local_models
     
 def scan_local_models(root="./models/llm", model_type=None):
-    """로컬에 저장된 모델 목록을 유형별로 스캔"""
+    """
+    로컬 llm 모델들을 스캔.
+    - model_type이 지정되지 않으면, 'transformers', 'gguf', 'mlx' 폴더를 각각 스캔.
+    - gguf의 경우 gguf 파일 자체를, 그 외에는 디렉토리 단위(필요한 파일이 있는 경우)로 등록.
+    """
     if not os.path.isdir(root):
         os.makedirs(root, exist_ok=True)
-
-    local_model_ids = []
-    subdirs = ['transformers', 'gguf', 'mlx'] if not model_type else [model_type]
+    
+    local_models = []
+    # model_type이 지정되지 않았다면, 세부 폴더 목록: transformers, gguf, mlx
+    subdirs = ['transformers', 'gguf', 'mlx'] if model_type is None else [model_type]
+    
     for subdir in subdirs:
         subdir_path = os.path.join(root, subdir)
         if not os.path.isdir(subdir_path):
             continue
-        for folder in os.listdir(subdir_path):
-            full_path = os.path.join(subdir_path, folder)
-            if os.path.isdir(full_path) and 'config.json' in os.listdir(full_path):
-                model_id = convert_folder_to_modelid(folder)
-                local_model_ids.append({"model_id": model_id, "model_type": subdir})
-    logger.info(f"Scanned local models: {local_model_ids}")
-    return local_model_ids
+        
+        if subdir == "gguf":
+            # gguf는 파일 단위로 스캔 (확장자가 .gguf 인 파일)
+            files = scan_files_with_extension(subdir_path, {".gguf"})
+            for f in files:
+                model_id = os.path.join(subdir, f)
+                local_models.append({"model_id": model_id, "model_type": subdir})
+        else:
+            # transformers와 mlx는 기존대로, 해당 폴더 내에 필요한 파일이 있으면 디렉토리 단위로 등록
+            for dirpath, _, filenames in os.walk(subdir_path):
+                if has_required_files(filenames, required_extensions={".safetensors", ".ckpt", ".pt", ".pth"}):
+                    rel_path = os.path.relpath(dirpath, subdir_path)
+                    model_id = subdir if rel_path == "." else os.path.join(subdir, rel_path)
+                    local_models.append({"model_id": model_id, "model_type": subdir})
+    
+    logger.info(f"Scanned local models: {local_models}")
+    return local_models
 
 def get_all_loras(lora_root="./models/llm/loras"):
+    """
+    lora 폴더 내에서, 확장자가 .safetensors, .bin, .pt, .pth 인 파일이 존재하는 폴더를
+    재귀적으로 스캔해서 목록에 추가.
+    """
     if not os.path.isdir(lora_root):
         os.makedirs(lora_root, exist_ok=True)
-        
-    lora_model_ids = ["None"]
-    for folder in lora_root:
-        lora_dir=os.path.join(lora_root, folder)
-        if not os.path.isdir(lora_dir):
-            continue
-        for file in os.listdir(lora_dir):
-            full_path=os.path.join(lora_dir, file)
-            if os.path.isdir(full_path) and file.endswith((".safetensors", ".bin", ".pt", ".pth")):
-                lora_model_id=convert_folder_to_modelid(lora_dir)
-                lora_model_ids.append(lora_model_id)
-                
-    return lora_model_ids
+    lora_models = ["None"]
+    allowed_extensions = {".safetensors", ".bin", ".pt", ".pth"}
+    for dirpath, _, filenames in os.walk(lora_root):
+        if any(fname.lower().endswith(ext) for fname in filenames for ext in allowed_extensions):
+            rel_path = os.path.relpath(dirpath, lora_root)
+            # 상대경로가 '.'이면 현재 폴더의 이름를 사용
+            model_id = os.path.basename(dirpath) if rel_path == "." else rel_path
+            lora_models.append(model_id)
+    return lora_models
 
 def get_diffusion_vae(vae_root="./models/diffusion/vae"):
+    """
+    diffusion/vae 폴더 내에서 필요한 파일들이 있는 폴더를 재귀적으로 스캔하여 VAE 모델 목록 반환.
+    """
     if not os.path.isdir(vae_root):
         os.makedirs(vae_root, exist_ok=True)
     
-    vae_model_ids = ["None"]
-    for folder in vae_root:
-        vae_dir=os.path.join(vae_root, folder)
-        if not os.path.isdir(vae_dir):
-            continue
-        for file in os.listdir(vae_dir):
-            full_path=os.path.join(vae_dir, file)
-            if os.path.isdir(full_path) and file.endswith((".safetensors", ".bin", ".pt", ".pth")):
-                vae_model_id=convert_folder_to_modelid(vae_dir)
-                vae_model_ids.append(vae_model_id)
-                
-    return vae_model_ids
+    vae_models = ["None"]
+    allowed_extensions = {".safetensors", ".ckpt", ".pt", ".pth"}
+    for dirpath, _, filenames in os.walk(vae_root):
+        if any(fname.lower().endswith(ext) for fname in filenames for ext in allowed_extensions):
+            rel_path = os.path.relpath(dirpath, vae_root)
+            model_id = os.path.basename(dirpath) if rel_path == "." else rel_path
+            vae_models.append(model_id)
+    return vae_models
+
 
 def get_diffusion_loras(lora_root="./models/diffusion/loras"):
+    """
+    diffusion/loras 폴더 내에서 필요한 파일들이 있는 폴더를 재귀적으로 스캔하여 LoRA 모델 목록 반환.
+    """
     if not os.path.isdir(lora_root):
         os.makedirs(lora_root, exist_ok=True)
         
-    lora_model_ids = ["None"]
-    for folder in lora_root:
-        lora_dir=os.path.join(lora_root, folder)
-        if not os.path.isdir(lora_dir):
-            continue
-        for file in os.listdir(lora_dir):
-            full_path=os.path.join(lora_dir, file)
-            if os.path.isdir(full_path) and file.endswith((".safetensors", ".bin", ".pt", ".pth")):
-                lora_model_id=convert_folder_to_modelid(lora_dir)
-                lora_model_ids.append(lora_model_id)
-                
-    return lora_model_ids
+    lora_models = ["None"]
+    allowed_extensions = {".safetensors", ".bin", ".pt", ".pth"}
+    for dirpath, _, filenames in os.walk(lora_root):
+        if any(fname.lower().endswith(ext) for fname in filenames for ext in allowed_extensions):
+            rel_path = os.path.relpath(dirpath, lora_root)
+            model_id = os.path.basename(dirpath) if rel_path == "." else rel_path
+            lora_models.append(model_id)
+    return lora_models
 
 def get_all_local_models():
     """모든 모델 유형별 로컬 모델 목록을 가져옴"""
@@ -146,9 +213,11 @@ def get_all_local_models():
 
 def get_all_diffusion_models():
     models=scan_diffusion_models()
-    diffusers=[m['model_id'] for m in models if m['model_type']=="diffusers"]
+    diffusers=[m['model_id'] for m in models if m['model_type'] == "diffusers"]
+    checkpoints=[m['model_id'] for m in models if m['model_type'] == 'checkpoints']
     return {
-        "diffusers": diffusers
+        "diffusers": diffusers,
+        "checkpoints": checkpoints
     }
     
 def remove_hf_cache(model_id):

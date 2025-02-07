@@ -28,7 +28,7 @@ from src.characters.persona_speech_manager import PersonaSpeechManager
 from src.common.args import parse_args
 from src.common.default_language import default_language
 
-from src.models import api_models, transformers_local, gguf_local, mlx_local, diffusion_api_models
+from src.models import api_models, transformers_local, gguf_local, mlx_local, diffusion_api_models, diffusers_local, checkpoints_local
 from src.main.chatbot.chatbot import (
     MainTab,
     characters,
@@ -306,7 +306,9 @@ with gr.Blocks(css=css) as demo:
     initial_choices = list(dict.fromkeys(initial_choices))
     initial_choices = sorted(initial_choices)  # 정렬 추가
     
-    diffusion_choices = diffusion_api_models
+    diffusion_choices = diffusion_api_models + checkpoints_local + diffusers_local
+    diffusion_choices = list(dict.fromkeys(diffusion_choices))
+    diffusion_choices = sorted(diffusion_choices)  # 정렬 추가
     
     with gr.Column(elem_classes="main-container"):
         with gr.Row(elem_classes="header-container"):
