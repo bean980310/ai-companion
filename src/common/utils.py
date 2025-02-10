@@ -170,16 +170,8 @@ def get_diffusion_vae(vae_root="./models/diffusion/vae"):
     """
     diffusion/vae 폴더 내에서 필요한 파일들이 있는 폴더를 재귀적으로 스캔하여 VAE 모델 목록 반환.
     """
-    if not os.path.isdir(vae_root):
-        os.makedirs(vae_root, exist_ok=True)
-    
-    vae_models = ["None"]
-    allowed_extensions = {".safetensors", ".ckpt", ".pt", ".pth"}
-    for dirpath, _, filenames in os.walk(vae_root):
-        if any(fname.lower().endswith(ext) for fname in filenames for ext in allowed_extensions):
-            rel_path = os.path.relpath(dirpath, vae_root)
-            model_id = os.path.basename(dirpath) if rel_path == "." else rel_path
-            vae_models.append(model_id)
+    models = scan_diffusion_models()
+    vae_models = [m['model_id'] for m in models if m['model_type'] == "vae"]
     return vae_models
 
 
@@ -187,16 +179,8 @@ def get_diffusion_loras(lora_root="./models/diffusion/loras"):
     """
     diffusion/loras 폴더 내에서 필요한 파일들이 있는 폴더를 재귀적으로 스캔하여 LoRA 모델 목록 반환.
     """
-    if not os.path.isdir(lora_root):
-        os.makedirs(lora_root, exist_ok=True)
-        
-    lora_models = ["None"]
-    allowed_extensions = {".safetensors", ".bin", ".pt", ".pth"}
-    for dirpath, _, filenames in os.walk(lora_root):
-        if any(fname.lower().endswith(ext) for fname in filenames for ext in allowed_extensions):
-            rel_path = os.path.relpath(dirpath, lora_root)
-            model_id = os.path.basename(dirpath) if rel_path == "." else rel_path
-            lora_models.append(model_id)
+    models = scan_diffusion_models()
+    lora_models = [m['model_id'] for m in models if m['model_type'] == "loras"]
     return lora_models
 
 def get_all_local_models():

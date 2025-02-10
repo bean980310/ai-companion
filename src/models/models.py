@@ -93,9 +93,6 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
         return None
     if model_type == "gguf":
         # GGUF 모델 로딩 로직
-        if not ensure_model_available(model_id, local_model_path, model_type):
-            logger.error(f"모델 '{model_id}'을(를) 다운로드할 수 없습니다.")
-            return None
         handler = GGUFModelHandler(
             model_id=model_id,
             quantization_bit=quantization_bit,
@@ -107,9 +104,6 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
         return handler
     elif model_type == "mlx":
         if "vision" in model_id.lower() or "qwen2-vl" in model_id.lower():
-            if not ensure_model_available(model_id, local_model_path, model_type):
-                logger.error(f"모델 '{model_id}'을(를) 다운로드할 수 없습니다.")
-                return None
             handler = MlxVisionHandler(
                 model_id=model_id,
                 local_model_path=local_model_path,
@@ -118,9 +112,6 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             models_cache[build_model_cache_key(model_id, model_type)] = handler
             return handler
         else:
-            if not ensure_model_available(model_id, local_model_path, model_type):
-                logger.error(f"모델 '{model_id}'을(를) 다운로드할 수 없습니다.")
-                return None
             handler = MlxModelHandler(
                 model_id=model_id,
                 local_model_path=local_model_path,
@@ -130,10 +121,6 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             return handler
     else:
         if model_id == "openbmb/MiniCPM-Llama3-V-2_5":
-            # 모델 존재 확인 및 다운로드
-            if not ensure_model_available(model_id, local_model_path, model_type):
-                logger.error(f"모델 '{model_id}'을(를) 다운로드할 수 없습니다.")
-                return None
             handler = MiniCPMLlama3V25Handler(
                 model_id=model_id,
                 local_model_path=local_model_path,
@@ -146,9 +133,6 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             "Bllossom/llama-3.2-Korean-Bllossom-AICA-5B",
         ] or ("vision" in model_id.lower() and model_id != "Bllossom/llama-3.1-Korean-Bllossom-Vision-8B"):
             # 모델 존재 확인 및 다운로드
-            if not ensure_model_available(model_id, local_model_path, model_type):
-                logger.error(f"모델 '{model_id}'을(를) 다운로드할 수 없습니다.")
-                return None
             handler = VisionModelHandler(
                 model_id=model_id,
                 lora_model_id=lora_model_id,
@@ -161,9 +145,6 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             return handler
         elif model_id == "THUDM/glm-4v-9b":
             # 모델 존재 확인 및 다운로드
-            if not ensure_model_available(model_id, local_model_path, model_type):
-                logger.error(f"모델 '{model_id}'을(를) 다운로드할 수 없습니다.")
-                return None
             handler = GLM4VHandler(
                 model_id=model_id,
                 local_model_path=local_model_path,
@@ -173,9 +154,6 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             models_cache[build_model_cache_key(model_id, model_type)] = handler
             return handler
         elif model_id == "THUDM/glm-4-9b-chat":
-            if not ensure_model_available(model_id, local_model_path, model_type):
-                logger.error(f"모델 '{model_id}'을(를) 다운로드할 수 없습니다.")
-                return None
             handler = GLM4Handler(
                 model_id=model_id,
                 local_model_path=local_model_path,
@@ -185,9 +163,6 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             models_cache[build_model_cache_key(model_id, model_type)] = handler
             return handler
         elif model_id in ["THUDM/glm-4-9b-chat-hf", "THUDM/glm-4-9b-chat-1m-hf"]:
-            if not ensure_model_available(model_id, local_model_path, model_type):
-                logger.error(f"모델 '{model_id}'을(를) 다운로드할 수 없습니다.")
-                return None
             handler = GLM4HfHandler(
                 model_id=model_id,  # model_id가 정의되어 있어야 합니다.
                 local_model_path=local_model_path,
@@ -198,9 +173,6 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             return handler
         elif model_id in ["bean980310/glm-4-9b-chat-hf_float8", "genai-archive/glm-4-9b-chat-hf_int8"]:
             # 'fp8' 특화 핸들러 로직 추가
-            if not ensure_model_available(model_id, local_model_path, model_type):
-                logger.error(f"모델 '{model_id}'을(를) 다운로드할 수 없습니다.")
-                return None
             handler = GLM4HfHandler(
                 model_id=model_id,  # model_id가 정의되어 있어야 합니다.
                 local_model_path=local_model_path,
@@ -210,9 +182,6 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             models_cache[build_model_cache_key(model_id, model_type)] = handler
             return handler
         elif model_id in ["CohereForAI/aya-23-8B", "CohereForAI/aya-23-35B"]:
-            if not ensure_model_available(model_id, local_model_path, model_type):
-                logger.error(f"모델 '{model_id}'을(를) 다운로드할 수 없습니다.")
-                return None
             handler = Aya23Handler(
                 model_id=model_id,  # model_id가 정의되어 있어야 합니다.
                 lora_model_id=lora_model_id,
@@ -224,9 +193,6 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
         elif "qwen" in model_id.lower():
-            if not ensure_model_available(model_id, local_model_path, model_type):
-                logger.error(f"모델 '{model_id}'을(를) 다운로드할 수 없습니다.")
-                return None
             handler = QwenHandler(
                 model_id=model_id,  # model_id가 정의되어 있어야 합니다.
                 lora_model_id=lora_model_id,
@@ -238,9 +204,6 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
         else:
-            if not ensure_model_available(model_id, local_model_path, model_type):
-                logger.error(f"모델 '{model_id}'을(를) 다운로드할 수 없습니다.")
-                return None
             handler = OtherModelHandler(model_id, lora_model_id=lora_model_id, local_model_path=local_model_path, lora_path=lora_path, model_type=model_type,device=device)
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler

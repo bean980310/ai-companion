@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 class Aya23Handler:
     def __init__(self, model_id, lora_model_id=None, local_model_path=None, lora_path=None, model_type="transformers", device='cpu'):
-        self.model_dir = local_model_path or os.path.join("./models/llm", model_type, make_local_dir_name(model_id))
-        self.lora_model_dir = lora_path or os.path.join("./model/llm/loras", make_local_dir_name(lora_model_id))
+        self.model_dir = local_model_path or os.path.join("./models/llm", model_id)
+        self.lora_model_dir = lora_path or (os.path.join("./models/llm/loras", lora_model_id) if lora_model_id else None)
         self.tokenizer = None
         self.model = None
         self.device = device

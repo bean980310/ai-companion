@@ -310,6 +310,14 @@ with gr.Blocks(css=css) as demo:
     diffusion_choices = list(dict.fromkeys(diffusion_choices))
     diffusion_choices = sorted(diffusion_choices)  # 정렬 추가
     
+    vae_choices = get_diffusion_vae()
+    
+    if "Default" not in vae_choices:
+        vae_choices.insert(0, "Default")
+        
+    if "None" not in vae_choices:
+        vae_choices.insert(1, "None")
+    
     with gr.Column(elem_classes="main-container"):
         with gr.Row(elem_classes="header-container"):
             with gr.Column(scale=3):
@@ -441,7 +449,7 @@ with gr.Blocks(css=css) as demo:
                                 label=_("temperature_label"),
                                 minimum=0.0,
                                 maximum=1.0,
-                                value=1.0,
+                                value=0.0,
                                 step=0.1,
                                 interactive=True
                             )
@@ -449,7 +457,7 @@ with gr.Blocks(css=css) as demo:
                                 label=_("top_k_label"),
                                 minimum=0,
                                 maximum=100,
-                                value=50,
+                                value=0,
                                 step=1,
                                 interactive=True
                             )
@@ -457,7 +465,7 @@ with gr.Blocks(css=css) as demo:
                                 label=_("top_p_label"),
                                 minimum=0.0,
                                 maximum=1.0,
-                                value=1.0,
+                                value=0.0,
                                 step=0.1,
                                 interactive=True
                             )
@@ -465,7 +473,7 @@ with gr.Blocks(css=css) as demo:
                                 label=_("repetition_penalty_label"),
                                 minimum=0.0,
                                 maximum=2.0,
-                                value=1.0,
+                                value=0.0,
                                 step=0.1,
                                 interactive=True
                             )
@@ -641,8 +649,8 @@ with gr.Blocks(css=css) as demo:
                             with gr.Row():
                                 vae_dropdown=gr.Dropdown(
                                     label="Select VAE Model",
-                                    choices=get_diffusion_vae(),
-                                    value="None",
+                                    choices=vae_choices,
+                                    value="Default",
                                     interactive=True,
                                     info="Select VAE model to apply to the diffusion model.",
                                     elem_classes="model-dropdown"
