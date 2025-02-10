@@ -15,6 +15,7 @@ tiktoken
 anthropic
 gguf
 llama-cpp-python
+stable-diffusion-cpp-python
 ollama
 langchain
 langchain-core
