@@ -293,10 +293,10 @@ with gr.Blocks(css=css) as demo:
     session_id_state = gr.State(session_id)
     selected_device_state = gr.State(default_device)
     seed_state = gr.State(args.seed)  # 시드 상태 전역 정의
-    temperature_state = gr.State(1.0)
-    top_k_state = gr.State(50)
-    top_p_state = gr.State(1.0)
-    repetition_penalty_state = gr.State(1.0)
+    temperature_state = gr.State(0.0)
+    top_k_state = gr.State(0)
+    top_p_state = gr.State(0.0)
+    repetition_penalty_state = gr.State(0.0)
     selected_language_state = gr.State(default_language)
     
     reset_confirmation = gr.State(False)
