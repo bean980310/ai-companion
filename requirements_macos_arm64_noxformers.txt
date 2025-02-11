@@ -27,7 +27,6 @@ onnx
 onnxruntime
 Pillow
 numpy
-websocket
 websocket-client
 mlx
 mlx_lm

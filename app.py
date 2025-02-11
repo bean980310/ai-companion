@@ -37,7 +37,7 @@ from src.main.chatbot.chatbot import (
     create_reset_confirm_modal,
     create_delete_session_modal
 )
-from src.main.image_generation.diffusion_models import generate_images
+from src.main.image_generation.image_generation import generate_images_wrapper
 
 from src.common.utils import get_all_loras, get_diffusion_loras, get_diffusion_vae
 
@@ -310,6 +310,10 @@ with gr.Blocks(css=css) as demo:
     diffusion_choices = list(dict.fromkeys(diffusion_choices))
     diffusion_choices = sorted(diffusion_choices)  # 정렬 추가
     
+    diffusion_lora_choices = get_diffusion_loras()
+    diffusion_lora_choices = list(dict.fromkeys(diffusion_lora_choices))
+    diffusion_lora_choices = sorted(diffusion_lora_choices)
+    
     vae_choices = get_diffusion_vae()
     
     if "Default" not in vae_choices:
@@ -519,6 +523,30 @@ with gr.Blocks(css=css) as demo:
                         reset_all_yes_btn = gr.Button("✅ 예", variant="danger")
                         reset_all_no_btn = gr.Button("❌ 아니요", variant="secondary")
             with gr.Tab('Image Generation'):
+                max_diffusion_lora_rows=10
+                diffusion_lora_text_encoder_sliders=[]
+                diffusion_lora_unet_sliders=[]
+                for i in range(max_diffusion_lora_rows):
+                    text_encoder_slider=gr.Slider(
+                        label=f"LoRA {i+1} - Text Encoder Weight",
+                        minimum=-2.0,
+                        maximum=2.0,
+                        step=0.01,
+                        value=1.0,
+                        visible=False,
+                        interactive=True
+                    )
+                    unet_slider = gr.Slider(
+                        label=f"LoRA {i+1} - U-Net Weight",
+                        minimum=-2.0,
+                        maximum=2.0,
+                        step=0.01,
+                        value=1.0,
+                        visible=False,
+                        interactive=True
+                    )
+                    diffusion_lora_text_encoder_sliders.append(text_encoder_slider)
+                    diffusion_lora_unet_sliders.append(unet_slider)
                 with gr.Row(elem_classes="model-container"):
                     with gr.Column(scale=8):
                         diffusion_model_type_dropdown = gr.Radio(
@@ -545,14 +573,18 @@ with gr.Blocks(css=css) as demo:
                     with gr.Accordion("LoRA Settings", open=False):
                         diffusion_lora_multiselect=gr.Dropdown(
                             label="Select LoRA Models",
-                            choices=get_diffusion_loras(),
+                            choices=diffusion_lora_choices,
                             value=[],
                             interactive=True,
                             multiselect=True,
                             info="Select LoRA models to apply to the diffusion model.",
                             elem_classes="model-dropdown"
                         )
-                        diffusion_lora_weights_container=gr.Column()
+                        diffusion_lora_slider_rows=[]
+                        for te, unet in zip(diffusion_lora_text_encoder_sliders, diffusion_lora_unet_sliders):
+                            diffusion_lora_slider_rows.append(gr.Row([te, unet]))
+                        for row in diffusion_lora_slider_rows:
+                            row
                                 
                 with gr.Row(elem_classes="chat-interface"):
                     with gr.Column(scale=7):
@@ -621,13 +653,13 @@ with gr.Blocks(css=css) as demo:
                         with gr.Accordion("Advanced Settings", open=False):
                             sampler_dropdown = gr.Dropdown(
                                 label="Sampler",
-                                choices=["Euler", "Euler Ancestral", "Heun", "DPM 2", "DPM 2 Ancestral", "DPM Fast", "DPM Adaptive", "DPM++ 2S Ancestral", "DPM++ SDE", "DPM++ SDE GPU", "DPM++ 2M", "DPM++ 2M SDE", "DPM++ 2M SDE GPU", "DPM++ 3M SDE", "DPM++ 3M SDE GPU", "LCM", "DDIM"],
-                                value="Euler"
+                                choices=["euler", "euler_cfg_pp", "euler_ancestral", "euler_ancestral_cfg_pp", "heun", "heunpp2", "dpm_2", "dpm_2_ancestral", "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_2s_ancestral_cfg_pp", "dpmpp_sde", "dpmpp_sde_gpu", "dpmpp_2m", "dpmpp_2m_cfg_pp", "dpmpp_2m_sde", "dpmpp_2m_sde_gpu", "dpmpp_3m_sde", "dpmpp_3m_sde_gpu", "ddpm", "lcm", "ddim"],
+                                value="euler"
                             )
                             scheduler_dropdown = gr.Dropdown(
                                 label="Scheduler",
-                                choices=["Normal", "Karras", "Exponential", "SGM Uniform", "Simple", "DDIM Uniform", "Beta", "Linear Quadratic", "KL Optimal"],  # 실제 옵션에 맞게 변경
-                                value="Normal"
+                                choices=["normal", "karras", "exponential", "sgm_uniform", "simple", "ddim_uniform", "beta", "linear_quadratic", "lm_optimal"],  # 실제 옵션에 맞게 변경
+                                value="normal"
                             )
                             cfg_scale_slider = gr.Slider(
                                 label="CFG Scale",
@@ -854,27 +886,20 @@ with gr.Blocks(css=css) as demo:
         return gr.update()
     
     def generate_diffusion_lora_weight_sliders(selected_loras: List[str]):
-        slider_rows=[]
-        if not selected_loras:
-            return []
-        for lora in selected_loras:
-            text_encoder_slider=gr.Slider(
-                label=f"{lora} - Text Encoder Weight",
-                minimum=-2.0,
-                maximum=2.0,
-                step=0.01,
-                value=1
-            )
-            unet_slider=gr.Slider(
-                label=f"{lora} - U-Net Weight",
-                minimum=-2.0,
-                maximum=2.0,
-                step=0.01,
-                value=1
-            )
-            slider_rows.append(gr.Row([text_encoder_slider, unet_slider]))
-            
-        return slider_rows
+        updates=[]
+        for i in range(max_diffusion_lora_rows):
+            if i < len(selected_loras):
+                # 선택된 LoRA가 있으면 해당 행을 보이게 하고 label 업데이트
+                lora_name = selected_loras[i]
+                text_update = gr.update(visible=True, label=f"{lora_name} - Text Encoder Weight")
+                unet_update = gr.update(visible=True, label=f"{lora_name} - U-Net Weight")
+            else:
+                # 선택된 LoRA가 없는 행은 숨김 처리
+                text_update = gr.update(visible=False)
+                unet_update = gr.update(visible=False)
+            updates.append(text_update)
+            updates.append(unet_update)
+        return updates
 
     def get_random_prompt():
         """랜덤 프롬프트 생성 함수"""
@@ -884,16 +909,18 @@ with gr.Blocks(css=css) as demo:
             "A mystical forest with glowing mushrooms"
         ]
         return random.choice(prompts)
-    
+    diffusion_lora_slider_outputs = []
+    for te_slider, unet_slider in zip(diffusion_lora_text_encoder_sliders, diffusion_lora_unet_sliders):
+        diffusion_lora_slider_outputs.extend([te_slider, unet_slider])
     diffusion_lora_multiselect.change(
         fn=generate_diffusion_lora_weight_sliders,
         inputs=[diffusion_lora_multiselect],
-        outputs=[diffusion_lora_weights_container]
+        outputs=diffusion_lora_slider_outputs
     )
 
     # 이벤트 핸들러 연결
     generate_btn.click(
-        fn=generate_images,
+        fn=generate_images_wrapper,
         inputs=[
             positive_prompt_input,       # Positive Prompt
             negative_prompt_input,       # Negative Prompt
@@ -912,8 +939,9 @@ with gr.Blocks(css=css) as demo:
             batch_count_input,
             cfg_scale_slider,
             seed_input,
-            random_seed_checkbox
-            
+            random_seed_checkbox,
+            *diffusion_lora_text_encoder_sliders,
+            *diffusion_lora_unet_sliders
         ],
         outputs=[gallery, image_history]
     )

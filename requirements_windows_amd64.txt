@@ -28,5 +28,4 @@ onnx
 onnxruntime-gpu
 Pillow
 numpy
-websocket
 websocket-client
