@@ -640,8 +640,7 @@ with gr.Blocks(css=css) as demo:
                         gallery = gr.Gallery(
                             label="Generated Images",
                             columns=2,
-                            rows=2,
-                            height="400px"
+                            rows=2
                         )
 
                     with gr.Column(scale=3, elem_classes="side-panel"):

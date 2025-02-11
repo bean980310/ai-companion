@@ -73,9 +73,10 @@
             ]
         }
     },
-    "save_image_websocket_node": {
-        "class_type": "SaveImageWebsocket",
+    "9": {
+        "class_type": "SaveImage",
         "inputs": {
+            "filename_prefix": "ComfyUI",
             "images": [
                 "8",
                 0

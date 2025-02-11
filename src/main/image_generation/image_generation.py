@@ -10,6 +10,7 @@ import logging
 from typing import List
 import pandas as pd
 import random
+import traceback
 
 from src.main.image_generation.comfy_api import generate_images_comfyui, prompt_text
 from src.main.image_generation.diffusion_models import load_image_generation_model
@@ -82,7 +83,7 @@ def generate_images(
         prompt["7"]["inputs"]["text"] = negative_prompt
         
         base_node = "4"
-        current_node_id=9
+        current_node_id=10
         
         for i, lora in enumerate(processed_loras):
             text_weight = lora_text_weights[i] if i < len(lora_text_weights) else 1.0
@@ -144,12 +145,12 @@ def generate_images(
                     output_images.append(image)
                     image.show()
                 except Exception as e:
-                    logger.error(f"이미지 로딩 오류: {e}")
+                    logger.error(f"이미지 로딩 오류: {str(e)}\n\n{traceback.format_exc()}")
                 
         return output_images, history_df
     
     except Exception as e:
-        logger.error(f"이미지 생성 중 오류 발생: {e}")
+        logger.error(f"이미지 생성 중 오류 발생: {str(e)}\n\n{traceback.format_exc()}")
         return [], None
     
 def generate_images_wrapper(positive_prompt, negative_prompt, style, generation_step, width, height,

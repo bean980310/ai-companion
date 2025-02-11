@@ -7,6 +7,7 @@ import json
 import urllib.request
 import urllib.parse
 import pandas as pd
+import os
 
 def generate_images_comfyui(prompt: dict):
     server_address = "127.0.0.1:8000"
@@ -32,24 +33,41 @@ def generate_images_comfyui(prompt: dict):
     def get_images(ws, prompt):
         prompt_id = queue_prompt(prompt)['prompt_id']
         output_images = {}
-        current_node = ""
+        output_dir = os.path.join(os.path.expanduser('~'), 'ai-companion', 'outputs')
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+            
         while True:
             out = ws.recv()
             if isinstance(out, str):
                 message = json.loads(out)
                 if message['type'] == 'executing':
                     data = message['data']
-                    if data['prompt_id'] == prompt_id:
-                        if data['node'] is None:
-                            break #Execution is done
-                        else:
-                            current_node = data['node']
-            else:
-                if current_node == 'save_image_websocket_node':
-                    images_output = output_images.get(current_node, [])
-                    images_output.append(out[8:])
-                    output_images[current_node] = images_output
+                    if data['node'] is None and data['prompt_id'] == prompt_id:
+                        break
 
+            else:
+                continue
+        
+        history = get_history(prompt_id)[prompt_id]
+        for node_id in history['outputs']:
+            node_output = history['outputs'][node_id]
+            images_output = []
+            if 'images' in node_output:
+                for image in node_output['images']:
+                    image_data = get_image(image['filename'], image['subfolder'], image['type'])
+                    images_output.append(image_data)
+                                
+                    save_path = os.path.join(output_dir, image['filename'])
+                    try:
+                        with open(save_path, "wb") as f:
+                            f.write(image_data)
+                            print(f"Saved image to {save_path}")
+                    except Exception as e:
+                        print(f"Error saving image {save_path}: {e}")
+                                    
+            output_images[node_id] = images_output
+                    
         return output_images
     
     ws_url = "ws://{}/ws?clientId={}".format(server_address, client_id)
@@ -136,9 +154,10 @@ prompt_text = """
             ]
         }
     },
-    "save_image_websocket_node": {
-        "class_type": "SaveImageWebsocket",
+    "9": {
+        "class_type": "SaveImage",
         "inputs": {
+            "filename_prefix": "ComfyUI",
             "images": [
                 "8",
                 0
