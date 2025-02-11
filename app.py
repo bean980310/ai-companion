@@ -646,7 +646,7 @@ with gr.Blocks(css=css) as demo:
 
                     with gr.Column(scale=3, elem_classes="side-panel"):
                         image_history = gr.Dataframe(
-                            headers=["Prompt", "Negative Prompt", "Style", "Width", "Height"],
+                            headers=["Prompt", "Negative Prompt", "Steps", "Model", "Sampler", "Scheduler", "CFG Scale", "Seed", "Width", "Height"],
                             label="Generation History"
                         )
                         

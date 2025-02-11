@@ -105,6 +105,7 @@ def generate_images(
             
         prompt["6"]["inputs"]["clip"] = [base_node, 1]
         prompt["7"]["inputs"]["clip"] = [base_node, 1]
+        prompt["3"]["inputs"]["model"] = [base_node, 0]
         
         # 실제 이미지 생성 로직은 각 모델에 맞게 다르게 호출됨.
         # 예시로 Diffusers 파이프라인인 경우:
@@ -121,7 +122,12 @@ def generate_images(
         history_entry = {
             "Positive Prompt": positive_prompt,
             "Negative Prompt": negative_prompt,
-            "Style": style,
+            "Generation Steps": generation_step,
+            "Model": diffusion_model,
+            "Sampler": sampler,
+            "Scheduler": scheduler,
+            "CFG Scale": cfg_scale,
+            "Seed": seed,
             "Width": width,
             "Height": height
         }
