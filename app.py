@@ -911,7 +911,8 @@ with gr.Blocks(css=css) as demo:
             batch_size_input,
             batch_count_input,
             cfg_scale_slider,
-            seed_input
+            seed_input,
+            random_seed_checkbox
             
         ],
         outputs=[gallery, image_history]
