@@ -143,7 +143,6 @@ def generate_images(
                 try:
                     image = Image.open(io.BytesIO(image_data))
                     output_images.append(image)
-                    image.show()
                 except Exception as e:
                     logger.error(f"이미지 로딩 오류: {str(e)}\n\n{traceback.format_exc()}")
                 
