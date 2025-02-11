@@ -593,7 +593,7 @@ with gr.Blocks(css=css) as demo:
                             )
                         
                         with gr.Row():
-                            generation_step=gr.Slider(
+                            generation_step_slider=gr.Slider(
                                 label="Generation Step",
                                 minimum=1,
                                 maximum=50,
@@ -629,7 +629,7 @@ with gr.Blocks(css=css) as demo:
                                 choices=["Normal", "Karras", "Exponential", "SGM Uniform", "Simple", "DDIM Uniform", "Beta", "Linear Quadratic", "KL Optimal"],  # 실제 옵션에 맞게 변경
                                 value="Normal"
                             )
-                            cfg_slider = gr.Slider(
+                            cfg_scale_slider = gr.Slider(
                                 label="CFG Scale",
                                 minimum=1,
                                 maximum=20,
@@ -898,12 +898,21 @@ with gr.Blocks(css=css) as demo:
             positive_prompt_input,       # Positive Prompt
             negative_prompt_input,       # Negative Prompt
             style_dropdown,              # Style
+            generation_step_slider,
             width_slider,                # Width
             height_slider,               # Height
             diffusion_model_dropdown,    # 선택한 이미지 생성 모델 (체크포인트 파일명 또는 diffusers model id)
             diffusion_model_type_dropdown,  # "checkpoint" 또는 "diffusers" 선택 (라디오 버튼 등)
             diffusion_lora_multiselect,  # 선택한 LoRA 모델 리스트
-            vae_dropdown                 # 선택한 VAE 모델
+            vae_dropdown,                # 선택한 VAE 모델
+            clip_skip_slider,
+            sampler_dropdown,
+            scheduler_dropdown,
+            batch_size_input,
+            batch_count_input,
+            cfg_scale_slider,
+            seed_input
+            
         ],
         outputs=[gallery, image_history]
     )

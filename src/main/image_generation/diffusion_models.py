@@ -69,12 +69,20 @@ def generate_images(
     positive_prompt: str,
     negative_prompt: str,
     style: str,
+    generation_step: int,
     width: int,
     height: int,
     diffusion_model: str,
     diffusion_model_type: str,
     lora_selection: List[str],
-    vae_selection: str
+    vae_selection: str,
+    clip_skip: int,
+    sampler: str,
+    scheduler: str,
+    batch_size: int,
+    batch_count: int,
+    cfg_scale: float,
+    seed: int
 ):
     """
     UI에서 전달받은 파라미터를 바탕으로 실제 모델을 로드하고 이미지 생성 작업을 수행.
