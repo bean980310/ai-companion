@@ -317,6 +317,13 @@ with gr.Blocks(css=css) as demo:
     
     vae_choices = get_diffusion_vae()
     
+    diffusion_refiner_choices = diffusion_api_models + checkpoints_local + diffusers_local
+    diffusion_refiner_choices = list(dict.fromkeys(diffusion_refiner_choices))
+    diffusion_refiner_choices = sorted(diffusion_refiner_choices)  # 정렬 추가
+    
+    if "None" not in diffusion_refiner_choices:
+        diffusion_refiner_choices.insert(0, "None")
+    
     if "Default" not in vae_choices:
         vae_choices.insert(0, "Default")
     
@@ -522,29 +529,6 @@ with gr.Blocks(css=css) as demo:
                         reset_all_no_btn = gr.Button("❌ 아니요", variant="secondary")
             with gr.Tab('Image Generation'):
                 max_diffusion_lora_rows=10
-                diffusion_lora_text_encoder_sliders=[]
-                diffusion_lora_unet_sliders=[]
-                for i in range(max_diffusion_lora_rows):
-                    text_encoder_slider=gr.Slider(
-                        label=f"LoRA {i+1} - Text Encoder Weight",
-                        minimum=-2.0,
-                        maximum=2.0,
-                        step=0.01,
-                        value=1.0,
-                        visible=False,
-                        interactive=True
-                    )
-                    unet_slider = gr.Slider(
-                        label=f"LoRA {i+1} - U-Net Weight",
-                        minimum=-2.0,
-                        maximum=2.0,
-                        step=0.01,
-                        value=1.0,
-                        visible=False,
-                        interactive=True
-                    )
-                    diffusion_lora_text_encoder_sliders.append(text_encoder_slider)
-                    diffusion_lora_unet_sliders.append(unet_slider)
                 with gr.Row(elem_classes="model-container"):
                     with gr.Column(scale=8):
                         diffusion_model_type_dropdown = gr.Radio(
@@ -568,6 +552,22 @@ with gr.Blocks(css=css) as demo:
                         )
                         
                 with gr.Row(elem_classes="model-container"):
+                    with gr.Column():
+                        diffusion_refiner_model_dropdown = gr.Dropdown(
+                            label=_("refiner_model_select_label"),
+                            choices=diffusion_refiner_choices,
+                            value=diffusion_refiner_choices[0] if len(diffusion_refiner_choices) > 0 else None,
+                            elem_classes="model-dropdown"
+                        )
+                        diffusion_refiner_start = gr.Slider(
+                            label="Refiner Start Step",
+                            minimum=1,
+                            maximum=50,
+                            step=1,
+                            value=20
+                        )
+                        
+                with gr.Row(elem_classes="model-container"):
                     with gr.Accordion("LoRA Settings", open=False):
                         diffusion_lora_multiselect=gr.Dropdown(
                             label="Select LoRA Models",
@@ -578,6 +578,29 @@ with gr.Blocks(css=css) as demo:
                             info="Select LoRA models to apply to the diffusion model.",
                             elem_classes="model-dropdown"
                         )
+                        diffusion_lora_text_encoder_sliders=[]
+                        diffusion_lora_unet_sliders=[]
+                        for i in range(max_diffusion_lora_rows):
+                            text_encoder_slider=gr.Slider(
+                                label=f"LoRA {i+1} - Text Encoder Weight",
+                                minimum=-2.0,
+                                maximum=2.0,
+                                step=0.01,
+                                value=1.0,
+                                visible=False,
+                                interactive=True
+                            )
+                            unet_slider = gr.Slider(
+                                label=f"LoRA {i+1} - U-Net Weight",
+                                minimum=-2.0,
+                                maximum=2.0,
+                                step=0.01,
+                                value=1.0,
+                                visible=False,
+                                interactive=True
+                            )
+                            diffusion_lora_text_encoder_sliders.append(text_encoder_slider)
+                            diffusion_lora_unet_sliders.append(unet_slider)
                         diffusion_lora_slider_rows=[]
                         for te, unet in zip(diffusion_lora_text_encoder_sliders, diffusion_lora_unet_sliders):
                             diffusion_lora_slider_rows.append(gr.Row([te, unet]))
@@ -624,7 +647,7 @@ with gr.Blocks(css=css) as demo:
                         
                         with gr.Row():
                             generation_step_slider=gr.Slider(
-                                label="Generation Step",
+                                label="Generation Steps",
                                 minimum=1,
                                 maximum=50,
                                 step=1,
@@ -961,9 +984,11 @@ with gr.Blocks(css=css) as demo:
             negative_prompt_input,       # Negative Prompt
             style_dropdown,              # Style
             generation_step_slider,
+            diffusion_refiner_start,
             width_slider,                # Width
             height_slider,               # Height
             diffusion_model_dropdown,    # 선택한 이미지 생성 모델 (체크포인트 파일명 또는 diffusers model id)
+            diffusion_refiner_model_dropdown, 
             diffusion_model_type_dropdown,  # "checkpoint" 또는 "diffusers" 선택 (라디오 버튼 등)
             diffusion_lora_multiselect,  # 선택한 LoRA 모델 리스트
             vae_dropdown,                # 선택한 VAE 모델

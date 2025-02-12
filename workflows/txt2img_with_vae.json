@@ -12,12 +12,12 @@
         0
       ],
       "positive": [
-        "16",
+        "6",
         0
       ],
       "negative": [
-        "16",
-        1
+        "7",
+        0
       ],
       "latent_image": [
         "5",
@@ -40,8 +40,8 @@
   },
   "5": {
     "inputs": {
-      "width": 768,
-      "height": 1344,
+      "width": 1024,
+      "height": 1024,
       "batch_size": 1
     },
     "class_type": "EmptyLatentImage",
@@ -82,8 +82,8 @@
         0
       ],
       "vae": [
-        "4",
-        2
+        "10",
+        0
       ]
     },
     "class_type": "VAEDecode",
@@ -104,67 +104,13 @@
       "title": "이미지 저장"
     }
   },
-  "12": {
+  "10": {
     "inputs": {
-      "control_net_name": "sdxl/Kataragi_inpaintXL-fp16.safetensors"
+      "vae_name": "sdxl/sdxl.vae.safetensors"
     },
-    "class_type": "ControlNetLoader",
+    "class_type": "VAELoader",
     "_meta": {
-      "title": "컨트롤넷 모델 로드"
-    }
-  },
-  "13": {
-    "inputs": {
-      "image": "65E913A0-ACD6-4ACE-95F5-AB0F46C65B21.png",
-      "upload": "image"
-    },
-    "class_type": "LoadImage",
-    "_meta": {
-      "title": "이미지 로드"
-    }
-  },
-  "16": {
-    "inputs": {
-      "strength": 1,
-      "start_percent": 0,
-      "end_percent": 1,
-      "positive": [
-        "6",
-        0
-      ],
-      "negative": [
-        "7",
-        0
-      ],
-      "control_net": [
-        "12",
-        0
-      ],
-      "image": [
-        "24",
-        0
-      ]
-    },
-    "class_type": "ControlNetApplyAdvanced",
-    "_meta": {
-      "title": "컨트롤넷 적용"
-    }
-  },
-  "24": {
-    "inputs": {
-      "black_pixel_for_xinsir_cn": false,
-      "image": [
-        "13",
-        0
-      ],
-      "mask": [
-        "13",
-        1
-      ]
-    },
-    "class_type": "InpaintPreprocessor",
-    "_meta": {
-      "title": "Inpaint Preprocessor"
+      "title": "VAE 로드"
     }
   }
 }
