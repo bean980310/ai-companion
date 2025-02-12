@@ -14,7 +14,7 @@ import traceback
 
 from src.main.image_generation.comfy_api import generate_images_comfyui
 from src.api.comfy_api import ComfyUIClient
-from workflows.load_workflow import load_txt2img_workflow
+from workflows.load_workflow import load_txt2img_workflow, load_txt2img_sdxl_workflow
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +30,7 @@ def generate_images(
     loras: List[str],
     vae: str,
     clip_skip: int,
+    clip_g: bool,
     sampler: str,
     scheduler: str,
     batch_size: int,
@@ -60,16 +61,16 @@ def generate_images(
             if lora.lower() != "none":
                 processed_loras.append(lora.split("/", 1)[-1])  # "loras/xxx.safetensors"
                 
-        if vae.lower() != "none" and vae.lower() != "default":
-            vae_value = vae.split("/", 1)[-1]
-        
         if random_seed:
             seed = random.randint(0, 9007199254740991)
             
         lora_text_weights = json.loads(lora_text_weights_json)
         lora_unet_weights = json.loads(lora_unet_weights_json)
         
-        prompt=load_txt2img_workflow()
+        if clip_g:
+            prompt=load_txt2img_sdxl_workflow()
+        else:
+            prompt=load_txt2img_workflow()
         
         prompt["3"]["inputs"]["cfg"] = cfg_scale
         prompt["3"]["inputs"]["sampler_name"] = sampler
@@ -80,8 +81,15 @@ def generate_images(
         prompt["5"]["inputs"]["batch_size"] = batch_size
         prompt["5"]["inputs"]["width"] = width
         prompt["5"]["inputs"]["height"] = height
-        prompt["6"]["inputs"]["text"] = positive_prompt
-        prompt["7"]["inputs"]["text"] = negative_prompt
+        
+        if clip_g:
+            prompt["6"]["inputs"]["text_l"] = positive_prompt
+            prompt["6"]["inputs"]["text_g"] = positive_prompt
+            prompt["7"]["inputs"]["text_l"] = negative_prompt
+            prompt["7"]["inputs"]["text_g"] = negative_prompt
+        else:
+            prompt["6"]["inputs"]["text"] = positive_prompt
+            prompt["7"]["inputs"]["text"] = negative_prompt
         
         base_node = "4"
         current_node_id=10
@@ -109,7 +117,10 @@ def generate_images(
         prompt["7"]["inputs"]["clip"] = [base_node, 1]
         prompt["3"]["inputs"]["model"] = [base_node, 0]
         
-        if vae_value:
+        if vae == "Default":
+            vae_value = None
+        else:
+            vae_value = vae.split("/", 1)[-1]
             new_node_id = str(current_node_id)
             prompt[new_node_id] = {
                 "class_type": "VAELoader",
@@ -119,9 +130,7 @@ def generate_images(
             }
             base_node = new_node_id
             current_node_id += 1
-        
-        prompt["8"]["inputs"]["vae"] = [base_node, 0]
-
+            prompt["8"]["inputs"]["vae"] = [base_node, 0]
         
         # 실제 이미지 생성 로직은 각 모델에 맞게 다르게 호출됨.
         # 예시로 Diffusers 파이프라인인 경우:
@@ -169,7 +178,7 @@ def generate_images(
         return [], None
     
 def generate_images_wrapper(positive_prompt, negative_prompt, style, generation_step, width, height,
-    diffusion_model, diffusion_model_type, lora_multiselect, vae, clip_skip, sampler, scheduler,
+    diffusion_model, diffusion_model_type, lora_multiselect, vae, clip_skip, clip_g, sampler, scheduler,
     batch_size, batch_count, cfg_scale, seed, random_seed,
     # 이후 20개의 슬라이더 값 (max_diffusion_lora_rows * 2; 예를 들어 10행이면 20개)
     *lora_slider_values):
@@ -181,7 +190,7 @@ def generate_images_wrapper(positive_prompt, negative_prompt, style, generation_
     unet_weights_json = json.dumps(unet_weights)
     return generate_images(
         positive_prompt, negative_prompt, style, generation_step, width, height,
-        diffusion_model, diffusion_model_type, lora_multiselect, vae, clip_skip, sampler, scheduler,
+        diffusion_model, diffusion_model_type, lora_multiselect, vae, clip_skip, clip_g, sampler, scheduler,
         batch_size, batch_count, cfg_scale, seed, random_seed,
         text_weights_json, unet_weights_json
     )

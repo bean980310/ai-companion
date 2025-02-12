@@ -319,9 +319,6 @@ with gr.Blocks(css=css) as demo:
     
     if "Default" not in vae_choices:
         vae_choices.insert(0, "Default")
-        
-    if "None" not in vae_choices:
-        vae_choices.insert(1, "None")
     
     with gr.Column(elem_classes="main-container"):
         with gr.Row(elem_classes="header-container"):
@@ -695,6 +692,10 @@ with gr.Blocks(css=css) as demo:
                                     step=1,
                                     value=1
                                 )
+                                clip_g_checkbox = gr.Checkbox(
+                                    label="Enable Clip G",
+                                    value=False
+                                )
                             with gr.Row():
                                 batch_size_input = gr.Number(
                                     label="Batch Size",
@@ -967,12 +968,13 @@ with gr.Blocks(css=css) as demo:
             diffusion_lora_multiselect,  # 선택한 LoRA 모델 리스트
             vae_dropdown,                # 선택한 VAE 모델
             clip_skip_slider,
+            clip_g_checkbox,
             sampler_dropdown,
             scheduler_dropdown,
             batch_size_input,
             batch_count_input,
             cfg_scale_slider,
-            seed_input,
+            diffusion_seed_input,
             random_seed_checkbox,
             *diffusion_lora_text_encoder_sliders,
             *diffusion_lora_unet_sliders
