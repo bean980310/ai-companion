@@ -33,7 +33,7 @@ def generate_images_comfyui(prompt: dict):
     def get_images(ws, prompt):
         prompt_id = queue_prompt(prompt)['prompt_id']
         output_images = {}
-        output_dir = os.path.join(os.path.expanduser('~'), 'ai-companion', 'outputs')
+        output_dir = 'outputs'
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
             
@@ -77,109 +77,3 @@ def generate_images_comfyui(prompt: dict):
     ws.close()
     
     return images
-
-prompt_text = """
-{
-    "3": {
-        "class_type": "KSampler",
-        "inputs": {
-            "cfg": 8,
-            "denoise": 1,
-            "latent_image": [
-                "5",
-                0
-            ],
-            "model": [
-                "4",
-                0
-            ],
-            "negative": [
-                "7",
-                0
-            ],
-            "positive": [
-                "6",
-                0
-            ],
-            "sampler_name": "euler",
-            "scheduler": "normal",
-            "seed": 8566257,
-            "steps": 20
-        }
-    },
-    "4": {
-        "class_type": "CheckpointLoaderSimple",
-        "inputs": {
-            "ckpt_name": "v1-5-pruned-emaonly.safetensors"
-        }
-    },
-    "5": {
-        "class_type": "EmptyLatentImage",
-        "inputs": {
-            "batch_size": 1,
-            "height": 512,
-            "width": 512
-        }
-    },
-    "6": {
-        "class_type": "CLIPTextEncode",
-        "inputs": {
-            "clip": [
-                "4",
-                1
-            ],
-            "text": "masterpiece best quality girl"
-        }
-    },
-    "7": {
-        "class_type": "CLIPTextEncode",
-        "inputs": {
-            "clip": [
-                "4",
-                1
-            ],
-            "text": "bad hands"
-        }
-    },
-    "8": {
-        "class_type": "VAEDecode",
-        "inputs": {
-            "samples": [
-                "3",
-                0
-            ],
-            "vae": [
-                "4",
-                2
-            ]
-        }
-    },
-    "9": {
-        "class_type": "SaveImage",
-        "inputs": {
-            "filename_prefix": "ComfyUI",
-            "images": [
-                "8",
-                0
-            ]
-        }
-    }
-}
-"""
-
-# prompt = json.loads(prompt_text)
-# #set the text prompt for our positive CLIPTextEncode
-# prompt["6"]["inputs"]["text"] = "masterpiece best quality man"
-
-# #set the seed for our KSampler node
-# prompt["3"]["inputs"]["seed"] = 5
-
-# images = generate_images_comfyui(prompt)
-
-# for node_id in images:
-#     for image_data in images[node_id]:
-#         from PIL import Image
-#         import io
-#         image = Image.open(io.BytesIO(image_data))
-#         image.show()
-

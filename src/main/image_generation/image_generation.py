@@ -12,8 +12,9 @@ import pandas as pd
 import random
 import traceback
 
-from src.main.image_generation.comfy_api import generate_images_comfyui, prompt_text
-from src.main.image_generation.diffusion_models import load_image_generation_model
+from src.main.image_generation.comfy_api import generate_images_comfyui
+from src.api.comfy_api import ComfyUIClient
+from workflows.load_workflow import load_txt2img_workflow
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +69,7 @@ def generate_images(
         lora_text_weights = json.loads(lora_text_weights_json)
         lora_unet_weights = json.loads(lora_unet_weights_json)
         
-        prompt=json.loads(prompt_text)
+        prompt=load_txt2img_workflow()
         
         prompt["3"]["inputs"]["cfg"] = cfg_scale
         prompt["3"]["inputs"]["sampler_name"] = sampler
@@ -117,7 +118,8 @@ def generate_images(
         else:
             # checkpoint 모델일 경우 (예시)
             # generated = model.generate(prompt=positive_prompt, negative_prompt=negative_prompt, width=width, height=height, style=style)
-            generated = generate_images_comfyui(prompt)  # 실제 생성 결과로 대체
+            client=ComfyUIClient()
+            generated = client.text2image_generate(prompt)  # 실제 생성 결과로 대체
         
         # 생성 기록 DataFrame 생성
         history_entry = {
