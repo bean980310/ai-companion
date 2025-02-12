@@ -2,6 +2,7 @@ transformers
 huggingface_hub
 datasets
 safetensors
+sentencepiece
 tokenizers
 diffusers
 peft
