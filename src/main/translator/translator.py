@@ -1,0 +1,27 @@
+from transformers import MBartForConditionalGeneration, MBart50TokenizerFast
+
+languages = {
+    "English": "en_XX",
+    "Korean": "ko_KR",
+    "Japanese": "ja_XX",
+    "Chinese": "zh_CN",
+    "French": "fr_XX",
+    "German": "de_DE",
+    "Spanish": "es_XX"
+}
+
+def translate(text, src_lang, tgt_lang):
+    model_name = "facebook/mbart-large-50-many-to-many-mmt"
+    tokenizer = MBart50TokenizerFast.from_pretrained(model_name)
+    model = MBartForConditionalGeneration.from_pretrained(model_name)
+    
+    tokenizer.src_lang = src_lang
+    encoded = tokenizer(text, return_tensors="pt")
+    generated_tokens = model.generate(**encoded, forced_bos_token_id=tokenizer.lang_code_to_id[tgt_lang])
+    translated = tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
+    return translated[0]
+
+def translate_interface(text, src_language, tgt_language):
+    src_lang = languages[src_language]
+    tgt_lang = languages[tgt_language]
+    return translate(text, src_lang, tgt_lang)

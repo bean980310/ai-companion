@@ -38,6 +38,7 @@ from src.main.chatbot.chatbot import (
     create_delete_session_modal
 )
 from src.main.image_generation.image_generation import generate_images_wrapper
+from src.main.translator.translator import translate_interface, languages
 
 from src.common.utils import get_all_loras, get_diffusion_loras, get_diffusion_vae
 
@@ -705,6 +706,34 @@ with gr.Blocks(css=css) as demo:
                                     value=1,
                                     precision=0
                                 )
+                                
+            with gr.Tab('Translator'):
+                with gr.Row(elem_classes="chat-interface"):
+                    with gr.Column():
+                        with gr.Row():
+                            src_lang_dropdown=gr.Dropdown(
+                                choices=list(languages.keys()), 
+                                value="English", 
+                                label="Source Language"
+                            )
+                            tgt_lang_dropdown=gr.Dropdown(
+                                choices=list(languages.keys()), 
+                                value="Korean", 
+                                label="Target Language"
+                            )
+                        with gr.Row():
+                            src_textbox=gr.Textbox(
+                                label="Source Text",
+                                lines=10
+                            )
+                            translate_result=gr.Textbox(
+                                label='Translate result',
+                                lines=10
+                            )
+                        with gr.Row():
+                            translate_btn = gr.Button("Translate", variant="primary")
+                            
+     
 
     # 아래는 변경 이벤트 등록
     def apply_session_immediately(chosen_sid):
@@ -915,6 +944,12 @@ with gr.Blocks(css=css) as demo:
         fn=generate_diffusion_lora_weight_sliders,
         inputs=[diffusion_lora_multiselect],
         outputs=diffusion_lora_slider_outputs
+    )
+    
+    translate_btn.click(
+        fn=translate_interface,
+        inputs=[src_textbox, src_lang_dropdown, tgt_lang_dropdown],
+        outputs=[translate_result]
     )
 
     # 이벤트 핸들러 연결
