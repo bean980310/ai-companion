@@ -527,6 +527,7 @@ with gr.Blocks(css=css) as demo:
                         reset_all_confirm_msg = gr.Markdown("⚠️ **정말로 모든 세션을 초기화하시겠습니까? 모든 대화 기록이 삭제됩니다.**")
                         reset_all_yes_btn = gr.Button("✅ 예", variant="danger")
                         reset_all_no_btn = gr.Button("❌ 아니요", variant="secondary")
+                        
             with gr.Tab('Image Generation'):
                 max_diffusion_lora_rows=10
                 with gr.Row(elem_classes="model-container"):
@@ -606,7 +607,29 @@ with gr.Blocks(css=css) as demo:
                             diffusion_lora_slider_rows.append(gr.Row([te, unet]))
                         for row in diffusion_lora_slider_rows:
                             row
-                    
+                            
+                with gr.Row(elem_classes="model-container"):
+                    with gr.Accordion("Image to Image", open=False):
+                        image_to_image_mode = gr.Radio(
+                            label="Image to Image Mode",
+                            choices=["None", "Image to Image", "Inpaint", "Inpaint Upload"],
+                            value="None",
+                            elem_classes="model-dropdown"
+                        )
+                        image_to_image_input = gr.Image(
+                            label="Image Input",
+                            type="pil",
+                            sources="upload",
+                            visible=False
+                        )
+                        denoise_strength_dropdown = gr.Slider(
+                            label="Denoise Strength",
+                            minimum=0.0,
+                            maximum=1.0,
+                            step=0.01,
+                            value=0.5,
+                        )
+
                 with gr.Row(elem_classes="chat-interface"):
                     with gr.Column(scale=7):
                         positive_prompt_input = gr.Textbox(
@@ -915,6 +938,16 @@ with gr.Blocks(css=css) as demo:
         inputs=[model_type_dropdown],
         outputs=[model_dropdown]
     )
+    
+    def toggle_image_to_image_input(mode):
+        image_visible = mode == "Image to Image"
+        return gr.update(visible=image_visible)
+    
+    image_to_image_mode.change(
+        fn=lambda mode: toggle_image_to_image_input(mode),
+        inputs=[image_to_image_mode],
+        outputs=[image_to_image_input]
+    )
         
     bot_message_inputs = [session_id_state, history_state, model_dropdown, custom_model_path_state, image_input, api_key_text, selected_device_state, seed_state]
     
@@ -1006,6 +1039,9 @@ with gr.Blocks(css=css) as demo:
             cfg_scale_slider,
             diffusion_seed_input,
             random_seed_checkbox,
+            image_to_image_mode, 
+            image_to_image_input, 
+            denoise_strength_dropdown,
             *diffusion_lora_text_encoder_sliders,
             *diffusion_lora_unet_sliders
         ],
