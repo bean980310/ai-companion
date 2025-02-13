@@ -11,6 +11,10 @@ torch --pre --index-url https://download.pytorch.org/whl/nightly/cpu
 torchvision
 torchaudio
 accelerate
+opencv-python
+basicsr
+facexlib
+gfpgan
 openai
 tiktoken
 anthropic

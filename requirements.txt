@@ -11,6 +11,11 @@ torch
 torchvision
 torchaudio
 accelerate
+opencv-python
+basicsr
+facexlib
+gfpgan
+git+https://github.com/xinntao/Real-ESRGAN.git
 openai
 tiktoken
 anthropic

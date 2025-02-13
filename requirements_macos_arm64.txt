@@ -11,6 +11,10 @@ torch
 torchvision
 torchaudio
 accelerate
+opencv-python
+basicsr
+facexlib
+gfpgan
 openai
 tiktoken
 anthropic

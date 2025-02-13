@@ -8,6 +8,9 @@ import urllib.request
 import urllib.parse
 import pandas as pd
 import os
+from requests_toolbelt import MultipartEncoder
+from PIL import Image
+import io
 
 class ComfyUIClient:
     def __init__(self, server_address="127.0.0.1:8000"):
@@ -71,6 +74,21 @@ class ComfyUIClient:
                     
         return output_images
     
+    def upload_image(self, input_path, name):
+        with open(input_path, 'rb') as f:
+            multipart_data = MultipartEncoder(
+                fields = {
+                    'image': (name, f, 'image/png'),
+                    'type': 'input',
+                    'overwrite': 'false'
+                }
+            )
+            
+            data = multipart_data
+            headers = { 'Content-Type': multipart_data.content_type }
+            with urllib.request.Request("http://{}/upload/image".format(self.server_address), data=data, headers=headers) as response:
+                return response.read()
+    
     def text2image_generate(self, prompt: dict):
         ws_url = "ws://{}/ws?clientId={}".format(self.server_address, self.client_id)
         ws = websocket.WebSocket()
@@ -79,3 +97,14 @@ class ComfyUIClient:
         ws.close()
         
         return images
+    
+    def image2image_generate(self, prompt: dict, input_path, filename):
+        ws_url = "ws://{}/ws?clientId={}".format(self.server_address, self.client_id)
+        ws = websocket.WebSocket()
+        ws.connect(ws_url)
+        self.upload_image(input_path, filename)
+        images = self.get_images(ws, prompt)
+        ws.close()
+        
+        return images
+        
