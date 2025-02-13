@@ -13,7 +13,6 @@ import random
 import traceback
 import os
 
-from src.main.image_generation.comfy_api import generate_images_comfyui
 from src.api.comfy_api import ComfyUIClient
 from workflows.load_workflow import load_txt2img_workflow, load_txt2img_sdxl_workflow, load_txt2img_sdxl_with_refiner_workflow, load_txt2img_workflow_clip_skip, load_txt2img_sdxl_workflow_clip_skip, load_txt2img_sdxl_with_refiner_workflow_clip_skip, load_img2img_workflow
 
