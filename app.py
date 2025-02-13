@@ -606,7 +606,7 @@ with gr.Blocks(css=css) as demo:
                             diffusion_lora_slider_rows.append(gr.Row([te, unet]))
                         for row in diffusion_lora_slider_rows:
                             row
-                                
+                    
                 with gr.Row(elem_classes="chat-interface"):
                     with gr.Column(scale=7):
                         positive_prompt_input = gr.Textbox(
@@ -713,7 +713,11 @@ with gr.Blocks(css=css) as demo:
                                     minimum=1,
                                     maximum=10,
                                     step=1,
-                                    value=1
+                                    value=2
+                                )
+                                enable_clip_skip_checkbox = gr.Checkbox(
+                                    label="Enable Custom Clip Skip",
+                                    value=False
                                 )
                                 clip_g_checkbox = gr.Checkbox(
                                     label="Enable Clip G",
@@ -993,6 +997,7 @@ with gr.Blocks(css=css) as demo:
             diffusion_lora_multiselect,  # 선택한 LoRA 모델 리스트
             vae_dropdown,                # 선택한 VAE 모델
             clip_skip_slider,
+            enable_clip_skip_checkbox,
             clip_g_checkbox,
             sampler_dropdown,
             scheduler_dropdown,

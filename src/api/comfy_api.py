@@ -98,11 +98,11 @@ class ComfyUIClient:
         
         return images
     
-    def image2image_generate(self, prompt: dict, input_path, filename):
+    def image2image_generate(self, prompt: dict, input_path, name):
         ws_url = "ws://{}/ws?clientId={}".format(self.server_address, self.client_id)
         ws = websocket.WebSocket()
         ws.connect(ws_url)
-        self.upload_image(input_path, filename)
+        self.upload_image(input_path, name)
         images = self.get_images(ws, prompt)
         ws.close()
         
