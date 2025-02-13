@@ -379,7 +379,7 @@ def generate_images_wrapper(positive_prompt, negative_prompt, style, generation_
     # JSON 문자열로 변환
     text_weights_json = json.dumps(text_weights)
     unet_weights_json = json.dumps(unet_weights)
-    if diffusion_refiner_model == None:
+    if diffusion_refiner_model == "None":
         return generate_images(
             positive_prompt, negative_prompt, style, generation_step, width, height,
             diffusion_model, diffusion_model_type, lora_multiselect, vae, clip_skip, clip_g, sampler, scheduler,
