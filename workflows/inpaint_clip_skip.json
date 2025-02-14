@@ -42,8 +42,8 @@
     "inputs": {
       "text": "photograph of victorian woman with wings, sky clouds, meadow grass\n",
       "clip": [
-        "4",
-        1
+        "15",
+        0
       ]
     },
     "class_type": "CLIPTextEncode",
@@ -55,8 +55,8 @@
     "inputs": {
       "text": "watermark, text\n",
       "clip": [
-        "4",
-        1
+        "15",
+        0
       ]
     },
     "class_type": "CLIPTextEncode",
@@ -168,6 +168,19 @@
     "class_type": "PasteMaskedImage",
     "_meta": {
       "title": "Paste Masked Image"
+    }
+  },
+  "15": {
+    "inputs": {
+      "stop_at_clip_layer": -1,
+      "clip": [
+        "4",
+        1
+      ]
+    },
+    "class_type": "CLIPSetLastLayer",
+    "_meta": {
+      "title": "CLIP 마지막 레이어 설정"
     }
   }
 }

@@ -40,28 +40,42 @@
   },
   "6": {
     "inputs": {
-      "text": "photograph of victorian woman with wings, sky clouds, meadow grass\n",
+      "width": 1024,
+      "height": 1024,
+      "crop_w": 0,
+      "crop_h": 0,
+      "target_width": 1024,
+      "target_height": 1024,
+      "text_g": "beautiful scenery nature glass bottle landscape, , purple galaxy bottle,",
+      "text_l": "beautiful scenery nature glass bottle landscape, , purple galaxy bottle,",
       "clip": [
-        "4",
-        1
+        "15",
+        0
       ]
     },
-    "class_type": "CLIPTextEncode",
+    "class_type": "CLIPTextEncodeSDXL",
     "_meta": {
-      "title": "CLIP 텍스트 인코딩 (프롬프트)"
+      "title": "CLIP 텍스트 인코딩 (SDXL)"
     }
   },
   "7": {
     "inputs": {
-      "text": "watermark, text\n",
+      "width": 1024,
+      "height": 1024,
+      "crop_w": 0,
+      "crop_h": 0,
+      "target_width": 1024,
+      "target_height": 1024,
+      "text_g": "text, watermark",
+      "text_l": "text, watermark",
       "clip": [
-        "4",
-        1
+        "15",
+        0
       ]
     },
-    "class_type": "CLIPTextEncode",
+    "class_type": "CLIPTextEncodeSDXL",
     "_meta": {
-      "title": "CLIP 텍스트 인코딩 (프롬프트)"
+      "title": "CLIP 텍스트 인코딩 (SDXL)"
     }
   },
   "8": {
@@ -168,6 +182,19 @@
     "class_type": "PasteMaskedImage",
     "_meta": {
       "title": "Paste Masked Image"
+    }
+  },
+  "15": {
+    "inputs": {
+      "stop_at_clip_layer": -1,
+      "clip": [
+        "4",
+        1
+      ]
+    },
+    "class_type": "CLIPSetLastLayer",
+    "_meta": {
+      "title": "CLIP 마지막 레이어 설정"
     }
   }
 }
