@@ -95,11 +95,10 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
         # GGUF 모델 로딩 로직
         handler = GGUFModelHandler(
             model_id=model_id,
-            quantization_bit=quantization_bit,
             local_model_path=local_model_path,
             model_type=model_type
         )
-        cache_key = build_model_cache_key(model_id, model_type, lora_model_id, quantization_bit, local_model_path)
+        cache_key = build_model_cache_key(model_id, model_type)
         models_cache[cache_key] = handler
         return handler
     elif model_type == "mlx":

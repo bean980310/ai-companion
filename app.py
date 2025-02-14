@@ -565,7 +565,16 @@ with gr.Blocks(css=css) as demo:
                             minimum=1,
                             maximum=50,
                             step=1,
-                            value=20
+                            value=20,
+                            visible=False
+                        )
+                        diffusion_with_refiner_image_to_image_start = gr.Slider(
+                            label="Image to Image Start Step",
+                            minimum=1,
+                            maximum=50,
+                            step=1,
+                            value=20,
+                            visible=False
                         )
                         
                 with gr.Row(elem_classes="model-container"):
@@ -622,12 +631,19 @@ with gr.Blocks(css=css) as demo:
                             sources="upload",
                             visible=False
                         )
-                        denoise_strength_dropdown = gr.Slider(
+                        image_inpaint_input = gr.ImageMask(
+                            label="Image Inpaint",
+                            type="pil",
+                            sources="upload",
+                            visible=False
+                        )
+                        denoise_strength_slider = gr.Slider(
                             label="Denoise Strength",
                             minimum=0.0,
                             maximum=1.0,
                             step=0.01,
                             value=0.5,
+                            visible=False
                         )
 
                 with gr.Row(elem_classes="chat-interface"):
@@ -939,14 +955,36 @@ with gr.Blocks(css=css) as demo:
         outputs=[model_dropdown]
     )
     
+    def toggle_refiner_start_step(model):
+        slider_visible = model != "None"
+        return gr.update(visible=slider_visible)
+    
+    def toggle_denoise_strength_dropdown(mode):
+        slider_visible = mode != "None"
+        return gr.update(visible=slider_visible)
+    
+    diffusion_refiner_model_dropdown.change(
+        fn=lambda model: toggle_refiner_start_step(model),
+        inputs=[diffusion_refiner_model_dropdown],
+        outputs=[diffusion_refiner_start]
+    )
+    
     def toggle_image_to_image_input(mode):
         image_visible = mode == "Image to Image"
         return gr.update(visible=image_visible)
     
+    def toggle_image_inpaint_input(mode):
+        image_visible = mode == "Inpaint"
+        return gr.update(visible=image_visible)
+    
     image_to_image_mode.change(
-        fn=lambda mode: toggle_image_to_image_input(mode),
+        fn=lambda mode: (
+            toggle_image_to_image_input(mode), 
+            toggle_image_inpaint_input(mode),
+            toggle_denoise_strength_dropdown(mode)
+            ),
         inputs=[image_to_image_mode],
-        outputs=[image_to_image_input]
+        outputs=[image_to_image_input, image_inpaint_input, denoise_strength_slider]
     )
         
     bot_message_inputs = [session_id_state, history_state, model_dropdown, custom_model_path_state, image_input, api_key_text, selected_device_state, seed_state]
@@ -1040,8 +1078,9 @@ with gr.Blocks(css=css) as demo:
             diffusion_seed_input,
             random_seed_checkbox,
             image_to_image_mode, 
-            image_to_image_input, 
-            denoise_strength_dropdown,
+            image_to_image_input,
+            image_inpaint_input,
+            denoise_strength_slider,
             *diffusion_lora_text_encoder_sliders,
             *diffusion_lora_unet_sliders
         ],
