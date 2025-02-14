@@ -66,8 +66,44 @@ def load_img2img_sdxl_workflow_clip_skip():
 
     return data
 
-def load_img2img_sdxl_with_refiner_clip_skip():
+def load_img2img_sdxl_with_refiner_workflow_clip_skip():
     with open('workflows/img2img_sdxl_with_refiner_clip_skip.json') as f:
         data=json.load(f)
 
+    return data
+
+def load_inpaint_workflow():
+    with open('workflow/inpaint.json') as f:
+        data=json.load(f)
+        
+    return data
+
+def load_inpaint_sdxl_workflow():
+    with open('workflow/inpaint_sdxl.json') as f:
+        data=json.load(f)
+        
+    return data
+
+def load_inpaint_sdxl_with_refiner_workflow():
+    with open('workflow/inpaint_sdxl_with_refiner.json') as f:
+        data=json.load(f)
+        
+    return data
+
+def load_inpaint_workflow_clip_skip():
+    with open('workflow/inpaint_clip_skip.json') as f:
+        data=json.load(f)
+        
+    return data
+
+def load_inpaint_sdxl_workflow_clip_skip():
+    with open('workflow/inpaint_sdxl_clip_skip.json') as f:
+        data=json.load(f)
+        
+    return data
+
+def load_inpaint_sdxl_with_refiner_workflow_clip_skip():
+    with open('workflow/inpaint_sdxl_with_refiner_clip_skip.json') as f:
+        data=json.load(f)
+        
     return data
