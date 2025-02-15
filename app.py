@@ -59,6 +59,8 @@ import json
 from src.common.css import css
 from src.common.js import js
 
+from src.api.comfy_api import client
+
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -530,6 +532,8 @@ with gr.Blocks(css=css) as demo:
                         
             with gr.Tab('Image Generation'):
                 max_diffusion_lora_rows=10
+                stored_image=gr.State()
+                stored_image_inpaint=gr.State()
                 with gr.Row(elem_classes="model-container"):
                     with gr.Column(scale=8):
                         diffusion_model_type_dropdown = gr.Radio(
@@ -982,6 +986,10 @@ with gr.Blocks(css=css) as demo:
         outputs=[diffusion_with_refiner_image_to_image_start]
     )
     
+    def process_uploaded_image(image):
+        image = client.upload_image(image)
+        return image
+    
     def toggle_image_to_image_input(mode):
         image_visible = mode == "Image to Image"
         return gr.update(visible=image_visible)
@@ -989,6 +997,18 @@ with gr.Blocks(css=css) as demo:
     def toggle_image_inpaint_input(mode):
         image_visible = mode == "Inpaint"
         return gr.update(visible=image_visible)
+    
+    image_to_image_input.change(
+        fn=process_uploaded_image,
+        inputs=image_to_image_input,
+        outputs=stored_image
+    )
+    
+    image_inpaint_input.change(
+        fn=process_uploaded_image,
+        inputs=image_inpaint_input,
+        outputs=stored_image_inpaint
+    )
     
     image_to_image_mode.change(
         fn=lambda mode: (
@@ -1098,8 +1118,8 @@ with gr.Blocks(css=css) as demo:
             diffusion_seed_input,
             random_seed_checkbox,
             image_to_image_mode, 
-            image_to_image_input,
-            image_inpaint_input,
+            stored_image,
+            stored_image_inpaint,
             denoise_strength_slider,
             *diffusion_lora_text_encoder_sliders,
             *diffusion_lora_unet_sliders

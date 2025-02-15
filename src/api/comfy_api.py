@@ -11,6 +11,7 @@ import os
 from requests_toolbelt import MultipartEncoder
 from PIL import Image
 import io
+import requests
 
 class ComfyUIClient:
     def __init__(self, server_address="127.0.0.1:8000"):
@@ -74,20 +75,30 @@ class ComfyUIClient:
                     
         return output_images
     
-    def upload_image(self, input_path, name):
-        with open(input_path, 'rb') as f:
-            multipart_data = MultipartEncoder(
-                fields = {
-                    'image': (name, f, 'image/png'),
-                    'type': 'input',
-                    'overwrite': 'false'
-                }
-            )
+    def upload_image(self, input_path, subfolder="", overwrite=False):
+        with Image.open(input_path) as f:
+            body={"image": f}
+            data={}
             
-            data = multipart_data
-            headers = { 'Content-Type': multipart_data.content_type }
-            with urllib.request.Request("http://{}/upload/image".format(self.server_address), data=data, headers=headers) as response:
-                return response.read()
+            if overwrite:
+                data["overwrite"] = "true"
+                
+            if subfolder:
+                data['subfolder'] = subfolder
+            
+            response=requests.post(f"http://{self.server_address}/upload/image", files=body,data=data)
+            
+            if response.status_code == 200:
+                data = response.json()
+                path = data["name"]
+                if "subfolder" in data:
+                    if data["subfolder"] != "":
+                        path = data["subfolder"] + "/" + path
+                        
+            else:
+                print(f"Error uploading image {input_path}: {response.status_code} - {response.reason}")
+                
+            return path
     
     def text2image_generate(self, prompt: dict):
         ws_url = "ws://{}/ws?clientId={}".format(self.server_address, self.client_id)
@@ -98,13 +109,15 @@ class ComfyUIClient:
         
         return images
     
-    def image2image_generate(self, prompt: dict, input_path, name):
+    def image2image_generate(self, prompt: dict):
         ws_url = "ws://{}/ws?clientId={}".format(self.server_address, self.client_id)
         ws = websocket.WebSocket()
         ws.connect(ws_url)
-        self.upload_image(input_path, name)
+        # self.upload_image(input_path, name)
         images = self.get_images(ws, prompt)
         ws.close()
         
         return images
         
+
+client=ComfyUIClient()
