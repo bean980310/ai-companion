@@ -629,12 +629,14 @@ with gr.Blocks(css=css) as demo:
                             label="Image Input",
                             type="pil",
                             sources="upload",
+                            format="png",
                             visible=False
                         )
                         image_inpaint_input = gr.ImageMask(
                             label="Image Inpaint",
                             type="pil",
                             sources="upload",
+                            format="png",
                             visible=False
                         )
                         denoise_strength_slider = gr.Slider(
@@ -699,6 +701,7 @@ with gr.Blocks(css=css) as demo:
                         
                         gallery = gr.Gallery(
                             label="Generated Images",
+                            format="png",
                             columns=2,
                             rows=2
                         )
