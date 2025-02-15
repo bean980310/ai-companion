@@ -75,30 +75,80 @@ class ComfyUIClient:
                     
         return output_images
     
-    def upload_image(self, input_path, subfolder="", overwrite=False):
-        with Image.open(input_path) as f:
-            body={"image": f}
-            data={}
+    def upload_image_img2img(self, input_img, subfolder="", overwrite=False):
+        from io import BytesIO
+        # input_img가 문자열(파일 경로)인지 확인
+        if isinstance(input_img, str):
+            with open(input_img, 'rb') as f:
+                file_data = f.read()
+            file_name = os.path.basename(input_img)
+        else:
+            # PIL.Image 객체라면, BytesIO에 저장 (PNG 형식 사용, 필요에 따라 변경)
+            buffer = BytesIO()
+            input_img.save(buffer, format="PNG")
+            file_data = buffer.getvalue()
+            file_name = "uploaded_image.png"
+        
+        files = {"image": (file_name, file_data, "image/png")}
+        data = {}
+        # data["image"] = (file_name, file_data, "image/png")
+        if overwrite:
+            data["overwrite"] = "true"
+        if subfolder:
+            data["subfolder"] = subfolder
+
+        response = requests.post(f"http://{self.server_address}/upload/image", files=files, data=data)
+        
+        if response.status_code == 200:
+            response_data = response.json()
+            path = response_data["name"]
+            if "subfolder" in response_data and response_data["subfolder"]:
+                path = response_data["subfolder"] + "/" + path
+        else:
+            print(f"Error uploading image: {response.status_code} - {response.reason}")
+            path = None
             
-            if overwrite:
-                data["overwrite"] = "true"
-                
-            if subfolder:
-                data['subfolder'] = subfolder
+        print("img2img upload:", path)
+        return path
+    
+    def upload_image_inpaint(self, input_img, subfolder="", overwrite=False):
+        """
+        inpaint 용 업로드 함수.
+        보통 inpaint용 이미지는 배경과 마스크를 합성한 최종 이미지이므로,
+        파일 이름이나 추가 전처리(예: 알파 채널 유지 등)를 다르게 할 수 있음.
+        """
+        from io import BytesIO
+        if isinstance(input_img, str):
+            with open(input_img, 'rb') as f:
+                file_data = f.read()
+            file_name = os.path.basename(input_img)
+        else:
+            buffer = BytesIO()
+            # inpaint의 경우, 필요에 따라 PNG의 알파 채널 유지 등 추가 옵션 적용 가능
+            input_img.save(buffer, format="PNG")
+            file_data = buffer.getvalue()
+            file_name = "uploaded_image_inpaint.png"
+        
+        files = {"image": (file_name, file_data, "image/png")}
+        data = {}
+        if overwrite:
+            data["overwrite"] = "true"
+        if subfolder:
+            data["subfolder"] = subfolder
+
+        response = requests.post(f"http://{self.server_address}/upload/image", files=files, data=data)
+        
+        if response.status_code == 200:
+            response_data = response.json()
+            path = response_data["name"]
+            if "subfolder" in response_data and response_data["subfolder"]:
+                path = response_data["subfolder"] + "/" + path
+        else:
+            print(f"Error uploading image: {response.status_code} - {response.reason}")
+            path = None
             
-            response=requests.post(f"http://{self.server_address}/upload/image", files=body,data=data)
-            
-            if response.status_code == 200:
-                data = response.json()
-                path = data["name"]
-                if "subfolder" in data:
-                    if data["subfolder"] != "":
-                        path = data["subfolder"] + "/" + path
-                        
-            else:
-                print(f"Error uploading image {input_path}: {response.status_code} - {response.reason}")
-                
-            return path
+        print("inpaint upload:", path)
+        return path
     
     def text2image_generate(self, prompt: dict):
         ws_url = "ws://{}/ws?clientId={}".format(self.server_address, self.client_id)

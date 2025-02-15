@@ -11,12 +11,13 @@ import traceback
 import os
 
 from src.api.comfy_api import ComfyUIClient
-from workflows.load_workflow import load_img2img_workflow, load_img2img_sdxl_workflow, load_img2img_sdxl_with_refiner_workflow, load_img2img_workflow_clip_skip, load_img2img_sdxl_workflow_clip_skip, load_img2img_sdxl_with_refiner_workflow_clip_skip
+from workflows.load_workflow import load_inpaint_workflow, load_inpaint_sdxl_workflow, load_inpaint_sdxl_with_refiner_workflow, load_inpaint_workflow_clip_skip, load_inpaint_sdxl_workflow_clip_skip, load_inpaint_sdxl_with_refiner_workflow_clip_skip
+
 logger = logging.getLogger(__name__)
 
 # client=ComfyUIClient()
 
-def generate_images_to_images(
+def generate_images_inpaint(
     positive_prompt: str,
     negative_prompt: str,
     style: str,
@@ -36,6 +37,8 @@ def generate_images_to_images(
     random_seed: bool,
     image_input: str,
     denoise_strength: float,
+    blur_radius: float,
+    blur_expansion_radius: int,
     lora_text_weights_json: str,
     lora_unet_weights_json: str
 ):
@@ -70,14 +73,14 @@ def generate_images_to_images(
         
         if clip_g:
             if enable_clip_skip:
-                prompt=load_img2img_sdxl_workflow_clip_skip()
+                prompt=load_inpaint_sdxl_workflow_clip_skip()
             else:
-                prompt=load_img2img_sdxl_workflow()
+                prompt=load_inpaint_sdxl_workflow()
         else:
             if enable_clip_skip:
-                prompt=load_img2img_workflow_clip_skip()
+                prompt=load_inpaint_workflow_clip_skip()
             else:
-                prompt=load_img2img_workflow()
+                prompt=load_inpaint_workflow()
         
         prompt["3"]["inputs"]["cfg"] = cfg_scale
         prompt["3"]["inputs"]["sampler_name"] = sampler
@@ -100,14 +103,17 @@ def generate_images_to_images(
             
         prompt["10"]["inputs"]["image"] = image_input
         
+        prompt["12"]["inputs"]["blur_radius"] = blur_radius
+        prompt["12"]["inputs"]["blur_expansion_radius"] = blur_expansion_radius
+        
         if enable_clip_skip:
-            prompt["12"]["inputs"]["stop_at_clip_layer"] = clip_skip
+            prompt["15"]["inputs"]["stop_at_clip_layer"] = clip_skip
         
         base_node = "4"
         if enable_clip_skip:
-            current_node_id = 13
+            current_node_id = 16
         else:
-            current_node_id = 12
+            current_node_id = 15
         
         for i, lora in enumerate(processed_loras):
             text_weight = lora_text_weights[i] if i < len(lora_text_weights) else 1.0
@@ -130,7 +136,7 @@ def generate_images_to_images(
          
         prompt["3"]["inputs"]["model"] = [base_node, 0]   
         if enable_clip_skip:   
-            prompt["12"]["inputs"]["clip"] = [base_node, 1]
+            prompt["15"]["inputs"]["clip"] = [base_node, 1]
         else:
             prompt["6"]["inputs"]["clip"] = [base_node, 1]
             prompt["7"]["inputs"]["clip"] = [base_node, 1]
@@ -197,7 +203,7 @@ def generate_images_to_images(
         logger.error(f"이미지 생성 중 오류 발생: {str(e)}\n\n{traceback.format_exc()}")
         return [], None
     
-def generate_images_to_images_with_refiner(
+def generate_images_inpaint_with_refiner(
     positive_prompt: str,
     negative_prompt: str,
     style: str,
@@ -220,6 +226,8 @@ def generate_images_to_images_with_refiner(
     random_seed: bool,
     image_input: str,
     denoise_strength: float,
+    blur_radius: float,
+    blur_expansion_radius: int,
     lora_text_weights_json: str,
     lora_unet_weights_json: str
 ):
@@ -255,9 +263,9 @@ def generate_images_to_images_with_refiner(
             clip_skip=clip_skip*(-1)
             
         if enable_clip_skip:
-            prompt=load_img2img_sdxl_with_refiner_workflow_clip_skip()
+            prompt=load_inpaint_sdxl_with_refiner_workflow_clip_skip()
         else:
-            prompt=load_img2img_sdxl_with_refiner_workflow()
+            prompt=load_inpaint_sdxl_with_refiner_workflow()
         
         prompt["3"]["inputs"]["cfg"] = cfg_scale
         prompt["3"]["inputs"]["sampler_name"] = sampler
@@ -288,15 +296,18 @@ def generate_images_to_images_with_refiner(
             
         prompt["14"]["inputs"]["image"] = image_input
         
+        prompt["16"]["inputs"]["blur_radius"] = blur_radius
+        prompt["16"]["inputs"]["blur_expansion_radius"] = blur_expansion_radius
+        
         if enable_clip_skip:
-            prompt["16"]["inputs"]["stop_at_clip_layer"] = clip_skip
+            prompt["19"]["inputs"]["stop_at_clip_layer"] = clip_skip
         
         base_node = "4"
         refiner_base_node = "13"
         if enable_clip_skip:
-            current_node_id = 17
+            current_node_id = 20
         else:
-            current_node_id = 16
+            current_node_id = 19
         
         for i, lora in enumerate(processed_loras):
             text_weight = lora_text_weights[i] if i < len(lora_text_weights) else 1.0
@@ -319,7 +330,7 @@ def generate_images_to_images_with_refiner(
          
         prompt["3"]["inputs"]["model"] = [base_node, 0]
         if enable_clip_skip:
-            prompt["16"]["inputs"]["clip"] = [base_node, 1]
+            prompt["19"]["inputs"]["clip"] = [base_node, 1]
         else:
             prompt["6"]["inputs"]["clip"] = [base_node, 1]
             prompt["7"]["inputs"]["clip"] = [base_node, 1]   

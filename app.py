@@ -27,6 +27,8 @@ from src.common.translations import translation_manager, _, TranslationManager
 from src.characters.persona_speech_manager import PersonaSpeechManager
 from src.common.args import parse_args
 from src.common.default_language import default_language
+from src.common.combine import combine_image_and_mask, ImageData, combine_masks, make_grey
+from PIL import Image
 
 from src.models import api_models, transformers_local, gguf_local, mlx_local, diffusion_api_models, diffusers_local, checkpoints_local
 from src.main.chatbot.chatbot import (
@@ -636,11 +638,27 @@ with gr.Blocks(css=css) as demo:
                             format="png",
                             visible=False
                         )
-                        image_inpaint_input = gr.ImageMask(
+                        image_inpaint_input = gr.ImageEditor(
                             label="Image Inpaint",
                             type="pil",
                             sources="upload",
                             format="png",
+                            visible=False
+                        )
+                        blur_radius_slider = gr.Slider(
+                            label="Blur Radius",
+                            minimum=0,
+                            maximum=10,
+                            step=0.5,
+                            value=5,
+                            visible=False
+                        )
+                        blur_expansion_radius_slider = gr.Slider(
+                            label="Blur Expansion Radius",
+                            minimum=0,
+                            maximum=100,
+                            step=1,
+                            value=1,
                             visible=False
                         )
                         denoise_strength_slider = gr.Slider(
@@ -970,6 +988,10 @@ with gr.Blocks(css=css) as demo:
         slider_visible = mode != "None"
         return gr.update(visible=slider_visible)
     
+    def toggle_blur_radius_slider(mode):
+        slider_visible = mode != "None"
+        return gr.update(visible=slider_visible), gr.update(visible=slider_visible)
+    
     def toggle_diffusion_with_refiner_image_to_image_start(model, mode):
         slider_visible = model != "None" and mode != "None"
         return gr.update(visible=slider_visible)
@@ -987,9 +1009,45 @@ with gr.Blocks(css=css) as demo:
     )
     
     def process_uploaded_image(image):
-        image = client.upload_image(image)
+        image = client.upload_image_img2img(image)
+        print(image)
         return image
     
+    def process_uploaded_image_inpaint(image: ImageData):
+        bg=image.get('background')
+        layers=image.get('layers', [])
+        
+        if bg is None:
+            logger.error("Inpaint input does not contain a background image.")
+            return None
+
+    # 마스크가 존재하면 첫 번째 마스크를 사용
+        if layers:
+            mask = layers[0]
+            # 마스크가 그레이스케일(L) 모드가 아니면 변환
+            for layer in layers[1:]:
+                mask=combine_masks(mask, layer)
+                
+            mask = make_grey(mask)
+            
+            combined = combine_image_and_mask(bg, mask)
+            if combined is None:
+                logger.error("Failed to combine background and mask images.")
+                return None
+        else:
+            combined = bg
+
+        # 업로드 전에 디버깅: 합성 이미지 저장 또는 확인 (원하는 경우 주석 해제)
+        combined.save("debug_combined.png")
+        
+        # 합성된 이미지를 ComfyUI API 서버에 업로드
+        uploaded_image = client.upload_image_inpaint(combined)
+        if not uploaded_image:
+            logger.error("upload_image returned an empty path. Check if image data is valid.")
+            return None
+
+        return uploaded_image
+        
     def toggle_image_to_image_input(mode):
         image_visible = mode == "Image to Image"
         return gr.update(visible=image_visible)
@@ -1004,8 +1062,8 @@ with gr.Blocks(css=css) as demo:
         outputs=stored_image
     )
     
-    image_inpaint_input.change(
-        fn=process_uploaded_image,
+    image_inpaint_input.apply(
+        fn=process_uploaded_image_inpaint,
         inputs=image_inpaint_input,
         outputs=stored_image_inpaint
     )
@@ -1024,6 +1082,10 @@ with gr.Blocks(css=css) as demo:
         fn=toggle_diffusion_with_refiner_image_to_image_start,
         inputs=[diffusion_refiner_model_dropdown, image_to_image_mode],
         outputs=[diffusion_with_refiner_image_to_image_start]
+    ).then(
+        fn=toggle_blur_radius_slider,
+        inputs=[image_to_image_mode],
+        outputs=[blur_radius_slider, blur_expansion_radius_slider]
     )
         
     bot_message_inputs = [session_id_state, history_state, model_dropdown, custom_model_path_state, image_input, api_key_text, selected_device_state, seed_state]
@@ -1121,6 +1183,8 @@ with gr.Blocks(css=css) as demo:
             stored_image,
             stored_image_inpaint,
             denoise_strength_slider,
+            blur_radius_slider,
+            blur_expansion_radius_slider,
             *diffusion_lora_text_encoder_sliders,
             *diffusion_lora_unet_sliders
         ],
