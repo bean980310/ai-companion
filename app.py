@@ -963,10 +963,20 @@ with gr.Blocks(css=css) as demo:
         slider_visible = mode != "None"
         return gr.update(visible=slider_visible)
     
+    def toggle_diffusion_with_refiner_image_to_image_start(model, mode):
+        slider_visible = model != "None" and mode != "None"
+        return gr.update(visible=slider_visible)
+    
     diffusion_refiner_model_dropdown.change(
-        fn=lambda model: toggle_refiner_start_step(model),
+        fn=lambda model: (
+            toggle_refiner_start_step(model)
+            ),
         inputs=[diffusion_refiner_model_dropdown],
         outputs=[diffusion_refiner_start]
+    ).then(
+        fn=toggle_diffusion_with_refiner_image_to_image_start,
+        inputs=[diffusion_refiner_model_dropdown, image_to_image_mode],
+        outputs=[diffusion_with_refiner_image_to_image_start]
     )
     
     def toggle_image_to_image_input(mode):
@@ -984,7 +994,13 @@ with gr.Blocks(css=css) as demo:
             toggle_denoise_strength_dropdown(mode)
             ),
         inputs=[image_to_image_mode],
-        outputs=[image_to_image_input, image_inpaint_input, denoise_strength_slider]
+        outputs=[image_to_image_input, 
+                 image_inpaint_input, 
+                 denoise_strength_slider]
+    ).then(
+        fn=toggle_diffusion_with_refiner_image_to_image_start,
+        inputs=[diffusion_refiner_model_dropdown, image_to_image_mode],
+        outputs=[diffusion_with_refiner_image_to_image_start]
     )
         
     bot_message_inputs = [session_id_state, history_state, model_dropdown, custom_model_path_state, image_input, api_key_text, selected_device_state, seed_state]
@@ -1059,6 +1075,7 @@ with gr.Blocks(css=css) as demo:
             negative_prompt_input,       # Negative Prompt
             style_dropdown,              # Style
             generation_step_slider,
+            diffusion_with_refiner_image_to_image_start,
             diffusion_refiner_start,
             width_slider,                # Width
             height_slider,               # Height
