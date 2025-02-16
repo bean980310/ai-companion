@@ -124,8 +124,10 @@ class ComfyUIClient:
             file_name = os.path.basename(input_img)
         else:
             buffer = BytesIO()
+            rgba_image = input_img.convert("RGBA")
+            rgba_image.save(buffer, format="PNG")
             # inpaint의 경우, 필요에 따라 PNG의 알파 채널 유지 등 추가 옵션 적용 가능
-            input_img.save(buffer, format="PNG")
+            # input_img.save(buffer, format="PNG")
             file_data = buffer.getvalue()
             file_name = "uploaded_image_inpaint.png"
         

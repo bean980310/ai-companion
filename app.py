@@ -27,8 +27,8 @@ from src.common.translations import translation_manager, _, TranslationManager
 from src.characters.persona_speech_manager import PersonaSpeechManager
 from src.common.args import parse_args
 from src.common.default_language import default_language
-from src.common.combine import combine_image_and_mask, ImageData, combine_masks, make_grey
 from PIL import Image
+import numpy as np
 
 from src.models import api_models, transformers_local, gguf_local, mlx_local, diffusion_api_models, diffusers_local, checkpoints_local
 from src.main.chatbot.chatbot import (
@@ -638,7 +638,7 @@ with gr.Blocks(css=css) as demo:
                             format="png",
                             visible=False
                         )
-                        image_inpaint_input = gr.ImageEditor(
+                        image_inpaint_input = gr.ImageMask(
                             label="Image Inpaint",
                             type="pil",
                             sources="upload",
@@ -1013,40 +1013,58 @@ with gr.Blocks(css=css) as demo:
         print(image)
         return image
     
-    def process_uploaded_image_inpaint(image: ImageData):
-        bg=image.get('background')
-        layers=image.get('layers', [])
+    def process_uploaded_image_inpaint(image) -> str:
+        bg = image.get("background")
+        layers = image.get("layers", [])
         
         if bg is None:
-            logger.error("Inpaint input does not contain a background image.")
+            logger.error("No background image provided for inpainting.")
             return None
-
-    # 마스크가 존재하면 첫 번째 마스크를 사용
-        if layers:
-            mask = layers[0]
-            # 마스크가 그레이스케일(L) 모드가 아니면 변환
-            for layer in layers[1:]:
-                mask=combine_masks(mask, layer)
-                
-            mask = make_grey(mask)
             
-            combined = combine_image_and_mask(bg, mask)
-            if combined is None:
-                logger.error("Failed to combine background and mask images.")
-                return None
-        else:
-            combined = bg
-
-        # 업로드 전에 디버깅: 합성 이미지 저장 또는 확인 (원하는 경우 주석 해제)
-        combined.save("debug_combined.png")
+        # Convert background to RGBA to ensure alpha channel exists
+        bg = bg.convert("RGBA")
+        bg_width, bg_height = bg.size
         
-        # 합성된 이미지를 ComfyUI API 서버에 업로드
-        uploaded_image = client.upload_image_inpaint(combined)
-        if not uploaded_image:
-            logger.error("upload_image returned an empty path. Check if image data is valid.")
+        if layers:
+            # Convert first mask to binary (fully black or white)
+            mask = layers[0].convert("L")
+            mask_np = np.array(mask)
+            
+            # Create binary mask (255 for masked areas, 0 for unmasked)
+            threshold = 128
+            binary_mask = np.where(mask_np > threshold, 255, 0).astype(np.uint8)
+            
+            # Split the background image into channels
+            r, g, b, a = bg.split()
+            
+            # Create mask image and invert it for alpha
+            mask_img = Image.fromarray(binary_mask)
+            alpha_mask = Image.fromarray(255 - binary_mask)  # Invert for alpha
+            
+            # Merge channels with new alpha
+            # For masked areas (binary_mask == 255):
+            #   - RGB channels will show through
+            #   - Alpha will be 0 (transparent)
+            # For unmasked areas (binary_mask == 0):
+            #   - Original image shows through
+            #   - Original alpha is preserved
+            result = Image.merge("RGBA", (
+                r,
+                g,
+                b,
+                Image.composite(alpha_mask, a, mask_img)
+            ))
+        else:
+            # If no mask provided, return original image
+            result = bg
+            
+        # Upload the processed image
+        uploaded_path = client.upload_image_inpaint(result)
+        if not uploaded_path:
+            logger.error("Failed to upload processed image for inpainting")
             return None
-
-        return uploaded_image
+            
+        return uploaded_path
         
     def toggle_image_to_image_input(mode):
         image_visible = mode == "Image to Image"
