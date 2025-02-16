@@ -631,20 +631,30 @@ with gr.Blocks(css=css) as demo:
                             value="None",
                             elem_classes="model-dropdown"
                         )
-                        image_to_image_input = gr.Image(
-                            label="Image Input",
-                            type="pil",
-                            sources="upload",
-                            format="png",
-                            visible=False
-                        )
-                        image_inpaint_input = gr.ImageMask(
-                            label="Image Inpaint",
-                            type="pil",
-                            sources="upload",
-                            format="png",
-                            visible=False
-                        )
+                        with gr.Row():
+                            image_to_image_input = gr.Image(
+                                label="Image Input",
+                                type="filepath",
+                                sources="upload",
+                                format="png",
+                                visible=False
+                            )
+                        with gr.Row():
+                            image_inpaint_input = gr.Image(
+                                label="Image Inpaint",
+                                type="filepath",
+                                sources="upload",
+                                format="png",
+                                visible=False
+                            )
+                            image_inpaint_masking = gr.ImageMask(
+                                label="Image Inpaint Mask",
+                                type="filepath",
+                                sources="upload",
+                                format="png",
+                                brush=gr.Brush(colors=["#FFFFFF"], color_mode="fixed"),
+                                visible=False
+                            )
                         blur_radius_slider = gr.Slider(
                             label="Blur Radius",
                             minimum=0,
@@ -989,7 +999,7 @@ with gr.Blocks(css=css) as demo:
         return gr.update(visible=slider_visible)
     
     def toggle_blur_radius_slider(mode):
-        slider_visible = mode != "None"
+        slider_visible = mode == "Inpaint" or mode == "Inpaint Upload"
         return gr.update(visible=slider_visible), gr.update(visible=slider_visible)
     
     def toggle_diffusion_with_refiner_image_to_image_start(model, mode):
@@ -1009,62 +1019,15 @@ with gr.Blocks(css=css) as demo:
     )
     
     def process_uploaded_image(image):
-        image = client.upload_image_img2img(image)
         print(image)
+        image = client.upload_image(image, overwrite=True)
         return image
     
-    def process_uploaded_image_inpaint(image) -> str:
-        bg = image.get("background")
-        layers = image.get("layers", [])
-        
-        if bg is None:
-            logger.error("No background image provided for inpainting.")
-            return None
-            
-        # Convert background to RGBA to ensure alpha channel exists
-        bg = bg.convert("RGBA")
-        bg_width, bg_height = bg.size
-        
-        if layers:
-            # Convert first mask to binary (fully black or white)
-            mask = layers[0].convert("L")
-            mask_np = np.array(mask)
-            
-            # Create binary mask (255 for masked areas, 0 for unmasked)
-            threshold = 128
-            binary_mask = np.where(mask_np > threshold, 255, 0).astype(np.uint8)
-            
-            # Split the background image into channels
-            r, g, b, a = bg.split()
-            
-            # Create mask image and invert it for alpha
-            mask_img = Image.fromarray(binary_mask)
-            alpha_mask = Image.fromarray(255 - binary_mask)  # Invert for alpha
-            
-            # Merge channels with new alpha
-            # For masked areas (binary_mask == 255):
-            #   - RGB channels will show through
-            #   - Alpha will be 0 (transparent)
-            # For unmasked areas (binary_mask == 0):
-            #   - Original image shows through
-            #   - Original alpha is preserved
-            result = Image.merge("RGBA", (
-                r,
-                g,
-                b,
-                Image.composite(alpha_mask, a, mask_img)
-            ))
-        else:
-            # If no mask provided, return original image
-            result = bg
-            
-        # Upload the processed image
-        uploaded_path = client.upload_image_inpaint(result)
-        if not uploaded_path:
-            logger.error("Failed to upload processed image for inpainting")
-            return None
-            
-        return uploaded_path
+    def process_uploaded_image_inpaint(original_image, mask_image):
+        print(original_image)
+        print(mask_image)
+        mask = client.upload_mask(original_image, mask_image['layers'][0])
+        return mask
         
     def toggle_image_to_image_input(mode):
         image_visible = mode == "Image to Image"
@@ -1074,14 +1037,18 @@ with gr.Blocks(css=css) as demo:
         image_visible = mode == "Inpaint"
         return gr.update(visible=image_visible)
     
+    def toggle_image_inpaint_mask(mode, image):
+        image_visible = mode == "Inpaint" and image is not None
+        return gr.update(visible=image_visible)
+    
     image_to_image_input.change(
         fn=process_uploaded_image,
         inputs=image_to_image_input,
         outputs=stored_image
     )
     
-    image_inpaint_input.apply(
-        fn=process_uploaded_image_inpaint,
+    image_inpaint_input.change(
+        fn=process_uploaded_image,
         inputs=image_inpaint_input,
         outputs=stored_image_inpaint
     )

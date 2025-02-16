@@ -9,9 +9,11 @@ import urllib.parse
 import pandas as pd
 import os
 from requests_toolbelt import MultipartEncoder
-from PIL import Image
+from PIL import Image, ImageOps
 import io
 import requests
+import datetime
+from io import BytesIO
 
 class ComfyUIClient:
     def __init__(self, server_address="127.0.0.1:8000"):
@@ -75,33 +77,30 @@ class ComfyUIClient:
                     
         return output_images
     
-    def upload_image_img2img(self, input_img, subfolder="", overwrite=False):
-        from io import BytesIO
-        # input_img가 문자열(파일 경로)인지 확인
-        if isinstance(input_img, str):
-            with open(input_img, 'rb') as f:
-                file_data = f.read()
-            file_name = os.path.basename(input_img)
-        else:
-            # PIL.Image 객체라면, BytesIO에 저장 (PNG 형식 사용, 필요에 따라 변경)
-            buffer = BytesIO()
-            input_img.save(buffer, format="PNG")
-            file_data = buffer.getvalue()
-            file_name = "uploaded_image.png"
+    def upload_image(self, input_img, subfolder="", overwrite=False):
+        if input_img is None:
+            return None
+        
+        with open(input_img, 'rb') as f:
+            file_data = f.read()
+        file_name = os.path.basename(input_img)
         
         files = {"image": (file_name, file_data, "image/png")}
         data = {}
         # data["image"] = (file_name, file_data, "image/png")
         if overwrite:
             data["overwrite"] = "true"
-        if subfolder:
-            data["subfolder"] = subfolder
+            
+        data["subfolder"] = ""
+            
+        data["type"] = "input" 
 
         response = requests.post(f"http://{self.server_address}/upload/image", files=files, data=data)
         
         if response.status_code == 200:
             response_data = response.json()
             path = response_data["name"]
+            image = path
             if "subfolder" in response_data and response_data["subfolder"]:
                 path = response_data["subfolder"] + "/" + path
         else:
@@ -109,40 +108,53 @@ class ComfyUIClient:
             path = None
             
         print("img2img upload:", path)
-        return path
+        return image
     
-    def upload_image_inpaint(self, input_img, subfolder="", overwrite=False):
+    def upload_mask(self, original_img, mask_img, subfolder="clipspace", overwrite=False):
         """
         inpaint 용 업로드 함수.
         보통 inpaint용 이미지는 배경과 마스크를 합성한 최종 이미지이므로,
         파일 이름이나 추가 전처리(예: 알파 채널 유지 등)를 다르게 할 수 있음.
         """
-        from io import BytesIO
-        if isinstance(input_img, str):
-            with open(input_img, 'rb') as f:
-                file_data = f.read()
-            file_name = os.path.basename(input_img)
-        else:
-            buffer = BytesIO()
-            rgba_image = input_img.convert("RGBA")
-            rgba_image.save(buffer, format="PNG")
-            # inpaint의 경우, 필요에 따라 PNG의 알파 채널 유지 등 추가 옵션 적용 가능
-            # input_img.save(buffer, format="PNG")
-            file_data = buffer.getvalue()
-            file_name = "uploaded_image_inpaint.png"
+        if original_img is None or mask_img is None:
+            return None
         
-        files = {"image": (file_name, file_data, "image/png")}
+        with open(original_img, 'rb') as f:
+            original_data = f.read()
+            
+        original_file_name = os.path.basename(original_img)
+        
+        mask_img=Image.open(mask_img)
+        buffer = BytesIO()
+        mask_img.save(buffer, format="PNG")
+        file_data = buffer.getvalue()
+        suffix=datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+        
+        new_file_name = f"clipspace-mask_{suffix}.png"
+        
+        files = {"image": (new_file_name, file_data, "image/png")}
         data = {}
+        
         if overwrite:
             data["overwrite"] = "true"
         if subfolder:
             data["subfolder"] = subfolder
-
-        response = requests.post(f"http://{self.server_address}/upload/image", files=files, data=data)
+            
+        original_ref = {
+            "filename": original_file_name,
+            "subfolder": "",
+            "type": "input"
+        }
         
+        data["type"] = "input"  # 프론트엔드에서 보내는 것과 동일하게
+        data["original_ref"] = json.dumps(original_ref)
+            
+        response = requests.post(f"http://{self.server_address}/upload/mask", files=files, data=data)
+            
         if response.status_code == 200:
             response_data = response.json()
             path = response_data["name"]
+            mask = path
             if "subfolder" in response_data and response_data["subfolder"]:
                 path = response_data["subfolder"] + "/" + path
         else:
@@ -150,7 +162,7 @@ class ComfyUIClient:
             path = None
             
         print("inpaint upload:", path)
-        return path
+        return mask
     
     def text2image_generate(self, prompt: dict):
         ws_url = "ws://{}/ws?clientId={}".format(self.server_address, self.client_id)
