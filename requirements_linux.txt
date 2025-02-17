@@ -6,12 +6,16 @@ sentencepiece
 tokenizers
 diffusers
 peft
+evaluate
+jiwer
 gradio
 torch
 torchvision
 torchaudio
 accelerate
 opencv-python
+opencv-contrib-python
+pytesseract
 basicsr
 facexlib
 gfpgan
