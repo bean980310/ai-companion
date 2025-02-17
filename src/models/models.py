@@ -104,9 +104,11 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
     elif model_type == "mlx":
         if "vision" in model_id.lower() or "qwen2-vl" in model_id.lower():
             handler = MlxVisionHandler(
-                model_id=model_id,
+                model_id=model_id,  # model_id가 정의되어 있어야 합니다.
+                lora_model_id=lora_model_id,
                 local_model_path=local_model_path,
-                model_type=model_type
+                lora_path=lora_path,
+                model_type=model_type,
             )
             models_cache[build_model_cache_key(model_id, model_type)] = handler
             return handler

@@ -1,0 +1,1 @@
+from diffusers import AutoPipelineForText2Image

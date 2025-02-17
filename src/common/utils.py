@@ -180,9 +180,10 @@ def get_all_loras(lora_root="./models/llm/loras"):
     if not os.path.isdir(lora_root):
         os.makedirs(lora_root, exist_ok=True)
     lora_models = ["None"]
-    allowed_extensions = {".safetensors", ".bin", ".pt", ".pth"}
+    allowed_extensions = { ".safetensors", ".bin", ".pt", ".pth" }
+    required_names = { "adapter_config.json" }
     for dirpath, _, filenames in os.walk(lora_root):
-        if any(fname.lower().endswith(ext) for fname in filenames for ext in allowed_extensions):
+        if has_required_files(filenames, required_names=required_names, required_extensions=allowed_extensions):
             rel_path = os.path.relpath(dirpath, lora_root)
             # 상대경로가 '.'이면 현재 폴더의 이름를 사용
             model_id = os.path.basename(dirpath) if rel_path == "." else rel_path
