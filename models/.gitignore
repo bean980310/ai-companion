@@ -1,3 +1,4 @@
+.gitattributes
 *.safetensors
 *.json
 *.model
@@ -12,3 +13,6 @@ assets/
 *.txt
 *.ckpt
 *.pt
+*.md
+*.bin
+*.pth
