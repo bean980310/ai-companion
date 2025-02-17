@@ -627,7 +627,7 @@ with gr.Blocks(css=css) as demo:
                     with gr.Accordion("Image to Image", open=False):
                         image_to_image_mode = gr.Radio(
                             label="Image to Image Mode",
-                            choices=["None", "Image to Image", "Inpaint", "Inpaint Upload"],
+                            choices=["None", "Image to Image", "Inpaint"],
                             value="None",
                             elem_classes="model-dropdown"
                         )
