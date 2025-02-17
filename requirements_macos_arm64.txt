@@ -15,6 +15,7 @@ opencv-python
 basicsr
 facexlib
 gfpgan
+git+https://github.com/xinntao/Real-ESRGAN.git
 openai
 tiktoken
 anthropic
@@ -27,6 +28,8 @@ langchain-core
 langchain-openai
 langchain-anthropic
 langchain-community
+langchain-huggingface
+langchain-ollama
 xformers
 bitsandbytes
 onnx

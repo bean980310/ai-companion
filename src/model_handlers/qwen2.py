@@ -5,12 +5,9 @@ import traceback
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import PeftModel, PeftConfig
 
-from optimum.quanto import QuantizedModelForCausalLM
-from src.common.utils import make_local_dir_name
-
 logger = logging.getLogger(__name__)
 
-class QwenHandler:
+class Qwen2Handler:
     def __init__(self, model_id, lora_model_id=None, local_model_path=None, lora_path=None, model_type="transformers", device='cpu'):
         self.model_dir = local_model_path or os.path.join("./models/llm", model_id)
         self.lora_model_dir = lora_path or (os.path.join("./models/llm/loras", lora_model_id) if lora_model_id else None)
@@ -37,6 +34,13 @@ class QwenHandler:
         except Exception as e:
             logger.error(f"Failed to load Qwen Model: {str(e)}\n\n{traceback.format_exc()}")
             raise
+        
+    def get_terminators(self):
+        return [
+            self.tokenizer.eos_token_id,
+            self.tokenizer.convert_tokens_to_ids("<|im_end|>")
+        ]
+        
     def generate_answer(self, history, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
         prompt_messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
         logger.info(f"[*] Prompt messages for other models: {prompt_messages}")

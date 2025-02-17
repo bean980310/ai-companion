@@ -4,11 +4,13 @@ from .llama3_2_vision import VisionModelHandler
 from .glm_4 import GLM4Handler
 from .aya_23 import Aya23Handler
 from .glm_4_hf import GLM4HfHandler
-from .qwen import QwenHandler
+from .llama3 import Llama3Handler
+from .qwen2 import Qwen2Handler
 from .other import OtherModelHandler
 from .gguf_handler import GGUFModelHandler
 from .mlx_handler import MlxModelHandler
 from .mlx_vision import MlxVisionHandler
+
 
 __all__ = [
     "GGUFModelHandler",
@@ -19,7 +21,8 @@ __all__ = [
     "Aya23Handler",
     "GLM4HfHandler",
     "OtherModelHandler",
-    "QwenHandler",
+    "Llama3Handler",
+    "Qwen2Handler",
     "MlxModelHandler",
     "MlxVisionHandler",
 ]

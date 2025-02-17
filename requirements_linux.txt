@@ -27,6 +27,8 @@ langchain-core
 langchain-openai
 langchain-anthropic
 langchain-community
+langchain-huggingface
+langchain-ollama
 xformers
 bitsandbytes
 onnx

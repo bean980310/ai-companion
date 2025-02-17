@@ -6,10 +6,10 @@ import numpy as np
 import torch
 from src.common.cache import models_cache
 from src.model_handlers import (
-    GGUFModelHandler, MiniCPMLlama3V25Handler, GLM4Handler, GLM4VHandler, VisionModelHandler,
-    Aya23Handler, GLM4HfHandler, OtherModelHandler, QwenHandler, MlxModelHandler, MlxVisionHandler
+    GGUFModelHandler, MiniCPMLlama3V25Handler, Llama3Handler, GLM4Handler, GLM4VHandler, VisionModelHandler,
+    Aya23Handler, GLM4HfHandler, OtherModelHandler, Qwen2Handler, MlxModelHandler, MlxVisionHandler
 )
-from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models
+from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models, convert_folder_to_modelid
 import gradio as gr
 
 from peft import PeftModel, PeftConfig
@@ -21,10 +21,11 @@ import anthropic
 
 from langchain.chains.llm import LLMChain
 from langchain.prompts import PromptTemplate
-from langchain_community.llms.openai import OpenAI
+from langchain_openai import OpenAI
 from langchain_community.llms.llamacpp import LlamaCpp
-from langchain_community.llms.ollama import Ollama
-from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
+from langchain_ollama import OllamaLLM as Ollama
+from langchain_huggingface import HuggingFacePipeline
+from langchain_huggingface import ChatHuggingFace
 
 logger = logging.getLogger(__name__)
 
@@ -110,79 +111,43 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
                 lora_path=lora_path,
                 model_type=model_type,
             )
-            models_cache[build_model_cache_key(model_id, model_type)] = handler
+            models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
         else:
             handler = MlxModelHandler(
-                model_id=model_id,
-                local_model_path=local_model_path,
-                model_type=model_type
-            )
-            models_cache[build_model_cache_key(model_id, model_type)] = handler
-            return handler
-    else:
-        if model_id == "openbmb/MiniCPM-Llama3-V-2_5":
-            handler = MiniCPMLlama3V25Handler(
-                model_id=model_id,
-                local_model_path=local_model_path,
-                model_type=model_type,
-                device=device
-            )
-            models_cache[build_model_cache_key(model_id, model_type)] = handler
-            return handler
-        elif model_id in [
-            "Bllossom/llama-3.2-Korean-Bllossom-AICA-5B",
-        ] or ("vision" in model_id.lower() and model_id != "Bllossom/llama-3.1-Korean-Bllossom-Vision-8B"):
-            # 모델 존재 확인 및 다운로드
-            handler = VisionModelHandler(
-                model_id=model_id,
+                model_id=model_id,  # model_id가 정의되어 있어야 합니다.
                 lora_model_id=lora_model_id,
                 local_model_path=local_model_path,
                 lora_path=lora_path,
-                model_type=model_type,
-                device=device
+                model_type=model_type
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
-        elif model_id == "THUDM/glm-4v-9b":
-            # 모델 존재 확인 및 다운로드
-            handler = GLM4VHandler(
-                model_id=model_id,
-                local_model_path=local_model_path,
-                model_type=model_type,
-                device=device
-            )
-            models_cache[build_model_cache_key(model_id, model_type)] = handler
-            return handler
-        elif model_id == "THUDM/glm-4-9b-chat":
-            handler = GLM4Handler(
-                model_id=model_id,
-                local_model_path=local_model_path,
-                model_type=model_type,
-                device=device
-            )
-            models_cache[build_model_cache_key(model_id, model_type)] = handler
-            return handler
-        elif model_id in ["THUDM/glm-4-9b-chat-hf", "THUDM/glm-4-9b-chat-1m-hf"]:
-            handler = GLM4HfHandler(
-                model_id=model_id,  # model_id가 정의되어 있어야 합니다.
-                local_model_path=local_model_path,
-                model_type=model_type,
-                device=device
-            )
-            models_cache[build_model_cache_key(model_id, model_type)] = handler
-            return handler
-        elif model_id in ["bean980310/glm-4-9b-chat-hf_float8", "genai-archive/glm-4-9b-chat-hf_int8"]:
-            # 'fp8' 특화 핸들러 로직 추가
-            handler = GLM4HfHandler(
-                model_id=model_id,  # model_id가 정의되어 있어야 합니다.
-                local_model_path=local_model_path,
-                model_type=model_type,
-                device=device
-            )
-            models_cache[build_model_cache_key(model_id, model_type)] = handler
-            return handler
-        elif model_id in ["CohereForAI/aya-23-8B", "CohereForAI/aya-23-35B"]:
+    else:
+        if "llama-3" in model_id.lower():
+            if "vision" in model_id.lower():
+                handler = VisionModelHandler(
+                    model_id=model_id,
+                    lora_model_id=lora_model_id,
+                    local_model_path=local_model_path,
+                    lora_path=lora_path,
+                    model_type=model_type,
+                    device=device
+                )
+                models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+                return handler
+            else:
+                handler = Llama3Handler(
+                    model_id=model_id,
+                    lora_model_id=lora_model_id,
+                    local_model_path=local_model_path,
+                    lora_path=lora_path,
+                    model_type=model_type,
+                    device=device
+                )
+                models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+                return handler
+        elif "aya-23" in model_id.lower():
             handler = Aya23Handler(
                 model_id=model_id,  # model_id가 정의되어 있어야 합니다.
                 lora_model_id=lora_model_id,
@@ -193,8 +158,8 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
-        elif "qwen" in model_id.lower():
-            handler = QwenHandler(
+        elif "qwen2" in model_id.lower():
+            handler = Qwen2Handler(
                 model_id=model_id,  # model_id가 정의되어 있어야 합니다.
                 lora_model_id=lora_model_id,
                 local_model_path=local_model_path,

@@ -402,6 +402,18 @@ def get_terminators(tokenizer):
     if "glm" in str(tokenizer.__class__).lower():
         # GLM 모델용 특수 처리
         return [tokenizer.eos_token_id]  # GLM의 EOS 토큰 사용
+    elif "llama" in str(tokenizer.__class__).lower():
+        # Llama 모델용 특수 처리
+        return [
+            tokenizer.eos_token_id,
+            tokenizer.convert_tokens_to_ids("<|eot_id|>")
+        ]
+    elif "qwen" in str(tokenizer.__class__).lower():
+        # Qwen 모델용 특수 처리
+        return [
+            tokenizer.eos_token_id,
+            tokenizer.convert_tokens_to_ids("<|im_end|>")
+        ]
     else:
         # 기존 다른 모델들을 위한 처리
         return [

@@ -14,7 +14,7 @@ class MlxModelHandler:
         
     def load_model(self):
         from mlx_lm import load
-        self.model, self.tokenizer = load(self.model_dir, tokenizer_config={"eos_token": "<|im_end|>"})
+        self.model, self.tokenizer = load(self.model_dir, adapter_path=self.lora_model_dir, tokenizer_config=self.get_eos_token())
     
     def generate_answer(self, history, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
         from mlx_lm import generate
@@ -47,3 +47,9 @@ class MlxModelHandler:
         title=title_response.strip()
         logger.info(f"생성된 채팅 제목: {title}")
         return title
+    
+    def get_eos_token(self):
+        if "llama-3" in self.model_dir.lower():
+            return {"eos_token": "<|eot_id|>"}
+        elif "qwen2" in self.model_dir.lower():
+            return {"eos_token": "<|im_end|>"}

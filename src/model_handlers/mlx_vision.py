@@ -10,15 +10,16 @@ from mlx_vlm.utils import load_config
 logger = logging.getLogger(__name__)
 
 class MlxVisionHandler:
-    def __init__(self, model_id, local_model_path=None, model_type="mlx"):
+    def __init__(self, model_id, lora_model_id=None, local_model_path=None, lora_path=None, model_type="mlx"):
         self.model_dir = local_model_path or os.path.join("./models/llm", model_id)
+        self.lora_model_dir = lora_path or (os.path.join("./models/llm/loras", lora_model_id) if lora_model_id else None)
         self.processor = None
         self.config = None
         self.model = None
         self.load_model()
         
     def load_model(self):
-        self.model, self.processor = load(self.model_dir)
+        self.model, self.processor = load(self.model_dir, adapter_path=self.lora_model_dir)
         self.config = load_config(self.model_dir)
         
     def generate_answer(self, history, *image_inputs, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
