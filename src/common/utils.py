@@ -181,7 +181,7 @@ def get_all_loras(lora_root="./models/llm/loras"):
         os.makedirs(lora_root, exist_ok=True)
     lora_models = ["None"]
     allowed_extensions = { ".safetensors", ".bin", ".pt", ".pth" }
-    required_names = { "adapter_config.json" }
+    required_names = {"config.json", "adapter_config.json"}
     for dirpath, _, filenames in os.walk(lora_root):
         if has_required_files(filenames, required_names=required_names, required_extensions=allowed_extensions):
             rel_path = os.path.relpath(dirpath, lora_root)

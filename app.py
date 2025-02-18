@@ -1345,7 +1345,7 @@ with gr.Blocks(css=css) as demo:
             model_dropdown,
             lora_dropdown,
             custom_model_path_state,
-            image_input,
+            multimodal_msg,
             api_key_text,
             selected_device_state,
             seed_state,

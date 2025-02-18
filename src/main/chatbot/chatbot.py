@@ -140,9 +140,16 @@ class MainTab:
         Returns:
             tuple: 업데이트된 입력 필드, 히스토리, Chatbot 컴포넌트, 상태 메시지.
         """
-        if not user_input.strip():
-            # 빈 입력일 경우 아무 것도 하지 않음
-            return "", history, self.filter_messages_for_chatbot(history), ""
+        if isinstance(user_input, dict):
+            text = user_input.get("text", "")
+            files = user_input.get("files", [])
+            if not text.strip() and not files:
+                # 빈 입력일 경우 아무 것도 하지 않음
+                return "", history, self.filter_messages_for_chatbot(history), ""
+        else:
+            if not user_input.strip():
+                # 빈 입력일 경우 아무 것도 하지 않음
+                return "", history, self.filter_messages_for_chatbot(history), ""
 
         if selected_character and selected_character not in self.characters:
             logger.warning(f"Invalid character selected: {selected_character}")
@@ -166,14 +173,22 @@ class MainTab:
             return "", history, self.filter_messages_for_chatbot(history), "❌ 캐릭터 설정 오류"
     
         
+        if isinstance(user_input, dict):
+            history.append({"role": "user", "content": files})
+            history.append({"role": "user", "content": text})
+            speech_manager.update_tone(text)
+        else:
         # 사용자 메시지 추가
-        history.append({"role": "user", "content": user_input})
-        
-        speech_manager.update_tone(user_input)
+            history.append({"role": "user", "content": user_input})
+            speech_manager.update_tone(user_input)
         
         return "", history, self.filter_messages_for_chatbot(history)
     
     def process_message_bot(self, session_id, history, selected_model, selected_lora, custom_path, image, api_key, device, seed, temperature, top_k, top_p, repetition_penalty, language):
+        if isinstance(image, dict):
+            files = image.get("files", [])
+            image = files
+            
         chat_title=self.chat_titles.get(session_id)
         try:
             if chat_title is None and len(history)==2:
