@@ -1,11 +1,6 @@
 import logging
 import traceback
 import os
-from src.common.utils import make_local_dir_name
-
-from mlx_vlm import load, generate
-from mlx_vlm.prompt_utils import apply_chat_template
-from mlx_vlm.utils import load_config
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +14,14 @@ class MlxVisionHandler:
         self.load_model()
         
     def load_model(self):
+        from mlx_vlm import load
+        from mlx_vlm.utils import load_config
         self.model, self.processor = load(self.model_dir, adapter_path=self.lora_model_dir)
         self.config = load_config(self.model_dir)
         
     def generate_answer(self, history, image_inputs, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
+        from mlx_vlm import generate
+        from mlx_vlm.prompt_utils import apply_chat_template
         # 1) prompt 문자열 생성 대신 history 그대로 사용
         # prompt = self.history_to_prompt(history)  # 주석 처리 혹은 삭제
         image = image_inputs if image_inputs else None
@@ -47,6 +46,7 @@ class MlxVisionHandler:
             return output
         
     def generate_chat_title(self, first_message: str)->str:
+        from mlx_vlm import generate
         prompt=(
             "Summarize the following message in one sentence and create an appropriate chat title:\n\n"
             f"{first_message}\n\n"
