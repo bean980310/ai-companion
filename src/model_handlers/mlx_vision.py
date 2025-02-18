@@ -43,5 +43,5 @@ class MlxVisionHandler:
                 prompt=history,   # <-- history 자체를 전달
                 num_images=0
             )
-            output = generate(self.model, self.processor, formatted_prompt, images=None, verbose=False, repetition_penalty=0.8, top_p=0.9, temp=0.7)
+            output = generate(self.model, self.processor, formatted_prompt, images, verbose=False, repetition_penalty=repetition_penalty, top_p=top_p, temp=temperature)
             return output

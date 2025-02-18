@@ -537,6 +537,7 @@ class MainTab:
         image_visible = (
             "vision" in selected_model.lower() or
             "qwen2-vl" in selected_model.lower() or
+            "qwen2.5-vl" in selected_model.lower() or
             selected_model in [
                 "Bllossom/llama-3.2-Korean-Bllossom-AICA-5B",
                 "THUDM/glm-4v-9b",

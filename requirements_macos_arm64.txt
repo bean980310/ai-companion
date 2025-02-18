@@ -15,6 +15,7 @@ torchaudio
 accelerate
 opencv-python
 opencv-contrib-python
+imutils
 pytesseract
 basicsr
 facexlib
@@ -41,6 +42,7 @@ onnxruntime
 Pillow
 numpy
 websocket-client
+eva-decord
 mlx
 mlx_lm
 mlx_vlm

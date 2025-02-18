@@ -103,7 +103,7 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
         models_cache[cache_key] = handler
         return handler
     elif model_type == "mlx":
-        if "vision" in model_id.lower() or "qwen2-vl" in model_id.lower():
+        if "vision" in model_id.lower() or "qwen2-vl" in model_id.lower() or "qwen2.5-vl" in model_id.lower():
             handler = MlxVisionHandler(
                 model_id=model_id,  # model_id가 정의되어 있어야 합니다.
                 lora_model_id=lora_model_id,
