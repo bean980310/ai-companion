@@ -529,6 +529,32 @@ class MainTab:
         """
         api_visible = selected_model in api_models
         return gr.update(visible=api_visible)
+    
+    def toggle_standard_msg_input_visibility(self, selected_model):
+        msg_visible = (
+            "vision" not in selected_model.lower() and
+            "qwen2-vl" not in selected_model.lower() and
+            "qwen2.5-vl" not in selected_model.lower() and
+            selected_model not in [
+                "Bllossom/llama-3.2-Korean-Bllossom-AICA-5B",
+                "THUDM/glm-4v-9b",
+                "openbmb/MiniCPM-Llama3-V-2_5"
+            ]
+        )
+        return gr.update(visible=msg_visible)
+    
+    def toggle_multimodal_msg_input_visibility(self, selected_model):
+        msg_visible = (
+            "vision" in selected_model.lower() or
+            "qwen2-vl" in selected_model.lower() or
+            "qwen2.5-vl" in selected_model.lower() or
+            selected_model in [
+                "Bllossom/llama-3.2-Korean-Bllossom-AICA-5B",
+                "THUDM/glm-4v-9b",
+                "openbmb/MiniCPM-Llama3-V-2_5"
+            ]
+        )
+        return gr.update(visible=msg_visible)
 
     def toggle_image_input_visibility(self, selected_model):
         """

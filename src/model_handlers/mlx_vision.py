@@ -22,19 +22,19 @@ class MlxVisionHandler:
         self.model, self.processor = load(self.model_dir, adapter_path=self.lora_model_dir)
         self.config = load_config(self.model_dir)
         
-    def generate_answer(self, history, *image_inputs, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
+    def generate_answer(self, history, image_inputs, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
         # 1) prompt 문자열 생성 대신 history 그대로 사용
         # prompt = self.history_to_prompt(history)  # 주석 처리 혹은 삭제
-        images = image_inputs if image_inputs else []
+        image = image_inputs if image_inputs else None
         if image_inputs:
             # 2) 'prompt' 대신 'conversation=history' 형태로 전달
             formatted_prompt = apply_chat_template(
                 processor=self.processor,
                 config=self.config,
-                prompt=history,   # <-- history 자체를 전달
-                num_images=len(images)
+                prompt=history,
+                num_images=1 # <-- history 자체를 전달
             )
-            output = generate(self.model, self.processor, formatted_prompt, images, verbose=False, repetition_penalty=repetition_penalty, top_p=top_p, temp=temperature)
+            output = generate(self.model, self.processor, formatted_prompt, image, verbose=False, repetition_penalty=repetition_penalty, top_p=top_p, temp=temperature)
             return output
         else:
             formatted_prompt = apply_chat_template(
@@ -43,5 +43,19 @@ class MlxVisionHandler:
                 prompt=history,   # <-- history 자체를 전달
                 num_images=0
             )
-            output = generate(self.model, self.processor, formatted_prompt, images, verbose=False, repetition_penalty=repetition_penalty, top_p=top_p, temp=temperature)
+            output = generate(self.model, self.processor, formatted_prompt, image, verbose=False, repetition_penalty=repetition_penalty, top_p=top_p, temp=temperature)
             return output
+        
+    def generate_chat_title(self, first_message: str)->str:
+        prompt=(
+            "Summarize the following message in one sentence and create an appropriate chat title:\n\n"
+            f"{first_message}\n\n"
+            "Chat Title:"
+        )
+        logger.info(f"채팅 제목 생성 프롬프트: {prompt}")
+        
+        title_response=generate(self.model, self.processor, prompt=prompt, verbose=True, max_tokens=20)
+        
+        title=title_response.strip()
+        logger.info(f"생성된 채팅 제목: {title}")
+        return title

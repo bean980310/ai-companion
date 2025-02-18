@@ -415,17 +415,28 @@ with gr.Blocks(css=css) as demo:
                         
                         with gr.Row(elem_classes="input-area"):
                             msg = gr.Textbox(
-                            label=_("message_input_label"),
-                            placeholder=_("message_placeholder"),
-                            scale=9,
-                            show_label=False,
-                            elem_classes="message-input"
+                                label=_("message_input_label"),
+                                placeholder=_("message_placeholder"),
+                                scale=9,
+                                show_label=False,
+                                elem_classes="message-input",
+                                submit_btn=True
+                            )
+                            multimodal_msg = gr.MultimodalTextbox(
+                                label=_("message_input_label"),
+                                placeholder=_("message_placeholder"),
+                                file_types=["image"],
+                                scale=9,
+                                show_label=False,
+                                elem_classes="message-input",
+                                submit_btn=True
                             )
                             send_btn = gr.Button(
                                 value=_("send_button"),
                                 scale=1,
                                 variant="primary",
-                                elem_classes="send-button"
+                                elem_classes="send-button",
+                                visible=False
                             )
                             image_input = gr.Image(label=_("image_upload_label"), type="pil", visible=False)
                     with gr.Column(scale=3, elem_classes="side-panel"):
@@ -977,11 +988,14 @@ with gr.Blocks(css=css) as demo:
     model_dropdown.change(
         fn=lambda selected_model: (
             main_tab.toggle_api_key_visibility(selected_model),
-            main_tab.toggle_image_input_visibility(selected_model),
-            main_tab.toggle_lora_visibility(selected_model)
+            # main_tab.toggle_image_input_visibility(selected_model),
+            main_tab.toggle_lora_visibility(selected_model),
+            main_tab.toggle_multimodal_msg_input_visibility(selected_model),
+            main_tab.toggle_standard_msg_input_visibility(selected_model)
         ),
         inputs=[model_dropdown],
-        outputs=[api_key_text, image_input, lora_dropdown]
+        outputs=[api_key_text, lora_dropdown, multimodal_msg, msg]
+        # outputs=[api_key_text, image_input, lora_dropdown]
     )
         
     model_type_dropdown.change(
@@ -1078,11 +1092,14 @@ with gr.Blocks(css=css) as demo:
     demo.load(
         fn=lambda selected_model: (
             main_tab.toggle_api_key_visibility(selected_model),
-            main_tab.toggle_image_input_visibility(selected_model),
-            main_tab.toggle_lora_visibility(selected_model)
+            # main_tab.toggle_image_input_visibility(selected_model),
+            main_tab.toggle_lora_visibility(selected_model),
+            main_tab.toggle_multimodal_msg_input_visibility(selected_model),
+            main_tab.toggle_standard_msg_input_visibility(selected_model)
         ),
         inputs=[model_dropdown],
-        outputs=[api_key_text, image_input, lora_dropdown]
+        outputs=[api_key_text, lora_dropdown, multimodal_msg, msg]
+        # outputs=[api_key_text, image_input, lora_dropdown]
     )
         
     def update_character_languages(selected_language, selected_character):
@@ -1222,6 +1239,10 @@ with gr.Blocks(css=css) as demo:
                     label=_("message_input_label"),
                     placeholder=_("message_placeholder")
                 ),
+                gr.update(
+                    label=_("message_input_label"),
+                    placeholder=_("message_placeholder")
+                ),
                 gr.update(value=_("send_button")),
                 gr.update(value=_("advanced_setting")),
                 gr.update(label=_("seed_label"), info=_("seed_info")),
@@ -1230,7 +1251,7 @@ with gr.Blocks(css=css) as demo:
             ]
         else:
             # 언어 변경 실패 시 아무 것도 하지 않음
-            return gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update()
+            return gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update()
 
     # 언어 변경 이벤트 연결
     language_dropdown.change(
@@ -1247,6 +1268,7 @@ with gr.Blocks(css=css) as demo:
             api_key_text,
             image_input,
             msg,
+            multimodal_msg,
             send_btn,
             advanced_setting,
             seed_input,
@@ -1268,6 +1290,49 @@ with gr.Blocks(css=css) as demo:
         ],
         outputs=[
             msg,            # 사용자 입력 필드 초기화
+            history_state,  # 히스토리 업데이트
+            chatbot,        # Chatbot UI 업데이트
+        ],
+        queue=False
+    ).then(
+        fn=main_tab.process_message_bot,
+        inputs=[
+            session_id_state,
+            history_state,
+            model_dropdown,
+            lora_dropdown,
+            custom_model_path_state,
+            image_input,
+            api_key_text,
+            selected_device_state,
+            seed_state,
+            temperature_state,
+            top_k_state,
+            top_p_state,
+            repetition_penalty_state,
+            selected_language_state
+        ],
+        outputs=[
+            history_state,
+            chatbot,
+            status_text,  # 상태 메시지
+            chat_title_box
+        ],
+        queue=True  # 모델 추론이 들어가므로 True
+    )
+    
+    multimodal_msg.submit(
+        fn=main_tab.process_message_user,
+        inputs=[
+            multimodal_msg,  # 사용자 입력
+            session_id_state,
+            history_state,
+            system_message_box,
+            character_dropdown,
+            selected_language_state
+        ],
+        outputs=[
+            multimodal_msg, # 사용자 입력 필드 초기화
             history_state,  # 히스토리 업데이트
             chatbot,        # Chatbot UI 업데이트
         ],

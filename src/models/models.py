@@ -282,7 +282,7 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
         
         logger.info(f"[*] Generating answer using {handler.__class__.__name__}")
         try:
-            if isinstance(handler, VisionModelHandler):
+            if isinstance(handler, VisionModelHandler) or isinstance(handler, MlxVisionHandler):
                 answer = handler.generate_answer(history, image_input, temperature, top_k, top_p, repetition_penalty)
             else:
                 answer = handler.generate_answer(history, temperature, top_k, top_p, repetition_penalty)
