@@ -66,7 +66,7 @@ from src.common.js import js
 
 from src.api.comfy_api import client
 
-os.environ['GRADIO_TEMP_DIR'] = os.path.abspath(TMP_DIR)
+# os.environ['GRADIO_TEMP_DIR'] = os.path.abspath(TMP_DIR)
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -351,20 +351,22 @@ with gr.Blocks(css=css) as demo:
                     elem_classes="custom-dropdown"
                 )
                 
-        with gr.Sidebar():
-            with gr.Accordion(label="Session Select", open=False):
-                session_select_dropdown = gr.Dropdown(
-                    label="세션 선택",
-                    choices=[],  # 앱 시작 시 혹은 별도의 로직으로 세션 목록을 채움
-                    value=None,
-                    interactive=True,
-                    container=False,
-                    scale=8,
-                    elem_classes="session-dropdown"
-                )
-                add_session_icon_btn = gr.Button("📝", elem_classes="icon-button", scale=1, variant="secondary")
-                delete_session_icon_btn = gr.Button("🗑️", elem_classes="icon-button-delete", scale=1, variant="stop")
-                        
+        with gr.Sidebar(label="Chat Session", open=False):
+            session_select_dropdown = gr.Dropdown(
+                label="세션 선택",
+                choices=[],  # 앱 시작 시 혹은 별도의 로직으로 세션 목록을 채움
+                value=None,
+                interactive=True,
+                container=False,
+                scale=8,
+                elem_classes="session-dropdown"
+            )
+            chat_title_box=gr.Textbox(
+                value="",
+                interactive=False
+            )
+            add_session_icon_btn = gr.Button("📝", elem_classes="icon-button", scale=1, variant="secondary")
+            delete_session_icon_btn = gr.Button("🗑️", elem_classes="icon-button-delete", scale=1, variant="stop")
                         
         with gr.Tabs() as tabs:
             with gr.Tab('Chat'):
@@ -397,11 +399,6 @@ with gr.Blocks(css=css) as demo:
                             visible=False,
                             elem_classes="model-dropdown"
                         )
-                with gr.Row():
-                    chat_title_box=gr.Textbox(
-                        value="",
-                        interactive=False
-                    )
                 with gr.Row(elem_classes="chat-interface"):
                     with gr.Column(scale=7):
                         system_message_box = gr.Textbox(
