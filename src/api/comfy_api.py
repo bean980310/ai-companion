@@ -90,8 +90,9 @@ class ComfyUIClient:
         # data["image"] = (file_name, file_data, "image/png")
         if overwrite:
             data["overwrite"] = "true"
-            
-        data["subfolder"] = ""
+        
+        if subfolder:
+            data["subfolder"] = subfolder
             
         data["type"] = "input" 
 
@@ -116,15 +117,14 @@ class ComfyUIClient:
         보통 inpaint용 이미지는 배경과 마스크를 합성한 최종 이미지이므로,
         파일 이름이나 추가 전처리(예: 알파 채널 유지 등)를 다르게 할 수 있음.
         """
-        if original_img is None or mask_img is None:
-            return None
         
-        with open(original_img, 'rb') as f:
-            original_data = f.read()
+        bg_img = Image.open(mask_img['background'])
+        buffer = BytesIO()
+        bg_img.save(buffer, format="PNG")
             
         original_file_name = os.path.basename(original_img)
         
-        mask_img=Image.open(mask_img)
+        mask_img=Image.open(mask_img['layers'][0])
         buffer = BytesIO()
         mask_img.save(buffer, format="PNG")
         file_data = buffer.getvalue()

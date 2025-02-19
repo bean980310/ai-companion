@@ -346,23 +346,24 @@ with gr.Blocks(css=css) as demo:
                     container=False,
                     elem_classes="custom-dropdown"
                 )
+                
+        with gr.Sidebar():
+            with gr.Accordion(label="Session Select", open=False):
+                session_select_dropdown = gr.Dropdown(
+                    label="세션 선택",
+                    choices=[],  # 앱 시작 시 혹은 별도의 로직으로 세션 목록을 채움
+                    value=None,
+                    interactive=True,
+                    container=False,
+                    scale=8,
+                    elem_classes="session-dropdown"
+                )
+                add_session_icon_btn = gr.Button("📝", elem_classes="icon-button", scale=1, variant="secondary")
+                delete_session_icon_btn = gr.Button("🗑️", elem_classes="icon-button-delete", scale=1, variant="stop")
+                        
+                        
         with gr.Tabs() as tabs:
             with gr.Tab('Chat'):
-                with gr.Row(elem_classes="session-container"):
-                    session_select_dropdown = gr.Dropdown(
-                        label="세션 선택",
-                        choices=[],  # 앱 시작 시 혹은 별도의 로직으로 세션 목록을 채움
-                        value=None,
-                        interactive=True,
-                        container=False,
-                        scale=8,
-                        elem_classes="session-dropdown"
-                    )
-                    add_session_icon_btn = gr.Button("📝", elem_classes="icon-button", scale=1, variant="secondary")
-                    delete_session_icon_btn = gr.Button("🗑️", elem_classes="icon-button-delete", scale=1, variant="stop")
-                    
-                    delete_modal, delete_message, delete_cancel_btn, delete_confirm_btn = create_delete_session_modal()
-                
                 with gr.Row(elem_classes="model-container"):
                     with gr.Column(scale=8):
                         model_type_dropdown = gr.Radio(
@@ -501,7 +502,6 @@ with gr.Blocks(css=css) as demo:
                                 step=0.1,
                                 interactive=True
                             )
-                            reset_modal, single_reset_content, all_reset_content, cancel_btn, confirm_btn = create_reset_confirm_modal()
                             preset_dropdown = gr.Dropdown(
                                 label="프리셋 선택",
                                 choices=get_preset_choices(default_language),
@@ -638,34 +638,38 @@ with gr.Blocks(css=css) as demo:
                     with gr.Accordion("Image to Image", open=False):
                         image_to_image_mode = gr.Radio(
                             label="Image to Image Mode",
-                            choices=["None", "Image to Image", "Inpaint"],
+                            choices=["None", "Image to Image", "Inpaint", "Inpaint Upload"],
                             value="None",
                             elem_classes="model-dropdown"
                         )
-                        with gr.Row():
-                            image_to_image_input = gr.Image(
-                                label="Image Input",
-                                type="filepath",
-                                sources="upload",
-                                format="png",
+                        with gr.Column():
+                            with gr.Row():
+                                image_to_image_input = gr.Image(
+                                    label="Image to Image",
+                                    type="filepath",
+                                    sources="upload",
+                                    format="png",
+                                    visible=False
+                                )
+                                image_inpaint_input = gr.Image(
+                                    label="Image Inpaint",
+                                    type="filepath",
+                                    sources="upload",
+                                    format="png",
+                                    visible=False
+                                )
+                                image_inpaint_masking = gr.ImageMask(
+                                    label="Image Inpaint Mask",
+                                    type="filepath",
+                                    sources="upload",
+                                    format="png",
+                                    visible=False
+                                )
+                            image_inpaint_copy = gr.Button(
+                                value="Copy",
                                 visible=False
                             )
-                        with gr.Row():
-                            image_inpaint_input = gr.Image(
-                                label="Image Inpaint",
-                                type="filepath",
-                                sources="upload",
-                                format="png",
-                                visible=False
-                            )
-                            image_inpaint_masking = gr.ImageMask(
-                                label="Image Inpaint Mask",
-                                type="filepath",
-                                sources="upload",
-                                format="png",
-                                brush=gr.Brush(colors=["#FFFFFF"], color_mode="fixed"),
-                                visible=False
-                            )
+                            
                         blur_radius_slider = gr.Slider(
                             label="Blur Radius",
                             minimum=0,
@@ -846,6 +850,8 @@ with gr.Blocks(css=css) as demo:
                         with gr.Row():
                             translate_btn = gr.Button("Translate", variant="primary")
                             
+        reset_modal, single_reset_content, all_reset_content, cancel_btn, confirm_btn = create_reset_confirm_modal()
+        delete_modal, delete_message, delete_cancel_btn, delete_confirm_btn = create_delete_session_modal()      
      
 
     # 아래는 변경 이벤트 등록
@@ -1037,10 +1043,20 @@ with gr.Blocks(css=css) as demo:
         image = client.upload_image(image, overwrite=True)
         return image
     
+    def process_uploaded_image_for_inpaint(image):
+        print(image)
+        im = {
+            "background": image,
+            "layers": [],
+            "composite": None
+        }
+        image = client.upload_image(image, overwrite=True)
+        return image, gr.update(value=im)
+    
     def process_uploaded_image_inpaint(original_image, mask_image):
         print(original_image)
         print(mask_image)
-        mask = client.upload_mask(original_image, mask_image['layers'][0])
+        mask = client.upload_mask(original_image, mask_image)
         return mask
         
     def toggle_image_to_image_input(mode):
@@ -1051,9 +1067,25 @@ with gr.Blocks(css=css) as demo:
         image_visible = mode == "Inpaint"
         return gr.update(visible=image_visible)
     
-    def toggle_image_inpaint_mask(mode, image):
-        image_visible = mode == "Inpaint" and image is not None
+    def toggle_image_inpaint_mask(mode):
+        image_visible = mode == "Inpaint"
         return gr.update(visible=image_visible)
+    
+    def toggle_image_inpaint_copy(mode, image):
+        button_visible = mode == "Inpaint" and image is not None
+        return gr.update(visible=button_visible)
+        
+    def toggle_image_inpaint_mask_interactive(image):
+        image_interactive = image is not None
+        return gr.update(interactive=image_interactive)
+    
+    def copy_image_for_inpaint(image):
+        im = {
+            "background": image,
+            "layers": [],
+            "composite": None
+        }
+        return gr.update(value=im)
     
     image_to_image_input.change(
         fn=process_uploaded_image,
@@ -1061,21 +1093,45 @@ with gr.Blocks(css=css) as demo:
         outputs=stored_image
     )
     
-    image_inpaint_input.change(
+    image_inpaint_input.upload(
         fn=process_uploaded_image,
         inputs=image_inpaint_input,
+        outputs=stored_image
+    ).then(
+        fn=copy_image_for_inpaint,
+        inputs=image_inpaint_input,
+        outputs=image_inpaint_masking
+    )
+    
+    image_inpaint_copy.click(
+        fn=toggle_image_inpaint_mask_interactive,
+        inputs=image_inpaint_input,
+        outputs=image_inpaint_masking
+    )
+    
+    image_inpaint_masking.upload(
+        fn=copy_image_for_inpaint,
+        inputs=image_inpaint_masking,
+        outputs=image_inpaint_input
+    )
+    
+    image_inpaint_masking.apply(
+        fn=process_uploaded_image_inpaint,
+        inputs=[image_to_image_input, image_inpaint_masking],
         outputs=stored_image_inpaint
     )
     
     image_to_image_mode.change(
         fn=lambda mode: (
-            toggle_image_to_image_input(mode), 
+            toggle_image_to_image_input(mode),
             toggle_image_inpaint_input(mode),
+            toggle_image_inpaint_mask(mode),
             toggle_denoise_strength_dropdown(mode)
             ),
         inputs=[image_to_image_mode],
-        outputs=[image_to_image_input, 
-                 image_inpaint_input, 
+        outputs=[image_to_image_input,
+                 image_inpaint_input,
+                 image_inpaint_masking, 
                  denoise_strength_slider]
     ).then(
         fn=toggle_diffusion_with_refiner_image_to_image_start,
