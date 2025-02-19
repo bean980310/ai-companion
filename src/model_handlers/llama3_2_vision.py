@@ -10,7 +10,7 @@ from peft import PeftModel
 
 logger = logging.getLogger(__name__)
 
-class VisionModelHandler:
+class Llama3VisionModelHandler:
     def __init__(self, model_id, lora_model_id=None, local_model_path=None, lora_path=None, model_type="transformers", device='cpu'):
         self.model_dir = local_model_path or os.path.join("./models/llm", model_id)
         self.lora_model_dir = lora_path or (os.path.join("./models/llm/loras", lora_model_id) if lora_model_id else None)

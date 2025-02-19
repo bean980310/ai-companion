@@ -36,7 +36,10 @@ class Llama3Handler:
             )
             if self.lora_model_dir and os.path.exists(self.lora_model_dir):
                 logger.info(f"[*] Loading LoRA from {self.lora_model_dir}")
-                self.model.load_adapter(self.lora_model_dir, "lora")
+                self.model=PeftModel.from_pretrained(
+                    self.model_dir,
+                    self.lora_model_dir
+                ).to(self.device)
             logger.info(f"[*] Model loaded successfully: {self.model_dir}")
         except Exception as e:
             logger.error(f"Failed to load Model: {str(e)}\n\n{traceback.format_exc()}")

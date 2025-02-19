@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from src.common.cache import models_cache
 from src.model_handlers import (
-    GGUFModelHandler, MiniCPMLlama3V25Handler, Llama3Handler, GLM4Handler, GLM4VHandler, VisionModelHandler,
+    GGUFModelHandler, MiniCPMLlama3V25Handler, Llama3Handler, GLM4Handler, GLM4VHandler, Llama3VisionModelHandler,
     Aya23Handler, GLM4HfHandler, OtherModelHandler, Qwen2Handler, MlxModelHandler, MlxVisionHandler
 )
 from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models, convert_folder_to_modelid
@@ -126,7 +126,7 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
     else:
         if "llama-3" in model_id.lower():
             if "vision" in model_id.lower():
-                handler = VisionModelHandler(
+                handler = Llama3VisionModelHandler(
                     model_id=model_id,
                     lora_model_id=lora_model_id,
                     local_model_path=local_model_path,
@@ -282,7 +282,7 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
         
         logger.info(f"[*] Generating answer using {handler.__class__.__name__}")
         try:
-            if isinstance(handler, VisionModelHandler) or isinstance(handler, MlxVisionHandler):
+            if isinstance(handler, Llama3VisionModelHandler) or isinstance(handler, MlxVisionHandler):
                 answer = handler.generate_answer(history, image_input, temperature, top_k, top_p, repetition_penalty)
             else:
                 answer = handler.generate_answer(history, temperature, top_k, top_p, repetition_penalty)
