@@ -14,6 +14,8 @@ import io
 import requests
 import datetime
 from io import BytesIO
+import numpy as np
+import torch
 
 class ComfyUIClient:
     def __init__(self, server_address="127.0.0.1:8000"):
@@ -125,8 +127,12 @@ class ComfyUIClient:
         original_file_name = os.path.basename(original_img)
         
         mask_img=Image.open(mask_img['layers'][0])
+        mask_temp=mask_img.getchannel('A')
+        new_alpha=ImageOps.invert(mask_temp)
+        new_mask=Image.new('L', mask_img.size)
+        new_mask.putalpha(new_alpha)
         buffer = BytesIO()
-        mask_img.save(buffer, format="PNG")
+        new_mask.save(buffer, format="PNG")
         file_data = buffer.getvalue()
         suffix=datetime.datetime.now().strftime("%y%m%d_%H%M%S")
         

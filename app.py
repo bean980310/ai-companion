@@ -5,6 +5,7 @@ import random
 import pandas as pd
 from pathlib import Path
 from typing import List, Dict, Any, Tuple
+import os
 import argparse
 import gradio as gr
 import logging
@@ -27,8 +28,10 @@ from src.common.translations import translation_manager, _, TranslationManager
 from src.characters.persona_speech_manager import PersonaSpeechManager
 from src.common.args import parse_args
 from src.common.default_language import default_language
-from PIL import Image
+from src.common.tmp_dir import TMP_DIR
+from PIL import Image, ImageOps
 import numpy as np
+import cv2
 
 from src.models import api_models, transformers_local, gguf_local, mlx_local, diffusion_api_models, diffusers_local, checkpoints_local
 from src.main.chatbot.chatbot import (
@@ -63,6 +66,8 @@ from src.common.js import js
 
 from src.api.comfy_api import client
 
+os.environ['GRADIO_TEMP_DIR'] = os.path.abspath(TMP_DIR)
+
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -85,7 +90,6 @@ rotating_file_handler = RotatingFileHandler(
 )
 rotating_file_handler.setFormatter(formatter)
 logger.addHandler(rotating_file_handler)
-
 
 args=parse_args()
 
@@ -1079,13 +1083,16 @@ with gr.Blocks(css=css) as demo:
         image_interactive = image is not None
         return gr.update(interactive=image_interactive)
     
-    def copy_image_for_inpaint(image):
-        im = {
-            "background": image,
-            "layers": [],
-            "composite": None
-        }
-        return gr.update(value=im)
+    def copy_image_for_inpaint(image_input, image):
+        import cv2
+        print(type(image_input))
+        im = cv2.imread(image_input)
+        height, width, channels = im.shape[:3]
+        image['background']=image_input
+        image['layers'][0]=np.zeros((height, width, 4), dtype=np.uint8)
+        
+        return gr.update(value=image)
+        
     
     image_to_image_input.change(
         fn=process_uploaded_image,
@@ -1095,10 +1102,14 @@ with gr.Blocks(css=css) as demo:
     
     image_inpaint_input.upload(
         fn=process_uploaded_image,
-        inputs=image_inpaint_input,
+        inputs=[image_inpaint_input],
         outputs=stored_image
     ).then(
         fn=copy_image_for_inpaint,
+        inputs=[image_inpaint_input, image_inpaint_masking],
+        outputs=image_inpaint_masking
+    ).then(
+        fn=toggle_image_inpaint_mask_interactive,
         inputs=image_inpaint_input,
         outputs=image_inpaint_masking
     )
@@ -1109,15 +1120,9 @@ with gr.Blocks(css=css) as demo:
         outputs=image_inpaint_masking
     )
     
-    image_inpaint_masking.upload(
-        fn=copy_image_for_inpaint,
-        inputs=image_inpaint_masking,
-        outputs=image_inpaint_input
-    )
-    
     image_inpaint_masking.apply(
         fn=process_uploaded_image_inpaint,
-        inputs=[image_to_image_input, image_inpaint_masking],
+        inputs=[image_inpaint_input, image_inpaint_masking],
         outputs=stored_image_inpaint
     )
     
