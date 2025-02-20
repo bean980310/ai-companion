@@ -24,6 +24,7 @@ git+https://github.com/xinntao/Real-ESRGAN.git
 openai
 tiktoken
 anthropic
+google-genai
 gguf
 llama-cpp-python
 stable-diffusion-cpp-python

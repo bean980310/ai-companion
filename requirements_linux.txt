@@ -23,6 +23,7 @@ gfpgan
 openai
 tiktoken
 anthropic
+google-genai
 gguf
 llama-cpp-python
 stable-diffusion-cpp-python
