@@ -19,6 +19,8 @@ import logging
 import traceback
 import openai
 import anthropic
+from google import genai
+from google.genai import types
 
 from langchain.chains.llm import LLMChain
 from langchain.prompts import PromptTemplate
@@ -237,6 +239,31 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
             except Exception as e:
                 logger.error(f"Anthropic API 오류: {str(e)}\n\n{traceback.format_exc()}")
                 return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+        elif "gemini" in selected_model:
+            if not api_key:
+                logger.error("Google API Key가 missing.")
+                return "Google API Key가 필요합니다."
+
+            client = genai.Client(api_key=api_key)
+            messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
+            config = types.GenerateContentConfig(
+                max_output_tokens=1024,
+                temperature=0.7,
+                top_p=0.9
+            )
+            logger.info(f"[*] Google API 요청: {messages}")
+            try: 
+                response = client.models.generate_content(
+                    model=selected_model,
+                    contents=messages,
+                    config=config
+                )
+                answer = response.text
+                logger.info(f"[*] Google 응답: {answer}")
+                return answer
+            except Exception as e:
+                logger.error(f"Google API 오류: {str(e)}\n\n{traceback.format_exc()}")
+                return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
         else:
             if not api_key:
                 logger.error("OpenAI API Key가 missing.")
@@ -251,7 +278,7 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
                     messages=messages,
                     temperature=0.7,
                     max_tokens=1024,
-                    top_p=0.9
+                    top_p=0.9,
                 )
                 answer = response.choices[0].message["content"]
                 logger.info(f"[*] OpenAI 응답: {answer}")
