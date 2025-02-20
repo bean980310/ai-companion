@@ -1531,14 +1531,21 @@ with gr.Blocks(css=css) as demo:
                     placeholder=_("message_placeholder")
                 ),
                 gr.update(value=_("send_button")),
-                gr.update(value=_("advanced_setting")),
+                gr.update(label=_("advanced_setting")),
                 gr.update(label=_("seed_label"), info=_("seed_info")),
+                gr.update(label=_("temperature_label")),
+                gr.update(label=_("top_k_label")),
+                gr.update(label=_("top_p_label")),
+                gr.update(label=_("repetition_penalty_label")),
                 gr.update(value=_("reset_session_button")),
                 gr.update(value=_("reset_all_sessions_button")),
+                gr.update(label=_("model_type_label")),
+                gr.update(label=_("model_select_label")),
+                gr.update(label=_("api_key_label")),
             ]
         else:
             # 언어 변경 실패 시 아무 것도 하지 않음
-            return gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update()
+            return gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update()
 
     # 언어 변경 이벤트 연결
     language_dropdown.change(
@@ -1559,8 +1566,15 @@ with gr.Blocks(css=css) as demo:
             send_btn,
             advanced_setting,
             seed_input,
+            temperature_slider,
+            top_k_slider,
+            top_p_slider,
+            repetition_penalty_slider,
             reset_btn,
             reset_all_btn,
+            diffusion_model_type_dropdown,
+            diffusion_model_dropdown,
+            diffusion_api_key_text
         ]
     )
     
