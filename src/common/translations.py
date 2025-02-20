@@ -172,7 +172,8 @@ class TranslationManager:
                 "refresh_info_label": "새로고침 결과",
                 "cache_clear_all_button": "모든 모델 캐시 삭제",
                 "clear_all_result_label": "결과",
-                "handle_character_change_invalid_error": "❌ 선택한 캐릭터가 유효하지 않습니다."
+                "handle_character_change_invalid_error": "❌ 선택한 캐릭터가 유효하지 않습니다.",
+                "ai_assistant": "AI 비서"
                 # 추가 번역키들...
             },
             'ja': {
@@ -261,7 +262,8 @@ class TranslationManager:
                 "refresh_info_label": "更新結果",
                 "cache_clear_all_button": "すべてのモデルキャッシュを削除",
                 "clear_all_result_label": "結果",
-                "handle_character_change_invalid_error": "❌ 選択したキャラクターが無効です。"
+                "handle_character_change_invalid_error": "❌ 選択したキャラクターが無効です。",
+                "ai_assistant": "AI秘書"
                 # 追加の翻訳キー...
             },
             'zh_CN': {
@@ -350,7 +352,8 @@ class TranslationManager:
                 "refresh_info_label": "刷新结果",
                 "cache_clear_all_button": "删除所有模型缓存",
                 "clear_all_result_label": "结果",
-                "handle_character_change_invalid_error": "❌ 选中的角色无效。"
+                "handle_character_change_invalid_error": "❌ 选中的角色无效。",
+                "ai_assistant": "AI秘书"
                 # 其他翻译键...
             },
             'zh_TW': {
@@ -439,7 +442,8 @@ class TranslationManager:
                 "refresh_info_label": "刷新結果",
                 "cache_clear_all_button": "刪除所有模型緩存",
                 "clear_all_result_label": "結果",
-                "handle_character_change_invalid_error": "❌ 選中的角色無效。"
+                "handle_character_change_invalid_error": "❌ 選中的角色無效。",
+                "ai_assistant": "AI祕書"
             },
             'en': {
                 'main_title': 'Simple Chatbot',
@@ -527,7 +531,8 @@ class TranslationManager:
                 "refresh_info_label": "Refresh Results",
                 "cache_clear_all_button": "Delete all model caches",
                 "clear_all_result_label": "Results",
-                "handle_character_change_invalid_error": "❌ The selected character is invalid."
+                "handle_character_change_invalid_error": "❌ The selected character is invalid.",
+                "ai_assistant": "AI Assistant"
                 # Additional translation keys...
             }
         }

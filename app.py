@@ -33,6 +33,8 @@ from PIL import Image, ImageOps
 import numpy as np
 import cv2
 
+from presets import AI_ASSISTANT_PRESET, SD_IMAGE_GENERATOR_PRESET, MINAMI_ASUKA_PRESET, MAKOTONO_AOI_PRESET, AINO_KOITO_PRESET
+
 from src.models import api_models, transformers_local, gguf_local, mlx_local, diffusion_api_models, diffusers_local, checkpoints_local
 from src.main.chatbot.chatbot import (
     MainTab,
@@ -1493,20 +1495,27 @@ with gr.Blocks(css=css) as demo:
             "中文(繁體)": "zh_TW",
             "English": "en"
         }
+        
         lang_code = lang_map.get(selected_lang, "ko")
+        
         if translation_manager.set_language(lang_code):
             if selected_lang in characters[selected_character]["languages"]:
                 speech_manager_state.current_language = selected_lang
             else:
                 speech_manager_state.current_language = characters[selected_character]["languages"][0]
-            system_presets = load_system_presets(lang_code)
                 
-            if len(system_presets) > 0:
-                preset_name = list(system_presets.keys())[0]
-                system_content = system_presets[preset_name]
-            else:
-                system_content = _("system_message_default")
-
+            
+            system_presets = {
+                "AI 비서(AI Assistant)": AI_ASSISTANT_PRESET,
+                "Image Generator": SD_IMAGE_GENERATOR_PRESET,
+                "미나미 아스카 (南飛鳥, みなみあすか, Minami Asuka)": MINAMI_ASUKA_PRESET,
+                "마코토노 아오이 (真琴乃葵, まことのあおい, Makotono Aoi)": MAKOTONO_AOI_PRESET,
+                "아이노 코이토 (愛野小糸, あいのこいと, Aino Koito)": AINO_KOITO_PRESET
+            }
+                
+            preset_name = system_presets.get(selected_character, AI_ASSISTANT_PRESET)
+            system_content = preset_name.get(lang_code, "당신은 유용한 AI 비서입니다.")
+            
             return [
                 gr.update(value=f"## {_('main_title')}"),
                 gr.update(value=_('select_session_info')),
@@ -1514,7 +1523,7 @@ with gr.Blocks(css=css) as demo:
                 info=_('language_info')),
                 gr.update(
                     label=_("system_message"),
-                    value=_("system_message_default"),
+                    value=system_content,
                     placeholder=_("system_message_placeholder")
                 ),
                 gr.update(label=_("model_type_label")),
@@ -1541,7 +1550,7 @@ with gr.Blocks(css=css) as demo:
                 gr.update(value=_("reset_all_sessions_button")),
                 gr.update(label=_("model_type_label")),
                 gr.update(label=_("model_select_label")),
-                gr.update(label=_("api_key_label")),
+                gr.update(label=_("api_key_label"))
             ]
         else:
             # 언어 변경 실패 시 아무 것도 하지 않음
