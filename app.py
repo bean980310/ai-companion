@@ -1191,6 +1191,16 @@ with gr.Blocks(css=css) as demo:
         # outputs=[api_key_text, image_input, lora_dropdown]
     )
     
+    demo.load(
+         fn=lambda selected_model: (
+            main_tab.toggle_api_key_visibility(selected_model),
+            # main_tab.toggle_image_input_visibility(selected_model),
+            main_tab.toggle_lora_visibility(selected_model),
+        ),
+        inputs=[storytelling_model_dropdown],
+        outputs=[storytelling_api_key_text, storytelling_lora_dropdown]
+        # outputs=[api_key_text, image_input, lora_dropdown]
+    )
     storytelling_model_type_dropdown.change(
         fn=main_tab.update_model_list,
         inputs=[storytelling_model_type_dropdown],
