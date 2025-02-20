@@ -1,4 +1,5 @@
 from transformers import MBartForConditionalGeneration, MBart50TokenizerFast
+from .map_language import map_language
 
 languages = {
     "English": "en_XX",
@@ -22,6 +23,6 @@ def translate(text, src_lang, tgt_lang):
     return translated[0]
 
 def translate_interface(text, src_language, tgt_language):
-    src_lang = languages[src_language]
-    tgt_lang = languages[tgt_language]
+    src_lang = languages[map_language(src_language)]
+    tgt_lang = languages[map_language(tgt_language)]
     return translate(text, src_lang, tgt_lang)

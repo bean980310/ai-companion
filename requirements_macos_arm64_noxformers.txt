@@ -17,6 +17,8 @@ opencv-python
 opencv-contrib-python
 imutils
 pytesseract
+pdf2image
+fasttext
 basicsr
 facexlib
 gfpgan

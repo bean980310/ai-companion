@@ -44,6 +44,7 @@ from src.main.chatbot.chatbot import (
 )
 from src.main.image_generation.image_generation import generate_images_wrapper
 from src.main.translator.translator import translate_interface, languages
+from src.main.translator import translate_interface, upload_handler, LANGUAGES
 
 from src.common.utils import get_all_loras, get_diffusion_loras, get_diffusion_vae
 
@@ -887,8 +888,8 @@ with gr.Blocks(css=css) as demo:
                             )
                         
                         with gr.Row():
-                            random_prompt_btn = gr.Button("🎲 Random Prompt", variant="secondary")
-                            generate_btn = gr.Button("🎨 Generate", variant="primary")
+                            random_prompt_btn = gr.Button("🎲 Random Prompt", variant="secondary", elem_classes="random-button")
+                            generate_btn = gr.Button("🎨 Generate", variant="primary", elem_classes="send-button-alt")
                         
                         gallery = gr.Gallery(
                             label="Generated Images",
@@ -1002,17 +1003,37 @@ with gr.Blocks(css=css) as demo:
                                 )
                 
             with gr.Tab('Translator'):
+                with gr.Row(elem_classes="model-container"):
+                    with gr.Column():
+                        with gr.Row():
+                            with gr.Column():
+                                upload_file_lang = gr.Dropdown(
+                                    choices=list(LANGUAGES.keys()),
+                                    value="English",
+                                    label="File Language"
+                                )
+                                upload_file_btn = gr.Button(
+                                    "Upload File",
+                                    variant="primary",
+                                    elem_classes="send-button-alt"
+                                )
+                            upload_file_input = gr.File(
+                                label="Upload File",
+                                file_types=["text", "image"],
+                                file_count="single"
+                            )
+                        
                 with gr.Row(elem_classes="chat-interface"):
                     with gr.Column():
                         with gr.Row():
                             src_lang_dropdown=gr.Dropdown(
-                                choices=list(languages.keys()), 
+                                choices=list(LANGUAGES.keys()), 
                                 value="English", 
                                 label="Source Language"
                             )
                             tgt_lang_dropdown=gr.Dropdown(
-                                choices=list(languages.keys()), 
-                                value="Korean", 
+                                choices=list(LANGUAGES.keys()), 
+                                value="한국어(Korean)", 
                                 label="Target Language"
                             )
                         with gr.Row():
@@ -1025,7 +1046,7 @@ with gr.Blocks(css=css) as demo:
                                 lines=10
                             )
                         with gr.Row():
-                            translate_btn = gr.Button("Translate", variant="primary")
+                            translate_btn = gr.Button("Translate", variant="primary", elem_classes="send-button-alt")
                             
         reset_modal, single_reset_content, all_reset_content, cancel_btn, confirm_btn = create_reset_confirm_modal()
         delete_modal, delete_message, delete_cancel_btn, delete_confirm_btn = create_delete_session_modal()      
@@ -1412,6 +1433,12 @@ with gr.Blocks(css=css) as demo:
         fn=translate_interface,
         inputs=[src_textbox, src_lang_dropdown, tgt_lang_dropdown],
         outputs=[translate_result]
+    )
+    
+    upload_file_btn.click(
+        fn=upload_handler,
+        inputs=[upload_file_input, upload_file_lang],
+        outputs=src_textbox
     )
 
     # 이벤트 핸들러 연결

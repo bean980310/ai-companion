@@ -152,6 +152,34 @@ css="""
     background-color: #2563eb;
 }
 
+.send-button-alt {
+    background-color: #3b82f6;
+    color: white;
+    border-radius: 8px;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.send-button-alt:hover {
+    background-color: #2563eb;
+}
+
+.random-button {
+    background-color: #9ca3af;
+    color: white;
+    border-radius: 8px;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.random-button:hover {
+    background-color: #4b5563;
+}
+
 .side-panel {
     padding-left: 1rem;
 }
