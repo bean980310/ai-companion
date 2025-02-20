@@ -563,13 +563,13 @@ with gr.Blocks(css=css) as demo:
                                 elem_classes="preset-dropdown"
                             )
                             change_preset_button = gr.Button("프리셋 변경")
-                            character_conversation_dropdown = gr.CheckboxGroup(
-                                label="대화할 캐릭터 선택",
-                                choices=get_preset_choices(default_language),  # 추가 캐릭터 이름
-                                value=list(get_preset_choices(default_language))[0] if get_preset_choices(default_language) else None,
-                                interactive=True
-                            )
-                            start_conversation_button = gr.Button("대화 시작")
+                            # character_conversation_dropdown = gr.CheckboxGroup(
+                            #     label="대화할 캐릭터 선택",
+                            #     choices=get_preset_choices(default_language),  # 추가 캐릭터 이름
+                            #     value=list(get_preset_choices(default_language))[0] if get_preset_choices(default_language) else None,
+                            #     interactive=True
+                            # )
+                            # start_conversation_button = gr.Button("대화 시작")
                             reset_btn = gr.Button(
                                 value=_("reset_session_button"),  # "세션 초기화"에 해당하는 번역 키
                                 variant="secondary",
@@ -1717,29 +1717,29 @@ with gr.Blocks(css=css) as demo:
         queue=True  # 모델 추론이 들어가므로 True
     )
         
-    start_conversation_button.click(
-        fn=main_tab.process_character_conversation,
-        inputs=[
-            history_state,
-            character_conversation_dropdown,
-            model_type_dropdown, 
-            model_dropdown,
-            custom_model_path_state,
-            image_input,
-            api_key_text,
-            selected_device_state,
-            seed_state,
-            temperature_state,
-            top_k_state,
-            top_p_state,
-            repetition_penalty_state,
-        ],
-        outputs=[history_state, profile_image]
-    ).then(
-        fn=main_tab.filter_messages_for_chatbot,  # 히스토리를 채팅창에 표시하기 위한 필터링
-        inputs=[history_state],
-        outputs=[chatbot]
-    )
+    # start_conversation_button.click(
+    #     fn=main_tab.process_character_conversation,
+    #     inputs=[
+    #         history_state,
+    #         character_conversation_dropdown,
+    #         model_type_dropdown, 
+    #         model_dropdown,
+    #         custom_model_path_state,
+    #         image_input,
+    #         api_key_text,
+    #         selected_device_state,
+    #         seed_state,
+    #         temperature_state,
+    #         top_k_state,
+    #         top_p_state,
+    #         repetition_penalty_state,
+    #     ],
+    #     outputs=[history_state, profile_image]
+    # ).then(
+    #     fn=main_tab.filter_messages_for_chatbot,  # 히스토리를 채팅창에 표시하기 위한 필터링
+    #     inputs=[history_state],
+    #     outputs=[chatbot]
+    # )
         
     demo.load(
         fn=main_tab.refresh_sessions,
