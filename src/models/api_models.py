@@ -8,7 +8,11 @@ api_models = [
     "claude-3-sonnet-20240229",
     "claude-3-opus-20240229",
     "claude-3-5-haiku-20241022",
-    "claude-3-5-sonnet-20241022"
+    "claude-3-5-sonnet-20241022",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-8b",
+    "gemini-1.5-pro"
     # 필요 시 추가
 ]
 
