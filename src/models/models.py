@@ -11,6 +11,7 @@ from src.model_handlers import (
 )
 from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models, convert_folder_to_modelid
 import gradio as gr
+from src.models import api_models
 
 from peft import PeftModel, PeftConfig
 
@@ -51,19 +52,7 @@ default_device = get_default_device()
 logger.info(f"Default device set to: {default_device}")
 def refresh_model_list():
     new_local_models = get_all_local_models()
-    api_models = [
-        "gpt-3.5-turbo",
-        "gpt-4",
-        "gpt-4-turbo",
-        "gpt-4o-mini",
-        "gpt-4o",
-        "claude-3-haiku-20240307",
-        "claude-3-sonnet-20240229",
-        "claude-3-opus-20240229",
-        "claude-3-5-haiku-20241022",
-        "claude-3-5-sonnet-20241022"
-        # 필요 시 추가
-    ]
+    global api_models
     local_models = (
         new_local_models["transformers"] + 
         new_local_models["gguf"] + 

@@ -3,6 +3,7 @@ from src.common.translations import _, translation_manager
 from src.models.models import get_all_local_models
 from src.common.utils import clear_all_model_cache
 from src.main.chatbot.chatbot import MainTab
+from src.models import api_models
 import logging
 
 main_tab=MainTab()
@@ -29,12 +30,7 @@ def create_cache_tab(model_dropdown, language_dropdown):
             # 새로 스캔
             new_local_models = get_all_local_models()
             # 새 choices: API 모델 + 로컬 모델 + 사용자 지정 모델 경로 변경
-            api_models = [
-                "gpt-3.5-turbo",
-                "gpt-4o-mini",
-                "gpt-4o"
-                # 필요 시 추가
-            ]
+            global api_models
             local_models = new_local_models["transformers"] + new_local_models["gguf"] + new_local_models["mlx"]
             new_choices = api_models + local_models
             new_choices = list(dict.fromkeys(new_choices))
