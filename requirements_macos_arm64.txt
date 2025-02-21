@@ -20,6 +20,10 @@ pytesseract
 pdf2image
 fasttext
 basicsr
+gtts
+pydub
+matplotlib
+scipy
 facexlib
 gfpgan
 git+https://github.com/xinntao/Real-ESRGAN.git
