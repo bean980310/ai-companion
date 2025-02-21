@@ -1011,7 +1011,7 @@ with gr.Blocks(css=css) as demo:
                             with gr.Column():
                                 upload_file_lang = gr.Dropdown(
                                     choices=list(LANGUAGES.keys()),
-                                    value="English",
+                                    value=list(LANGUAGES.keys())[0],
                                     label="File Language"
                                 )
                                 upload_file_btn = gr.Button(
@@ -1030,12 +1030,12 @@ with gr.Blocks(css=css) as demo:
                         with gr.Row():
                             src_lang_dropdown=gr.Dropdown(
                                 choices=list(LANGUAGES.keys()), 
-                                value="English", 
+                                value=list(LANGUAGES.keys())[0], 
                                 label="Source Language"
                             )
                             tgt_lang_dropdown=gr.Dropdown(
                                 choices=list(LANGUAGES.keys()), 
-                                value="한국어(Korean)", 
+                                value=list(LANGUAGES.keys())[1], 
                                 label="Target Language"
                             )
                         with gr.Row():
@@ -1049,6 +1049,7 @@ with gr.Blocks(css=css) as demo:
                             )
                         with gr.Row():
                             translate_btn = gr.Button("Translate", variant="primary", elem_classes="send-button-alt")
+            create_download_tab()
                             
         reset_modal, single_reset_content, all_reset_content, cancel_btn, confirm_btn = create_reset_confirm_modal()
         delete_modal, delete_message, delete_cancel_btn, delete_confirm_btn = create_delete_session_modal()      
@@ -1818,7 +1819,6 @@ with gr.Blocks(css=css) as demo:
             close_settings_btn = gr.Button("✕", elem_classes="close-button")
             
         with gr.Tabs():
-            create_download_tab()
             create_cache_tab(model_dropdown, language_dropdown)
             create_util_tab()
         

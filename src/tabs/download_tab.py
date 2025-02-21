@@ -10,6 +10,7 @@ from src.models.api_models import api_models
 from src.models.known_hf_models import known_hf_models
 
 from src.common.utils import download_model_from_hf, make_local_dir_name, get_all_local_models
+from src.hub import TASKS, LIBRARIES, LANGUAGES_HUB
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 main_tab=MainTab()
 
 def create_download_tab():
-    with gr.Tab("Download"):
+    with gr.Tab("Download Center"):
         with gr.Tabs():
             # Predefined 탭
             with gr.Tab("Predefined"):
@@ -255,19 +256,21 @@ def create_download_tab():
                 with gr.Row():
                     with gr.Column(scale=1):
                         model_type_filter_hub = gr.Dropdown(
-                            label="Model Type",
-                            choices=["All", "Text Generation", "Vision", "Audio", "Other"],
-                            value="All"
+                            label="Tasks",
+                            choices=list(dict.fromkeys(TASKS)),
+                            value="None"
                         )
                         language_filter_hub = gr.Dropdown(
                             label="Language",
-                            choices=["All", "Korean", "English", "Chinese", "Japanese", "Multilingual"],
-                            value="All"
+                            choices=list(dict.fromkeys(LANGUAGES_HUB)),
+                            multiselect=True,
+                            value=[]
                         )
                         library_filter_hub = gr.Dropdown(
                             label="Library",
-                            choices=["All", "Transformers", "GGUF", "MLX"],
-                            value="All"
+                            choices=list(dict.fromkeys(LIBRARIES)),
+                            multiselect=True,
+                            value=[]
                         )
                     with gr.Column(scale=3):
                         model_list_hub = gr.Dataframe(
@@ -347,17 +350,22 @@ def create_download_tab():
                     try:
                         api = HfApi()
                         filter_str = ""
-                        if model_type != "All":
-                            filter_str += f"task_{model_type.lower().replace(' ', '_')}"
-                        if language != "All":
-                            if filter_str:
-                                filter_str += " AND "
-                            filter_str += f"language_{language.lower()}"
-                        if library != "All":
-                            filter_str += f"library_{library.lower()}"
+                        task_filter = model_type
+                        lib_filter = []
+                        lang_filter = []
+                        if model_type == "None":
+                            return None
+                        else:
+                            filter_str += f"task_{model_type}"
+                        for i in range(len(library)):
+                            lib_filter.append(library[i])
+                        for i in range(len(language)):
+                            lang_filter.append(language[i])
 
                         models = api.list_models(
-                            filter=filter_str if filter_str else None,
+                            task=task_filter,
+                            library=lib_filter,
+                            language=lang_filter,
                             limit=100,
                             sort="lastModified",
                             direction=-1

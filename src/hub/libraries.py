@@ -1,0 +1,1 @@
+LIBRARIES=["pytorch", "tensorflow", "jax", "safetensors", "transformers", "peft", "tensorboard", "gguf", "diffusers", "onnx", "sentence-transformers", "tf-keras", "mlx", "adapters", "keras", "nemo"]
