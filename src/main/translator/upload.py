@@ -1,16 +1,15 @@
 import pytesseract
 from pdf2image import convert_from_path
 from PIL import Image
-from .map_language import map_language
 
 languages = {
     "English": "eng",
-    "Korean": "kor",
-    "Japanese": "jpn",
-    "Chinese": "chi_sim",
-    "French": "fra",
-    "German": "deu",
-    "Spanish": "spa"
+    "한국어(Korean)": "kor",
+    "日本語(Japanese)": "jpn",
+    "简体中文(Simp. Chinese)": "chi_sim",
+    "Français(French)": "fra",
+    "Deutsche(German)": "deu",
+    "Español(Spanish)": "spa"
 }
 
 
@@ -41,7 +40,7 @@ def image_to_text(image_path: str, lang: str='eng') -> str:
     return text
 
 def upload_handler(file_path, language):
-    lang=languages[map_language(language)]
+    lang=languages[language]
     if file_path.endswith('.pdf'):
         # PDF 파일 처리
         text = pdf_to_text(file_path, lang=lang)

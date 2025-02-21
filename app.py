@@ -1010,8 +1010,8 @@ with gr.Blocks(css=css) as demo:
                         with gr.Row():
                             with gr.Column():
                                 upload_file_lang = gr.Dropdown(
-                                    choices=list(LANGUAGES.keys()),
-                                    value=list(LANGUAGES.keys())[0],
+                                    choices=list(dict.fromkeys(LANGUAGES)),
+                                    value=list(dict.fromkeys(LANGUAGES))[0],
                                     label="File Language"
                                 )
                                 upload_file_btn = gr.Button(
@@ -1029,13 +1029,13 @@ with gr.Blocks(css=css) as demo:
                     with gr.Column():
                         with gr.Row():
                             src_lang_dropdown=gr.Dropdown(
-                                choices=list(LANGUAGES.keys()), 
-                                value=list(LANGUAGES.keys())[0], 
+                                choices=list(dict.fromkeys(LANGUAGES)), 
+                                value=list(dict.fromkeys(LANGUAGES))[0], 
                                 label="Source Language"
                             )
                             tgt_lang_dropdown=gr.Dropdown(
-                                choices=list(LANGUAGES.keys()), 
-                                value=list(LANGUAGES.keys())[1], 
+                                choices=list(dict.fromkeys(LANGUAGES)), 
+                                value=list(dict.fromkeys(LANGUAGES))[1], 
                                 label="Target Language"
                             )
                         with gr.Row():
