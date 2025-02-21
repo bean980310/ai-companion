@@ -24,6 +24,9 @@ gtts
 pydub
 matplotlib
 scipy
+librosa
+samplerate
+pyworld
 facexlib
 gfpgan
 openai
