@@ -305,10 +305,10 @@ with gr.Blocks(css=css) as demo:
     session_id_state = gr.State(session_id)
     selected_device_state = gr.State(default_device)
     seed_state = gr.State(args.seed)  # 시드 상태 전역 정의
-    temperature_state = gr.State(0.0)
-    top_k_state = gr.State(0)
-    top_p_state = gr.State(0.0)
-    repetition_penalty_state = gr.State(0.0)
+    temperature_state = gr.State(0.6)
+    top_k_state = gr.State(20)
+    top_p_state = gr.State(0.9)
+    repetition_penalty_state = gr.State(1.1)
     selected_language_state = gr.State(default_language)
     
     reset_confirmation = gr.State(False)
@@ -527,7 +527,7 @@ with gr.Blocks(css=css) as demo:
                                 label=_("temperature_label"),
                                 minimum=0.0,
                                 maximum=1.0,
-                                value=0.0,
+                                value=0.6,
                                 step=0.1,
                                 interactive=True
                             )
@@ -535,7 +535,7 @@ with gr.Blocks(css=css) as demo:
                                 label=_("top_k_label"),
                                 minimum=0,
                                 maximum=100,
-                                value=0,
+                                value=20,
                                 step=1,
                                 interactive=True
                             )
@@ -543,7 +543,7 @@ with gr.Blocks(css=css) as demo:
                                 label=_("top_p_label"),
                                 minimum=0.0,
                                 maximum=1.0,
-                                value=0.0,
+                                value=0.9,
                                 step=0.1,
                                 interactive=True
                             )
@@ -551,7 +551,7 @@ with gr.Blocks(css=css) as demo:
                                 label=_("repetition_penalty_label"),
                                 minimum=0.0,
                                 maximum=2.0,
-                                value=0.0,
+                                value=1.1,
                                 step=0.1,
                                 interactive=True
                             )
@@ -1157,22 +1157,22 @@ with gr.Blocks(css=css) as demo:
         outputs=[seed_state]
     )
     temperature_slider.change(
-        fn=lambda temp: temp if temp is not None else 1.0,
+        fn=lambda temp: temp if temp is not None else 0.6,
         inputs=[temperature_slider],
         outputs=[temperature_state]
     )
     top_k_slider.change(
-        fn=lambda top_k: top_k if top_k is not None else 50,
+        fn=lambda top_k: top_k if top_k is not None else 20,
         inputs=[top_k_slider],
         outputs=[top_k_state]
     )
     top_p_slider.change(
-        fn=lambda top_p: top_p if top_p is not None else 1.0,
+        fn=lambda top_p: top_p if top_p is not None else 0.9,
         inputs=[top_p_slider],
         outputs=[top_p_state]
     )
     repetition_penalty_slider.change(
-        fn=lambda repetition_penalty: repetition_penalty if repetition_penalty is not None else 1.0,
+        fn=lambda repetition_penalty: repetition_penalty if repetition_penalty is not None else 1.1,
         inputs=[repetition_penalty_slider],
         outputs=[repetition_penalty_state]
     )
