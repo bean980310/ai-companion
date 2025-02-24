@@ -38,6 +38,8 @@ gguf
 llama-cpp-python
 stable-diffusion-cpp-python
 ollama
+unstructured
+sentence_transformers
 langchain
 langchain-core
 langchain-openai

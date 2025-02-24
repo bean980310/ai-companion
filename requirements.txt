@@ -38,6 +38,8 @@ google-genai
 gguf
 llama-cpp-python
 ollama
+unstructured
+sentence_transformers
 langchain
 langchain-core
 langchain-openai
