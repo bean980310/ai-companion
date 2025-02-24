@@ -1,4 +1,4 @@
-import logging
+# import logging
 import gradio as gr
 import os
 import secrets
@@ -24,9 +24,13 @@ from io import BytesIO
 from PIL import Image
 import pandas as pd
 
+from src import logger
+
 # 로깅 설정
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
+# logger.setLevel(logging.INFO)
     
 generator_choices = api_models + transformers_local + gguf_local + mlx_local + ["사용자 지정 모델 경로 변경"]
 generator_choices = list(dict.fromkeys(generator_choices))  # 중복 제거

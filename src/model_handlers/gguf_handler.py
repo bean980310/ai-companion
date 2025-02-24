@@ -1,13 +1,12 @@
 # model_handlers/gguf_handler.py
 import faulthandler
 faulthandler.enable()
-import logging
 import llama_cpp
 from llama_cpp import Llama # gguf 모델을 로드하기 위한 라이브러리
 from llama_cpp.llama_tokenizer import LlamaHFTokenizer
 import os
 
-logger = logging.getLogger(__name__)
+from src import logger
 
 class GGUFModelHandler:
     def __init__(self, model_id, local_model_path=None, model_type="gguf"):
@@ -24,7 +23,7 @@ class GGUFModelHandler:
         """
         GGUF 모델 로드
         """
-        logging.info(f"GGUF 모델 로드 시작: {self.local_model_path}")
+        logger.info(f"GGUF 모델 로드 시작: {self.local_model_path}")
         try:
             self.model = Llama(
                 model_path=self.local_model_path,
@@ -33,9 +32,9 @@ class GGUFModelHandler:
                 logits_all=True
                 # 필요에 따라 추가 매개변수 설정
             )
-            logging.info("GGUF 모델 로드 성공")
+            logger.info("GGUF 모델 로드 성공")
         except Exception as e:
-            logging.error(f"GGUF 모델 로드 실패: {str(e)}")
+            logger.error(f"GGUF 모델 로드 실패: {str(e)}")
             raise e
     
     def generate_answer(self, history, temperature, top_k, top_p, repetition_penalty):
@@ -53,7 +52,7 @@ class GGUFModelHandler:
             )
             return response["choices"][0]["message"]["content"]
         except Exception as e:
-            logging.error(f"GGUF 모델 추론 오류: {str(e)}")
+            logger.error(f"GGUF 모델 추론 오류: {str(e)}")
             return f"오류 발생: {str(e)}"
         
     def generate_chat_title(self, first_message: str)->str:

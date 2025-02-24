@@ -3,13 +3,12 @@
 
 import os
 import torch
-import logging
 import traceback
 from transformers import AutoTokenizer, AutoModelForCausalLM, StoppingCriteria, StoppingCriteriaList
 
 from src.common.utils import make_local_dir_name
 
-logger = logging.getLogger(__name__)
+from src import logger
 
 class StopOnTokens(StoppingCriteria):
     def __init__(self, stop_token_ids):

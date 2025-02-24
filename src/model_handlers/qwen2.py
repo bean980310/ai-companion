@@ -1,11 +1,10 @@
 import os
 import torch
-import logging
 import traceback
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import PeftModel, PeftConfig
 
-logger = logging.getLogger(__name__)
+from src import logger
 
 class Qwen2Handler:
     def __init__(self, model_id, lora_model_id=None, local_model_path=None, lora_path=None, model_type="transformers", device='cpu'):

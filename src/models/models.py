@@ -15,7 +15,6 @@ from src.models import api_models
 
 from peft import PeftModel, PeftConfig
 
-import logging
 import traceback
 import openai
 import anthropic
@@ -30,7 +29,7 @@ from langchain_ollama import OllamaLLM as Ollama
 from langchain_huggingface import HuggingFacePipeline
 from langchain_huggingface import ChatHuggingFace
 
-logger = logging.getLogger(__name__)
+from src import logger
 
 LOCAL_MODELS_ROOT = "./models"
 

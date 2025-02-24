@@ -1,7 +1,8 @@
 import logging
 import locale
+from src import logger
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 def detect_system_language() -> str:
     """시스템 기본 언어를 감지합니다."""

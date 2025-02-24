@@ -2,7 +2,6 @@
 
 import os
 import shutil
-import logging
 import asyncio
 import traceback
 import torch
@@ -19,7 +18,8 @@ from model_converter import convert_model_to_float8, convert_model_to_int8, conv
 import platform
 import gc
 from src.common.cache import models_cache
-logger = logging.getLogger(__name__)
+
+from src import logger
 
 LOCAL_MODELS_ROOT = "./models"
 comfyui_path=os.path.join(os.path.expanduser('~'), 'ComfyUI', 'models')

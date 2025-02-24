@@ -1,6 +1,7 @@
 from typing import Optional, List, Tuple, Dict, Any
 import sqlite3
-import logging
+from src import logger
+# import logging
 from contextlib import contextmanager
 from dataclasses import dataclass
 import gradio as gr
@@ -9,7 +10,7 @@ from datetime import datetime
 import csv
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 @dataclass
 class PresetConfig:

@@ -1,9 +1,8 @@
 from typing import List
 import pandas as pd
 import random
-import logging
 
-logger = logging.getLogger(__name__)
+from src import logger
 
 def load_ckpt_model(model_path: str):
     # ckpt 파일을 로드하는 예제 함수 (예: torch.load 활용)

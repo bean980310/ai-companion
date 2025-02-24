@@ -1,5 +1,4 @@
 import os
-import logging
 import traceback
 
 import gradio as gr
@@ -13,8 +12,7 @@ from src.common.utils import download_model_from_hf, make_local_dir_name, get_al
 from src.hub import TASKS, LIBRARIES, LANGUAGES_HUB
 
 # 로깅 설정
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from src import logger
 
 main_tab=MainTab()
 

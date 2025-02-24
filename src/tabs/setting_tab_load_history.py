@@ -1,9 +1,7 @@
 import gradio as gr
 import json
-import logging
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from src import logger
 
 def create_load_history_tab(history_state):
     with gr.Tab("채팅 히스토리 재로드"):

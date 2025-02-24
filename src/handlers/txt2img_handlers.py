@@ -3,7 +3,6 @@ import uuid
 import json
 import urllib.request
 import urllib.parse
-import logging
 from typing import List
 import pandas as pd
 import random
@@ -13,7 +12,7 @@ import os
 from src.api.comfy_api import ComfyUIClient
 from workflows.load_workflow import load_txt2img_workflow, load_txt2img_sdxl_workflow, load_txt2img_sdxl_with_refiner_workflow, load_txt2img_workflow_clip_skip, load_txt2img_sdxl_workflow_clip_skip, load_txt2img_sdxl_with_refiner_workflow_clip_skip
 
-logger = logging.getLogger(__name__)
+from src import logger
 
 def generate_images(
     positive_prompt: str,

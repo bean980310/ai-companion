@@ -5,12 +5,11 @@ from typing import Dict, Optional, Union, List
 import json
 import os
 from pathlib import Path
-import logging
 from presets import AI_ASSISTANT_PRESET, MINAMI_ASUKA_PRESET, MAKOTONO_AOI_PRESET, AINO_KOITO_PRESET, SD_IMAGE_GENERATOR_PRESET
 
 from src.common.default_language import default_language
 
-logger = logging.getLogger(__name__)
+from src import logger
 
 class TranslationError(Exception):
     """번역 관련 커스텀 예외"""

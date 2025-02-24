@@ -4,12 +4,10 @@ from src.models.models import get_all_local_models
 from src.common.utils import clear_all_model_cache
 from src.main.chatbot.chatbot import MainTab
 from src.models import api_models
-import logging
 
 main_tab=MainTab()
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from src import logger
 
 def create_cache_tab(model_dropdown, language_dropdown):    
     with gr.Tab(_("cache_tab_title")):

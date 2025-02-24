@@ -1,9 +1,7 @@
-import logging
 import traceback
 import os
 
-logger = logging.getLogger(__name__)
-
+from src import logger
 class MlxVisionHandler:
     def __init__(self, model_id, lora_model_id=None, local_model_path=None, lora_path=None, model_type="mlx"):
         self.model_dir = local_model_path or os.path.join("./models/llm", model_id)

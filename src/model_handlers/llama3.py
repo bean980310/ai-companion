@@ -1,7 +1,6 @@
 # common.py 상단에 추가
 import os
 import torch
-import logging
 import traceback
 from langchain.schema import HumanMessage, AIMessage, SystemMessage
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
@@ -10,7 +9,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from peft import PeftModel, LoraModel, LoraConfig
 
-logger = logging.getLogger(__name__)
+from src import logger
 
 class Llama3Handler:
     def __init__(self, model_id, lora_model_id=None, local_model_path=None, lora_path=None, model_type="transformers", device='cpu'):

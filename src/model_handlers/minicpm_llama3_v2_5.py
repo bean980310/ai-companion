@@ -3,11 +3,10 @@ import os
 import torch
 from transformers import AutoTokenizer, AutoModel, ProcessorMixin
 import traceback
-import logging
 from PIL import Image
 from src.common.utils import make_local_dir_name
 
-logger = logging.getLogger(__name__)
+from src import logger
 
 class MiniCPMLlama3V25Handler:
     def __init__(self, model_id, local_model_path=None, model_type="transformers", device='cpu'):

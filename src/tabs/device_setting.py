@@ -1,13 +1,11 @@
 import torch
 import platform
-import logging
 import gradio as gr
 from typing import Tuple
 
 from src.models.models import get_default_device
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from src import logger
 
 def set_device(selection):
     """

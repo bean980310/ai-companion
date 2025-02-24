@@ -1,14 +1,12 @@
 import os
 import torch
-import logging
 import traceback
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from optimum.quanto import QuantizedModelForCausalLM
 from src.common.utils import make_local_dir_name
 
-logger = logging.getLogger(__name__)
-
+from src import logger
 class GLM4HfHandler:
     def __init__(self, model_id, local_model_path=None, model_type="transformers", device='cpu'):
         self.model_dir = local_model_path or os.path.join("./models/llm", model_id)

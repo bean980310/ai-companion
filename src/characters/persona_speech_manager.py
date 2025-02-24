@@ -3,11 +3,12 @@ import logging
 from typing import Dict
 from src.common.database import load_system_presets
 import sqlite3
+from src import logger
 
-import re
+import regex as re
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
 class PersonaSpeechManager:
     def __init__(self, translation_manager, characters: Dict[str, Dict[str, str]], db_path='persona_state.db'):
         """

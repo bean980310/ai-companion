@@ -1,14 +1,13 @@
 # common.py 상단에 추가
 import os
 import torch
-import logging
 import traceback
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from src.common.utils import get_terminators, make_local_dir_name
 
 from peft import PeftModel
 
-logger = logging.getLogger(__name__)
+from src import logger
 
 class OtherModelHandler:
     def __init__(self, model_id, lora_model_id=None, local_model_path=None, lora_path=None, model_type="transformers", device='cpu'):

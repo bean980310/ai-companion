@@ -9,6 +9,7 @@ peft
 evaluate
 jiwer
 gradio
+regex
 torch
 torchvision
 torchaudio

@@ -6,7 +6,6 @@ import uuid
 import json
 import urllib.request
 import urllib.parse
-import logging
 from typing import List
 import pandas as pd
 import random
@@ -15,7 +14,7 @@ import os
 
 from src.handlers import generate_images, generate_images_with_refiner, generate_images_to_images, generate_images_to_images_with_refiner, generate_images_inpaint, generate_images_inpaint_with_refiner
 
-logger = logging.getLogger(__name__)
+from src import logger
 
 def generate_images_wrapper(positive_prompt, negative_prompt, style, generation_step, img2img_step_start, diffusion_refiner_start, width, height,
     diffusion_model, diffusion_refiner_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
