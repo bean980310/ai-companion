@@ -55,6 +55,7 @@ onnxruntime
 Pillow
 numpy
 websocket-client
+faiss-cpu
 eva-decord
 mlx
 mlx_lm

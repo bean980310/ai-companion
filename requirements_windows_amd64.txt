@@ -55,4 +55,5 @@ onnxruntime-gpu
 Pillow
 numpy
 websocket-client
+faiss-gpu
 eva-decord
