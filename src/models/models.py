@@ -283,9 +283,9 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
         logger.info(f"[*] Generating answer using {handler.__class__.__name__}")
         try:
             if isinstance(handler, TransformersVisionModelHandler) or isinstance(handler, MlxVisionModelHandler):
-                answer = handler.generate_answer(history, image_input, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0)
+                answer = handler.generate_answer(history, image_input, temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty)
             else:
-                answer = handler.generate_answer(history, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0)
+                answer = handler.generate_answer(history, temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty)
             return answer
         except Exception as e:
             logger.error(f"모델 추론 오류: {str(e)}\n\n{traceback.format_exc()}")

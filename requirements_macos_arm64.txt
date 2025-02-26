@@ -52,6 +52,7 @@ xformers
 bitsandbytes
 onnx
 onnxruntime
+gptqmodel
 Pillow
 numpy
 websocket-client
