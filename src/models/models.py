@@ -7,7 +7,8 @@ import torch
 from src.common.cache import models_cache
 from src.model_handlers import (
     GGUFModelHandler, MiniCPMLlama3V25Handler, Llama3Handler, GLM4Handler, GLM4VHandler, Llama3VisionModelHandler,
-    Aya23Handler, GLM4HfHandler, OtherModelHandler, Qwen2Handler, MlxModelHandler, MlxVisionHandler
+    Aya23Handler, GLM4HfHandler, OtherModelHandler, Qwen2Handler, MlxModelHandler, MlxVisionHandler,
+    TransformersCausalModelHandler, TransformersVisionModelHandler, GGUFCausalModelHandler, MlxCausalModelHandler, MlxVisionModelHandler
 )
 from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models, convert_folder_to_modelid
 import gradio as gr
@@ -84,83 +85,67 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
         return None
     if model_type == "gguf":
         # GGUF 모델 로딩 로직
-        handler = GGUFModelHandler(
+        # handler = GGUFModelHandler(
+        #     model_id=model_id,
+        #     local_model_path=local_model_path,
+        #     model_type=model_type
+        # )
+        handler = GGUFCausalModelHandler(
             model_id=model_id,
-            local_model_path=local_model_path,
-            model_type=model_type
+            lora_model_id=lora_model_id,
+            model_type=model_type,
+            device=device
         )
         cache_key = build_model_cache_key(model_id, model_type)
         models_cache[cache_key] = handler
         return handler
     elif model_type == "mlx":
         if "vision" in model_id.lower() or "qwen2-vl" in model_id.lower() or "qwen2.5-vl" in model_id.lower():
-            handler = MlxVisionHandler(
-                model_id=model_id,  # model_id가 정의되어 있어야 합니다.
+            # handler = MlxVisionHandler(
+            #     model_id=model_id,  # model_id가 정의되어 있어야 합니다.
+            #     lora_model_id=lora_model_id,
+            #     local_model_path=local_model_path,
+            #     lora_path=lora_path,
+            #     model_type=model_type,
+            # )
+            handler = MlxVisionModelHandler(
+                model_id=model_id,
                 lora_model_id=lora_model_id,
-                local_model_path=local_model_path,
-                lora_path=lora_path,
-                model_type=model_type,
+                model_type=model_type
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
         else:
-            handler = MlxModelHandler(
-                model_id=model_id,  # model_id가 정의되어 있어야 합니다.
+            # handler = MlxModelHandler(
+            #     model_id=model_id,  # model_id가 정의되어 있어야 합니다.
+            #     lora_model_id=lora_model_id,
+            #     local_model_path=local_model_path,
+            #     lora_path=lora_path,
+            #     model_type=model_type
+            # )
+            handler = MlxCausalModelHandler(
+                model_id=model_id,
                 lora_model_id=lora_model_id,
-                local_model_path=local_model_path,
-                lora_path=lora_path,
                 model_type=model_type
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
     else:
-        if "llama-3" in model_id.lower():
-            if "vision" in model_id.lower():
-                handler = Llama3VisionModelHandler(
-                    model_id=model_id,
-                    lora_model_id=lora_model_id,
-                    local_model_path=local_model_path,
-                    lora_path=lora_path,
-                    model_type=model_type,
-                    device=device
-                )
-                models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
-                return handler
-            else:
-                handler = Llama3Handler(
-                    model_id=model_id,
-                    lora_model_id=lora_model_id,
-                    local_model_path=local_model_path,
-                    lora_path=lora_path,
-                    model_type=model_type,
-                    device=device
-                )
-                models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
-                return handler
-        elif "aya-23" in model_id.lower():
-            handler = Aya23Handler(
-                model_id=model_id,  # model_id가 정의되어 있어야 합니다.
+        if "vision" in model_id.lower() or "qwen2-vl" in model_id.lower() or "qwen2.5-vl" in model_id.lower():
+            handler = TransformersVisionModelHandler(
+                model_id=model_id,
                 lora_model_id=lora_model_id,
-                local_model_path=local_model_path,
-                lora_path=lora_path,
-                model_type=model_type,
-                device=device
-            )
-            models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
-            return handler
-        elif "qwen2" in model_id.lower():
-            handler = Qwen2Handler(
-                model_id=model_id,  # model_id가 정의되어 있어야 합니다.
-                lora_model_id=lora_model_id,
-                local_model_path=local_model_path,
-                lora_path=lora_path,
                 model_type=model_type,
                 device=device
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
         else:
-            handler = OtherModelHandler(model_id, lora_model_id=lora_model_id, local_model_path=local_model_path, lora_path=lora_path, model_type=model_type,device=device)
+            handler = TransformersCausalModelHandler(
+                model_id=model_id, 
+                lora_model_id=lora_model_id, 
+                model_type=model_type,
+                device=device)
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
 
@@ -297,10 +282,10 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
         
         logger.info(f"[*] Generating answer using {handler.__class__.__name__}")
         try:
-            if isinstance(handler, Llama3VisionModelHandler) or isinstance(handler, MlxVisionHandler):
-                answer = handler.generate_answer(history, image_input, temperature, top_k, top_p, repetition_penalty)
+            if isinstance(handler, TransformersVisionModelHandler) or isinstance(handler, MlxVisionModelHandler):
+                answer = handler.generate_answer(history, image_input, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0)
             else:
-                answer = handler.generate_answer(history, temperature, top_k, top_p, repetition_penalty)
+                answer = handler.generate_answer(history, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0)
             return answer
         except Exception as e:
             logger.error(f"모델 추론 오류: {str(e)}\n\n{traceback.format_exc()}")

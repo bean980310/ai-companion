@@ -7,7 +7,6 @@ class BaseModelHandler(ABC):
         self.config = None
         self.local_model_path = os.path.join("./models/llm", model_id)
         self.local_lora_model_path = os.path.join("./models/llm/loras", lora_model_id) if lora_model_id else None
-        self.template = self.load_template()
     
     @abstractmethod
     def load_model(self):
@@ -22,7 +21,7 @@ class BaseModelHandler(ABC):
         pass
     
     @abstractmethod
-    def load_template(self):
+    def load_template(self, messages):
         pass
         
 class BaseCausalModelHandler(BaseModelHandler):
@@ -40,11 +39,11 @@ class BaseCausalModelHandler(BaseModelHandler):
         pass
     
     @abstractmethod
-    def get_settings(self):
+    def get_settings(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
         pass
     
     @abstractmethod
-    def load_template(self):
+    def load_template(self, messages):
         pass
     
 class BaseVisionModelHandler(BaseModelHandler):
@@ -58,14 +57,14 @@ class BaseVisionModelHandler(BaseModelHandler):
         pass
     
     @abstractmethod
-    def generate_answer(self, history, image_input, **kwargs):
+    def generate_answer(self, history, image_input=None, **kwargs):
         pass
     
     @abstractmethod
-    def get_settings(self):
+    def get_settings(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
         pass
     
     @abstractmethod
-    def load_template(self):
+    def load_template(self, messages, image_input):
         pass
     

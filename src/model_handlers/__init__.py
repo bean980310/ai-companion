@@ -10,7 +10,9 @@ from .other import OtherModelHandler
 from .gguf_handler import GGUFModelHandler
 from .mlx_handler import MlxModelHandler
 from .mlx_vision import MlxVisionHandler
-
+from .transformers_handlers import TransformersCausalModelHandler, TransformersVisionModelHandler
+from .gguf_handlers import GGUFCausalModelHandler
+from .mlx_handlers import MlxCausalModelHandler, MlxVisionModelHandler
 
 __all__ = [
     "GGUFModelHandler",
@@ -25,4 +27,9 @@ __all__ = [
     "Qwen2Handler",
     "MlxModelHandler",
     "MlxVisionHandler",
+    "TransformersCausalModelHandler",
+    "TransformersVisionModelHandler",
+    "GGUFCausalModelHandler",
+    "MlxCausalModelHandler",
+    "MlxVisionModelHandler"
 ]
