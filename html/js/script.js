@@ -1,4 +1,3 @@
-js="""
 const toggleButton = document.querySelector('#toggleSidebar');
 const sidebar = document.querySelector('.sidebar-container');
 const layout = document.querySelector('.main-container');
@@ -82,4 +81,3 @@ confirmYes.addEventListener('click', () => {
 confirmNo.addEventListener('click', () => {
     confirmDialog.classList.remove('active');
 });
-"""

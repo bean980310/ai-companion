@@ -18,9 +18,6 @@ class Llama3Handler:
         self.tokenizer = None
         self.model = None
         self.device = device
-        self.pipe = None
-        self.llm = None
-        self.chat = None
         self.load_model()
     def load_model(self):
         try:
@@ -51,23 +48,45 @@ class Llama3Handler:
         ]
         
     def generate_answer(self, history, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
-        pipe=pipeline(
-            "text-generation",
-            model=self.model,
-            tokenizer=self.tokenizer,
-            max_new_tokens=1024,
-            temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
-            repetition_penalty=repetition_penalty
-        )
-        hf = HuggingFacePipeline(pipeline=pipe)
-        
         prompt_messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
+        logger.info(f"[*] Prompt messages for other models: {prompt_messages}")
         
-        chat_template = ChatPromptTemplate.from_messages(prompt_messages)
+        try:
+            chat_template = ChatPromptTemplate.from_messages(prompt_messages)
+            logger.info("[*] 입력 템플릿 적용 완료")
+        except Exception as e:
+            logger.error(f"입력 템플릿 적용 중 오류 발생: {str(e)}\n\n{traceback.format_exc()}")
+            return f"입력 템플릿 적용 중 오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+        try:
+            pipe=pipeline(
+                "text-generation",
+                model=self.model,
+                tokenizer=self.tokenizer,
+                max_new_tokens=1024,
+                temperature=temperature,
+                top_k=top_k,
+                top_p=top_p,
+                repetition_penalty=repetition_penalty
+            )
+            hf = HuggingFacePipeline(pipeline=pipe)
+            
+            logger.info("[*] 모델 생성 완료")
+        except Exception as e:
+            logger.error(f"모델 생성 중 오류 발생: {str(e)}\n\n{traceback.format_exc()}")
+            return f"모델 생성 중 오류 발생: {str(e)}\n\n{traceback.format_exc()}"
         
-        generated_text = hf.invoke(chat_template)
+        try:
+            chain = chat_template | hf
+            logger.info("[*] Chain 생성 완료")
+        except Exception as e:
+            logger.error(f"Chain 생성 중 오류 발생: {str(e)}\n\n{traceback.format_exc()}")
+            return f"Chain 생성 중 오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+        try:
+            generated_text = chain.invoke(prompt_messages)
+            logger.info(f"[*] 생성된 텍스트: {generated_text}")
+        except Exception as e:
+            logger.error(f"출력 디코딩 중 오류 발생: {str(e)}\n\n{traceback.format_exc()}")
+            return f"출력 디코딩 중 오류 발생: {str(e)}\n\n{traceback.format_exc()}"
         
         return generated_text.strip()
     

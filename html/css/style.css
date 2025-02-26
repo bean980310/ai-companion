@@ -1,8 +1,7 @@
-css="""
 /* Updated style.css */
 
 :root {
-    --sidebar-width: 320px;
+    --sidebar-width: 250px;
     
     --color-background-primary: #f8fafc;
     --color-background-secondary: white;
@@ -10,7 +9,6 @@ css="""
     --color-background-primary-dark: #1a1a1a;
     --color-background-secondary-dark: #2d2d2d;
 }
-
 
 .main-layout {
     display: flex;
@@ -66,6 +64,7 @@ css="""
     padding: 0.5rem;
 }
 
+
 .session-container {
     background-color: var(--color-background-secondary);
     padding: 1rem;
@@ -108,6 +107,14 @@ css="""
 }
 
 .model-container {
+    background-color: var(--color-background-secondary);
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.history-container {
     background-color: var(--color-background-secondary);
     padding: 1rem;
     border-radius: 12px;
@@ -242,7 +249,7 @@ css="""
         background-color: var(--color-background-primary-dark);
     }
     
-    .header-container, .session-container, .model-container, .chat-interface {
+    .header-container, .session-container, .model-container, .chat-interface, .history-container {
         background-color: var(--color-background-secondary-dark);
         border-color: #404040;
     }
@@ -458,4 +465,3 @@ css="""
         color: #9ca3af;
     }
 }
-"""
