@@ -251,29 +251,38 @@ def on_app_start(language=None):  # language 매개변수에 기본값 설정
     logger.info(f"불러온 세션 목록: {sessions}")
 
     presets = load_system_presets(language=language)
+    if len(presets) > 0:
+        if last_character in presets:
+            preset_name = last_character
+        else:
+            preset_name = list(system_presets.keys())[0]
+        display_system = presets[preset_name]
+    else:
+        preset_name = None
+        display_system = _("system_message_default")
     logger.info(f"로드된 프리셋: {presets}")
     
     if not loaded_history:
         system_presets = load_system_presets(language)
         if len(system_presets) > 0:
             preset_name = list(system_presets.keys())[0]
-            default_system = {
-                "role": "system",
-                "content": system_presets[preset_name]
-            }
-            loaded_history = [default_system]
+            display_system = system_presets[preset_name]
         else:
-            default_system = {
-                "role": "system",
-                "content": "당신은 유용한 AI 비서입니다."
-            }
-            loaded_history = [default_system]
+            preset_name = None
+            display_system = _("system_message_default")
+        default_system = {
+            "role": "system",
+            "content": display_system
+        }
+        loaded_history = [default_system]
             
     return (
         sid, 
         loaded_history,
         gr.update(choices=sessions, value=sid if sessions else None),
         last_character,
+        gr.update(value=preset_name),
+        display_system,
         f"현재 세션: {sid}"
     )
 
@@ -318,7 +327,7 @@ with open("html/js/script.js", 'r') as f:
 with gr.Blocks(css=css) as demo:
     speech_manager_state = gr.State(initialize_speech_manager)
     
-    session_id, loaded_history, session_dropdown, last_character, session_label=on_app_start()
+    session_id, loaded_history, session_dropdown, last_character, last_preset, system_message, session_label=on_app_start()
     last_sid_state=gr.State()
     history_state = gr.State(loaded_history)
     last_character_state = gr.State()
@@ -330,6 +339,8 @@ with gr.Blocks(css=css) as demo:
     session_id_state = gr.State(session_id)
     selected_device_state = gr.State(default_device)
     character_state = gr.State(last_character)
+    # preset_state = gr.State(last_preset)
+    system_message_state = gr.State(system_message)
     seed_state = gr.State(args.seed)  # 시드 상태 전역 정의
     temperature_state = gr.State(0.6)
     top_k_state = gr.State(20)
@@ -501,7 +512,7 @@ with gr.Blocks(css=css) as demo:
                     with gr.Column(scale=7):
                         system_message_box = gr.Textbox(
                             label=_("system_message"),
-                            value=_("system_message_default"),
+                            value=system_message,
                             placeholder=_("system_message_placeholder"),
                             elem_classes="system-message"
                         )
@@ -604,7 +615,7 @@ with gr.Blocks(css=css) as demo:
                             preset_dropdown = gr.Dropdown(
                                 label="프리셋 선택",
                                 choices=get_preset_choices(default_language),
-                                value=list(get_preset_choices(default_language))[0] if get_preset_choices(default_language) else None,
+                                value=last_preset,
                                 interactive=True,
                                 elem_classes="preset-dropdown"
                             )
@@ -1020,7 +1031,7 @@ with gr.Blocks(css=css) as demo:
                         wrap=True,
                         datatype=["str", "str", "str", "str", "str", "str", "str", "str", "str", "str"]
                     )
-            with gr.Tab('Storytelling'):
+            with gr.Tab('Storyteller'):
                 with gr.Accordion(label="Model Selection", open=False):
                     with gr.Row(elem_classes="model-container"):
                         with gr.Column(scale=8):
@@ -1051,6 +1062,21 @@ with gr.Blocks(css=css) as demo:
                                 visible=False,
                                 elem_classes="model-dropdown"
                             )
+                with gr.Row(elem_classes="chat-interface"):
+                    with gr.Column():
+                        storytelling_input = gr.Textbox(
+                            label="Input",
+                            placeholder="Enter your message...",
+                            lines=10,
+                            elem_classes="message-input",
+                        )
+                        storytelling_btn = gr.Button("Storytelling", variant="primary", elem_classes="send-button-alt")
+                    with gr.Column():
+                        storytelling_output = gr.Textbox(
+                            label="Output",
+                            lines=10,
+                            elem_classes="message-output"
+                        )
                 
             with gr.Tab('Translator'):
                 with gr.Row(elem_classes="model-container"):
@@ -2006,7 +2032,7 @@ with gr.Blocks(css=css) as demo:
     demo.load(
         fn=on_app_start,
         inputs=[], # 언어 상태는 이미 초기화됨
-        outputs=[session_id_state, history_state, existing_sessions_dropdown, character_state,
+        outputs=[session_id_state, history_state, existing_sessions_dropdown, character_state, preset_dropdown, system_message_state,
         current_session_display],
         queue=False
     )
