@@ -1235,7 +1235,11 @@ with gr.Blocks(css=css) as demo:
     character_dropdown.change(
         fn=update_system_message_and_profile,
         inputs=[character_dropdown, language_dropdown, speech_manager_state, session_id_state],
-        outputs=[system_message_box, profile_image]
+        outputs=[system_message_box, profile_image, preset_dropdown]
+    ).then(
+        fn=main_tab.handle_change_preset,
+        inputs=[preset_dropdown, history_state, selected_language_state],
+        outputs=[history_state, system_message_box, profile_image]
     )
         
     # 모델 선택 변경 시 가시성 토글

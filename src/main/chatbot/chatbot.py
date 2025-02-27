@@ -676,7 +676,7 @@ def update_system_message_and_profile(
             update_system_message_in_db(session_id, system_message)
             update_last_character_in_db(session_id, character_name)
 
-        return system_message, selected_profile_image
+        return system_message, selected_profile_image, gr.update(value=character_name)
     except ValueError as ve:
         logger.error(f"Character setting error: {ve}")
         return "시스템 메시지 로딩 중 오류가 발생했습니다.", None
