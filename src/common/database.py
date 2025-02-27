@@ -39,7 +39,13 @@ class SessionResult:
     success: bool
     message: str
     affected_rows: int = 0
-
+    
+@dataclass
+class CharacterInfo:
+    name: str
+    preset_name: str
+    character_key: str
+    
 class DatabaseInitError(Exception):
     """데이터베이스 초기화 관련 커스텀 예외"""
     pass
@@ -57,11 +63,11 @@ class SessionManagementError(Exception):
 
 
 DEFAULT_PRESETS = frozenset([
-    'AI_ASSISTANT_PRESET',
-    'SD_IMAGE_GENERATOR_PRESET',
-    'MINAMI_ASUKA_PRESET',
-    'MAKOTONO_AOI_PRESET',
-    'AINO_KOITO_PRESET'
+    'AI 비서(AI Assistant)',
+    'Image Generator',
+    '미나미 아스카 (南飛鳥, みなみあすか, Minami Asuka)',
+    '마코토노 아오이 (真琴乃葵, まことのあおい, Makotono Aoi)',
+    '아이노 코이토 (愛野小糸, あいのこいと, Aino Koito)'
 ])
 
 class DatabaseError(Exception):
@@ -236,7 +242,6 @@ def initialize_presets_db() -> None:
         logger.error(f"Failed to initialize presets DB: {e}")
         raise
 
-
 # 앱 시작 시 DB 초기화 함수 호출
 initialize_presets_db()
 
@@ -251,11 +256,11 @@ def insert_default_presets(translation_manager, overwrite=True) -> None:
     """
     # 프리셋 설정 정의
     preset_configs = [
-        PresetConfig("AI_ASSISTANT_PRESET", "ai_assistant"),
-        PresetConfig("SD_IMAGE_GENERATOR_PRESET", "sd_image_generator"),
-        PresetConfig("MINAMI_ASUKA_PRESET", "minami_asuka"),
-        PresetConfig("MAKOTONO_AOI_PRESET", "makotono_aoi"),
-        PresetConfig("AINO_KOITO_PRESET", "aino_koito"),
+        PresetConfig("AI 비서(AI Assistant)", "ai_assistant"),
+        PresetConfig("Image Generator", "sd_image_generator"),
+        PresetConfig("미나미 아스카 (南飛鳥, みなみあすか, Minami Asuka)", "minami_asuka"),
+        PresetConfig("마코토노 아오이 (真琴乃葵, まことのあおい, Makotono Aoi)", "makotono_aoi"),
+        PresetConfig("아이노 코이토 (愛野小糸, あいのこいと, Aino Koito)", "aino_koito"),
     ]
     
     try:

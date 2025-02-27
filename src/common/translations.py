@@ -22,10 +22,10 @@ class TranslationManager:
         self.translations: Dict[str, Dict[str, str]] = {}
         self.character_settings: Dict[str, Dict[str, str]] = {
             'ai_assistant': AI_ASSISTANT_PRESET,
+            'sd_image_generator': SD_IMAGE_GENERATOR_PRESET,
             'minami_asuka': MINAMI_ASUKA_PRESET,
             'makotono_aoi': MAKOTONO_AOI_PRESET,
-            'aino_koito': AINO_KOITO_PRESET,
-            'sd_image_generator': SD_IMAGE_GENERATOR_PRESET
+            'aino_koito': AINO_KOITO_PRESET
         }
         self.load_translations()
 
