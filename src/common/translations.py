@@ -537,11 +537,11 @@ class TranslationManager:
         }
         
         default_presets = {
-            'AI_ASSISTANT': AI_ASSISTANT_PRESET,
-            'SD_IMAGE_GENERATOR': SD_IMAGE_GENERATOR_PRESET,
-            'MINAMI_ASUKA': MINAMI_ASUKA_PRESET,
-            'MAKOTONO_AOI': MAKOTONO_AOI_PRESET,
-            'AINO_KOITO': AINO_KOITO_PRESET
+            'AI 비서(AI Assistant)': AI_ASSISTANT_PRESET,
+            'Image Generator': SD_IMAGE_GENERATOR_PRESET,
+            '미나미 아스카 (南飛鳥, みなみあすか, Minami Asuka)': MINAMI_ASUKA_PRESET,
+            '마코토노 아오이 (真琴乃葵, まことのあおい, Makotono Aoi)': MAKOTONO_AOI_PRESET,
+            '아이노 코이토 (愛野小糸, あいのこいと, Aino Koito)': AINO_KOITO_PRESET
         }
 
         for lang, translations in default_translations.items():
