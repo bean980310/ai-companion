@@ -5,8 +5,6 @@ import random
 import pandas as pd
 from pathlib import Path
 from typing import List, Dict, Any, Tuple
-import os
-import argparse
 import gradio as gr
 import sqlite3
 from src.common.database import (
@@ -28,26 +26,22 @@ from src.characters.persona_speech_manager import PersonaSpeechManager
 from src.common.args import parse_args
 from src.common.default_language import default_language
 from src.common.tmp_dir import TMP_DIR
-from PIL import Image, ImageOps
+from src.common.character_info import characters
+from src.common.utils import get_all_loras, get_diffusion_loras, get_diffusion_vae
 import numpy as np
-import cv2
 
 from presets import AI_ASSISTANT_PRESET, SD_IMAGE_GENERATOR_PRESET, MINAMI_ASUKA_PRESET, MAKOTONO_AOI_PRESET, AINO_KOITO_PRESET
 
 from src.models import api_models, transformers_local, gguf_local, mlx_local, diffusion_api_models, diffusers_local, checkpoints_local
-from src.main.chatbot.chatbot import (
+from src.main.chatbot import (
     MainTab,
-    characters,
     get_speech_manager,
     update_system_message_and_profile,
     create_reset_confirm_modal,
     create_delete_session_modal
 )
-from src.main.image_generation.image_generation import generate_images_wrapper
-from src.main.translator.translator import translate_interface, languages
+from src.main.image_generation import generate_images_wrapper
 from src.main.translator import translate_interface, upload_handler, LANGUAGES
-
-from src.common.utils import get_all_loras, get_diffusion_loras, get_diffusion_vae
 
 from src.tabs.cache_tab import create_cache_tab
 from src.tabs.download_tab import create_download_tab
@@ -61,7 +55,6 @@ from src.tabs.device_setting import set_device, create_device_setting_tab
 from src.tabs.sd_prompt_generator_tab import create_sd_prompt_generator_tab
 
 from presets import __all__ as preset_modules
-import json
 
 from src.api.comfy_api import client
 
@@ -69,25 +62,6 @@ from src.api.comfy_api import client
 
 # 로깅 설정
 from src import logger
-
-# # 로그 포맷 정의
-# formatter = logging.Formatter(
-#     fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-#     datefmt='%Y-%m-%d %H:%M:%S'
-# )
-
-# # 콘솔 핸들러 추가
-# console_handler = logging.StreamHandler()
-# console_handler.setFormatter(formatter)
-# logger.addHandler(console_handler)
-
-# # 파일 핸들러 추가 (로테이팅 파일 핸들러 사용)
-# log_file = "app.log"  # 원하는 로그 파일 경로로 변경 가능
-# rotating_file_handler = RotatingFileHandler(
-#     log_file, maxBytes=5*1024*1024, backupCount=5  # 5MB마다 새로운 파일로 교체, 최대 5개 백업
-# )
-# rotating_file_handler.setFormatter(formatter)
-# logger.addHandler(rotating_file_handler)
 
 args=parse_args()
 
@@ -412,72 +386,6 @@ with gr.Blocks(css=css) as demo:
                     
         with gr.Tabs() as tabs:
             with gr.Tab('Chat'):
-                # with gr.Sidebar() as chat_side:
-                #     # with gr.Row(elem_classes="session-container"):
-                #     #     with gr.Column():
-                #     #         gr.Markdown("### Chat Session")
-                #     #         session_select_dropdown = gr.Dropdown(
-                #     #             label="세션 선택",
-                #     #             choices=[],  # 앱 시작 시 혹은 별도의 로직으로 세션 목록을 채움
-                #     #             value=None,
-                #     #             interactive=True,
-                #     #             container=False,
-                #     #             scale=8,
-                #     #             elem_classes="session-dropdown"
-                #     #         )
-                #     #         chat_title_box=gr.Textbox(
-                #     #             value="",
-                #     #             interactive=False
-                #     #         )
-                #     #         add_session_icon_btn = gr.Button("📝", elem_classes="icon-button", scale=1, variant="secondary")
-                #     #         delete_session_icon_btn = gr.Button("🗑️", elem_classes="icon-button-delete", scale=1, variant="stop")
-                #     with gr.Row(elem_classes="model-container"):
-                #         with gr.Column():
-                #             gr.Markdown("### Model Selection")
-                #             with gr.Column(scale=8):
-                #                 model_type_dropdown = gr.Radio(
-                #                     label=_("model_type_label"),
-                #                     choices=["all", "api", "transformers", "gguf", "mlx"],
-                #                     value="all",
-                #                     elem_classes="model-dropdown"
-                #                 )
-                #             with gr.Column(scale=10):
-                #                 model_dropdown = gr.Dropdown(
-                #                     label=_("model_select_label"),
-                #                     choices=initial_choices,
-                #                     value=initial_choices[0] if len(initial_choices) > 0 else None,
-                #                     elem_classes="model-dropdown"
-                #                 )
-                #                 api_key_text = gr.Textbox(
-                #                     label=_("api_key_label"),
-                #                     placeholder="sk-...",
-                #                     visible=False,
-                #                     elem_classes="api-key-input"
-                #                 )
-                #                 lora_dropdown = gr.Dropdown(
-                #                     label="LoRA 모델 선택",
-                #                     choices=get_all_loras(),
-                #                     value="None",
-                #                     interactive=True,
-                #                     visible=False,
-                #                     elem_classes="model-dropdown"
-                #                 )
-                # with gr.Row(elem_classes="session-container"):
-                #     session_select_dropdown = gr.Dropdown(
-                #         label="세션 선택",
-                #         choices=[],  # 앱 시작 시 혹은 별도의 로직으로 세션 목록을 채움
-                #         value=None,
-                #         interactive=True,
-                #         container=False,
-                #         scale=8,
-                #         elem_classes="session-dropdown"
-                #     )
-                #     chat_title_box=gr.Textbox(
-                #         value="",
-                #         interactive=False
-                #     )
-                #     add_session_icon_btn = gr.Button("📝", elem_classes="icon-button", scale=1, variant="secondary")
-                #     delete_session_icon_btn = gr.Button("🗑️", elem_classes="icon-button-delete", scale=1, variant="stop")
                 with gr.Accordion(label="Model Selection", open=False, elem_classes="accordion-container"):
                     with gr.Row(elem_classes="model-container"):
                         with gr.Column(scale=8):
@@ -620,13 +528,6 @@ with gr.Blocks(css=css) as demo:
                                 elem_classes="preset-dropdown"
                             )
                             change_preset_button = gr.Button("프리셋 변경")
-                            # character_conversation_dropdown = gr.CheckboxGroup(
-                            #     label="대화할 캐릭터 선택",
-                            #     choices=get_preset_choices(default_language),  # 추가 캐릭터 이름
-                            #     value=list(get_preset_choices(default_language))[0] if get_preset_choices(default_language) else None,
-                            #     interactive=True
-                            # )
-                            # start_conversation_button = gr.Button("대화 시작")
                             reset_btn = gr.Button(
                                 value=_("reset_session_button"),  # "세션 초기화"에 해당하는 번역 키
                                 variant="secondary",
@@ -657,100 +558,6 @@ with gr.Blocks(css=css) as demo:
                 max_diffusion_lora_rows=10
                 stored_image=gr.State()
                 stored_image_inpaint=gr.State()
-                # with gr.Sidebar():
-                #     with gr.Row(elem_classes="model-container"):
-                #         with gr.Column():
-                #             gr.Markdown("### Model Selection")
-                #             with gr.Column(scale=8):
-                #                 diffusion_model_type_dropdown = gr.Radio(
-                #                     label=_("model_type_label"),
-                #                     choices=["all", "api", "diffusers", "checkpoints"],
-                #                     value="all",
-                #                     elem_classes="model-dropdown"
-                #                 )
-                #             with gr.Column(scale=10):
-                #                 diffusion_model_dropdown = gr.Dropdown(
-                #                     label=_("model_select_label"),
-                #                     choices=diffusion_choices,
-                #                     value=diffusion_choices[0] if len(diffusion_choices) > 0 else None,
-                #                     elem_classes="model-dropdown"
-                #                 )
-                #                 diffusion_api_key_text = gr.Textbox(
-                #                     label=_("api_key_label"),
-                #                     placeholder="sk-...",
-                #                     visible=False,
-                #                     elem_classes="api-key-input"
-                #                 )
-                            
-                #     with gr.Row(elem_classes="model-container"):
-                #         with gr.Column():
-                #             gr.Markdown("### Refiner Model Selection")
-                #             with gr.Column():
-                #                 diffusion_refiner_model_dropdown = gr.Dropdown(
-                #                     label=_("refiner_model_select_label"),
-                #                     choices=diffusion_refiner_choices,
-                #                     value=diffusion_refiner_choices[0] if len(diffusion_refiner_choices) > 0 else None,
-                #                     elem_classes="model-dropdown"
-                #                 )
-                #                 diffusion_refiner_start = gr.Slider(
-                #                     label="Refiner Start Step",
-                #                     minimum=1,
-                #                     maximum=50,
-                #                     step=1,
-                #                     value=20,
-                #                     visible=False
-                #                 )
-                #                 diffusion_with_refiner_image_to_image_start = gr.Slider(
-                #                     label="Image to Image Start Step",
-                #                     minimum=1,
-                #                     maximum=50,
-                #                     step=1,
-                #                     value=20,
-                #                     visible=False
-                #                 )
-                            
-                #     with gr.Row(elem_classes="model-container"):
-                #         with gr.Column():
-                #             gr.Markdown("### LoRA Model Selection")
-                #             with gr.Accordion("LoRA Settings", open=False):
-                #                 diffusion_lora_multiselect=gr.Dropdown(
-                #                     label="Select LoRA Models",
-                #                     choices=diffusion_lora_choices,
-                #                     value=[],
-                #                     interactive=True,
-                #                     multiselect=True,
-                #                     info="Select LoRA models to apply to the diffusion model.",
-                #                     elem_classes="model-dropdown"
-                #                 )
-                #                 diffusion_lora_text_encoder_sliders=[]
-                #                 diffusion_lora_unet_sliders=[]
-                #                 for i in range(max_diffusion_lora_rows):
-                #                     text_encoder_slider=gr.Slider(
-                #                         label=f"LoRA {i+1} - Text Encoder Weight",
-                #                         minimum=-2.0,
-                #                         maximum=2.0,
-                #                         step=0.01,
-                #                         value=1.0,
-                #                         visible=False,
-                #                         interactive=True
-                #                     )
-                #                     unet_slider = gr.Slider(
-                #                         label=f"LoRA {i+1} - U-Net Weight",
-                #                         minimum=-2.0,
-                #                         maximum=2.0,
-                #                         step=0.01,
-                #                         value=1.0,
-                #                         visible=False,
-                #                         interactive=True
-                #                     )
-                #                     diffusion_lora_text_encoder_sliders.append(text_encoder_slider)
-                #                     diffusion_lora_unet_sliders.append(unet_slider)
-                #                 diffusion_lora_slider_rows=[]
-                #                 for te, unet in zip(diffusion_lora_text_encoder_sliders, diffusion_lora_unet_sliders):
-                #                     diffusion_lora_slider_rows.append(gr.Row([te, unet]))
-                #                 for row in diffusion_lora_slider_rows:
-                #                     row
-
                 with gr.Accordion(label="Model Selection", open=False, elem_classes="accordion-container"):          
                     with gr.Row(elem_classes="model-container"):
                         with gr.Column(scale=8):
@@ -1272,36 +1079,30 @@ with gr.Blocks(css=css) as demo:
     model_dropdown.change(
         fn=lambda selected_model: (
             main_tab.toggle_api_key_visibility(selected_model),
-            # main_tab.toggle_image_input_visibility(selected_model),
             main_tab.toggle_lora_visibility(selected_model),
             main_tab.toggle_multimodal_msg_input_visibility(selected_model),
             main_tab.toggle_standard_msg_input_visibility(selected_model)
         ),
         inputs=[model_dropdown],
         outputs=[api_key_text, lora_dropdown, multimodal_msg, msg]
-        # outputs=[api_key_text, image_input, lora_dropdown]
     )
     
     storytelling_model_dropdown.change(
         fn=lambda selected_model: (
             main_tab.toggle_api_key_visibility(selected_model),
-            # main_tab.toggle_image_input_visibility(selected_model),
             main_tab.toggle_lora_visibility(selected_model),
         ),
         inputs=[storytelling_model_dropdown],
         outputs=[storytelling_api_key_text, storytelling_lora_dropdown]
-        # outputs=[api_key_text, image_input, lora_dropdown]
     )
     
     demo.load(
          fn=lambda selected_model: (
             main_tab.toggle_api_key_visibility(selected_model),
-            # main_tab.toggle_image_input_visibility(selected_model),
             main_tab.toggle_lora_visibility(selected_model),
         ),
         inputs=[storytelling_model_dropdown],
         outputs=[storytelling_api_key_text, storytelling_lora_dropdown]
-        # outputs=[api_key_text, image_input, lora_dropdown]
     )
     storytelling_model_type_dropdown.change(
         fn=main_tab.update_model_list,
@@ -1796,30 +1597,6 @@ with gr.Blocks(css=css) as demo:
         queue=True  # 모델 추론이 들어가므로 True
     )
         
-    # start_conversation_button.click(
-    #     fn=main_tab.process_character_conversation,
-    #     inputs=[
-    #         history_state,
-    #         character_conversation_dropdown,
-    #         model_type_dropdown, 
-    #         model_dropdown,
-    #         custom_model_path_state,
-    #         image_input,
-    #         api_key_text,
-    #         selected_device_state,
-    #         seed_state,
-    #         temperature_state,
-    #         top_k_state,
-    #         top_p_state,
-    #         repetition_penalty_state,
-    #     ],
-    #     outputs=[history_state, profile_image]
-    # ).then(
-    #     fn=main_tab.filter_messages_for_chatbot,  # 히스토리를 채팅창에 표시하기 위한 필터링
-    #     inputs=[history_state],
-    #     outputs=[chatbot]
-    # )
-        
     demo.load(
         fn=main_tab.refresh_sessions,
         inputs=[],
@@ -2032,8 +1809,7 @@ with gr.Blocks(css=css) as demo:
     demo.load(
         fn=on_app_start,
         inputs=[], # 언어 상태는 이미 초기화됨
-        outputs=[session_id_state, history_state, existing_sessions_dropdown, character_state, preset_dropdown, system_message_state,
-        current_session_display],
+        outputs=[session_id_state, history_state, existing_sessions_dropdown, character_state, preset_dropdown, system_message_state, current_session_display],
         queue=False
     )
 
