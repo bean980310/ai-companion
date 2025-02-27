@@ -10,6 +10,8 @@ from datetime import datetime
 import csv
 from pathlib import Path
 
+from src.common.character_info import characters
+
 # logger = logging.getLogger(__name__)
 
 @dataclass
@@ -139,7 +141,8 @@ def initialize_database() -> None:
                     name TEXT,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    last_activity DATETIME
+                    last_activity DATETIME,
+                    last_character TEXT
                 )
             """)
             
@@ -185,9 +188,9 @@ def ensure_demo_session() -> None:
                 # 데모 세션 생성
                 current_time = datetime.now().isoformat()
                 cursor.execute("""
-                    INSERT INTO sessions (id, name, created_at, updated_at, last_activity)
-                    VALUES (?, ?, ?, ?, ?)
-                """, ('demo_session', 'Demo Session', current_time, current_time, current_time))
+                    INSERT INTO sessions (id, name, created_at, updated_at, last_activity, last_character)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, ('demo_session', 'Demo Session', current_time, current_time, current_time, list(characters.keys())[0]))
                 
                 # 기본 시스템 메시지 추가
                 cursor.execute("""
@@ -519,8 +522,10 @@ def get_existing_sessions() -> List[str]:
         logger.error(f"Error retrieving sessions: {e}")
         return []
     
-def save_chat_history_db(history, session_id="demo_session") -> bool:
+def save_chat_history_db(history, session_id="demo_session", selected_character=None) -> bool:
     """Save chat history to SQLite database"""
+    if selected_character is None:
+        selected_character = list(characters.keys())[0]
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -540,7 +545,8 @@ def save_chat_history_db(history, session_id="demo_session") -> bool:
                     name TEXT,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    last_activity DATETIME
+                    last_activity DATETIME,
+                    last_character TEXT
                 )
             """)
             
@@ -550,9 +556,9 @@ def save_chat_history_db(history, session_id="demo_session") -> bool:
                 # 세션이 존재하지 않으면 생성
                 current_time = datetime.now().isoformat()
                 cursor.execute("""
-                    INSERT INTO sessions (id, name, created_at, updated_at, last_activity)
-                    VALUES (?, ?, ?, ?, ?)
-                """, (session_id, f"Session {session_id}", current_time, current_time, current_time))
+                    INSERT INTO sessions (id, name, created_at, updated_at, last_activity, last_character)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (session_id, f"Session {session_id}", current_time, current_time, current_time, selected_character))
                 logger.info(f"Created new session: {session_id}")
             
             for msg in history:
@@ -577,7 +583,16 @@ def save_chat_history_db(history, session_id="demo_session") -> bool:
     except Exception as e:
         logger.error(f"Error saving chat history to DB: {e}")
         return False
-    
+
+def update_last_character_in_db(session_id, character):
+    try:
+        with sqlite3.connect("chat_history.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE sessions SET last_character=? WHERE id=?", (character, session_id))
+            conn.commit()
+    except Exception as e:
+        logger.error(f"Error updating last character: {e}")
+        
 def save_chat_history(history):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     file_name = f"chat_history_{timestamp}.json"

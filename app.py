@@ -19,7 +19,8 @@ from src.common.database import (
     get_existing_sessions, 
     get_preset_choices,
     insert_default_presets,
-    update_system_message_in_db)
+    update_system_message_in_db,
+    update_last_character_in_db)
 from src.models.models import default_device
 from src.common.cache import models_cache
 from src.common.translations import translation_manager, _, TranslationManager
@@ -92,6 +93,20 @@ args=parse_args()
 
 main_tab=MainTab()
 
+def get_last_used_character(session_id):
+    try:
+        with sqlite3.connect("chat_history.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT last_character FROM sessions WHERE id=?", (session_id,))
+            row = cursor.fetchone()
+            if row and row[0]:
+                return row[0]
+            else:
+                return list(characters.keys())[0]  # 기본 캐릭터로 설정
+    except Exception as e:
+        logger.error(f"Error fetching last used character: {e}")
+        return list(characters.keys())[0]
+    
 def initialize_speech_manager():
     return PersonaSpeechManager(translation_manager, characters)
 
@@ -225,6 +240,13 @@ def on_app_start(language=None):  # language 매개변수에 기본값 설정
     loaded_history = load_chat_from_db(sid)
     logger.info(f"앱 시작 시 불러온 히스토리: {loaded_history}")
     
+    if sid != "demo_session":
+        last_character = get_last_used_character(sid)
+        logger.info(f"마지막 사용 캐릭터: {last_character}")
+    else:
+        last_character = list(characters.keys())[0]
+        logger.info("demo_session이므로 기본 캐릭터 설정")
+    
     sessions = get_existing_sessions()
     logger.info(f"불러온 세션 목록: {sessions}")
 
@@ -251,6 +273,7 @@ def on_app_start(language=None):  # language 매개변수에 기본값 설정
         sid, 
         loaded_history,
         gr.update(choices=sessions, value=sid if sessions else None),
+        last_character,
         f"현재 세션: {sid}"
     )
 
@@ -280,6 +303,7 @@ def on_character_change(chosen_character, session_id):
     #    그리고 DB에 UPDATE
     system_message_box.update(value=updated_system_msg)
     update_system_message_in_db(session_id, updated_system_msg)
+    update_last_character_in_db(session_id, chosen_character)
 
     return updated_system_msg  # UI에 표시
 
@@ -294,9 +318,10 @@ with open("html/js/script.js", 'r') as f:
 with gr.Blocks(css=css) as demo:
     speech_manager_state = gr.State(initialize_speech_manager)
     
-    session_id, loaded_history, session_dropdown, session_label=on_app_start()
+    session_id, loaded_history, session_dropdown, last_character, session_label=on_app_start()
     last_sid_state=gr.State()
     history_state = gr.State(loaded_history)
+    last_character_state = gr.State()
     session_list_state = gr.State()
     overwrite_state = gr.State(False) 
 
@@ -304,6 +329,7 @@ with gr.Blocks(css=css) as demo:
     custom_model_path_state = gr.State("")
     session_id_state = gr.State(session_id)
     selected_device_state = gr.State(default_device)
+    character_state = gr.State(last_character)
     seed_state = gr.State(args.seed)  # 시드 상태 전역 정의
     temperature_state = gr.State(0.6)
     top_k_state = gr.State(20)
@@ -521,13 +547,13 @@ with gr.Blocks(css=css) as demo:
                             show_label=True,
                             width=400,
                             height=400,
-                            value=characters[list(characters.keys())[0]]["profile_image"],
+                            value=characters[last_character]["profile_image"],
                             elem_classes="profile-image"
                         )
                         character_dropdown = gr.Dropdown(
                             label=_('character_select_label'),
                             choices=list(characters.keys()),
-                            value=list(characters.keys())[0],
+                            value=last_character,
                             interactive=True,
                             info=_('character_select_info'),
                             elem_classes='profile-image'
@@ -1101,7 +1127,7 @@ with gr.Blocks(css=css) as demo:
         new_system_msg = speech_manager.get_system_message()
 
         # 3) DB에 기록할 새 세션 만들기
-        new_sid, info, new_history = main_tab.create_new_session(new_system_msg)
+        new_sid, info, new_history = main_tab.create_new_session(new_system_msg, chosen_character)
 
         sessions = get_existing_sessions()
         return [
@@ -1976,7 +2002,7 @@ with gr.Blocks(css=css) as demo:
     demo.load(
         fn=on_app_start,
         inputs=[], # 언어 상태는 이미 초기화됨
-        outputs=[session_id_state, history_state, existing_sessions_dropdown,
+        outputs=[session_id_state, history_state, existing_sessions_dropdown, character_state,
         current_session_display],
         queue=False
     )

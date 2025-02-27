@@ -5,7 +5,7 @@ import secrets
 import sqlite3
 
 from src.models.models import get_all_local_models, generate_answer, generate_chat_title
-from src.common.database import save_chat_history_db, delete_session_history, delete_all_sessions, get_preset_choices, load_system_presets, get_existing_sessions, load_chat_from_db, update_system_message_in_db
+from src.common.database import save_chat_history_db, delete_session_history, delete_all_sessions, get_preset_choices, load_system_presets, get_existing_sessions, load_chat_from_db, update_system_message_in_db, update_last_character_in_db
 from src.common.translations import TranslationManager, translation_manager
 
 from src.characters.preset_images import PRESET_IMAGES
@@ -15,6 +15,7 @@ from src.common.default_language import default_language
 
 import traceback
 from src.characters.persona_speech_manager import PersonaSpeechManager
+from src.common.character_info import characters
 from src.common.args import parse_args
 from src.common.translations import _
 
@@ -37,44 +38,6 @@ generator_choices = list(dict.fromkeys(generator_choices))  # 중복 제거
 generator_choices = sorted(generator_choices)  # 정렬
 
 DEFAULT_PROFILE_IMAGE = None
-
-characters={
-    "AI 비서(AI Assistant)": {
-        "default_tone": "존댓말",
-        "languages": ["ko", "ja", "zh_CN", "zh_TW", "en"],
-        "default_language": "ko",
-        "preset_name": "AI_ASSISTANT_PRESET",
-        "profile_image": "assets/0_ai_assistant.png"
-    },
-    "Image Generator": {
-        "default_tone": "formal",
-        "languages": ["en"],
-        "default_language": "en",
-        "preset_name": "SD_IMAGE_GENERATOR_PRESET",
-        "profile_image": "assets/Z_image_generator.png"
-    },
-    "미나미 아스카 (南飛鳥, みなみあすか, Minami Asuka)": {
-        "default_tone": "반말", 
-        "languages": ["ko", "ja", "zh_CN", "zh_TW", "en"],
-        "default_language": "ko",
-        "preset_name": "MINAMI_ASUKA_PRESET",
-        "profile_image": "assets/1_minami_asuka.png"
-    },
-    "마코토노 아오이 (真琴乃葵, まことのあおい, Makotono Aoi)": {
-        "default_tone": "반말", 
-        "languages": ["ko", "ja", "zh_CN", "zh_TW", "en"],
-        "default_language": "ko",
-        "preset_name": "MAKOTONO_AOI_PRESET",
-        "profile_image": "assets/2_makotono_aoi.png"
-    },
-    "아이노 코이토 (愛野小糸, あいのこいと, Aino Koito)": {
-        "default_tone": "반말", 
-        "languages": ["ko", "ja", "zh_CN", "zh_TW", "en"],
-        "default_language": "ko",
-        "preset_name": "AINO_KOITO_PRESET",
-        "profile_image": "assets/3_aino_koito.png"
-    },
-}
 
 speech_manager = PersonaSpeechManager(translation_manager=translation_manager, characters=characters)
 
@@ -421,7 +384,7 @@ class MainTab:
             return gr.update(choices=[], value=None), "DB에 세션이 없습니다."
         return gr.update(choices=sessions, value=sessions[0])
 
-    def create_new_session(self, system_message_box_value: str):
+    def create_new_session(self, system_message_box_value: str, selected_character):
         """
         새 세션을 생성하고 DB에 기본 system_message를 저장합니다.
         """
@@ -433,7 +396,7 @@ class MainTab:
         
         new_history = [system_message]
         # DB에 저장
-        save_chat_history_db(new_history, session_id=new_sid)
+        save_chat_history_db(new_history, session_id=new_sid, selected_character=selected_character)
         return new_sid, f"현재 세션: {new_sid}", new_history
 
     def apply_session(self, chosen_sid: str):
@@ -711,6 +674,7 @@ def update_system_message_and_profile(
         # session_id가 유효하다면, 새 시스템 메시지를 DB에 반영
         if session_id:
             update_system_message_in_db(session_id, system_message)
+            update_last_character_in_db(session_id, character_name)
 
         return system_message, selected_profile_image
     except ValueError as ve:

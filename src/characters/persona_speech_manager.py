@@ -372,4 +372,3 @@ class PersonaSpeechManager:
         else:
             logger.warning(f"세션 {session_id}의 상태를 데이터베이스에서 찾을 수 없습니다.")
             
-    
