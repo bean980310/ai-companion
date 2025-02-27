@@ -73,7 +73,7 @@ def create_download_tab():
                 progress_bar_predefined = gr.Progress(track_tqdm=True)
 
                 # 다운로드 결과와 로그
-                with gr.Accordion("Download Details", open=False):
+                with gr.Accordion("Download Details", open=False, elem_classes="accordion-container"):
                     download_info_predefined = gr.TextArea(
                         label="Download Log",
                         interactive=False,
@@ -182,7 +182,7 @@ def create_download_tab():
                 progress_bar_custom = gr.Progress(track_tqdm=True)
 
                 # 다운로드 결과와 로그
-                with gr.Accordion("Download Details", open=False):
+                with gr.Accordion("Download Details", open=False, elem_classes="accordion-container"):
                     download_info_custom = gr.TextArea(
                         label="Download Log",
                         interactive=False,
@@ -325,7 +325,7 @@ def create_download_tab():
                 progress_bar_hub = gr.Progress(track_tqdm=True)
 
                 # 다운로드 결과와 로그
-                with gr.Accordion("Download Details", open=False):
+                with gr.Accordion("Download Details", open=False, elem_classes="accordion-container"):
                     download_info_hub = gr.TextArea(
                         label="Download Log",
                         interactive=False,

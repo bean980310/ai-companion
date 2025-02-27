@@ -478,7 +478,7 @@ with gr.Blocks(css=css) as demo:
                 #     )
                 #     add_session_icon_btn = gr.Button("📝", elem_classes="icon-button", scale=1, variant="secondary")
                 #     delete_session_icon_btn = gr.Button("🗑️", elem_classes="icon-button-delete", scale=1, variant="stop")
-                with gr.Accordion(label="Model Selection", open=False):
+                with gr.Accordion(label="Model Selection", open=False, elem_classes="accordion-container"):
                     with gr.Row(elem_classes="model-container"):
                         with gr.Column(scale=8):
                             model_type_dropdown = gr.Radio(
@@ -569,7 +569,7 @@ with gr.Blocks(css=css) as demo:
                             info=_('character_select_info'),
                             elem_classes='profile-image'
                         )
-                        advanced_setting=gr.Accordion(_("advanced_setting"), open=False)
+                        advanced_setting=gr.Accordion(_("advanced_setting"), open=False, elem_classes="accordion-container")
                         with advanced_setting:
                             seed_input = gr.Number(
                                 label=_("seed_label"),
@@ -751,7 +751,7 @@ with gr.Blocks(css=css) as demo:
                 #                 for row in diffusion_lora_slider_rows:
                 #                     row
 
-                with gr.Accordion(label="Model Selection", open=False):          
+                with gr.Accordion(label="Model Selection", open=False, elem_classes="accordion-container"):          
                     with gr.Row(elem_classes="model-container"):
                         with gr.Column(scale=8):
                             diffusion_model_type_dropdown = gr.Radio(
@@ -800,7 +800,7 @@ with gr.Blocks(css=css) as demo:
                             )
                             
                     with gr.Row(elem_classes="model-container"):
-                        with gr.Accordion("LoRA Settings", open=False):
+                        with gr.Accordion("LoRA Settings", open=False, elem_classes="accordion-container"):
                             diffusion_lora_multiselect=gr.Dropdown(
                                 label="Select LoRA Models",
                                 choices=diffusion_lora_choices,
@@ -840,7 +840,7 @@ with gr.Blocks(css=css) as demo:
                                 row
                             
                 with gr.Row(elem_classes="model-container"):
-                    with gr.Accordion("Image to Image", open=False):
+                    with gr.Accordion("Image to Image", open=False, elem_classes="accordion-container"):
                         image_to_image_mode = gr.Radio(
                             label="Image to Image Mode",
                             choices=["None", "Image to Image", "Inpaint", "Inpaint Upload"],
@@ -959,7 +959,7 @@ with gr.Blocks(css=css) as demo:
                         )
 
                     with gr.Column(scale=3, elem_classes="side-panel"):
-                        with gr.Accordion("Advanced Settings", open=False):
+                        with gr.Accordion("Advanced Settings", open=False, elem_classes="accordion-container"):
                             sampler_dropdown = gr.Dropdown(
                                 label="Sampler",
                                 choices=["euler", "euler_cfg_pp", "euler_ancestral", "euler_ancestral_cfg_pp", "heun", "heunpp2", "dpm_2", "dpm_2_ancestral", "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_2s_ancestral_cfg_pp", "dpmpp_sde", "dpmpp_sde_gpu", "dpmpp_2m", "dpmpp_2m_cfg_pp", "dpmpp_2m_sde", "dpmpp_2m_sde_gpu", "dpmpp_3m_sde", "dpmpp_3m_sde_gpu", "ddpm", "lcm", "ddim"],
@@ -1023,7 +1023,7 @@ with gr.Blocks(css=css) as demo:
                                     value=1,
                                     precision=0
                                 )
-                with gr.Accordion("History", open=False):
+                with gr.Accordion("History", open=False, elem_classes="accordion-container"):
                     image_history = gr.Dataframe(
                         headers=["Prompt", "Negative Prompt", "Steps", "Model", "Sampler", "Scheduler", "CFG Scale", "Seed", "Width", "Height"],
                         label="Generation History",
@@ -1032,7 +1032,7 @@ with gr.Blocks(css=css) as demo:
                         datatype=["str", "str", "str", "str", "str", "str", "str", "str", "str", "str"]
                     )
             with gr.Tab('Storyteller'):
-                with gr.Accordion(label="Model Selection", open=False):
+                with gr.Accordion(label="Model Selection", open=False, elem_classes="accordion-container"):
                     with gr.Row(elem_classes="model-container"):
                         with gr.Column(scale=8):
                             storytelling_model_type_dropdown = gr.Radio(
