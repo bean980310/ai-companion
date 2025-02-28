@@ -172,6 +172,29 @@ def scan_local_models(root="./models/llm", model_type=None):
     logger.info(f"Scanned local models: {local_models}")
     return local_models
 
+def scan_tts_models(root="./models/tts", model_type=None):
+    if not os.path.isdir(root):
+        os.makedirs(root, exist_ok=True)
+        
+    local_models = []
+    
+    subdirs = ["vits", "svc"] if model_type is None else [model_type]
+    allowed_extensions = { ".safetensors", ".bin", ".pt", ".pth" }
+    required_names = {"config.json"}
+    
+    for subdir in subdirs:
+        subdir_path = os.path.join(root, subdir)
+        if not os.path.isdir(subdir_path):
+            continue
+        
+        for dirpath, _, filenames in os.walk(subdir_path):
+            if has_required_files(filenames, required_names=required_names, required_extensions=allowed_extensions):
+                rel_path = os.path.relpath(dirpath, subdir_path)
+                model_id = subdir if rel_path == "." else os.path.join(subdir, rel_path)
+                local_models.append({"model_id": model_id, "model_type": "tts"})
+                
+    return local_models
+
 def get_all_loras(lora_root="./models/llm/loras"):
     """
     lora 폴더 내에서, 확장자가 .safetensors, .bin, .pt, .pth 인 파일이 존재하는 폴더를
@@ -232,6 +255,15 @@ def get_all_diffusion_models():
     return {
         "diffusers": diffusers,
         "checkpoints": checkpoints
+    }
+    
+def get_all_tts_models():
+    models = scan_tts_models()
+    vits = [m["model_id"] for m in models if m["model_type"] == "vits"]
+    svc = [m["model_id"] for m in models if m["model_type"] == "svc"]
+    return {
+        "vits": vits,
+        "svc": svc
     }
     
 def remove_hf_cache(model_id):

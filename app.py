@@ -32,7 +32,7 @@ import numpy as np
 
 from presets import AI_ASSISTANT_PRESET, SD_IMAGE_GENERATOR_PRESET, MINAMI_ASUKA_PRESET, MAKOTONO_AOI_PRESET, AINO_KOITO_PRESET
 
-from src.models import api_models, transformers_local, gguf_local, mlx_local, diffusion_api_models, diffusers_local, checkpoints_local
+from src.models import api_models, transformers_local, gguf_local, mlx_local, diffusion_api_models, diffusers_local, checkpoints_local, vits_local, svc_local
 from src.main.chatbot import (
     MainTab,
     get_speech_manager,
@@ -236,6 +236,12 @@ def on_app_start(language=None):  # language 매개변수에 기본값 설정
         display_system = _("system_message_default")
     logger.info(f"로드된 프리셋: {presets}")
     
+    preset_list = get_preset_choices(default_language)
+    for i in range(len(preset_list)):
+        if list(preset_list)[i] == last_character:
+            last_preset = list(preset_list)[i]
+            break
+        
     if not loaded_history:
         system_presets = load_system_presets(language)
         if len(system_presets) > 0:
@@ -255,7 +261,7 @@ def on_app_start(language=None):  # language 매개변수에 기본값 설정
         loaded_history,
         gr.update(choices=sessions, value=sid if sessions else None),
         last_character,
-        gr.update(value=preset_name),
+        gr.update(value=last_preset),
         display_system,
         f"현재 세션: {sid}"
     )
@@ -343,6 +349,13 @@ with gr.Blocks(css=css) as demo:
     diffusion_refiner_choices = list(dict.fromkeys(diffusion_refiner_choices))
     diffusion_refiner_choices = sorted(diffusion_refiner_choices)  # 정렬 추가
     
+    tts_choices = vits_local + svc_local
+    tts_choices = list(dict.fromkeys(tts_choices))
+    tts_choices = sorted(tts_choices)
+    
+    if len(tts_choices) == 0:
+        tts_choices.insert(0, "Put Your Models")
+    
     if "None" not in diffusion_refiner_choices:
         diffusion_refiner_choices.insert(0, "None")
     
@@ -384,8 +397,8 @@ with gr.Blocks(css=css) as demo:
                     add_session_icon_btn = gr.Button("📝", elem_classes="icon-button", scale=1, variant="secondary")
                     delete_session_icon_btn = gr.Button("🗑️", elem_classes="icon-button-delete", scale=1, variant="stop")
                     
-        with gr.Tabs() as tabs:
-            with gr.Tab('Chat'):
+        with gr.Tabs(elem_classes='tabs') as tabs:
+            with gr.Tab('Chat', elem_classes='tab'):
                 with gr.Accordion(label="Model Selection", open=False, elem_classes="accordion-container"):
                     with gr.Row(elem_classes="model-container"):
                         with gr.Column(scale=8):
@@ -554,7 +567,7 @@ with gr.Blocks(css=css) as demo:
                         reset_all_yes_btn = gr.Button("✅ 예", variant="danger")
                         reset_all_no_btn = gr.Button("❌ 아니요", variant="secondary")
                         
-            with gr.Tab('Image Generation'):
+            with gr.Tab('Image Generation', elem_classes='tab'):
                 max_diffusion_lora_rows=10
                 stored_image=gr.State()
                 stored_image_inpaint=gr.State()
@@ -838,7 +851,7 @@ with gr.Blocks(css=css) as demo:
                         wrap=True,
                         datatype=["str", "str", "str", "str", "str", "str", "str", "str", "str", "str"]
                     )
-            with gr.Tab('Storyteller'):
+            with gr.Tab('Storyteller', elem_classes='tab'):
                 with gr.Accordion(label="Model Selection", open=False, elem_classes="accordion-container"):
                     with gr.Row(elem_classes="model-container"):
                         with gr.Column(scale=8):
@@ -884,8 +897,12 @@ with gr.Blocks(css=css) as demo:
                             lines=10,
                             elem_classes="message-output"
                         )
+                        
+            with gr.Tab('Text to Speech', elem_classes='tab'):
+                with gr.Row(elem_classes="chat-interface"):
+                    gr.Markdown("# Coming Soon!")
                 
-            with gr.Tab('Translator'):
+            with gr.Tab('Translator', elem_classes='tab'):
                 with gr.Row(elem_classes="model-container"):
                     with gr.Column():
                         with gr.Row():
@@ -930,6 +947,7 @@ with gr.Blocks(css=css) as demo:
                             )
                         with gr.Row():
                             translate_btn = gr.Button("Translate", variant="primary", elem_classes="send-button-alt")
+                            
             create_download_tab()
                             
         reset_modal, single_reset_content, all_reset_content, cancel_btn, confirm_btn = create_reset_confirm_modal()

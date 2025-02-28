@@ -5,9 +5,13 @@
     
     --color-background-primary: #f8fafc;
     --color-background-secondary: white;
+    --color-background-tab: #f0f0f0;
+    --color-background-accordion: #f0f0f0;
     
     --color-background-primary-dark: #1a1a1a;
     --color-background-secondary-dark: #2d2d2d;
+    --color-background-tab-dark: #1f1f1f;
+    --color-background-accordion-dark: #1f1f1f;
 }
 
 .main-layout {
@@ -106,6 +110,40 @@
     color: #dc2626;
 }
 
+.tabs {
+    display: flex;
+    border-bottom: 2px solid #e5e7eb;
+    margin-bottom: 1rem;
+}
+
+/* 탭 기본 스타일 */
+.tab {
+    display: flex;
+    padding: 0.75rem 1rem;
+    /* cursor: pointer; */
+    background-color: var(--color-background-tab);
+    color: #1a1a1a;
+    font-weight: 500;
+    /* transition: background-color 0.2s, color 0.2s; */
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-radius: 12px;
+    margin-right: 0.25rem;
+    border: none;
+}
+
+/* 활성 탭 스타일 */
+/* .tab-active {
+    background-color: var(--color-background-primary);
+    color: #1a1a1a;
+    border-bottom: 2px solid var(--color-background-primary);
+} */
+
+/* 탭 호버 효과 */
+/* .tab:hover {
+    background-color: #f0f0f0;
+} */
+
 .model-container {
     background-color: var(--color-background-secondary);
     padding: 1rem;
@@ -115,7 +153,7 @@
 }
 
 .accordion-container {
-    background-color: var(--color-background-secondary);
+    background-color: var(--color-background-accordion);
     padding: 1rem;
     border-radius: 12px;
     margin-bottom: 1rem;
@@ -263,9 +301,13 @@
         background-color: var(--color-background-primary-dark);
     }
     
-    .header-container, .session-container, .model-container, .accordion-container, .chat-interface, .history-container {
+    .header-container, .session-container, .model-container, .chat-interface, .history-container {
         background-color: var(--color-background-secondary-dark);
         border-color: #404040;
+    }
+
+    .accordion-container {
+        background-color: var(--color-background-accordion-dark);
     }
     
     .main-title {
@@ -300,6 +342,21 @@
         background-color: var(--color-background-secondary-dark);
         color: #9ca3af;
     }
+
+    .tab {
+        background-color: var(--color-background-tab-dark);
+        color: #ffffff;
+    }
+    
+    /* .tab-active {
+        background-color: var(--color-background-primary-dark);
+        color: #ffffff;
+        border-bottom: 2px solid var(--color-background-primary-dark);
+    }
+    
+    .tab:hover {
+        background-color: #3b3b3b;
+    } */
 }
 /* css 변수에 추가 */
 .settings-popup {

@@ -10,7 +10,7 @@ from src.common.translations import TranslationManager, translation_manager
 
 from src.characters.preset_images import PRESET_IMAGES
 from src.models.api_models import api_models
-from src.models.local_models import transformers_local, gguf_local, mlx_local
+from src.models.local_llm_models import transformers_local, gguf_local, mlx_local
 from src.common.default_language import default_language
 
 import traceback

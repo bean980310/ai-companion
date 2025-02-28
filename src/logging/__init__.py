@@ -1,10 +1,10 @@
 import logging
 from logging.handlers import RotatingFileHandler
 
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+# logger.setLevel(logging.INFO)
 
 # 로그 포맷 정의
 formatter = logging.Formatter(

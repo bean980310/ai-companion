@@ -2,7 +2,7 @@ import gradio as gr
 from src.models.models import generate_stable_diffusion_prompt_cached
 from src.main.chatbot.chatbot import generator_choices
 from src.models.api_models import api_models
-from src.models.local_models import transformers_local, gguf_local, mlx_local
+from src.models.local_llm_models import transformers_local, gguf_local, mlx_local
 
 def create_sd_prompt_generator_tab():
     with gr.Tab("SD Prompt 생성"):
