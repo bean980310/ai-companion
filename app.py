@@ -42,6 +42,7 @@ from src.main.chatbot import (
 )
 from src.main.image_generation import generate_images_wrapper
 from src.main.translator import translate_interface, upload_handler, LANGUAGES
+from src.main.tts import text_to_speech
 
 from src.tabs.cache_tab import create_cache_tab
 from src.tabs.download_tab import create_download_tab
