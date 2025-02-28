@@ -1,7 +1,7 @@
 /* Updated style.css */
 
 :root {
-    --sidebar-width: 250px;
+    --sidebar-width: 400px;
     
     --color-background-primary: #f8fafc;
     --color-background-secondary: white;
@@ -220,6 +220,12 @@
     padding: 0.75rem;
 }
 
+.message-input-alt {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 0.75rem;
+}
+
 .message-output {
     border: 1px solid #e5e7eb;
     border-radius: 8px;
@@ -332,7 +338,7 @@
         border-color: #404040;
     }
     
-    .message-input .message-output {
+    .message-input .message-input-alt .message-output {
         background-color: var(--color-background-primary-dark);
         border-color: #404040;
         color: #ffffff;

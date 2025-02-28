@@ -17,7 +17,7 @@ from src import logger
 main_tab=MainTab()
 
 def create_download_tab():
-    with gr.Tab("Download Center"):
+    with gr.Tab("Download Center") as download_tab:
         with gr.Tabs():
             # Predefined 탭
             with gr.Tab("Predefined"):
@@ -440,4 +440,4 @@ def create_download_tab():
                     outputs=[download_status_hub, download_info_hub]
                 )
                 
-    return
+    return download_tab
