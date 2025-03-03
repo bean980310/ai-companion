@@ -1,5 +1,7 @@
 # app.py
 
+import warnings
+import platform
 import importlib
 import random
 import pandas as pd
@@ -71,6 +73,32 @@ args=parse_args()
 
 main_tab=MainTab()
 
+def detect_platform():
+    os_name = platform.system()
+    arch = platform.machine()
+    return os_name, arch
+
+def get_allowed_llm_models(os_name, arch):
+    if os_name == "Darwin":
+        if arch == "arm64":
+            allowed = api_models + transformers_local + gguf_local + mlx_local
+        else:
+            allowed = api_models + gguf_local
+    else:
+        allowed = api_models + transformers_local + gguf_local
+    
+    return allowed
+
+def get_allowed_diffusion_models(os_name, arch):
+    if os_name == "Darwin" and arch == "x86_64":
+        allowed = diffusion_api_models
+    else:
+        allowed = diffusion_api_models + diffusers_local + checkpoints_local
+    
+    return allowed
+        
+os_name, arch = detect_platform()
+    
 def get_last_used_character(session_id):
     try:
         with sqlite3.connect("chat_history.db") as conn:
@@ -339,11 +367,11 @@ with gr.Blocks(css=css) as demo:
     stored_image=gr.State()
     stored_image_inpaint=gr.State()
     
-    initial_choices = api_models + transformers_local + gguf_local + mlx_local
+    initial_choices = get_allowed_llm_models(os_name, arch)
     initial_choices = list(dict.fromkeys(initial_choices))
     initial_choices = sorted(initial_choices)  # 정렬 추가
     
-    diffusion_choices = diffusion_api_models + checkpoints_local + diffusers_local
+    diffusion_choices = get_allowed_diffusion_models(os_name, arch)
     diffusion_choices = list(dict.fromkeys(diffusion_choices))
     diffusion_choices = sorted(diffusion_choices)  # 정렬 추가
     
@@ -1972,7 +2000,9 @@ with gr.Blocks(css=css) as demo:
     )
 
 if __name__=="__main__":
-    
+    print(f"Detected OS: {os_name}, Architecture: {arch}")
+    if os_name == "Darwin" and arch == "x86_64":
+        warnings.warn("Normal operation is not guaranteed on Intel Macs and may be removed from compatibility list without notice.")
     initialize_app()
 
     demo.queue().launch(debug=args.debug, share=args.share, inbrowser=args.inbrowser, server_port=args.port, width=800)
