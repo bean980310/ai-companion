@@ -1,9 +1,9 @@
 from src.models.models import default_device
-from src.models.api_models import api_models, diffusion_api_models
+from src.models.api_models import api_models, diffusion_api_models, tts_api_models
 from src.models.local_llm_models import transformers_local, gguf_local, mlx_local
 from src.models.known_hf_models import known_hf_models
 from src.models.local_diffusion_models import diffusers_local, checkpoints_local
-from src.models.local_tts_models import vits_local, svc_local
+from src.models.local_tts_models import vits_local
 
 __all__=[
     'default_device',
@@ -15,6 +15,6 @@ __all__=[
     'diffusion_api_models',
     "diffusers_local",
     "checkpoints_local",
-    "vits_local",
-    "svc_local"
+    "tts_api_models",
+    "vits_local"
 ]

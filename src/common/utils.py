@@ -178,7 +178,7 @@ def scan_tts_models(root="./models/tts", model_type=None):
         
     local_models = []
     
-    subdirs = ["vits", "svc"] if model_type is None else [model_type]
+    subdirs = ["vits"] if model_type is None else [model_type]
     allowed_extensions = { ".safetensors", ".bin", ".pt", ".pth" }
     required_names = {"config.json"}
     
@@ -260,10 +260,8 @@ def get_all_diffusion_models():
 def get_all_tts_models():
     models = scan_tts_models()
     vits = [m["model_id"] for m in models if m["model_type"] == "vits"]
-    svc = [m["model_id"] for m in models if m["model_type"] == "svc"]
     return {
-        "vits": vits,
-        "svc": svc
+        "vits": vits
     }
     
 def remove_hf_cache(model_id):

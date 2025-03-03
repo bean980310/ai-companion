@@ -4,6 +4,10 @@ import os
 import scipy
 
 def text_to_speech(model_id, inputs):
+    if model_id == "Put Your Models":
+        print("Please select a model.")
+        return None
+    
     model_path=os.path.join("./models/tts", model_id)
     tokenizer = VitsTokenizer.from_pretrained(model_path)
     model = VitsModel.from_pretrained(model_path)

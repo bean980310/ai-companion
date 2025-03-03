@@ -32,7 +32,7 @@ import numpy as np
 
 from presets import AI_ASSISTANT_PRESET, SD_IMAGE_GENERATOR_PRESET, MINAMI_ASUKA_PRESET, MAKOTONO_AOI_PRESET, AINO_KOITO_PRESET
 
-from src.models import api_models, transformers_local, gguf_local, mlx_local, diffusion_api_models, diffusers_local, checkpoints_local, vits_local, svc_local
+from src.models import api_models, transformers_local, gguf_local, mlx_local, diffusion_api_models, diffusers_local, checkpoints_local, tts_api_models, vits_local
 from src.main.chatbot import (
     MainTab,
     get_speech_manager,
@@ -40,7 +40,10 @@ from src.main.chatbot import (
     create_reset_confirm_modal,
     create_delete_session_modal
 )
-from src.main.image_generation import generate_images_wrapper
+from src.main.image_generation import (
+    generate_images_wrapper, 
+    update_diffusion_model_list,
+    toggle_diffusion_api_key_visibility)
 from src.main.translator import translate_interface, upload_handler, LANGUAGES
 from src.main.tts import text_to_speech
 
@@ -354,12 +357,9 @@ with gr.Blocks(css=css) as demo:
     diffusion_refiner_choices = list(dict.fromkeys(diffusion_refiner_choices))
     diffusion_refiner_choices = sorted(diffusion_refiner_choices)  # 정렬 추가
     
-    tts_choices = vits_local + svc_local
+    tts_choices = tts_api_models + vits_local
     tts_choices = list(dict.fromkeys(tts_choices))
     tts_choices = sorted(tts_choices)
-    
-    if len(tts_choices) == 0:
-        tts_choices.insert(0, "Put Your Models")
     
     if "None" not in diffusion_refiner_choices:
         diffusion_refiner_choices.insert(0, "None")
@@ -551,39 +551,26 @@ with gr.Blocks(css=css) as demo:
                             visible=False,
                             elem_classes="model-dropdown"
                         )
+                        
+            with gr.Column() as tts_side:
+                with gr.Row(elem_classes="model-container"):
+                    with gr.Column():
+                        gr.Markdown("### Model Selection")
+                        tts_model_type_dropdown = gr.Radio(
+                            label=_("model_type_label"),
+                            choices=["all", "api", "vits"],
+                            value="all",
+                            elem_classes="model-dropdown"
+                        )
+                        tts_model_dropdown = gr.Dropdown(
+                            label=_("model_select_label"),
+                            choices=tts_choices,
+                            value=tts_choices[0] if len(tts_choices) > 0 else "Put Your Models",
+                            elem_classes="model-dropdown"
+                        )
                     
         with gr.Tabs(elem_classes='tabs') as tabs:
             with gr.Tab('Chat', elem_classes='tab') as chat_tab:
-                # with gr.Accordion(label="Model Selection", open=False, elem_classes="accordion-container"):
-                #     with gr.Row(elem_classes="model-container"):
-                #         with gr.Column(scale=8):
-                #             model_type_dropdown = gr.Radio(
-                #                 label=_("model_type_label"),
-                #                 choices=["all", "api", "transformers", "gguf", "mlx"],
-                #                 value="all",
-                #                 elem_classes="model-dropdown"
-                #             )
-                #         with gr.Column(scale=10):
-                #             model_dropdown = gr.Dropdown(
-                #                 label=_("model_select_label"),
-                #                 choices=initial_choices,
-                #                 value=initial_choices[0] if len(initial_choices) > 0 else None,
-                #                 elem_classes="model-dropdown"
-                #             )
-                #             api_key_text = gr.Textbox(
-                #                 label=_("api_key_label"),
-                #                 placeholder="sk-...",
-                #                 visible=False,
-                #                 elem_classes="api-key-input"
-                #             )
-                #             lora_dropdown = gr.Dropdown(
-                #                 label="LoRA 모델 선택",
-                #                 choices=get_all_loras(),
-                #                 value="None",
-                #                 interactive=True,
-                #                 visible=False,
-                #                 elem_classes="model-dropdown"
-                #             )
                 with gr.Row(elem_classes="chat-interface"):
                     with gr.Column(scale=7):
                         system_message_box = gr.Textbox(
@@ -722,95 +709,7 @@ with gr.Blocks(css=css) as demo:
                         reset_all_yes_btn = gr.Button("✅ 예", variant="danger")
                         reset_all_no_btn = gr.Button("❌ 아니요", variant="secondary")
                         
-            with gr.Tab('Image Generation', elem_classes='tab') as diffusion_tab:
-                # with gr.Accordion(label="Model Selection", open=False, elem_classes="accordion-container"):          
-                #     with gr.Row(elem_classes="model-container"):
-                #         with gr.Column(scale=8):
-                #             diffusion_model_type_dropdown = gr.Radio(
-                #                 label=_("model_type_label"),
-                #                 choices=["all", "api", "diffusers", "checkpoints"],
-                #                 value="all",
-                #                 elem_classes="model-dropdown"
-                #             )
-                #         with gr.Column(scale=10):
-                #             diffusion_model_dropdown = gr.Dropdown(
-                #                 label=_("model_select_label"),
-                #                 choices=diffusion_choices,
-                #                 value=diffusion_choices[0] if len(diffusion_choices) > 0 else None,
-                #                 elem_classes="model-dropdown"
-                #             )
-                #             diffusion_api_key_text = gr.Textbox(
-                #                 label=_("api_key_label"),
-                #                 placeholder="sk-...",
-                #                 visible=False,
-                #                 elem_classes="api-key-input"
-                #             )
-                            
-                #     with gr.Row(elem_classes="model-container"):
-                #         with gr.Column():
-                #             diffusion_refiner_model_dropdown = gr.Dropdown(
-                #                 label=_("refiner_model_select_label"),
-                #                 choices=diffusion_refiner_choices,
-                #                 value=diffusion_refiner_choices[0] if len(diffusion_refiner_choices) > 0 else None,
-                #                 elem_classes="model-dropdown"
-                #             )
-                #             diffusion_refiner_start = gr.Slider(
-                #                 label="Refiner Start Step",
-                #                 minimum=1,
-                #                 maximum=50,
-                #                 step=1,
-                #                 value=20,
-                #                 visible=False
-                #             )
-                #             diffusion_with_refiner_image_to_image_start = gr.Slider(
-                #                 label="Image to Image Start Step",
-                #                 minimum=1,
-                #                 maximum=50,
-                #                 step=1,
-                #                 value=20,
-                #                 visible=False
-                #             )
-                            
-                #     with gr.Row(elem_classes="model-container"):
-                #         with gr.Accordion("LoRA Settings", open=False, elem_classes="accordion-container"):
-                #             diffusion_lora_multiselect=gr.Dropdown(
-                #                 label="Select LoRA Models",
-                #                 choices=diffusion_lora_choices,
-                #                 value=[],
-                #                 interactive=True,
-                #                 multiselect=True,
-                #                 info="Select LoRA models to apply to the diffusion model.",
-                #                 elem_classes="model-dropdown"
-                #             )
-                #             diffusion_lora_text_encoder_sliders=[]
-                #             diffusion_lora_unet_sliders=[]
-                #             for i in range(max_diffusion_lora_rows):
-                #                 text_encoder_slider=gr.Slider(
-                #                     label=f"LoRA {i+1} - Text Encoder Weight",
-                #                     minimum=-2.0,
-                #                     maximum=2.0,
-                #                     step=0.01,
-                #                     value=1.0,
-                #                     visible=False,
-                #                     interactive=True
-                #                 )
-                #                 unet_slider = gr.Slider(
-                #                     label=f"LoRA {i+1} - U-Net Weight",
-                #                     minimum=-2.0,
-                #                     maximum=2.0,
-                #                     step=0.01,
-                #                     value=1.0,
-                #                     visible=False,
-                #                     interactive=True
-                #                 )
-                #                 diffusion_lora_text_encoder_sliders.append(text_encoder_slider)
-                #                 diffusion_lora_unet_sliders.append(unet_slider)
-                #             diffusion_lora_slider_rows=[]
-                #             for te, unet in zip(diffusion_lora_text_encoder_sliders, diffusion_lora_unet_sliders):
-                #                 diffusion_lora_slider_rows.append(gr.Row([te, unet]))
-                #             for row in diffusion_lora_slider_rows:
-                #                 row
-                            
+            with gr.Tab('Image Generation', elem_classes='tab') as diffusion_tab:             
                 with gr.Row(elem_classes="model-container"):
                     with gr.Accordion("Image to Image", open=False, elem_classes="accordion-container"):
                         image_to_image_mode = gr.Radio(
@@ -1002,36 +901,6 @@ with gr.Blocks(css=css) as demo:
                         datatype=["str", "str", "str", "str", "str", "str", "str", "str", "str", "str"]
                     )
             with gr.Tab('Storyteller', elem_classes='tab') as story_tab:
-                # with gr.Accordion(label="Model Selection", open=False, elem_classes="accordion-container"):
-                #     with gr.Row(elem_classes="model-container"):
-                #         with gr.Column(scale=8):
-                #             storytelling_model_type_dropdown = gr.Radio(
-                #                 label=_("model_type_label"),
-                #                 choices=["all", "api", "transformers", "gguf", "mlx"],
-                #                 value="all",
-                #                 elem_classes="model-dropdown"
-                #             )
-                #         with gr.Column(scale=10):
-                #             storytelling_model_dropdown = gr.Dropdown(
-                #                 label=_("model_select_label"),
-                #                 choices=initial_choices,
-                #                 value=initial_choices[0] if len(initial_choices) > 0 else None,
-                #                 elem_classes="model-dropdown"
-                #             )
-                #             storytelling_api_key_text = gr.Textbox(
-                #                 label=_("api_key_label"),
-                #                 placeholder="sk-...",
-                #                 visible=False,
-                #                 elem_classes="api-key-input"
-                #             )
-                #             storytelling_lora_dropdown = gr.Dropdown(
-                #                 label="LoRA 모델 선택",
-                #                 choices=get_all_loras(),
-                #                 value="None",
-                #                 interactive=True,
-                #                 visible=False,
-                #                 elem_classes="model-dropdown"
-                #             )
                 with gr.Row(elem_classes="chat-interface"):
                     with gr.Column(scale=7):
                         storytelling_input = gr.Textbox(
@@ -1286,6 +1155,22 @@ with gr.Blocks(css=css) as demo:
         inputs=[preset_dropdown, history_state, selected_language_state],
         outputs=[history_state, system_message_box, profile_image]
     )
+    
+    diffusion_model_dropdown.change(
+        fn=lambda selected_model: (
+            toggle_diffusion_api_key_visibility(selected_model)
+        ),
+        inputs=[diffusion_model_dropdown],
+        outputs=[diffusion_api_key_text]
+    )
+    
+    demo.load(
+        fn=lambda selected_model: (
+            toggle_diffusion_api_key_visibility(selected_model)
+        ),
+        inputs=[diffusion_model_dropdown],
+        outputs=[diffusion_api_key_text]
+    )
         
     # 모델 선택 변경 시 가시성 토글
     model_dropdown.change(
@@ -1326,6 +1211,12 @@ with gr.Blocks(css=css) as demo:
         fn=main_tab.update_model_list,
         inputs=[model_type_dropdown],
         outputs=[model_dropdown]
+    )
+    
+    diffusion_model_type_dropdown.change(
+        fn=update_diffusion_model_list,
+        inputs=[diffusion_model_type_dropdown],
+        outputs=[diffusion_model_dropdown]
     )
     
     def toggle_refiner_start_step(model):
@@ -1851,58 +1742,58 @@ with gr.Blocks(css=css) as demo:
     )
     
     def select_chat_tab():
-        return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
+        return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
     
     def select_image_generation_tab():
-        return gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)
+        return gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
     
     def select_storyteller_tab():
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
+        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)
     
     def select_tts_tab():
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
     
     def select_translate_tab():
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
     
     def select_download_tab():
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
     
     chat_tab.select(
         fn=select_chat_tab,
         inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side]
+        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side]
     )
     diffusion_tab.select(
         fn=select_image_generation_tab,
         inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side]
+        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side]
     )
     story_tab.select(
         fn=select_storyteller_tab,
         inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side]
+        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side]
     )
     tts_tab.select(
         fn=select_tts_tab,
         inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side]
+        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side]
     )
     translate_tab.select(
         fn=select_translate_tab,
         inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side]
+        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side]
     )
     download_tab.select(
         fn=select_download_tab,
         inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side]
+        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side]
     )
     
     demo.load(
         fn=select_chat_tab,
         inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side]
+        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side]
     )
     
     demo.load(None, None, None).then(

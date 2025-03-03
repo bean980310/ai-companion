@@ -6,6 +6,7 @@ sentencepiece
 tokenizers
 diffusers
 peft
+trl
 evaluate
 jiwer
 gradio

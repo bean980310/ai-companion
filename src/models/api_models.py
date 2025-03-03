@@ -19,3 +19,8 @@ api_models = [
 diffusion_api_models=[
     "dall-e-3"
 ]
+
+tts_api_models=[
+    "tts-1",
+    "tts-1-hd"
+]
