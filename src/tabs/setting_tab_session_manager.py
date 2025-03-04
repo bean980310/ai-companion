@@ -1,8 +1,8 @@
 import gradio as gr
 from typing import Tuple
-from src.main.chatbot.chatbot import MainTab
+from src.main.chatbot.chatbot import Chatbot
 
-main_tab=MainTab()
+chat_bot=Chatbot()
 
 def create_session_management_tab(session_id_state, history_state, session_select_dropdown, system_message_box, chatbot)-> Tuple[gr.Tab, gr.Dropdown, gr.Textbox]:
     setting_session_management_tab = gr.Tab("세션 관리")
@@ -45,18 +45,18 @@ def create_session_management_tab(session_id_state, history_state, session_selec
         )
                         
         refresh_sessions_btn.click(
-            fn=main_tab.refresh_sessions,
+            fn=chat_bot.refresh_sessions,
             inputs=[],
             outputs=[existing_sessions_dropdown]
         ).then(
-            fn=main_tab.refresh_sessions,
+            fn=chat_bot.refresh_sessions,
             inputs=[],
             outputs=[session_select_dropdown]
         )
                         
         # (2) 새 세션 생성
         create_new_session_btn.click(
-            fn=lambda: main_tab.create_new_session(system_message_box.value),
+            fn=lambda: chat_bot.create_new_session(system_message_box.value),
             inputs=[],
             outputs=[session_id_state, session_manage_info]
         ).then(
@@ -64,25 +64,25 @@ def create_session_management_tab(session_id_state, history_state, session_selec
             inputs=[],
             outputs=[history_state]
         ).then(
-            fn=main_tab.filter_messages_for_chatbot,
+            fn=chat_bot.filter_messages_for_chatbot,
             inputs=[history_state],
             outputs=[chatbot]
         ).then(
-            fn=main_tab.refresh_sessions,
+            fn=chat_bot.refresh_sessions,
             inputs=[],
             outputs=[session_select_dropdown]
         )
                         
         apply_session_btn.click(
-            fn=main_tab.apply_session,
+            fn=chat_bot.apply_session,
             inputs=[existing_sessions_dropdown],
             outputs=[history_state, session_id_state, session_manage_info]
         ).then(
-            fn=main_tab.filter_messages_for_chatbot,
+            fn=chat_bot.filter_messages_for_chatbot,
             inputs=[history_state],
             outputs=[chatbot]
         ).then(
-            fn=main_tab.refresh_sessions,
+            fn=chat_bot.refresh_sessions,
             inputs=[],
             outputs=[session_select_dropdown]
         )
@@ -105,7 +105,7 @@ def create_session_management_tab(session_id_state, history_state, session_selec
 
         # (5) 예 버튼 → 실제 세션 삭제
         delete_session_yes_btn.click(
-            fn=main_tab.delete_session,
+            fn=chat_bot.delete_session,
             inputs=[existing_sessions_dropdown, session_id_state],
             outputs=[session_manage_info, delete_session_confirm_msg, existing_sessions_dropdown]
         ).then(
@@ -114,7 +114,7 @@ def create_session_management_tab(session_id_state, history_state, session_selec
             outputs=[delete_session_confirm_row],
             queue=False
         ).then(
-            fn=main_tab.refresh_sessions,
+            fn=chat_bot.refresh_sessions,
             inputs=[],
             outputs=[session_select_dropdown]
         )

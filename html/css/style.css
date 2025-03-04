@@ -152,6 +152,14 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.warning-container {
+    background-color: var(--color-background-secondary);
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
 .accordion-container {
     background-color: var(--color-background-accordion);
     padding: 1rem;
@@ -307,7 +315,7 @@
         background-color: var(--color-background-primary-dark);
     }
     
-    .header-container, .session-container, .model-container, .chat-interface, .history-container {
+    .header-container, .warning-container, .session-container, .model-container, .chat-interface, .history-container {
         background-color: var(--color-background-secondary-dark);
         border-color: #404040;
     }

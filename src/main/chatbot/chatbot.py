@@ -12,6 +12,7 @@ from src.characters.preset_images import PRESET_IMAGES
 from src.models.api_models import api_models
 from src.models.local_llm_models import transformers_local, gguf_local, mlx_local
 from src.common.default_language import default_language
+from src.common.utils import detect_platform
 
 import traceback
 from src.characters.persona_speech_manager import PersonaSpeechManager
@@ -32,12 +33,10 @@ from src import logger
 # logging.basicConfig(level=logging.INFO)
 # logger = logging.getLogger(__name__)
 # logger.setLevel(logging.INFO)
-    
-generator_choices = api_models + transformers_local + gguf_local + mlx_local + ["사용자 지정 모델 경로 변경"]
-generator_choices = list(dict.fromkeys(generator_choices))  # 중복 제거
-generator_choices = sorted(generator_choices)  # 정렬
 
 DEFAULT_PROFILE_IMAGE = None
+
+os_name, arch = detect_platform()
 
 speech_manager = PersonaSpeechManager(translation_manager=translation_manager, characters=characters)
 
@@ -48,7 +47,7 @@ def get_speech_manager(session_id: str) -> PersonaSpeechManager:
         session_speech_managers[session_id] = PersonaSpeechManager(translation_manager=translation_manager, characters=characters)
     return session_speech_managers[session_id]
 
-class MainTab:
+class Chatbot:
     def __init__(self):
         self.default_language=default_language
         self.preset_images=PRESET_IMAGES
@@ -576,9 +575,9 @@ class MainTab:
                 
         # "전체 목록"이면 => API 모델 + 모든 로컬 모델 + "사용자 지정 모델 경로 변경"
         if selected_type == "all":
-            all_models = api_models + transformers_local + gguf_local + mlx_local
-            # 중복 제거 후 정렬
+            all_models = self.update_allowed_models(os_name, arch)
             all_models = sorted(list(dict.fromkeys(all_models)))
+            # 중복 제거 후 정렬
             return gr.update(choices=all_models, value=all_models[0] if all_models else None)
         
         # API 모델만 선택한 경우
@@ -592,12 +591,24 @@ class MainTab:
         elif selected_type == "mlx":
             updated_list = mlx_local
         else:
-        # 혹시 예상치 못한 값이면 transformers로 처리(또는 None)
-            updated_list = transformers_local
-                
+            # 혹시 예상치 못한 값이면 transformers로 처리(또는 None)
+            if os_name == "Darwin" and arch == "x86_64":
+                updated_list = api_models
+            else:
+                updated_list = transformers_local
+        
         updated_list = sorted(list(dict.fromkeys(updated_list)))
         return gr.update(choices=updated_list, value=updated_list[0] if updated_list else None)
     
+    def update_allowed_models(self, os_name, arch):
+        if os_name == "Darwin":
+            if arch == "arm64":
+                return api_models + transformers_local + gguf_local + mlx_local
+            else:
+                return api_models + gguf_local
+        else:
+            return api_models + transformers_local + gguf_local
+
     def show_reset_modal(self, reset_type):
         """초기화 확인 모달 표시"""
         self.reset_type = reset_type
@@ -708,3 +719,19 @@ def create_delete_session_modal():
             confirm_btn = gr.Button("삭제", variant="stop")
                 
     return delete_modal, message, cancel_btn, confirm_btn
+
+def get_allowed_llm_models(os_name, arch):
+    if os_name == "Darwin":
+        if arch == "arm64":
+            allowed = api_models + transformers_local + gguf_local + mlx_local
+            allowed_type = ["all", "api", "transformers", "gguf", "mlx"]
+        else:
+            allowed = api_models + gguf_local
+            allowed_type = ["all", "api", "gguf"]
+    else:
+        allowed = api_models + transformers_local + gguf_local
+        allowed_type = ["all", "api", "transformers", "gguf"]
+        
+    allowed = list(dict.fromkeys(allowed))
+    
+    return sorted(allowed), allowed_type

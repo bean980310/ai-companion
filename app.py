@@ -29,23 +29,31 @@ from src.common.args import parse_args
 from src.common.default_language import default_language
 from src.common.tmp_dir import TMP_DIR
 from src.common.character_info import characters
-from src.common.utils import get_all_loras, get_diffusion_loras, get_diffusion_vae
+from src.common.utils import (
+    get_all_loras, 
+    get_diffusion_loras, 
+    get_diffusion_vae, 
+    detect_platform
+)
 import numpy as np
 
 from presets import AI_ASSISTANT_PRESET, SD_IMAGE_GENERATOR_PRESET, MINAMI_ASUKA_PRESET, MAKOTONO_AOI_PRESET, AINO_KOITO_PRESET
 
 from src.models import api_models, transformers_local, gguf_local, mlx_local, diffusion_api_models, diffusers_local, checkpoints_local, tts_api_models, vits_local
 from src.main.chatbot import (
-    MainTab,
+    Chatbot,
     get_speech_manager,
     update_system_message_and_profile,
     create_reset_confirm_modal,
-    create_delete_session_modal
+    create_delete_session_modal,
+    get_allowed_llm_models
 )
 from src.main.image_generation import (
     generate_images_wrapper, 
     update_diffusion_model_list,
-    toggle_diffusion_api_key_visibility)
+    toggle_diffusion_api_key_visibility,
+    get_allowed_diffusion_models
+)
 from src.main.translator import translate_interface, upload_handler, LANGUAGES
 from src.main.tts import text_to_speech
 
@@ -58,7 +66,6 @@ from src.tabs.setting_tab_save_history import create_save_history_tab
 from src.tabs.setting_tab_load_history import create_load_history_tab
 from src.tabs.setting_tab_session_manager import create_session_management_tab
 from src.tabs.device_setting import set_device, create_device_setting_tab
-from src.tabs.sd_prompt_generator_tab import create_sd_prompt_generator_tab
 
 from presets import __all__ as preset_modules
 
@@ -71,32 +78,8 @@ from src import logger
 
 args=parse_args()
 
-main_tab=MainTab()
+chat_bot=Chatbot()
 
-def detect_platform():
-    os_name = platform.system()
-    arch = platform.machine()
-    return os_name, arch
-
-def get_allowed_llm_models(os_name, arch):
-    if os_name == "Darwin":
-        if arch == "arm64":
-            allowed = api_models + transformers_local + gguf_local + mlx_local
-        else:
-            allowed = api_models + gguf_local
-    else:
-        allowed = api_models + transformers_local + gguf_local
-    
-    return allowed
-
-def get_allowed_diffusion_models(os_name, arch):
-    if os_name == "Darwin" and arch == "x86_64":
-        allowed = diffusion_api_models
-    else:
-        allowed = diffusion_api_models + diffusers_local + checkpoints_local
-    
-    return allowed
-        
 os_name, arch = detect_platform()
     
 def get_last_used_character(session_id):
@@ -328,7 +311,7 @@ def on_character_change(chosen_character, session_id):
 
     return updated_system_msg  # UI에 표시
 
-refresh_session_list=main_tab.refresh_sessions()
+refresh_session_list=chat_bot.refresh_sessions()
 
 with open("html/css/style.css", 'r') as f:
     css = f.read()
@@ -367,13 +350,9 @@ with gr.Blocks(css=css) as demo:
     stored_image=gr.State()
     stored_image_inpaint=gr.State()
     
-    initial_choices = get_allowed_llm_models(os_name, arch)
-    initial_choices = list(dict.fromkeys(initial_choices))
-    initial_choices = sorted(initial_choices)  # 정렬 추가
+    initial_choices, llm_type_choices = get_allowed_llm_models(os_name, arch)
     
-    diffusion_choices = get_allowed_diffusion_models(os_name, arch)
-    diffusion_choices = list(dict.fromkeys(diffusion_choices))
-    diffusion_choices = sorted(diffusion_choices)  # 정렬 추가
+    diffusion_choices, diffusion_type_choices = get_allowed_diffusion_models(os_name, arch)
     
     diffusion_lora_choices = get_diffusion_loras()
     diffusion_lora_choices = list(dict.fromkeys(diffusion_lora_choices))
@@ -381,9 +360,7 @@ with gr.Blocks(css=css) as demo:
     
     vae_choices = get_diffusion_vae()
     
-    diffusion_refiner_choices = diffusion_api_models + checkpoints_local + diffusers_local
-    diffusion_refiner_choices = list(dict.fromkeys(diffusion_refiner_choices))
-    diffusion_refiner_choices = sorted(diffusion_refiner_choices)  # 정렬 추가
+    diffusion_refiner_choices, diffusion_refiner_type_choices = get_allowed_diffusion_models(os_name, arch)
     
     tts_choices = tts_api_models + vits_local
     tts_choices = list(dict.fromkeys(tts_choices))
@@ -431,12 +408,16 @@ with gr.Blocks(css=css) as demo:
                         add_session_icon_btn = gr.Button("📝", elem_classes="icon-button", scale=1, variant="secondary")
                         delete_session_icon_btn = gr.Button("🗑️", elem_classes="icon-button-delete", scale=1, variant="stop")
                 with gr.Row(elem_classes="model-container"):
+                    if os_name == "Darwin" and arch == "x86_64":
+                        with gr.Column():
+                            gr.Markdown("### 🚨 macOS x86_64에서는 transformers, mlx 선택 불가")
+                            
                     with gr.Column():
                         gr.Markdown("### Model Selection")
                         model_type_dropdown = gr.Radio(
                             label=_("model_type_label"),
-                            choices=["all", "api", "transformers", "gguf", "mlx"],
-                            value="all",
+                            choices=llm_type_choices,
+                            value=llm_type_choices[0],
                             elem_classes="model-dropdown"
                         )
                         model_dropdown = gr.Dropdown(
@@ -462,12 +443,15 @@ with gr.Blocks(css=css) as demo:
                     
             with gr.Column() as diffusion_side:          
                 with gr.Row(elem_classes="model-container"):
+                    if os_name == "Darwin" and arch == "x86_64":
+                        with gr.Column():
+                            gr.Markdown("### 🚨 macOS x86_64에서는 diffusers, checkpoints 선택 불가")
                     with gr.Column():
                         gr.Markdown("### Model Selection")
                         diffusion_model_type_dropdown = gr.Radio(
                             label=_("model_type_label"),
-                            choices=["all", "api", "diffusers", "checkpoints"],
-                            value="all",
+                            choices=diffusion_type_choices,
+                            value=diffusion_type_choices[0],
                             elem_classes="model-dropdown"
                         )
                         diffusion_model_dropdown = gr.Dropdown(
@@ -484,6 +468,9 @@ with gr.Blocks(css=css) as demo:
                         )
                             
                 with gr.Row(elem_classes="model-container"):
+                    if os_name == "Darwin" and arch == "x86_64":
+                        with gr.Column():
+                            gr.Markdown("### 🚨 macOS x86_64에서는 diffusers, checkpoints 선택 불가")
                     with gr.Column():
                         gr.Markdown("### Refiner Model Selection")
                         diffusion_refiner_model_dropdown = gr.Dropdown(
@@ -550,13 +537,17 @@ with gr.Blocks(css=css) as demo:
                             row
                             
             with gr.Column() as storyteller_side:
+                if os_name == "Darwin" and arch == "x86_64":
+                    with gr.Column():
+                        gr.Markdown("### 🚨 macOS x86_64에서는 transformers, mlx 선택 불가")
+                        
                 with gr.Row(elem_classes="model-container"):
                     with gr.Column():
                         gr.Markdown("### Model Selection")
                         storytelling_model_type_dropdown = gr.Radio(
                             label=_("model_type_label"),
-                            choices=["all", "api", "transformers", "gguf", "mlx"],
-                            value="all",
+                            choices=llm_type_choices,
+                            value=llm_type_choices[0],
                             elem_classes="model-dropdown"
                         )
                         storytelling_model_dropdown = gr.Dropdown(
@@ -596,7 +587,13 @@ with gr.Blocks(css=css) as demo:
                             value=tts_choices[0] if len(tts_choices) > 0 else "Put Your Models",
                             elem_classes="model-dropdown"
                         )
-                    
+                        
+        if os_name == "Darwin" and arch == "x86_64":
+            with gr.Row(elem_classes="warning-container"):
+                gr.Markdown("### 🚨 경고! 현재 Intel CPU를 탑재된 Mac에서 구동중입니다.")
+                gr.Markdown("macOS x86_64에서는 정상적으로 동작하지 않을 수 있으며, 대부분의 기능을 지원하지 않습니다.")
+                gr.Markdown("CPU를 사용하시려면, `Settings`에서 `CPU`를 선택해주세요.")
+                
         with gr.Tabs(elem_classes='tabs') as tabs:
             with gr.Tab('Chat', elem_classes='tab') as chat_tab:
                 with gr.Row(elem_classes="chat-interface"):
@@ -1049,7 +1046,7 @@ with gr.Blocks(css=css) as demo:
         """
         메인탭에서 세션이 선택되면 바로 main_tab.apply_session을 호출해 세션 적용.
         """
-        return main_tab.apply_session(chosen_sid)
+        return chat_bot.apply_session(chosen_sid)
 
     def init_session_dropdown(sessions):
         if not sessions:
@@ -1069,7 +1066,7 @@ with gr.Blocks(css=css) as demo:
         new_system_msg = speech_manager.get_system_message()
 
         # 3) DB에 기록할 새 세션 만들기
-        new_sid, info, new_history = main_tab.create_new_session(new_system_msg, chosen_character)
+        new_sid, info, new_history = chat_bot.create_new_session(new_system_msg, chosen_character)
 
         sessions = get_existing_sessions()
         return [
@@ -1077,7 +1074,7 @@ with gr.Blocks(css=css) as demo:
             new_history,
             gr.update(choices=sessions, value=new_sid),
             info,
-            main_tab.filter_messages_for_chatbot(new_history)
+            chat_bot.filter_messages_for_chatbot(new_history)
         ]
     
     # 이벤트 핸들러
@@ -1107,7 +1104,7 @@ with gr.Blocks(css=css) as demo:
         
     def delete_selected_session(chosen_sid):
         # 선택된 세션을 삭제 (주의: None 또는 ""인 경우 처리)
-        result_msg, _, updated_dropdown = main_tab.delete_session(chosen_sid, "demo_session")
+        result_msg, _, updated_dropdown = chat_bot.delete_session(chosen_sid, "demo_session")
         return result_msg, updated_dropdown
         
     # 삭제 버튼 클릭 시 모달 표시
@@ -1125,11 +1122,11 @@ with gr.Blocks(css=css) as demo:
 
     # 삭제 확인 버튼
     delete_confirm_btn.click(
-        fn=main_tab.delete_session,
+        fn=chat_bot.delete_session,
         inputs=[session_select_dropdown, session_id_state],
         outputs=[delete_modal, delete_message, session_select_dropdown]
     ).then(
-        fn=main_tab.refresh_sessions,
+        fn=chat_bot.refresh_sessions,
         inputs=[],
         outputs=[session_select_dropdown]
     )
@@ -1169,7 +1166,7 @@ with gr.Blocks(css=css) as demo:
             
     # 프리셋 변경 버튼 클릭 시 호출될 함수 연결
     change_preset_button.click(
-        fn=main_tab.handle_change_preset,
+        fn=chat_bot.handle_change_preset,
         inputs=[preset_dropdown, history_state, selected_language_state],
         outputs=[history_state, system_message_box, profile_image]
     )
@@ -1179,7 +1176,7 @@ with gr.Blocks(css=css) as demo:
         inputs=[character_dropdown, language_dropdown, speech_manager_state, session_id_state],
         outputs=[system_message_box, profile_image, preset_dropdown]
     ).then(
-        fn=main_tab.handle_change_preset,
+        fn=chat_bot.handle_change_preset,
         inputs=[preset_dropdown, history_state, selected_language_state],
         outputs=[history_state, system_message_box, profile_image]
     )
@@ -1203,10 +1200,10 @@ with gr.Blocks(css=css) as demo:
     # 모델 선택 변경 시 가시성 토글
     model_dropdown.change(
         fn=lambda selected_model: (
-            main_tab.toggle_api_key_visibility(selected_model),
-            main_tab.toggle_lora_visibility(selected_model),
-            main_tab.toggle_multimodal_msg_input_visibility(selected_model),
-            main_tab.toggle_standard_msg_input_visibility(selected_model)
+            chat_bot.toggle_api_key_visibility(selected_model),
+            chat_bot.toggle_lora_visibility(selected_model),
+            chat_bot.toggle_multimodal_msg_input_visibility(selected_model),
+            chat_bot.toggle_standard_msg_input_visibility(selected_model)
         ),
         inputs=[model_dropdown],
         outputs=[api_key_text, lora_dropdown, multimodal_msg, msg]
@@ -1214,8 +1211,8 @@ with gr.Blocks(css=css) as demo:
     
     storytelling_model_dropdown.change(
         fn=lambda selected_model: (
-            main_tab.toggle_api_key_visibility(selected_model),
-            main_tab.toggle_lora_visibility(selected_model),
+            chat_bot.toggle_api_key_visibility(selected_model),
+            chat_bot.toggle_lora_visibility(selected_model),
         ),
         inputs=[storytelling_model_dropdown],
         outputs=[storytelling_api_key_text, storytelling_lora_dropdown]
@@ -1223,20 +1220,20 @@ with gr.Blocks(css=css) as demo:
     
     demo.load(
          fn=lambda selected_model: (
-            main_tab.toggle_api_key_visibility(selected_model),
-            main_tab.toggle_lora_visibility(selected_model),
+            chat_bot.toggle_api_key_visibility(selected_model),
+            chat_bot.toggle_lora_visibility(selected_model),
         ),
         inputs=[storytelling_model_dropdown],
         outputs=[storytelling_api_key_text, storytelling_lora_dropdown]
     )
     storytelling_model_type_dropdown.change(
-        fn=main_tab.update_model_list,
+        fn=chat_bot.update_model_list,
         inputs=[storytelling_model_type_dropdown],
         outputs=[storytelling_model_dropdown]
     )
         
     model_type_dropdown.change(
-        fn=main_tab.update_model_list,
+        fn=chat_bot.update_model_list,
         inputs=[model_type_dropdown],
         outputs=[model_dropdown]
     )
@@ -1385,11 +1382,11 @@ with gr.Blocks(css=css) as demo:
     
     demo.load(
         fn=lambda selected_model: (
-            main_tab.toggle_api_key_visibility(selected_model),
+            chat_bot.toggle_api_key_visibility(selected_model),
             # main_tab.toggle_image_input_visibility(selected_model),
-            main_tab.toggle_lora_visibility(selected_model),
-            main_tab.toggle_multimodal_msg_input_visibility(selected_model),
-            main_tab.toggle_standard_msg_input_visibility(selected_model)
+            chat_bot.toggle_lora_visibility(selected_model),
+            chat_bot.toggle_multimodal_msg_input_visibility(selected_model),
+            chat_bot.toggle_standard_msg_input_visibility(selected_model)
         ),
         inputs=[model_dropdown],
         outputs=[api_key_text, lora_dropdown, multimodal_msg, msg]
@@ -1600,7 +1597,7 @@ with gr.Blocks(css=css) as demo:
     
         # 메시지 전송 시 함수 연결
     msg.submit(
-        fn=main_tab.process_message_user,
+        fn=chat_bot.process_message_user,
         inputs=[
             msg,  # 사용자 입력
             session_id_state,
@@ -1616,7 +1613,7 @@ with gr.Blocks(css=css) as demo:
         ],
         queue=False
     ).then(
-        fn=main_tab.process_message_bot,
+        fn=chat_bot.process_message_bot,
         inputs=[
             session_id_state,
             history_state,
@@ -1643,7 +1640,7 @@ with gr.Blocks(css=css) as demo:
     )
     
     multimodal_msg.submit(
-        fn=main_tab.process_message_user,
+        fn=chat_bot.process_message_user,
         inputs=[
             multimodal_msg,  # 사용자 입력
             session_id_state,
@@ -1659,7 +1656,7 @@ with gr.Blocks(css=css) as demo:
         ],
         queue=False
     ).then(
-        fn=main_tab.process_message_bot,
+        fn=chat_bot.process_message_bot,
         inputs=[
             session_id_state,
             history_state,
@@ -1686,7 +1683,7 @@ with gr.Blocks(css=css) as demo:
     )
 
     send_btn.click(
-        fn=main_tab.process_message_user,
+        fn=chat_bot.process_message_user,
         inputs=[
             msg,  # 사용자 입력
             session_id_state,
@@ -1702,7 +1699,7 @@ with gr.Blocks(css=css) as demo:
         ],
         queue=False
     ).then(
-        fn=main_tab.process_message_bot,
+        fn=chat_bot.process_message_bot,
         inputs=[
             session_id_state,
             history_state,
@@ -1729,7 +1726,7 @@ with gr.Blocks(css=css) as demo:
     )
         
     demo.load(
-        fn=main_tab.refresh_sessions,
+        fn=chat_bot.refresh_sessions,
         inputs=[],
         outputs=[session_select_dropdown],
         queue=False
@@ -1740,32 +1737,32 @@ with gr.Blocks(css=css) as demo:
         inputs=[session_select_dropdown],
         outputs=[history_state, session_id_state, session_select_info]
     ).then(
-        fn=main_tab.filter_messages_for_chatbot,
+        fn=chat_bot.filter_messages_for_chatbot,
         inputs=[history_state],
         outputs=[chatbot]
     )
     
     reset_btn.click(
-        fn=lambda: main_tab.show_reset_modal("single"),
+        fn=lambda: chat_bot.show_reset_modal("single"),
         outputs=[reset_modal, single_reset_content, all_reset_content]
     )
     reset_all_btn.click(
-        fn=lambda: main_tab.show_reset_modal("all"),
+        fn=lambda: chat_bot.show_reset_modal("all"),
         outputs=[reset_modal, single_reset_content, all_reset_content]
     )
     
     cancel_btn.click(
-        fn=main_tab.hide_reset_modal,
+        fn=chat_bot.hide_reset_modal,
         outputs=[reset_modal, single_reset_content, all_reset_content]
     )
     
     confirm_btn.click(
-        fn=main_tab.handle_reset_confirm,
+        fn=chat_bot.handle_reset_confirm,
         inputs=[history_state, chatbot, system_message_box, selected_language_state, session_id_state],
         outputs=[reset_modal, single_reset_content, all_reset_content, 
                 msg, history_state, chatbot, status_text]
     ).then(
-        fn=main_tab.refresh_sessions,  # 세션 목록 갱신 (전체 초기화의 경우)
+        fn=chat_bot.refresh_sessions,  # 세션 목록 갱신 (전체 초기화의 경우)
         outputs=[session_select_dropdown]
     )
     
@@ -1880,7 +1877,7 @@ with gr.Blocks(css=css) as demo:
                     )
                     # 프리셋 Dropdown 초기화
                     demo.load(
-                        fn=main_tab.initial_load_presets,
+                        fn=chat_bot.initial_load_presets,
                         inputs=[],
                         outputs=[preset_dropdown],
                         queue=False
@@ -1890,7 +1887,6 @@ with gr.Blocks(css=css) as demo:
                     setting_session_management_tab, existing_sessions_dropdown, current_session_display=create_session_management_tab(session_id_state, history_state, session_select_dropdown, system_message_box, chatbot)
                     device_tab, device_dropdown=create_device_setting_tab(default_device)
                     
-            create_sd_prompt_generator_tab()
         with gr.Row(elem_classes="popup-footer"):
             cancel_btn = gr.Button("Cancel", variant="secondary")
             save_settings_btn = gr.Button("Save Changes", variant="primary")

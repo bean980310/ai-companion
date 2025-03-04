@@ -15,9 +15,11 @@ import gradio as gr
 
 from src.handlers import generate_images, generate_images_with_refiner, generate_images_to_images, generate_images_to_images_with_refiner, generate_images_inpaint, generate_images_inpaint_with_refiner
 
-from src.common.utils import get_all_diffusion_models
+from src.common.utils import get_all_diffusion_models, detect_platform
 from src.models import diffusion_api_models, diffusers_local, checkpoints_local
 from src import logger
+    
+os_name, arch = detect_platform()
 
 def generate_images_wrapper(positive_prompt, negative_prompt, style, generation_step, img2img_step_start, diffusion_refiner_start, width, height,
     diffusion_model, diffusion_refiner_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
@@ -85,7 +87,7 @@ def update_diffusion_model_list(selected_type):
     checkpoints_local = diffusion_models_data["checkpoints"]
     
     if selected_type == "all":
-        all_models = diffusion_api_models + diffusers_local + checkpoints_local
+        all_models = update_diffusion_allowed_models(os_name, arch)
         # 중복 제거 후 정렬
         all_models = sorted(list(dict.fromkeys(all_models)))
         return gr.update(choices=all_models, value=all_models[0] if all_models else None)
@@ -102,6 +104,23 @@ def update_diffusion_model_list(selected_type):
     updated_list = sorted(list(dict.fromkeys(updated_list)))
     return gr.update(choices=updated_list, value=updated_list[0] if updated_list else None)
 
+def update_diffusion_allowed_models(os_name, arch):
+    if os_name == "Darwin" and arch == "x86_64":
+        return diffusion_api_models
+    else:
+        return diffusion_api_models + diffusers_local + checkpoints_local
+
 def toggle_diffusion_api_key_visibility(selected_model):
     api_visible = selected_model in diffusion_api_models
     return gr.update(visible=api_visible)
+
+def get_allowed_diffusion_models(os_name, arch):
+    if os_name == "Darwin" and arch == "x86_64":
+        allowed = diffusion_api_models
+        allowed_type = ["all", "api"]
+    else:
+        allowed = diffusion_api_models + diffusers_local + checkpoints_local
+        allowed_type = ["all", "api", "diffusers", "checkpoints"]
+    
+    allowed = list(dict.fromkeys(allowed))
+    return sorted(allowed), allowed_type

@@ -4,7 +4,7 @@ import traceback
 import gradio as gr
 from huggingface_hub import HfApi
 
-from src.main.chatbot.chatbot import MainTab
+from src.main.chatbot.chatbot import Chatbot
 from src.models.api_models import api_models
 from src.models.known_hf_models import known_hf_models
 
@@ -14,7 +14,7 @@ from src.hub import TASKS, LIBRARIES, LANGUAGES_HUB
 # 로깅 설정
 from src import logger
 
-main_tab=MainTab()
+chat_bot=Chatbot()
 
 def create_download_tab():
     with gr.Tab("Download Center") as download_tab:
@@ -98,7 +98,7 @@ def create_download_tab():
                             download_status_predefined.update("❌ No model selected.")
                             return
 
-                        model_type = main_tab.determine_model_type(repo_id)
+                        model_type = chat_bot.determine_model_type(repo_id)
 
                         download_status_predefined.update("🔄 Preparing to download...")
                         logger.info(f"Starting download for {repo_id}")
@@ -207,7 +207,7 @@ def create_download_tab():
                             download_status_custom.update("❌ No repository ID entered.")
                             return
 
-                        model_type = main_tab.determine_model_type(repo_id)
+                        model_type = chat_bot.determine_model_type(repo_id)
 
                         download_status_custom.update("🔄 Preparing to download...")
                         logger.info(f"Starting download for {repo_id}")
@@ -397,7 +397,7 @@ def create_download_tab():
                             download_status_hub.update("❌ No model selected.")
                             return
 
-                        model_type = main_tab.determine_model_type(model_id)
+                        model_type = chat_bot.determine_model_type(model_id)
 
                         download_status_hub.update("🔄 Preparing to download...")
                         logger.info(f"Starting download for {model_id}")

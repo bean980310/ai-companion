@@ -36,7 +36,12 @@ class DownloadTracker:
         if self.progress_callback:
             progress = (self.current_size / self.total_size) if self.total_size > 0 else 0
             self.progress_callback(min(progress, 1.0))
-
+            
+def detect_platform():
+    os_name = platform.system()
+    arch = platform.machine()
+    return os_name, arch
+    
 def make_local_dir_name(model_id: str) -> str:
     """HuggingFace 모델 ID를 로컬 디렉토리 이름으로 변환"""
     return model_id.replace("/", "__")

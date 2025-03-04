@@ -95,6 +95,25 @@
 
 ## 자신의 컴퓨터 환경에 맞는 requirements를 설치하기
 
+- **가상 환경 설정**
+
+```shell
+# conda (권장!)
+# Python 3.10
+conda create -n ai-companion python=3.10
+# Python 3.11
+conda create -n ai-companion python=3.11
+# Python 3.12
+conda create -n ai-companion python=3.12
+conda activate ai-companion
+# venv
+python3 -m venv venv
+# MacOS, Linux 환경
+source venv/bin/activate 
+# Windows 환경
+source venv/Scripts/activate 
+```
+
 - **Windows 환경**
 ```shell
 pip install -r requirements_windows_amd64.txt
@@ -127,3 +146,14 @@ export CXX="/opt/homebrew/opt/llvm/bin/clang++"
 ```zsh
 pip install xformers
 ```
+
+## 실행
+
+```zsh
+python app.py
+```
+
+### Intel Mac 지원에 관하여
+
+Intel Mac에서는 정상적인 동작을 보장하지 않으며, 대부분의 기능을 지원하지 않습니다.
+따라서 최종 버전 배포 시점 및 그 이전에 Intel Mac에 대한 지원이 제거될 수 있습니다.

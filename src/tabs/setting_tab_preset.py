@@ -1,10 +1,10 @@
 import gradio as gr
 from src.common.database import preset_exists, handle_add_preset, load_system_presets, save_chat_history_db, get_preset_choices, handle_delete_preset
-from src.main.chatbot.chatbot import MainTab
+from src.main.chatbot.chatbot import Chatbot
 
 from src.characters.preset_images import PRESET_IMAGES
 
-main_tab=MainTab()
+chat_bot=Chatbot()
 
 from src import logger
 
@@ -59,7 +59,7 @@ def create_system_preset_management_tab(default_language, session_id_state, hist
             )
             refresh_preset_button = gr.Button("프리셋 목록 갱신")
             refresh_preset_button.click(
-                fn=main_tab.refresh_preset_list,
+                fn=chat_bot.refresh_preset_list,
                 inputs=[selected_language_state],
                 outputs=[preset_dropdown]
             )
@@ -161,7 +161,7 @@ def create_system_preset_management_tab(default_language, session_id_state, hist
             inputs=[preset_dropdown, session_id_state, history_state, selected_language_state],
             outputs=[preset_info, history_state, system_message_box, profile_image]
         ).then(
-            fn=main_tab.filter_messages_for_chatbot,
+            fn=chat_bot.filter_messages_for_chatbot,
             inputs=[history_state],
             outputs=chatbot
         )
