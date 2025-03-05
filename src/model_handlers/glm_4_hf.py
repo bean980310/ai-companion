@@ -3,7 +3,6 @@ import torch
 import traceback
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-from optimum.quanto import QuantizedModelForCausalLM
 from src.common.utils import make_local_dir_name
 
 from src import logger
