@@ -23,7 +23,7 @@ os_name, arch = detect_platform()
 
 def generate_images_wrapper(positive_prompt, negative_prompt, style, generation_step, img2img_step_start, diffusion_refiner_start, width, height,
     diffusion_model, diffusion_refiner_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
-    batch_size, batch_count, cfg_scale, seed, random_seed, image_to_image_mode, image_input=None, image_inpaint_input=None, denoise_strength=1, blur_radius=5.0, blur_expansion_radius=1,
+    batch_size, batch_count, cfg_scale, seed, random_seed, image_to_image_mode, image_input=None, image_inpaint_input=None, denoise_strength=1, blur_radius=5.0, blur_expansion_radius=1, api_key=None,
     # 이후 20개의 슬라이더 값 (max_diffusion_lora_rows * 2; 예를 들어 10행이면 20개)
     *lora_slider_values):
     n = len(lora_slider_values) // 2
@@ -32,54 +32,57 @@ def generate_images_wrapper(positive_prompt, negative_prompt, style, generation_
     # JSON 문자열로 변환
     text_weights_json = json.dumps(text_weights)
     unet_weights_json = json.dumps(unet_weights)
-    if image_to_image_mode == "None":
-        if diffusion_refiner_model == "None":
-            return generate_images(
-                positive_prompt, negative_prompt, style, generation_step, width, height,
-                diffusion_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
-                batch_size, batch_count, cfg_scale, seed, random_seed,
-                text_weights_json, unet_weights_json
-            )
-        else:
-            clip_g=True
-            return generate_images_with_refiner(
-                positive_prompt, negative_prompt, style, generation_step, diffusion_refiner_start, width, height,
-                diffusion_model, diffusion_refiner_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
-                batch_size, batch_count, cfg_scale, seed, random_seed,
-                text_weights_json, unet_weights_json
-            )
-    elif image_to_image_mode == "Image to Image":
-        if diffusion_refiner_model == "None":
-            return generate_images_to_images(
-                positive_prompt, negative_prompt, style, generation_step,
-                diffusion_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
-                batch_count, cfg_scale, seed, random_seed, image_input, denoise_strength,
-                text_weights_json, unet_weights_json
-            )
-        else:
-            clip_g=True
-            return generate_images_to_images_with_refiner(
-                positive_prompt, negative_prompt, style, generation_step, img2img_step_start, diffusion_refiner_start,
-                diffusion_model, diffusion_refiner_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
-                batch_count, cfg_scale, seed, random_seed, image_input, denoise_strength,
-                text_weights_json, unet_weights_json
-            )
-    elif image_to_image_mode == "Inpaint":
-        if diffusion_refiner_model == "None":
-            return generate_images_inpaint(
-                positive_prompt, negative_prompt, style, generation_step,
-                diffusion_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
-                batch_count, cfg_scale, seed, random_seed, image_inpaint_input, denoise_strength, blur_radius, blur_expansion_radius,
-                text_weights_json, unet_weights_json
-            )
-        else:
-            clip_g=True
-            return generate_images_inpaint_with_refiner(
-                positive_prompt, negative_prompt, style, generation_step, img2img_step_start, diffusion_refiner_start,
-                diffusion_model, diffusion_refiner_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
-                batch_count, cfg_scale, seed, random_seed, image_inpaint_input, denoise_strength, blur_radius, blur_expansion_radius,
-                text_weights_json, unet_weights_json
-            )
+    if diffusion_model_type == "api":
+        return api_image_generation(positive_prompt, width, height, diffusion_model, api_key)
+    else:
+        if image_to_image_mode == "None":
+            if diffusion_refiner_model == "None":
+                return generate_images(
+                    positive_prompt, negative_prompt, style, generation_step, width, height,
+                    diffusion_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
+                    batch_size, batch_count, cfg_scale, seed, random_seed,
+                    text_weights_json, unet_weights_json
+                )
+            else:
+                clip_g=True
+                return generate_images_with_refiner(
+                    positive_prompt, negative_prompt, style, generation_step, diffusion_refiner_start, width, height,
+                    diffusion_model, diffusion_refiner_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
+                    batch_size, batch_count, cfg_scale, seed, random_seed,
+                    text_weights_json, unet_weights_json
+                )
+        elif image_to_image_mode == "Image to Image":
+            if diffusion_refiner_model == "None":
+                return generate_images_to_images(
+                    positive_prompt, negative_prompt, style, generation_step,
+                    diffusion_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
+                    batch_count, cfg_scale, seed, random_seed, image_input, denoise_strength,
+                    text_weights_json, unet_weights_json
+                )
+            else:
+                clip_g=True
+                return generate_images_to_images_with_refiner(
+                    positive_prompt, negative_prompt, style, generation_step, img2img_step_start, diffusion_refiner_start,
+                    diffusion_model, diffusion_refiner_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
+                    batch_count, cfg_scale, seed, random_seed, image_input, denoise_strength,
+                    text_weights_json, unet_weights_json
+                )
+        elif image_to_image_mode == "Inpaint":
+            if diffusion_refiner_model == "None":
+                return generate_images_inpaint(
+                    positive_prompt, negative_prompt, style, generation_step,
+                    diffusion_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
+                    batch_count, cfg_scale, seed, random_seed, image_inpaint_input, denoise_strength, blur_radius, blur_expansion_radius,
+                    text_weights_json, unet_weights_json
+                )
+            else:
+                clip_g=True
+                return generate_images_inpaint_with_refiner(
+                    positive_prompt, negative_prompt, style, generation_step, img2img_step_start, diffusion_refiner_start,
+                    diffusion_model, diffusion_refiner_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
+                    batch_count, cfg_scale, seed, random_seed, image_inpaint_input, denoise_strength, blur_radius, blur_expansion_radius,
+                    text_weights_json, unet_weights_json
+                )
             
 def update_diffusion_model_list(selected_type):
     diffusion_models_data = get_all_diffusion_models()
@@ -124,3 +127,23 @@ def get_allowed_diffusion_models(os_name, arch):
     
     allowed = list(dict.fromkeys(allowed))
     return sorted(allowed), allowed_type
+
+def api_image_generation(prompt, width, height, model="dall-e-3", api_key=None):
+    import openai
+    if not api_key:
+        logger.error("OpenAI API Key가 missing.")
+        return "OpenAI API Key가 필요합니다."
+    openai.api_key = api_key
+    
+    try:
+        response = openai.images.generate(
+            model=model,
+            prompt=prompt,
+            size=f"{width}x{height}",
+            quality="standard",
+            n=1,
+        )
+        
+        return response.data[0].url
+    except Exception as e:
+        logger.error(f"Error generating image: {e}")

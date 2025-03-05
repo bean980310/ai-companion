@@ -1485,6 +1485,7 @@ with gr.Blocks(css=css) as demo:
             denoise_strength_slider,
             blur_radius_slider,
             blur_expansion_radius_slider,
+            diffusion_api_key_text,
             *diffusion_lora_text_encoder_sliders,
             *diffusion_lora_unet_sliders
         ],
