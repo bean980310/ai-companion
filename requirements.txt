@@ -50,7 +50,6 @@ langchain-huggingface
 langchain-ollama
 onnx
 onnxruntime
-gptqmodel
 Pillow
 numpy
 websocket-client
