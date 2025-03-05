@@ -17,7 +17,8 @@ api_models = [
 ]
 
 diffusion_api_models=[
-    "dall-e-3"
+    "dall-e-3",
+    "imagen-3.0-generate-002"
 ]
 
 tts_api_models=[

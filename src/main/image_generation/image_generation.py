@@ -128,22 +128,82 @@ def get_allowed_diffusion_models(os_name, arch):
     allowed = list(dict.fromkeys(allowed))
     return sorted(allowed), allowed_type
 
-def api_image_generation(prompt, width, height, model="dall-e-3", api_key=None):
-    import openai
-    if not api_key:
-        logger.error("OpenAI API Key가 missing.")
-        return "OpenAI API Key가 필요합니다."
-    openai.api_key = api_key
-    
-    try:
-        response = openai.images.generate(
-            model=model,
-            prompt=prompt,
-            size=f"{width}x{height}",
-            quality="standard",
-            n=1,
-        )
+def api_image_generation(prompt, width, height, model, api_key=None):
+    if "dall-e" in model:
+        import openai
+        if not api_key:
+            logger.error("OpenAI API Key가 missing.")
+            return [], None 
+        openai.api_key = api_key
         
-        return response.data[0].url
-    except Exception as e:
-        logger.error(f"Error generating image: {e}")
+        try:
+            response = openai.images.generate(
+                model=model,
+                prompt=prompt,
+                size=f"{width}x{height}",
+                quality="standard",
+                n=1,
+            )
+            
+            output_images=[]
+            
+            image = response.data[0].url
+            output_images.append(image)
+            
+            history_entry = {
+                "Positive Prompt": prompt,
+                "Negative Prompt": "",
+                "Generation Steps": "",
+                "Model": model,
+                "Sampler": "",
+                "Scheduler": "",
+                "CFG Scale": "",
+                "Seed": "",
+                "Width": width,
+                "Height": height
+            }
+            history_df = pd.DataFrame([history_entry])
+
+            return output_images, history_df
+        except Exception as e:
+            logger.error(f"Error generating image: {e}")
+            return [], None 
+    else:
+        from google import genai
+        from google.genai import types
+        from PIL import Image
+        from io import BytesIO
+        if not api_key:
+            logger.error("Google API Key가 missing.")
+            return [], None
+        client = genai.Client(api_key=api_key)
+        try:
+            response = client.models.generate_images(
+                model=model,
+                prompt=prompt,
+                config=types.GenerateImagesConfig(
+                    number_of_images=1
+                )
+            )
+            output_images=[]
+            for generated_image in response.generated_images:
+                image = Image.open(BytesIO(generated_image.image.image_bytes))
+                output_images.append(image)
+                
+            history_entry = {
+                "Positive Prompt": prompt,
+                "Negative Prompt": "",
+                "Generation Steps": "",
+                "Model": model,
+                "Sampler": "",
+                "Scheduler": "",
+                "CFG Scale": "",
+                "Seed": "",
+                "Width": "",
+                "Height": ""
+            }
+            history_df = pd.DataFrame([history_entry])
+            return output_images, history_df
+        except Exception as e:
+            logger.error(f"Error generating image: {e}")
+            return [], None 
