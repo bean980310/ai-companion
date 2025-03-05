@@ -3,9 +3,8 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
-from optimum.quanto import Calibration, QuantizedModelForCausalLM, qfloat8, qint4, qint8
-
 def convert_model_to_float8(model_id: str, output_dir: str, push_to_hub: float=False):
+    from optimum.quanto import QuantizedModelForCausalLM, qfloat8
     """
     모델을 8비트로 변환하여 저장하는 함수
     """
@@ -33,6 +32,8 @@ def convert_model_to_float8(model_id: str, output_dir: str, push_to_hub: float=F
         return False
     
 def convert_model_to_int8(model_id: str, output_dir: str, push_to_hub: float=False):
+    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+    from optimum.quanto import QuantizedModelForCausalLM, qint8
     """
     모델을 8비트로 변환하여 저장하는 함수
     """
@@ -61,6 +62,8 @@ def convert_model_to_int8(model_id: str, output_dir: str, push_to_hub: float=Fal
         return False
     
 def convert_model_to_int4(model_id: str, output_dir: str, push_to_hub: float=False):
+    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+    from optimum.quanto import QuantizedModelForCausalLM, qint4
     """
     모델을 8비트로 변환하여 저장하는 함수
     """
