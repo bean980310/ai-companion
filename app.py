@@ -270,7 +270,7 @@ def on_app_start(language=None):  # language 매개변수에 기본값 설정
             "content": display_system
         }
         loaded_history = [default_system]
-        last_preset = list(preset_list)[0]
+        last_preset = last_character
             
     return (
         sid, 
