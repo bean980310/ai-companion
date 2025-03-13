@@ -5,7 +5,15 @@ from typing import Dict, Optional, Union, List
 import json
 import os
 from pathlib import Path
-from presets import AI_ASSISTANT_PRESET, MINAMI_ASUKA_PRESET, MAKOTONO_AOI_PRESET, AINO_KOITO_PRESET, SD_IMAGE_GENERATOR_PRESET
+from presets import (
+    AI_ASSISTANT_PRESET, 
+    MINAMI_ASUKA_PRESET, 
+    MAKOTONO_AOI_PRESET, 
+    AINO_KOITO_PRESET, 
+    SD_IMAGE_GENERATOR_PRESET, 
+    ARIA_PRINCESS_FATE_PRESET, 
+    ARIA_PRINCE_FATE_PRESET
+    )
 
 from src.common.default_language import default_language
 
@@ -25,7 +33,9 @@ class TranslationManager:
             'sd_image_generator': SD_IMAGE_GENERATOR_PRESET,
             'minami_asuka': MINAMI_ASUKA_PRESET,
             'makotono_aoi': MAKOTONO_AOI_PRESET,
-            'aino_koito': AINO_KOITO_PRESET
+            'aino_koito': AINO_KOITO_PRESET,
+            'aria_princess_fate': ARIA_PRINCESS_FATE_PRESET,
+            'aria_prince_fate': ARIA_PRINCE_FATE_PRESET
         }
         self.load_translations()
 
@@ -541,7 +551,9 @@ class TranslationManager:
             'Image Generator': SD_IMAGE_GENERATOR_PRESET,
             '미나미 아스카 (南飛鳥, みなみあすか, Minami Asuka)': MINAMI_ASUKA_PRESET,
             '마코토노 아오이 (真琴乃葵, まことのあおい, Makotono Aoi)': MAKOTONO_AOI_PRESET,
-            '아이노 코이토 (愛野小糸, あいのこいと, Aino Koito)': AINO_KOITO_PRESET
+            '아이노 코이토 (愛野小糸, あいのこいと, Aino Koito)': AINO_KOITO_PRESET,
+            '아리아 프린세스 페이트 (アリア·プリンセス·フェイト, Aria Princess Fate)': ARIA_PRINCESS_FATE_PRESET,
+            '아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)': ARIA_PRINCE_FATE_PRESET
         }
 
         for lang, translations in default_translations.items():

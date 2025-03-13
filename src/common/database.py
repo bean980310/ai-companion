@@ -261,6 +261,8 @@ def insert_default_presets(translation_manager, overwrite=True) -> None:
         PresetConfig("미나미 아스카 (南飛鳥, みなみあすか, Minami Asuka)", "minami_asuka"),
         PresetConfig("마코토노 아오이 (真琴乃葵, まことのあおい, Makotono Aoi)", "makotono_aoi"),
         PresetConfig("아이노 코이토 (愛野小糸, あいのこいと, Aino Koito)", "aino_koito"),
+        PresetConfig("아리아 프린세스 페이트 (アリア·プリンセス·フェイト, Aria Princess Fate)", "aria_princess_fate"),
+        PresetConfig("아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)", "aria_prince_fate")
     ]
     
     try:
