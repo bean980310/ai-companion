@@ -6,8 +6,6 @@ import numpy as np
 import torch
 from src.common.cache import models_cache
 from src.model_handlers import (
-    GGUFModelHandler, MiniCPMLlama3V25Handler, Llama3Handler, GLM4Handler, GLM4VHandler, Llama3VisionModelHandler,
-    Aya23Handler, GLM4HfHandler, OtherModelHandler, Qwen2Handler, MlxModelHandler, MlxVisionHandler,
     TransformersCausalModelHandler, TransformersVisionModelHandler, GGUFCausalModelHandler, MlxCausalModelHandler, MlxVisionModelHandler
 )
 from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models, convert_folder_to_modelid
