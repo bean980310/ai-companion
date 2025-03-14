@@ -68,6 +68,8 @@ DEFAULT_PRESETS = frozenset([
     '미나미 아스카 (南飛鳥, みなみあすか, Minami Asuka)',
     '마코토노 아오이 (真琴乃葵, まことのあおい, Makotono Aoi)',
     '아이노 코이토 (愛野小糸, あいのこいと, Aino Koito)'
+    '아리아 프린세스 페이트 (アリア·プリンセス·フェイト, Aria Princess Fate)',
+    '아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)',
 ])
 
 class DatabaseError(Exception):
