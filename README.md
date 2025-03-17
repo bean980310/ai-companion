@@ -71,11 +71,9 @@ Local Model의 경우 다음과 같은 Base Model을 지원.
 - Stable Diffusion 3.5 Large
 - Stable Diffusion 3.5 Medium
 
-* **LoRA**
-Local Model의 경우 LoRA를 최대 10개 까지 선택가능. 단, 베이스 모델에 맞는 LoRA를 적용해야 함.
+* **LoRA**: Local Model의 경우 LoRA를 최대 10개 까지 선택가능. 단, 베이스 모델에 맞는 LoRA를 적용해야 함.
 
-* **VAE**
-VAE를 사용자 지정. Default로 둘 경우, Checkpoints에 내장된 VAE를 사용.
+* **VAE**: VAE를 사용자 지정. Default로 둘 경우, Checkpoints에 내장된 VAE를 사용.
 
 **생성 옵션**
 
