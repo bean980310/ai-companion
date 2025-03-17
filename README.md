@@ -21,8 +21,7 @@ LLM을 활용하여 AI와 대화.
 |Anthropic|claude-3-haiku-20240307 <br> claude-3-sonnet-20240229 <br> claude-3-opus-latest <br> claude-3-5-sonnet-latest <br> claude-3-5-haiku-latest <br> claude-3-7-sonnet-latest|
 |Google GenAI|gemini-1.5-flash <br> gemini-1.5-flash-8b <br> gemini-1.5-pro <br> gemini-2.0-flash|
 
-* **Local**: Transformers, GGUF, MLX(Apple Silicon Mac 한정)
-Local Model의 경우 아래의 모델에 대해 Download Center에서 모델 다운로드를 사전 제공.
+* **Local**: Transformers, GGUF, MLX(Apple Silicon Mac 한정)<br>Transformers Model의 경우 아래의 모델에 대해 Download Center에서 모델 다운로드를 사전 제공.
 
 |모델 제공|모델명|
 |--------|-----|
@@ -72,8 +71,10 @@ Local Model의 경우 다음과 같은 Base Model을 지원.
 - Stable Diffusion 3.5 Medium
 
 * **LoRA**: Local Model의 경우 LoRA를 최대 10개 까지 선택가능. 단, 베이스 모델에 맞는 LoRA를 적용해야 함.
-
 * **VAE**: VAE를 사용자 지정. Default로 둘 경우, Checkpoints에 내장된 VAE를 사용.
+* **Embedding**: 사용시 embedding:name과 같은 방식으로 입력하여 적용.
+* **ControlNet**: 현재 ai-companion에서는 인터페이스가 구현되지 않았으며, 추후 구현 예정.
+* **Refiner**: Stable Diffusion XL 1.0 Refiner 모델로, Refiner Start Step로 리파이너 샘플링이 시작되는 단계를 지정할수 있음.
 
 **생성 옵션**
 
@@ -87,9 +88,36 @@ Local Model의 경우 다음과 같은 Base Model을 지원.
 |Stable Diffusion 1.5 <br> Stable Diffusion 2.x|512x512 <br> 512x768 <br> 768x512|
 |Stable Diffusion XL 1.0 <br> Stable Diffusion 3 Medium <br> FLUX.1 Schnell <br> FLUX.1 Dev <br> Stable Diffusion 3.5 Large <br> Stable Diffusion 3.5 Medium|1024x1024 <br> 896x1152 <br> 1152x896 <br> 832x1216 <br> 1216x832 <br> 768x1344 <br> 1344x768 <br> 640x1536 <br> 1536x640|
 
+* **generation Steps**: 인공지능이 노이징된 이미지를 복구할 때 몇 단계의 스텝을 걸쳐 이미지를 복구 시킬지 여부를 결정하는 값으로, 값이 높을수록 생성까지 걸리는 시간이 길어짐.
+* **Denoise Strength**: 노이즈의 강도를 조정.
+
+**Advanced Settings**
+
+* **Sampler**: 샘플링 방식이 다르면 같은 프롬프트에서도 다른 결과를 얻을 수 있음.
+* **Scheduler**: 스케쥴러가 다를경우 같은 샘플러와 같은 프롬프트에서도 다른 결과를 얻을 수 있음.
+* **CFG Scale**: CFG 값이 높을수록 프롬프트의 설명을 잘 따르고, 낮을수록 창의적으로 이미지를 생성함.
+* **Seed**: 생성 과정에 사용되는 난수의 초기값.
+* **Clip Skip**: 이미지 생성 과정의 일부를 건너뛰는 기능.
+* **Batch Size**: 한번의 실행으로 생성할 이미지의 갯수.
+
+**Image to Image**
+
+이미지에 변화를 줄수 있음. Inpaint를 사용하여 Mask 구간에 대해서만 변화를 줄수 있음.
+
 ### Storyteller
 LLM을 활용하여 텍스트를 생성. Chatbot과는 달리 소설 등의 글작성에 UI가 최적화됨.
 
+**지원 모델**
+Chatbot 문단내 지원 모델 참조.
+
+**하이퍼파라미터 설정**
+하이퍼파라미터의 작동원리에 대해 잘 알지 못할경우 기본값으로 두는걸 권장합니다.
+
+* **시드 값**: 생성 과정에 사용되는 난수의 초기값. (기본값: 42)
+* **온도(temperature)**: 답변의 창의성과 무작위성을 조절하는 하이퍼파라미터. 높을수록 예측하기 어렵고 창의적인 답변을 생성. 낮을수록 결정적이고 보수적인 답변을 생성. (기본값: 0.6)
+* **Top K**: 고려하는 옵션의 수를 제한하고 가능성이 가장 높은 단어를 선택하여 고품질 출력을 보장하는 하이퍼파라미터. (기본값: 20)
+* **Top P**: 답변의 창의성과 무작위성을 조절하는 하이퍼파라미터. 임계 확률을 설정하고 누적 확률이 임계치를 초과하는 상위 토큰을 선택한 뒤 모델이 토큰 세트에서 무작위로 샘플링하여 출력을 생성. (기본값: 0.9)
+* **반복 패널티(repetition penalty)**: 중복 단어의 수를 조절하는 하이퍼파라미터. 높을수록 중복되는 단어가 적어짐. (기본값: 1.1)
 
 ### Video Generation
 Coming Soon
