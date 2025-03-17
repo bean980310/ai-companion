@@ -14,11 +14,13 @@ LLM을 활용하여 AI와 대화.
 
 **지원 모델**
 * **API** 
-  - **OpenAI**: gpt-3.5-turbo, gpt-4, gpt-4-turbo, gpt-4o-mini, gpt-4o
-  - **Anthropic**: claude-3-haiku-20240307, claude-3-sonnet-20240229, claude-3-opus-latest, claude-3-5-sonnet-latest, claude-3-5-haiku-latest, claude-3-7-sonnet-latest
-  - **Google GenAI**: gemini-1.5-flash, gemini-1.5-flash-8b, gemini-1.5-pro, gemini-2.0-flash
-* **Local**: Transformers, GGUF, MLX(Apple Silicon Mac 한정)
+|모델 제공|모델명|
+|-------|----|
+|OpenAI|gpt-3.5-turbo, gpt-4, gpt-4-turbo, gpt-4o-mini, gpt-4o|
+|Anthropic|claude-3-haiku-20240307, claude-3-sonnet-20240229, claude-3-opus-latest, claude-3-5-sonnet-latest, claude-3-5-haiku-latest, claude-3-7-sonnet-latest|
+|Google GenAI|gemini-1.5-flash, gemini-1.5-flash-8b, gemini-1.5-pro, gemini-2.0-flash|
 
+* **Local**: Transformers, GGUF, MLX(Apple Silicon Mac 한정)
 Local Model의 경우 아래의 모델에 대해 Download Center에서 모델 다운로드를 사전 제공.
 |모델 제공|모델명|
 |--------|-----|
