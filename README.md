@@ -37,7 +37,7 @@ Local Model의 경우 아래의 모델에 대해 Download Center에서 모델 �
 * **프리셋**: 사용자 정의된 시스템 프롬프트를 적용. 캐릭터 변경시 이에 대응하는 프리셋으로 자동 설정됨.
 
 **하이퍼파라미터 설정**
-<br><br>하이퍼파라미터의 작동원리에 대해 잘 알지 못할경우 기본값으로 두는걸 권장합니다.
+하이퍼파라미터의 작동원리에 대해 잘 알지 못할경우 기본값으로 두는걸 권장합니다.
 
 * **시드 값**: 생성 과정에 사용되는 난수의 초기값. (기본값: 42)
 * **온도(temperature)**: 답변의 창의성과 무작위성을 조절하는 하이퍼파라미터. 높을수록 예측하기 어렵고 창의적인 답변을 생성. 낮을수록 결정적이고 보수적인 답변을 생성. (기본값: 0.6)
@@ -48,8 +48,50 @@ Local Model의 경우 아래의 모델에 대해 Download Center에서 모델 �
 ### Image Generation
 Stable Diffusion, Flux등 이미지 생성 모델을 활용한 이미지 생성. ComfyUI를 백엔드 서버로 활용하여 이미지를 생성함.
 
+**지원 모델**
+* **API**
+현재 이미지 생성 API 모델은 제한적으로 지원중.
+
+|모델 제공|모델명|
+|-------|----|
+|OpenAI|dall-e-3|
+|Google GenAI|imagen-3.0-generate-002|
+
+* **Local**: Diffusers, Checkpoints
+ - **Diffusers**: 현재, Diffusers 모델의 경우 스캔도 가능하며 선택도 가능하지만 Diffusers 모델을 사용한 실제 이미지 생성은 사용할수 없음. (추후 기능 구현 예정.)
+ - **Checkpoints**: ComfyUI를 경유하여 이미지를 생성함. ComfyUI 디렉토리의 models/checkpoints에 모델 파일이 들어있어야함.
+
+Local Model의 경우 다음과 같은 Base Model을 지원.
+- Stable Diffusion 1.5
+- Stable Diffusion 2.x
+- Stable Diffusion XL 1.0
+- Stable Diffusion 3 Medium
+- FLUX.1 Schnell
+- FLUX.1 Dev
+- Stable Diffusion 3.5 Large
+- Stable Diffusion 3.5 Medium
+
+* **LoRA**
+Local Model의 경우 LoRA를 최대 10개 까지 선택가능. 단, 베이스 모델에 맞는 LoRA를 적용해야 함.
+
+* **VAE**
+VAE를 사용자 지정. Default로 둘 경우, Checkpoints에 내장된 VAE를 사용.
+
+**생성 옵션**
+
+* **Positive Prompt**: 입력한 단어에 해당되는 이미지를 생성.
+* **Negative Prompt**: 결과 이미지에서 보고 싶지 않은 것들을 제외.
+* **Width, Height**: 이미지의 너비, 높이를 조정.
+* **Recommended Resolution**
+
+|Base Model|Recommended Resolution|
+|----------|----------|
+|Stable Diffusion 1.5 <br> Stable Diffusion 2.x|512x512, 512x768, 768x512|
+|SDXL1.0, SD3Medium, FLUX.1 Schnell, FLUX.1 Dev, SD3.5Large, SD3.5Medium|1024x1024, 896x1152, 1152x896, 832x1216, 1216x832, 768x1344, 1344x768, 640x1536, 1536x640|
+
 ### Storyteller
 LLM을 활용하여 텍스트를 생성. Chatbot과는 달리 소설 등의 글작성에 UI가 최적화됨.
+
 
 ### Video Generation
 Coming Soon
