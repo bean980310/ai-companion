@@ -13,7 +13,8 @@
 LLM을 활용하여 AI와 대화.
 
 **지원 모델**
-* **API** 
+* **API**
+
 |모델 제공|모델명|
 |-------|----|
 |OpenAI|gpt-3.5-turbo, gpt-4, gpt-4-turbo, gpt-4o-mini, gpt-4o|
