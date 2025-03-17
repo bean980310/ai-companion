@@ -12,6 +12,21 @@
 ### Chatbot
 LLM을 활용하여 AI와 대화.
 
+**지원 모델**
+* **API** 
+  - **OpenAI**: gpt-3.5-turbo, gpt-4, gpt-4-turbo, gpt-4o-mini, gpt-4o
+  - **Anthropic**: claude-3-haiku-20240307, claude-3-sonnet-20240229, claude-3-opus-latest, claude-3-5-sonnet-latest, claude-3-5-haiku-latest, claude-3-7-sonnet-latest
+  - **Google GenAI**: gemini-1.5-flash, gemini-1.5-flash-8b, gemini-1.5-pro, gemini-2.0-flash
+* **Local**: Transformers, GGUF, MLX(Apple Silicon Mac 한정)
+
+Local Model의 경우 아래의 모델에 대해 Download Center에서 모델 다운로드를 사전 제공.
+|모델 제공|모델명|
+|--------|-----|
+|meta-llama|meta-llama/Llama-3.1-8B, meta-llama/Llama-3.1-8B-Instruct, meta-llama/Llama-3.2-11B-Vision, meta-llama/Llama-3.2-11B-Vision-Instruct|
+|google|google/gemma-2-9b, google/gemma-2-9b-it, google/gemma-3-12b-pt, google/gemma-3-12b-it|
+|Qwen|Qwen/Qwen2.5-7B, Qwen/Qwen2.5-7B-Instruct, Qwen/Qwen2.5-14B, Qwen/Qwen2.5-14B-Instruct|
+|mistralai|mistralai/Mistral-7B-v0.3, mistralai/Mistral-7B-Instruct-v0.3, mistralai/Mistral-Small-24B-Base-2501, mistralai/Mistral-Small-24B-Instruct-2501|
+
 ### Image Generation
 Stable Diffusion, Flux등 이미지 생성 모델을 활용한 이미지 생성. ComfyUI를 백엔드 서버로 활용하여 이미지를 생성함.
 
