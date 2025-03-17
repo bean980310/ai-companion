@@ -87,7 +87,7 @@ VAE를 사용자 지정. Default로 둘 경우, Checkpoints에 내장된 VAE를 
 |Base Model|Recommended Resolution|
 |----------|----------|
 |Stable Diffusion 1.5 <br> Stable Diffusion 2.x|512x512, 512x768, 768x512|
-|SDXL1.0, SD3Medium, FLUX.1 Schnell, FLUX.1 Dev, SD3.5Large, SD3.5Medium|1024x1024, 896x1152, 1152x896, 832x1216, 1216x832, 768x1344, 1344x768, 640x1536, 1536x640|
+|Stable Diffusion XL 1.0 <br> Stable Diffusion 3 Medium <br> FLUX.1 Schnell <br> FLUX.1 Dev <br> Stable Diffusion 3.5 Large <br> Stable Diffusion 3.5 Medium|1024x1024, 896x1152, 1152x896, 832x1216, 1216x832, 768x1344, 1344x768, 640x1536, 1536x640|
 
 ### Storyteller
 LLM을 활용하여 텍스트를 생성. Chatbot과는 달리 소설 등의 글작성에 UI가 최적화됨.
