@@ -17,19 +17,19 @@ LLM을 활용하여 AI와 대화.
 
 |모델 제공|모델명|
 |-------|----|
-|OpenAI|gpt-3.5-turbo, gpt-4, gpt-4-turbo, gpt-4o-mini, gpt-4o, gpt-4.5-preview|
-|Anthropic|claude-3-haiku-20240307, claude-3-sonnet-20240229, claude-3-opus-latest, claude-3-5-sonnet-latest, claude-3-5-haiku-latest, claude-3-7-sonnet-latest|
-|Google GenAI|gemini-1.5-flash, gemini-1.5-flash-8b, gemini-1.5-pro, gemini-2.0-flash|
+|OpenAI|gpt-3.5-turbo <br> gpt-4 <br> gpt-4-turbo <br> gpt-4o-mini <br> gpt-4o <br> gpt-4.5-preview|
+|Anthropic|claude-3-haiku-20240307 <br> claude-3-sonnet-20240229 <br> claude-3-opus-latest <br> claude-3-5-sonnet-latest <br> claude-3-5-haiku-latest <br> claude-3-7-sonnet-latest|
+|Google GenAI|gemini-1.5-flash <br> gemini-1.5-flash-8b <br> gemini-1.5-pro <br> gemini-2.0-flash|
 
 * **Local**: Transformers, GGUF, MLX(Apple Silicon Mac 한정)
 Local Model의 경우 아래의 모델에 대해 Download Center에서 모델 다운로드를 사전 제공.
 
 |모델 제공|모델명|
 |--------|-----|
-|meta-llama|meta-llama/Llama-3.1-8B, meta-llama/Llama-3.1-8B-Instruct, meta-llama/Llama-3.2-11B-Vision, meta-llama/Llama-3.2-11B-Vision-Instruct|
-|google|google/gemma-2-9b, google/gemma-2-9b-it, google/gemma-3-12b-pt, google/gemma-3-12b-it|
-|Qwen|Qwen/Qwen2.5-7B, Qwen/Qwen2.5-7B-Instruct, Qwen/Qwen2.5-14B, Qwen/Qwen2.5-14B-Instruct|
-|mistralai|mistralai/Mistral-7B-v0.3, mistralai/Mistral-7B-Instruct-v0.3, mistralai/Mistral-Small-24B-Base-2501, mistralai/Mistral-Small-24B-Instruct-2501|
+|meta-llama|meta-llama/Llama-3.1-8B <br> meta-llama/Llama-3.1-8B-Instruct <br> meta-llama/Llama-3.2-11B-Vision <br> meta-llama/Llama-3.2-11B-Vision-Instruct|
+|google|google/gemma-2-9b <br> google/gemma-2-9b-it <br> google/gemma-3-12b-pt <br> google/gemma-3-12b-it|
+|Qwen|Qwen/Qwen2.5-7B <br> Qwen/Qwen2.5-7B-Instruct <br> Qwen/Qwen2.5-14B <br> Qwen/Qwen2.5-14B-Instruct|
+|mistralai|mistralai/Mistral-7B-v0.3 <br> mistralai/Mistral-7B-Instruct-v0.3 <br> mistralai/Mistral-Small-24B-Base-2501 <br> mistralai/Mistral-Small-24B-Instruct-2501|
 
 **캐릭터 페르소나 설정**
 * **시스템 프롬프트(시스템 메시지)**: 챗봇에게 역할을 부여하거나 유저의 요구에 맞도록 시스템에 지시하는 프롬프트. (기본값: 당신은 유용한 AI 비서입니다.) 프리셋 혹은 캐릭터 변경시 이에 맞춰 사전정의된 시스템 프롬프트로 자동 설정됨.
