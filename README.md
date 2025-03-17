@@ -23,6 +23,7 @@ LLM을 활용하여 AI와 대화.
 
 * **Local**: Transformers, GGUF, MLX(Apple Silicon Mac 한정)
 Local Model의 경우 아래의 모델에 대해 Download Center에서 모델 다운로드를 사전 제공.
+
 |모델 제공|모델명|
 |--------|-----|
 |meta-llama|meta-llama/Llama-3.1-8B, meta-llama/Llama-3.1-8B-Instruct, meta-llama/Llama-3.2-11B-Vision, meta-llama/Llama-3.2-11B-Vision-Instruct|
