@@ -4,6 +4,7 @@ api_models = [
     "gpt-4-turbo",
     "gpt-4o-mini",
     "gpt-4o",
+    "gpt-4.5-preview",
     "claude-3-haiku-20240307",
     "claude-3-sonnet-20240229",
     "claude-3-opus-latest",
