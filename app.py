@@ -927,8 +927,9 @@ with gr.Blocks(css=css) as demo:
                         datatype=["str", "str", "str", "str", "str", "str", "str", "str", "str", "str"]
                     )
             with gr.Tab('Storyteller', elem_classes='tab') as story_tab:
-                with gr.Row(elem_classes="chat-interface"):
+                with gr.Row(elem_classes="model-container"):
                     gr.Markdown("# Under Construction")
+                with gr.Row(elem_classes="chat-interface"):
                     with gr.Column(scale=7):
                         storytelling_input = gr.Textbox(
                             label="Input",
