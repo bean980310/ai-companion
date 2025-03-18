@@ -1,9 +1,9 @@
 characters={
-    "AI 비서(AI Assistant)": {
+    "AI 비서 (AI Assistant)": {
         "default_tone": "존댓말",
         "languages": ["ko", "ja", "zh_CN", "zh_TW", "en"],
         "default_language": "ko",
-        "preset_name": "AI 비서(AI Assistant)",
+        "preset_name": "AI 비서 (AI Assistant)",
         "profile_image": "assets/0_ai_assistant.png"
     },
     "Image Generator": {

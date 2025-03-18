@@ -542,7 +542,7 @@ class TranslationManager:
         }
         
         default_presets = {
-            'AI 비서(AI Assistant)': AI_ASSISTANT_PRESET,
+            'AI 비서 (AI Assistant)': AI_ASSISTANT_PRESET,
             'Image Generator': SD_IMAGE_GENERATOR_PRESET,
             '미나미 아스카 (南飛鳥, みなみあすか, Minami Asuka)': MINAMI_ASUKA_PRESET,
             '마코토노 아오이 (真琴乃葵, まことのあおい, Makotono Aoi)': MAKOTONO_AOI_PRESET,

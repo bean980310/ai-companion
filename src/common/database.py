@@ -63,7 +63,7 @@ class SessionManagementError(Exception):
 
 
 DEFAULT_PRESETS = frozenset([
-    'AI 비서(AI Assistant)',
+    'AI 비서 (AI Assistant)',
     'Image Generator',
     '미나미 아스카 (南飛鳥, みなみあすか, Minami Asuka)',
     '마코토노 아오이 (真琴乃葵, まことのあおい, Makotono Aoi)',
@@ -258,7 +258,7 @@ def insert_default_presets(translation_manager, overwrite=True) -> None:
     """
     # 프리셋 설정 정의
     preset_configs = [
-        PresetConfig("AI 비서(AI Assistant)", "ai_assistant"),
+        PresetConfig("AI 비서 (AI Assistant)", "ai_assistant"),
         PresetConfig("Image Generator", "sd_image_generator"),
         PresetConfig("미나미 아스카 (南飛鳥, みなみあすか, Minami Asuka)", "minami_asuka"),
         PresetConfig("마코토노 아오이 (真琴乃葵, まことのあおい, Makotono Aoi)", "makotono_aoi"),
