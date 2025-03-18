@@ -96,7 +96,7 @@ class TranslationManager:
         """기본 번역 파일 생성"""
         default_translations = {
             'ko': {
-                'main_title': '간단한 Chatbot',
+                'main_title': '로컬 머신을 위한 AI 컴패니언 Beta',
                 'select_session_info': "선택된 세션이 표시됩니다.",
                 'language_select': '언어 선택',
                 'language_info': '인터페이스 언어를 선택하세요',
@@ -186,7 +186,7 @@ class TranslationManager:
                 # 추가 번역키들...
             },
             'ja': {
-                'main_title': 'シンプルなチャットボット',
+                'main_title': 'ローカルマシンのためのAIコンパニオンBeta',
                 'select_session_info': "選択されたセッションが表示されます。",
                 'language_select': '言語選択',
                 'language_info': 'インターフェース言語を選択してください',
@@ -276,7 +276,7 @@ class TranslationManager:
                 # 追加の翻訳キー...
             },
             'zh_CN': {
-                'main_title': '简单聊天机器人',
+                'main_title': '本地机器的AI伴侣Beta',
                 'select_session_info': "此时将显示选定的会话。",
                 'language_select': '选择语言',
                 'language_info': '选择界面语言',
@@ -366,7 +366,7 @@ class TranslationManager:
                 # 其他翻译键...
             },
             'zh_TW': {
-                'main_title': '簡單聊天機器人',
+                'main_title': '本地機器的AI伴侶Beta',
                 'select_session_info': "此時將顯示選定的會話。",
                 'language_select': '選擇語言',
                 'language_info': '選擇界面語言',
@@ -455,7 +455,7 @@ class TranslationManager:
                 "ai_assistant": "AI祕書"
             },
             'en': {
-                'main_title': 'Simple Chatbot',
+                'main_title': 'AI Companion for Local Machines Beta',
                 'select_session_info': "The selected session is displayed.",
                 'language_select': 'Select Language',
                 'language_info': 'Choose interface language',
