@@ -68,6 +68,7 @@ Local Model의 경우 다음과 같은 Base Model을 지원.
 - FLUX.1 Dev
 - Stable Diffusion 3.5 Large
 - Stable Diffusion 3.5 Medium
+- Illustrious XL 1.0
 
 * **LoRA**: Local Model의 경우 LoRA를 최대 10개 까지 선택가능. 단, 베이스 모델에 맞는 LoRA를 적용해야 함.
 * **VAE**: VAE를 사용자 지정. Default로 둘 경우, Checkpoints에 내장된 VAE를 사용.
@@ -86,6 +87,7 @@ Local Model의 경우 다음과 같은 Base Model을 지원.
 |----------|----------|
 |Stable Diffusion 1.5 <br> Stable Diffusion 2.x|512x512 <br> 512x768 <br> 768x512|
 |Stable Diffusion XL 1.0 <br> Stable Diffusion 3 Medium <br> FLUX.1 Schnell <br> FLUX.1 Dev <br> Stable Diffusion 3.5 Large <br> Stable Diffusion 3.5 Medium|1024x1024 <br> 896x1152 <br> 1152x896 <br> 832x1216 <br> 1216x832 <br> 768x1344 <br> 1344x768 <br> 640x1536 <br> 1536x640|
+|Illustrious XL 1.0|1536x1536 <br> 1248x1824 <br> 1824x1248|
 
 * **generation Steps**: 인공지능이 노이징된 이미지를 복구할 때 몇 단계의 스텝을 걸쳐 이미지를 복구 시킬지 여부를 결정하는 값으로, 값이 높을수록 생성까지 걸리는 시간이 길어짐.
 * **Denoise Strength**: 노이즈의 강도를 조정.
