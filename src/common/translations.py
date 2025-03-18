@@ -96,7 +96,7 @@ class TranslationManager:
         """기본 번역 파일 생성"""
         default_translations = {
             'ko': {
-                'main_title': '로컬 머신을 위한 AI 컴패니언 Beta',
+                'main_title': '로컬 머신을 위한 AI 컴패니언',
                 'select_session_info': "선택된 세션이 표시됩니다.",
                 'language_select': '언어 선택',
                 'language_info': '인터페이스 언어를 선택하세요',
@@ -182,11 +182,10 @@ class TranslationManager:
                 "cache_clear_all_button": "모든 모델 캐시 삭제",
                 "clear_all_result_label": "결과",
                 "handle_character_change_invalid_error": "❌ 선택한 캐릭터가 유효하지 않습니다.",
-                "ai_assistant": "AI 비서"
                 # 추가 번역키들...
             },
             'ja': {
-                'main_title': 'ローカルマシンのためのAIコンパニオンBeta',
+                'main_title': 'ローカルマシンのためのAIコンパニオン',
                 'select_session_info': "選択されたセッションが表示されます。",
                 'language_select': '言語選択',
                 'language_info': 'インターフェース言語を選択してください',
@@ -271,12 +270,11 @@ class TranslationManager:
                 "refresh_info_label": "更新結果",
                 "cache_clear_all_button": "すべてのモデルキャッシュを削除",
                 "clear_all_result_label": "結果",
-                "handle_character_change_invalid_error": "❌ 選択したキャラクターが無効です。",
-                "ai_assistant": "AI秘書"
+                "handle_character_change_invalid_error": "❌ 選択したキャラクターが無効です。"
                 # 追加の翻訳キー...
             },
             'zh_CN': {
-                'main_title': '本地机器的AI伴侣Beta',
+                'main_title': '本地机器的AI伴侣',
                 'select_session_info': "此时将显示选定的会话。",
                 'language_select': '选择语言',
                 'language_info': '选择界面语言',
@@ -361,12 +359,11 @@ class TranslationManager:
                 "refresh_info_label": "刷新结果",
                 "cache_clear_all_button": "删除所有模型缓存",
                 "clear_all_result_label": "结果",
-                "handle_character_change_invalid_error": "❌ 选中的角色无效。",
-                "ai_assistant": "AI秘书"
+                "handle_character_change_invalid_error": "❌ 选中的角色无效。"
                 # 其他翻译键...
             },
             'zh_TW': {
-                'main_title': '本地機器的AI伴侶Beta',
+                'main_title': '本地機器的AI伴侶',
                 'select_session_info': "此時將顯示選定的會話。",
                 'language_select': '選擇語言',
                 'language_info': '選擇界面語言',
@@ -451,11 +448,10 @@ class TranslationManager:
                 "refresh_info_label": "刷新結果",
                 "cache_clear_all_button": "刪除所有模型緩存",
                 "clear_all_result_label": "結果",
-                "handle_character_change_invalid_error": "❌ 選中的角色無效。",
-                "ai_assistant": "AI祕書"
+                "handle_character_change_invalid_error": "❌ 選中的角色無效。"
             },
             'en': {
-                'main_title': 'AI Companion for Local Machines Beta',
+                'main_title': 'AI Companion for Local Machines',
                 'select_session_info': "The selected session is displayed.",
                 'language_select': 'Select Language',
                 'language_info': 'Choose interface language',
@@ -540,8 +536,7 @@ class TranslationManager:
                 "refresh_info_label": "Refresh Results",
                 "cache_clear_all_button": "Delete all model caches",
                 "clear_all_result_label": "Results",
-                "handle_character_change_invalid_error": "❌ The selected character is invalid.",
-                "ai_assistant": "AI Assistant"
+                "handle_character_change_invalid_error": "❌ The selected character is invalid."
                 # Additional translation keys...
             }
         }

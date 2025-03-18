@@ -377,6 +377,7 @@ with gr.Blocks(css=css) as demo:
         with gr.Row(elem_classes="header-container"):
             with gr.Column(scale=3):
                 title = gr.Markdown(f"## {_('main_title')}", elem_classes="title")
+                gr.Markdown("### Beta Release")
             with gr.Column(scale=1):
                 settings_button = gr.Button("⚙️ Settings", elem_classes="settings-button")
                 language_dropdown = gr.Dropdown(
