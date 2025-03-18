@@ -289,6 +289,148 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
             logger.error(f"모델 추론 오류: {str(e)}\n\n{traceback.format_exc()}")
             return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
         
+def generate_text(history, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, image_input=None, api_key=None, device="cpu", seed=42, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0, character_language='ko'):
+    """
+    사용자 히스토리를 기반으로 답변 생성.
+    """
+        
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+    elif torch.backends.mps.is_available():
+        torch.mps.manual_seed(seed)
+    else:
+        torch.manual_seed(seed)
+        
+    if not history:
+        system_message = {
+            "role": "system",
+            "content": "당신은 유용한 AI 비서입니다."
+        }
+        history = [system_message]
+    
+    cache_key = build_model_cache_key(selected_model, model_type, selected_lora, local_path=local_model_path)
+    handler = models_cache.get(cache_key)
+    
+    last_message = history[-1]
+    if last_message["role"] == "assistant":
+        last_message = history[-2]
+    
+    # if character_language == "ko":
+    #     # 한국어 모델 사용
+    #     model_id = "klue/bert-base"  # 예시
+    # elif character_language == "en":
+    #     # 영어 모델 사용
+    #     model_id = "bert-base-uncased"  # 예시
+    # elif character_language == "ja":
+    #     # 일본어 모델 사용
+    #     model_id = "tohoku-nlp/bert-base-japanese"  # 예시"
+    # else:
+    #     # 기본 모델 사용
+    #     model_id = "gpt-3.5-turbo"
+    
+    if model_type == "api":
+        if "claude" in selected_model:
+            if not api_key:
+                logger.error("Anthropic API Key가 missing.")
+                return "Anthropic API Key가 필요합니다."
+            
+            client = anthropic.Client(api_key=api_key)
+            # Anthropic 메시지 형식으로 변환
+            messages = []
+            for msg in history:
+                if msg["role"] == "system":
+                    continue  # Claude API는 시스템 메시지를 별도로 처리하지 않음
+                messages.append({
+                    "role": msg["role"],
+                    "content": msg["content"]
+                })
+            
+            logger.info(f"[*] Anthropic API 요청: {messages}")
+            
+            try:
+                response = client.messages.create(
+                    model=selected_model,
+                    messages=messages,
+                    temperature=0.7,
+                    max_tokens=1024
+                )
+                answer = response.content[0].text
+                logger.info(f"[*] Anthropic 응답: {answer}")
+                return answer
+            except Exception as e:
+                logger.error(f"Anthropic API 오류: {str(e)}\n\n{traceback.format_exc()}")
+                return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+        elif "gemini" in selected_model:
+            if not api_key:
+                logger.error("Google API Key가 missing.")
+                return "Google API Key가 필요합니다."
+
+            client = genai.Client(api_key=api_key)
+            messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
+            config = types.GenerateContentConfig(
+                max_output_tokens=1024,
+                temperature=0.7,
+                top_p=0.9
+            )
+            logger.info(f"[*] Google API 요청: {messages}")
+            try: 
+                response = client.models.generate_content(
+                    model=selected_model,
+                    contents=messages,
+                    config=config
+                )
+                answer = response.text
+                logger.info(f"[*] Google 응답: {answer}")
+                return answer
+            except Exception as e:
+                logger.error(f"Google API 오류: {str(e)}\n\n{traceback.format_exc()}")
+                return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+        else:
+            if not api_key:
+                logger.error("OpenAI API Key가 missing.")
+                return "OpenAI API Key가 필요합니다."
+            openai.api_key = api_key
+            messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
+            logger.info(f"[*] OpenAI API 요청: {messages}")
+            
+            try:
+                response = openai.chat.completions.create(
+                    model=selected_model,
+                    messages=messages,
+                    temperature=0.7,
+                    max_tokens=1024,
+                    top_p=0.9,
+                )
+                answer = response.choices[0].message["content"]
+                logger.info(f"[*] OpenAI 응답: {answer}")
+                return answer
+            except Exception as e:
+                logger.error(f"OpenAI API 오류: {str(e)}\n\n{traceback.format_exc()}")
+                return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+    
+    else:
+        if not handler:
+            logger.info(f"[*] 모델 로드 중: {selected_model}")
+            handler = load_model(selected_model, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path)
+        
+        if not handler:
+            logger.error("모델 핸들러가 로드되지 않았습니다.")
+            return "모델 핸들러가 로드되지 않았습니다."
+        
+        logger.info(f"[*] Generating answer using {handler.__class__.__name__}")
+        try:
+            if isinstance(handler, TransformersVisionModelHandler) or isinstance(handler, MlxVisionModelHandler):
+                answer = handler.generate_answer(history, image_input, temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty)
+            else:
+                answer = handler.generate_answer(history, temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty)
+            return answer
+        except Exception as e:
+            logger.error(f"모델 추론 오류: {str(e)}\n\n{traceback.format_exc()}")
+            return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+        
 def generate_chat_title(first_message, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, device="cpu"):
     """
     첫 번째 메시지를 기반으로 채팅 제목을 생성하는 함수.
