@@ -1,66 +1,67 @@
-# ローカルマシンのためのAIコンパニオン
-ローカル環境で駆動する生成 AIモデル(LLM、Diffusionなど)を利用した人工知能コンパニオンGradioアプリ。
+# ローカル環境向けAIコンパニオン
+ローカル環境で動作する生成系AIモデル（LLM、Diffusionモデル等）を活用した、GradioベースのAIコンパニオンアプリです。
 
 [English](README.md) [한국어](README_ko.md) [日本語](README_ja.md)
 
 ## 概要
 
-チャットボットサービスとAIを活用した絵、ビデオ、オーディオ生成サービスを提供し、ユーザーのペルソナとキャラクターのペルソナシステムを活用したAIキャラクター機能を通じたペルソナチャットボット機能を導入し、AIを単純なツールを越えて友達やパートナーとして交流および協力し、会話を超えた様々な作業および遊びの提供するサービス
+チャットボット機能に加え、AIを用いた画像、動画、音声生成サービスを提供します。
+ユーザーペルソナとキャラクターペルソナの仕組みを導入することで、AIを単なるツールとしてだけでなく、友人やパートナーとして交流し、会話だけでなく様々なタスクや遊びも共に楽しめるサービスを提供します。
 
-ユーザーペルソナは主に一般ユーザーを対象にしており、絵、ビデオ、音楽、オーディオ生成サービスはプロユーザーも対象に含まれる。
+ユーザーペルソナは一般ユーザーを主な対象とし、画像・動画・音楽・音声生成サービスはプロユーザーも対象に含みます。
 
-## 主要機能
-### Chatbot
-LLMを活用してAIと会話。
+## 主な機能
+### チャットボット(Chatbot)
+LLMを利用してAIと対話します。
 
 **対応モデル**
 * **API**
 
-|開発者|モデル名|
+|提供元|モデル名|
 |-------|----|
 |OpenAI|gpt-3.5-turbo <br> gpt-4 <br> gpt-4-turbo <br> gpt-4o-mini <br> gpt-4o <br> gpt-4.5-preview|
 |Anthropic|claude-3-haiku-20240307 <br> claude-3-sonnet-20240229 <br> claude-3-opus-latest <br> claude-3-5-sonnet-latest <br> claude-3-5-haiku-latest <br> claude-3-7-sonnet-latest|
 |Google GenAI|gemini-1.5-flash <br> gemini-1.5-flash-8b <br> gemini-1.5-pro <br> gemini-2.0-flash|
 
-* **Local**: Transformers, GGUF, MLX(Apple Silicon Mac only)<br>Transformers Modelの場合、以下のモデルに対してDownload Centerでモデルダウンロードを事前提供。
+* **ローカル(Local)**: Transformers、GGUF、MLX（Apple Silicon搭載Macのみ）<br>Transformersモデルは事前にダウンロードセンターから取得可能です。
 
-|開発者|モデル名|
+|提供元|モデル名|
 |--------|-----|
 |meta-llama|meta-llama/Llama-3.1-8B <br> meta-llama/Llama-3.1-8B-Instruct <br> meta-llama/Llama-3.2-11B-Vision <br> meta-llama/Llama-3.2-11B-Vision-Instruct|
 |google|google/gemma-2-9b <br> google/gemma-2-9b-it <br> google/gemma-3-12b-pt <br> google/gemma-3-12b-it|
 |Qwen|Qwen/Qwen2.5-7B <br> Qwen/Qwen2.5-7B-Instruct <br> Qwen/Qwen2.5-14B <br> Qwen/Qwen2.5-14B-Instruct|
 |mistralai|mistralai/Mistral-7B-v0.3 <br> mistralai/Mistral-7B-Instruct-v0.3 <br> mistralai/Mistral-Small-24B-Base-2501 <br> mistralai/Mistral-Small-24B-Instruct-2501|
 
-**キャラクターペルソナ設定**
-* **システムプロンプト(システムメッセージ)**: チャットボットに役割を付与したり、ユーザーの要求に合うようにシステムに指示するプロンプト。（デフォルト:あなたは有用なAI秘書です。）プリセットまたはキャラクター変更時、これに合わせて事前定義されたシステムプロンプトに自動設定される。
-* **キャラクター**: 会話する相手を選択可能。
-* **プリセット**: カスタマイズされたシステム プロンプトを適用。 キャラクター変更時、これに対応するプリセットに自動設定される。
+**キャラクターペルソナの設定**
+* **システムプロンプト（システムメッセージ）**: AIに役割を与えたり、ユーザーの要望に沿った指示を与えるプロンプトです。（デフォルト：「あなたは役に立つAIアシスタントです。」）キャラクターやプリセット変更時に自動的に設定されます。
+* **キャラクター**: 対話相手のAIキャラクターを選択できます。
+* **プリセット**: ユーザーが作成したプロンプトの設定です。キャラクター変更時には対応するプリセットに自動的に切り替わります。
 
-**ハイパーパラメータ設定**<br>ハイパーパラメータの作動原理についてよくわからない場合は、デフォルトにしておくことをお勧めします。
+**ハイパーパラメータ設定**<br>よく分からない場合はデフォルトのまま使用することを推奨します。
 
-* **Seed**: 生成過程で使用される乱数の初期値。(デフォルト: 42)
-* **温度(Temperature)**: 回答の創造性とランダム性を調整するハイパーパラメータ。 高いほど予測が難しく、創意的な回答を生成。低いほど決定的で保守的な回答を生成。(デフォルト:0.6)
-* **Top K**: 考慮するオプションの数を制限し、可能性が最も高い単語を選択して高品質の出力を保障するハイパーパラメータ。(デフォルト:20)
-* **Top P**: 回答の創造性とランダム性を調整するハイパーパラメータ。 臨界確率を設定し、累積確率が臨界値を超える上位トークンを選択した後、モデルがトークンセットからランダムにサンプリングして出力を生成します。(デフォルト:0.9)
-* **反復ペナルティ(repetition penalty)**: 重複する単語の数を調整するハイパーパラメータ。 高いほど重複する単語が少なくなる。(デフォルト:1.1)
+* **シード値(Seed)**: 生成時の乱数初期値（デフォルト: 42）
+* **温度(Temperature)**: 回答の創造性やランダム性を制御します。高いほど創造的、低いほど保守的な回答になります（デフォルト: 0.6）
+* **Top K**: 候補として考慮するトークンの数を制限し、品質の高い単語を選択します（デフォルト: 20）
+* **Top P**: 累積確率で上位トークンを選択し、ランダムにサンプリングします（デフォルト: 0.9）
+* **反復ペナルティ(repetition penalty)**: 単語の重複を抑えます。値が高いほど単語の繰り返しが減ります（デフォルト: 1.1）
 
-### Image Generation
-Stable Diffusion、Fluxなどの画像生成モデルを活用した画像生成。ComfyUIをバックエンドサーバとして活用し、画像を生成する。
+### 画像生成(Image Generation)
+Stable DiffusionやFluxなどの画像生成モデルを利用します。バックエンドにComfyUIを使っています。
 
 **対応モデル**
 * **API**
-現在、画像生成APIモデルは制限的にサポート中。
+APIの画像生成モデルは現在限定的に対応しています。
 
-|開発者|モデル名|
+|提供元|モデル名|
 |-------|----|
 |OpenAI|dall-e-3|
 |Google GenAI|imagen-3.0-generate-002|
 
-* **Local**: Diffusers, Checkpoints
- - **Diffusers**: 現在、Diffusersモデルの場合、スキャンも可能で選択も可能だが、Diffusersモデルを使用した実際のイメージ生成は使用できない。(今後機能実装予定。)
- - **Checkpoints**: ComfyUI経由で画像を生成する。 ComfyUIディレクトリのmodels/checkpointsにモデルファイルが入っている必要がある。
+* **ローカル**: Diffusers, Checkpoints
+ - **Diffusers**: 現在モデル選択のみ可能、画像生成は未対応（後日対応予定）。
+ - **Checkpoints**: ComfyUIを通して画像を生成。モデルファイルは models/checkpoints ディレクトリに配置。
 
-Local Modelの場合、次のようなBase Modelを対応。
+ローカルでのベースモデル対応:
 - Stable Diffusion 1.5
 - Stable Diffusion 2.x
 - Stable Diffusion XL 1.0
@@ -71,18 +72,18 @@ Local Modelの場合、次のようなBase Modelを対応。
 - Stable Diffusion 3.5 Medium
 - Illustrious XL 1.0
 
-* **LoRA**: Local Modelの場合、LORAを最大10個まで選択可能。ただし、ベースモデルに合うLORAを適用しなければならない。
-* **VAE**: VAEをカスタマイズ。 Defaultにする場合、Checkpointsに内蔵されたVAEを使用。
-* **Embedding**: 適用時にembedding:nameと同じ方法で入力して適用。
-* **ControlNet**: 現在、ai-companionではインターフェースが実装されておらず、今後実装予定。
-* **Refiner**: Stable Diffusion XL 1.0 Refinerモデルで、Refiner Start Stepでリファイナサンプリングが始まる段階を指定できる。
+* **LoRA**: ベースモデルに合わせて最大10個まで適用可能。
+* **VAE**: ユーザー指定が可能。未指定の場合、Checkpoint内蔵のVAEを使用。
+* **Embedding**: embedding:nameの形式で使用可能。
+* **ControlNet**: 現在未実装、後日実装予定。
+* **Refiner**: SDXL1.0モデルで使用可能、サンプリング開始ステップを指定可能。
 
 **生成オプション**
 
-* **Positive Prompt**: 入力した単語に対応する画像を生成。
-* **Negative Prompt**: 結果画像で見たくないものを除く。
-* **Width, Height**: 画像の幅、高さを調整。
-* **Recommended Resolution**
+* **Positive Prompt**: 含めたい要素を指定。
+* **Negative Prompt**: 除外したい要素を指定。
+* **Width, Height**: 画像サイズを調整。
+* **推奨解像度**: モデルに応じた推奨値
 
 |Base Model|Recommended Resolution|
 |----------|----------|
@@ -90,37 +91,37 @@ Local Modelの場合、次のようなBase Modelを対応。
 |Stable Diffusion XL 1.0 <br> Stable Diffusion 3 Medium <br> FLUX.1 Schnell <br> FLUX.1 Dev <br> Stable Diffusion 3.5 Large <br> Stable Diffusion 3.5 Medium|1024x1024 <br> 896x1152 <br> 1152x896 <br> 832x1216 <br> 1216x832 <br> 768x1344 <br> 1344x768 <br> 640x1536 <br> 1536x640|
 |Illustrious XL 1.0|1536x1536 <br> 1248x1824 <br> 1824x1248|
 
-* **generation Steps**: AIがノイジングされたイメージを復旧する際、何段階のステップをかけてイメージを復旧させるかを決定する値で、値が高いほど生成までかかる時間が長くなる。
-* **Denoise Strength**: ノイズの強度を調整。
+* **生成ステップ(Generation Steps)**: 高いほど生成時間が長く高品質になる傾向があります。
+* **ノイズ除去強度(Denoise Strength)**: ノイズの強度調整。
 
-**Advanced Settings**
+**高度な設定(Advanced Settings)**
 
-* **Sampler**: サンプリング方式が異なると、同じプロンプトでも異なる結果が得られる。
-* **Scheduler**: スケジューラが異なる場合、同じサンプラーと同じプロンプトでも異なる結果が得られる。
-* **CFG Scale**: CFG値が高いほどプロンプトの説明によく従い、低いほど創意的にイメージを生成する。
-* **Seed**: 生成過程で使用される乱数の初期値。
-* **Clip Skip**: 画像生成プロセスの一部をスキップする機能。
-* **Batch Size**: 1回の実行で生成する画像の数。
+* **サンプラー(Sampler)**: 出力結果に影響。
+* **スケジューラー(Scheduler)**: 同じ条件でも結果が変化。
+* **CFGスケール(CFG Scale)**: プロンプトへの追従度を調整。
+* **シード(Seed)**: 乱数初期値。
+* **Clip Skip**: 画像生成の途中工程をスキップ。
+* **バッチサイズ(Batch Size)**: 一度に生成する画像数。
 
-**Image to Image**<br>イメージに変化を与えることができる。 Inpaintを使用してマスク区間に対してのみ変化を与えることができる。
+**Image to Image**<br>イメージに変化を与えることができる。 Inpaintを使用してマスク区間に対してのみ変化を与えることができます。
 
 ### Storyteller
-LLMを活用してテキストを生成。 Chatbotとは異なり、小説などの文章作成にUIが最適化される。（現在未完成。）
+LLMを用いて物語などのテキスト生成を支援する機能（現在開発中）。
 
 **対応モデル**<br>Chatbot段落内の対応モデルを参照。
 
 **ハイパーパラメータ設定**<br>Chatbot段落内のハイパーパラメータ設定を参照。<br>ハイパーパラメータの作動原理についてよく分からない場合は、デフォルトにしておくことをお勧めします。
 
-### Video Generation
-Coming Soon
+### 動画生成(Video Generation)
+近日対応予定
 
-### Audio Generation
-Coming Soon
+### 音声生成(Audio Generation)
+近日対応予定
 
-### Translator
-翻訳モデルを活用した多言語翻訳。 画像ファイルまたはpdfファイルをアップロードしてテキストを抽出した後、該当テキストを翻訳に活用することも可能。
+### 翻訳(Translator)
+翻訳モデルを活用し、多言語翻訳に対応。画像やPDFのテキスト抽出による翻訳も可能。
 
-## 準備
+## インストール方法
 
 - **仮想環境設定**
 
@@ -174,13 +175,12 @@ export CXX="/opt/homebrew/opt/llvm/bin/clang++"
 pip install xformers
 ```
 
-## 実行
+## 実行方法
 
 ```zsh
 python app.py
 ```
 
-### Intel Mac互換に関して
+### Intel Macについて
 
-Intel Macでは正常な動作を保障せず、ほとんどの機能をサポートしません。
-したがって、最終バージョンの配布時点およびそれ以前にIntel Macに対するサポートが削除される可能性があります。
+ntel搭載Macは正式サポートしておらず、一部機能が動作しない場合があります。将来的にサポート終了の可能性もあります。

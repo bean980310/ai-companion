@@ -185,12 +185,12 @@ class TranslationManager:
                 # 추가 번역키들...
             },
             'ja': {
-                'main_title': 'ローカルマシンのためのAIコンパニオン',
+                'main_title': 'ローカル環境向けAIコンパニオン',
                 'select_session_info': "選択されたセッションが表示されます。",
                 'language_select': '言語選択',
                 'language_info': 'インターフェース言語を選択してください',
                 'system_message': 'システムメッセージ',
-                'system_message_default': 'あなたは有用なAI秘書です。',
+                'system_message_default': 'あなたは役に立つAIアシスタントです。',
                 'system_message_placeholder': '会話の性格、話し方などを定義してください。',
                 'tab_main': 'メイン',
                 'model_type_label': 'モデルタイプの選択',
@@ -456,7 +456,7 @@ class TranslationManager:
                 'language_select': 'Select Language',
                 'language_info': 'Choose interface language',
                 'system_message': 'System Message',
-                'system_message_default': 'You are a useful AI assistant.',
+                'system_message_default': 'You are a helpful AI assistant.',
                 'system_message_placeholder': 'Define conversation characteristics, tone, etc.',
                 'tab_main': 'Main',
                 'model_type_label': 'Select Model Type',
