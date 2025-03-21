@@ -274,12 +274,12 @@ class TranslationManager:
                 # 追加の翻訳キー...
             },
             'zh_CN': {
-                'main_title': '本地机器的AI伴侣',
+                'main_title': '面向本地环境的AI伴侣',
                 'select_session_info': "此时将显示选定的会话。",
                 'language_select': '选择语言',
                 'language_info': '选择界面语言',
                 'system_message': '系统消息',
-                'system_message_default': '你是一个有用的AI秘书。',
+                'system_message_default': '你是一个乐于助人的AI助手。',
                 'system_message_placeholder': '定义对话特征、语气等。',
                 'tab_main': '主干',
                 'model_type_label': '选择模型类型',
@@ -363,12 +363,12 @@ class TranslationManager:
                 # 其他翻译键...
             },
             'zh_TW': {
-                'main_title': '本地機器的AI伴侶',
+                'main_title': '面向本地環境的AI伴侶',
                 'select_session_info': "此時將顯示選定的會話。",
                 'language_select': '選擇語言',
                 'language_info': '選擇界面語言',
                 'system_message': '系統消息',
-                'system_message_default': '你是一個有用的AI祕書。',
+                'system_message_default': '你是一個樂於助人的AI助手。',
                 'system_message_placeholder': '定義對話特徵、語氣等。',
                 'tab_main': '主幹',
                 'model_type_label': '選擇模型類型',

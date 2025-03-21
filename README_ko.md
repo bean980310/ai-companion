@@ -1,7 +1,7 @@
 # 로컬 머신을 위한 AI 컴패니언
 로컬 환경에서 실행되는 생성형 AI 모델(LLM, Diffusion 등)을 활용한 Gradio 기반 인공지능 컴패니언 앱입니다.
 
-[English](README.md) [한국어](README_ko.md) [日本語](README_ja.md)
+[English](README.md) [한국어](README_ko.md) [日本語](README_ja.md) [简体中文](README_zh_cn.md) [繁體中文](README_zh_tw.md)
 
 ## 개요
 
@@ -48,8 +48,7 @@ LLM을 활용해 AI와 자연스럽게 대화할 수 있습니다.
 Stable Diffusion, Flux 등의 이미지 생성 모델을 사용하여 이미지를 생성합니다. ComfyUI를 백엔드 서버로 사용합니다.
 
 **지원 모델**
-* **API**
-현재는 제한적인 모델만 지원됩니다.
+* **API**<br>현재는 제한적인 모델만 지원됩니다.
 
 |제공사|모델명|
 |-------|----|

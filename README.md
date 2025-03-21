@@ -1,7 +1,7 @@
 # AI Companion for Local Machines
 A Gradio-based AI companion app leveraging generative AI models (LLMs, Diffusion models, etc.) running in a local environment.
 
-[English](README.md) [한국어](README_ko.md) [日本語](README_ja.md)
+[English](README.md) [한국어](README_ko.md) [日本語](README_ja.md) [简体中文](README_zh_cn.md) [繁體中文](README_zh_tw.md)
 
 ## Overview
 
@@ -71,6 +71,8 @@ Supported Local Base Models:
 - Stable Diffusion 3.5 Medium
 - Illustrious XL 1.0
 
+**Detailed options**
+
 * **LoRA**: Supports up to 10 LoRA models per base model. Compatible LoRAs must be applied.
 * **VAE**: User-defined VAE. Defaults to embedded VAE within the Checkpoints.
 * **Embedding**: Use via syntax like embedding:name.
@@ -138,6 +140,8 @@ python3 -m venv venv
 source venv/bin/activate # macOS/Linux
 source venv/Scripts/activate # Windows
 ```
+
+**Install dependencies**
 
 - **Windows**
 ```shell

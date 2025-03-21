@@ -1,7 +1,7 @@
 # ローカル環境向けAIコンパニオン
 ローカル環境で動作する生成系AIモデル（LLM、Diffusionモデル等）を活用した、GradioベースのAIコンパニオンアプリです。
 
-[English](README.md) [한국어](README_ko.md) [日本語](README_ja.md)
+[English](README.md) [한국어](README_ko.md) [日本語](README_ja.md) [简体中文](README_zh_cn.md) [繁體中文](README_zh_tw.md)
 
 ## 概要
 
@@ -49,8 +49,7 @@ LLMを利用してAIと対話します。
 Stable DiffusionやFluxなどの画像生成モデルを利用します。バックエンドにComfyUIを使っています。
 
 **対応モデル**
-* **API**
-APIの画像生成モデルは現在限定的に対応しています。
+* **API**<br>APIの画像生成モデルは現在限定的に対応しています。
 
 |提供元|モデル名|
 |-------|----|
@@ -71,6 +70,8 @@ APIの画像生成モデルは現在限定的に対応しています。
 - Stable Diffusion 3.5 Large
 - Stable Diffusion 3.5 Medium
 - Illustrious XL 1.0
+
+**詳細オプション**
 
 * **LoRA**: ベースモデルに合わせて最大10個まで適用可能。
 * **VAE**: ユーザー指定が可能。未指定の場合、Checkpoint内蔵のVAEを使用。
@@ -141,6 +142,8 @@ source venv/bin/activate
 # Windows環境
 source venv/Scripts/activate 
 ```
+
+**依存関係のインストール**
 
 - **Windows環境**
 ```shell
