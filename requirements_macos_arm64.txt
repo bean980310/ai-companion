@@ -60,6 +60,7 @@ websocket-client
 faiss-cpu
 eva-decord
 tensorflow
+tensorflow-metal
 tensorboard
 keras
 tf-keras
