@@ -124,6 +124,17 @@ Multi-language translation using translation models. Supports text extraction fr
 
 ## Installation
 
+**Clone repo**
+
+```shell
+git clone https://github.com/bean980310/ai-companion.git
+# Clone repo with submodules
+git clone --recursive https://github.com/bean980310/ai-companion.git
+# Init and Update submodules
+git submodule init
+git submodule update
+```
+
 - **Virtual Environment Setup**
 
 ```shell

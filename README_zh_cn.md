@@ -120,6 +120,17 @@
 
 ## 安装方法
 
+**Clone repo**
+
+```shell
+git clone https://github.com/bean980310/ai-companion.git
+# Clone repo with submodules
+git clone --recursive https://github.com/bean980310/ai-companion.git
+# Init and Update submodules
+git submodule init
+git submodule update
+```
+
 - **虚拟环境设置**
 
 ```shell

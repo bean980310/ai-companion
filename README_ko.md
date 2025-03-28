@@ -123,6 +123,17 @@ LLM을 활용한 글쓰기 전용 UI 제공(현재 개발 중).
 
 ## 설치 방법
 
+**Clone repo**
+
+```shell
+git clone https://github.com/bean980310/ai-companion.git
+# Clone repo with submodules
+git clone --recursive https://github.com/bean980310/ai-companion.git
+# Init and Update submodules
+git submodule init
+git submodule update
+```
+
 - **가상 환경 설정**
 
 ```shell
