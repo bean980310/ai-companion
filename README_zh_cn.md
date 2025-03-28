@@ -187,4 +187,4 @@ python app.py
 
 ### Intel Mac支持说明
 
-Intel Mac环境下部分功能可能无法正常运行，未来可能不再提供支持。
+对基于 Intel CPU 的 Mac 的支持已停止。

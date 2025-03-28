@@ -410,9 +410,9 @@ with gr.Blocks(css=css) as demo:
                         add_session_icon_btn = gr.Button("📝", elem_classes="icon-button", scale=1, variant="secondary")
                         delete_session_icon_btn = gr.Button("🗑️", elem_classes="icon-button-delete", scale=1, variant="stop")
                 with gr.Row(elem_classes="model-container"):
-                    if os_name == "Darwin" and arch == "x86_64":
-                        with gr.Column():
-                            gr.Markdown("### 🚨 macOS x86_64에서는 transformers, mlx 선택 불가")
+                    # if os_name == "Darwin" and arch == "x86_64":
+                    #     with gr.Column():
+                    #         gr.Markdown("### 🚨 macOS x86_64에서는 transformers, mlx 선택 불가")
                             
                     with gr.Column():
                         gr.Markdown("### Model Selection")
@@ -445,9 +445,9 @@ with gr.Blocks(css=css) as demo:
                     
             with gr.Column() as diffusion_side:          
                 with gr.Row(elem_classes="model-container"):
-                    if os_name == "Darwin" and arch == "x86_64":
-                        with gr.Column():
-                            gr.Markdown("### 🚨 macOS x86_64에서는 diffusers, checkpoints 선택 불가")
+                    # if os_name == "Darwin" and arch == "x86_64":
+                    #     with gr.Column():
+                    #         gr.Markdown("### 🚨 macOS x86_64에서는 diffusers, checkpoints 선택 불가")
                     with gr.Column():
                         gr.Markdown("### Model Selection")
                         diffusion_model_type_dropdown = gr.Radio(
@@ -470,9 +470,9 @@ with gr.Blocks(css=css) as demo:
                         )
                             
                 with gr.Row(elem_classes="model-container"):
-                    if os_name == "Darwin" and arch == "x86_64":
-                        with gr.Column():
-                            gr.Markdown("### 🚨 macOS x86_64에서는 diffusers, checkpoints 선택 불가")
+                    # if os_name == "Darwin" and arch == "x86_64":
+                    #     with gr.Column():
+                    #         gr.Markdown("### 🚨 macOS x86_64에서는 diffusers, checkpoints 선택 불가")
                     with gr.Column():
                         gr.Markdown("### Refiner Model Selection")
                         diffusion_refiner_model_dropdown = gr.Dropdown(
@@ -539,9 +539,9 @@ with gr.Blocks(css=css) as demo:
                             row
                             
             with gr.Column() as storyteller_side:
-                if os_name == "Darwin" and arch == "x86_64":
-                    with gr.Column():
-                        gr.Markdown("### 🚨 macOS x86_64에서는 transformers, mlx 선택 불가")
+                # if os_name == "Darwin" and arch == "x86_64":
+                #     with gr.Column():
+                #         gr.Markdown("### 🚨 macOS x86_64에서는 transformers, mlx 선택 불가")
                         
                 with gr.Row(elem_classes="model-container"):
                     with gr.Column():
@@ -590,11 +590,11 @@ with gr.Blocks(css=css) as demo:
                             elem_classes="model-dropdown"
                         )
                         
-        if os_name == "Darwin" and arch == "x86_64":
-            with gr.Row(elem_classes="warning-container"):
-                gr.Markdown("### 🚨 경고! 현재 Intel CPU를 탑재된 Mac에서 구동중입니다.")
-                gr.Markdown("macOS x86_64에서는 정상적으로 동작하지 않을 수 있으며, 대부분의 기능을 지원하지 않습니다.")
-                gr.Markdown("CPU를 사용하시려면, `Settings`에서 `CPU`를 선택해주세요.")
+        # if os_name == "Darwin" and arch == "x86_64":
+        #     with gr.Row(elem_classes="warning-container"):
+        #         gr.Markdown("### 🚨 경고! 현재 Intel CPU를 탑재된 Mac에서 구동중입니다.")
+        #         gr.Markdown("macOS x86_64에서는 정상적으로 동작하지 않을 수 있으며, 대부분의 기능을 지원하지 않습니다.")
+        #         gr.Markdown("CPU를 사용하시려면, `Settings`에서 `CPU`를 선택해주세요.")
                 
         with gr.Tabs(elem_classes='tabs') as tabs:
             with gr.Tab('Chat', elem_classes='tab') as chat_tab:
@@ -2005,7 +2005,7 @@ with gr.Blocks(css=css) as demo:
 if __name__=="__main__":
     print(f"Detected OS: {os_name}, Architecture: {arch}")
     if os_name == "Darwin" and arch == "x86_64":
-        warnings.warn("Normal operation is not guaranteed on Intel Macs and may be removed from compatibility list without notice.")
+        raise EnvironmentError("ERROR: Support and compatibility for Intel CPU Based Mac is discontinued.")
     initialize_app()
 
     demo.queue().launch(debug=args.debug, share=args.share, inbrowser=args.inbrowser, server_port=args.port, width=800)

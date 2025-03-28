@@ -196,4 +196,4 @@ python app.py
 
 ### Intel Mac 지원 안내
 
-Intel Mac에서는 일부 기능이 정상적으로 동작하지 않을 수 있으며, 추후 지원이 중단될 수 있습니다.
+Intel Mac에 대한 AI 컴패니언의 지원이 중단되었습니다.

@@ -195,4 +195,4 @@ python app.py
 
 ### Support for Intel Macs
 
-Normal operation is not guaranteed for Intel Macs. Most features may not function correctly, and support could be discontinued in future releases.
+Support for Intel CPU-based Macs has been discontinued.
