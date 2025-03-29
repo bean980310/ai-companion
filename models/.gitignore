@@ -6,6 +6,7 @@
 assets/
 *.ipynb
 *.png
+*.jpeg
 *.jpg
 *.gguf
 *.h5
