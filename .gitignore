@@ -7,7 +7,6 @@ app.log*
 __pycache__
 chat_history.db
 chat_history_backup.db
-translations/
 inputs/
 persona_state.db
 *.mp3
