@@ -120,13 +120,14 @@
 
 ## 安裝方法
 
-**Clone repo**
+**克隆儲存庫**
 
 ```shell
+# 僅克隆一個儲存庫
 git clone https://github.com/bean980310/ai-companion.git
-# Clone repo with submodules
+# 克隆帶有子模組的儲存庫
 git clone --recursive https://github.com/bean980310/ai-companion.git
-# Init and Update submodules
+# 初始化並更新子模組
 git submodule init
 git submodule update
 ```

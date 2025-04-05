@@ -124,13 +124,14 @@ LLMを用いて物語などのテキスト生成を支援する機能（現在�
 
 ## インストール方法
 
-**Clone repo**
+**リポジトリをクローンする**
 
 ```shell
+# リポジトリのみをクローンする
 git clone https://github.com/bean980310/ai-companion.git
-# Clone repo with submodules
+# サブモジュールを含むリポジトリをクローンする
 git clone --recursive https://github.com/bean980310/ai-companion.git
-# Init and Update submodules
+# サブモジュールの初期化と更新
 git submodule init
 git submodule update
 ```

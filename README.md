@@ -124,13 +124,14 @@ Multi-language translation using translation models. Supports text extraction fr
 
 ## Installation
 
-**Clone repo**
+**Clone a repository**
 
 ```shell
+# Clone a repository only
 git clone https://github.com/bean980310/ai-companion.git
-# Clone repo with submodules
+# Clone a repository with submodules
 git clone --recursive https://github.com/bean980310/ai-companion.git
-# Init and Update submodules
+# Init and Update a submodules
 git submodule init
 git submodule update
 ```
