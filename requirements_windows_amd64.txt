@@ -70,7 +70,7 @@ tqdm
 funasr
 cn2an
 pypinyin
-pyopenjtalk
+pyopenjtalk-plus
 g2p_en
 modelscope
 chardet
