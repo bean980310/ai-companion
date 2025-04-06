@@ -49,6 +49,8 @@ langchain-anthropic
 langchain-community
 langchain-huggingface
 langchain-ollama
+qwen-vl-utils
+qwen-omni-utils
 jaxtyping
 bitsandbytes
 onnx
