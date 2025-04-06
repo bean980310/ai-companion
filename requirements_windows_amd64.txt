@@ -50,6 +50,7 @@ langchain-community
 langchain-huggingface
 langchain-ollama
 xformers
+jaxtyping
 bitsandbytes
 onnx
 onnxruntime-gpu

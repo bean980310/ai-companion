@@ -50,6 +50,7 @@ langchain-community
 langchain-huggingface
 langchain-ollama
 xformers
+jaxtyping
 bitsandbytes
 onnx
 onnxruntime
@@ -96,3 +97,5 @@ attrdict
 mlx
 mlx_lm
 mlx_vlm
+argmaxtools
+diffusionkit --no-deps
