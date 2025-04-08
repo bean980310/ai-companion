@@ -98,5 +98,6 @@ mlx
 mlx_lm
 mlx_vlm
 mlx_embeddings
+coremltools
 argmaxtools
 diffusionkit --no-deps
