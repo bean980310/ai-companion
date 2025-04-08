@@ -99,5 +99,6 @@ attrdict
 mlx
 mlx_lm
 mlx_vlm
+mlx_embeddings
 argmaxtools
 diffusionkit --no-deps
