@@ -83,6 +83,7 @@ jieba_fast
 jieba
 split-lang
 fast_langdetect
+openai-whisper
 Faster_whisper
 wordsegment
 rotary_embedding_torch
