@@ -2,6 +2,7 @@ debug.ipynb
 app.log*
 .env
 .gradio
+__pycache__
 chat_history.db
 chat_history_backup.db
 inputs/
