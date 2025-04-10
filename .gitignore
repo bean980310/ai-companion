@@ -1,9 +1,7 @@
-.DS_Store
 debug.ipynb
 app.log*
 .env
 .gradio
-._*
 __pycache__
 chat_history.db
 chat_history_backup.db
