@@ -102,4 +102,4 @@ mlx_embeddings
 mlx_whisper
 coremltools
 argmaxtools
-diffusionkit --no-deps
+# diffusionkit
