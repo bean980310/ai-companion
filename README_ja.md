@@ -177,13 +177,20 @@ pip install -r requirements_linux.txt
 
 ```zsh
 brew update
-brew install gcc cmake llvm
+brew install gcc cmake llvm@16 libomp
 ```
 
 ```zsh
-export PATH="/opt/homebrew/opt/llvm/bin:/$PATH"
-export CC="/opt/homebrew/opt/llvm/bin/clang"
-export CXX="/opt/homebrew/opt/llvm/bin/clang++"
+export PATH="/opt/homebrew/opt/llvm@16/bin:$PATH"
+
+export LDFLAGS="-L/opt/homebrew/opt/libomp/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/libomp/include"
+export CXXFLAGS="-Xpreprocessor -fopenmp"
+
+export CC=/opt/homebrew/opt/llvm@16/bin/clang
+export CXX=/opt/homebrew/opt/llvm@16/bin/clang++
+export LDFLAGS="-L/opt/homebrew/opt/llvm@16/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/llvm@16/include"
 ```
 
 ```zsh
