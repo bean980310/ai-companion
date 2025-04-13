@@ -19,6 +19,11 @@ api_models = [
     "meta-llama/llama-3.3-70b-instruct:free",
     "qwen/qwen-2.5-72b-instruct",
     "qwen/qwen-2.5-72b-instruct:free",
+    "mistralai/mistral-large-2411",
+    "mistralai/mistral-small-24b-instruct-2501",
+    "mistralai/mistral-small-24b-instruct-2501:free",
+    "deepseek/deepseek-r1",
+    "deepseek/deepseek-r1:free",
     # "mistralai/mistral-small-3.1-24b-instruct",
     # "mistralai/mistral-small-3.1-24b-instruct:free",
     # 필요 시 추가
