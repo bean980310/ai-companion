@@ -28,6 +28,8 @@ from langchain_ollama import OllamaLLM as Ollama
 from langchain_huggingface import HuggingFacePipeline
 from langchain_huggingface import ChatHuggingFace
 
+import requests
+
 from src import logger
 
 LOCAL_MODELS_ROOT = "./models"
@@ -246,7 +248,7 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
             except Exception as e:
                 logger.error(f"Google API 오류: {str(e)}\n\n{traceback.format_exc()}")
                 return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
-        else:
+        elif "gpt" in selected_model:
             if not api_key:
                 logger.error("OpenAI API Key가 missing.")
                 return "OpenAI API Key가 필요합니다."
@@ -268,7 +270,37 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
             except Exception as e:
                 logger.error(f"OpenAI API 오류: {str(e)}\n\n{traceback.format_exc()}")
                 return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
-    
+        else:
+            if not api_key:
+                logger.error("OpenRouter API Key가 missing.")
+                return "OpenRouter API Key가 필요합니다."
+            messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
+            logger.info(f"[*] OpenRouter API 요청: {messages}")
+            
+            try:
+                url="https://openrouter.ai/api/v1/chat/completions"
+                payload = { 
+                    "model": selected_model,
+                    "messages": messages,
+                    "max_tokens": 1024,
+                    "temperature": temperature,
+                    "top_p": top_p,
+                    "top_k": top_k,
+                    "repetition_penalty": repetition_penalty
+                }
+                headers = {
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                }
+                response = requests.post(url, json=payload, headers=headers)
+                response_data = response.json()
+                answer = response_data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                logger.info(f"[*] OpenRouter 응답: {answer}")
+                return answer
+            except Exception as e:
+                logger.error(f"OpenRouter API 오류: {str(e)}\n\n{traceback.format_exc()}")
+                return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+
     else:
         if not handler:
             logger.info(f"[*] 모델 로드 중: {selected_model}")

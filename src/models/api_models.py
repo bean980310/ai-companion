@@ -14,7 +14,13 @@ api_models = [
     "gemini-2.0-flash",
     "gemini-1.5-flash",
     "gemini-1.5-flash-8b",
-    "gemini-1.5-pro"
+    "gemini-1.5-pro",
+    "meta-llama/llama-3.3-70b-instruct",
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "qwen/qwen-2.5-72b-instruct",
+    "qwen/qwen-2.5-72b-instruct:free",
+    # "mistralai/mistral-small-3.1-24b-instruct",
+    # "mistralai/mistral-small-3.1-24b-instruct:free",
     # 필요 시 추가
 ]
 
