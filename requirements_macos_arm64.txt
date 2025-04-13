@@ -40,6 +40,7 @@ gguf
 llama-cpp-python
 stable-diffusion-cpp-python
 ollama
+lmstudio
 unstructured
 sentence_transformers
 langchain
