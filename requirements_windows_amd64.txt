@@ -103,3 +103,17 @@ inflect
 unidecode
 whisper-timestamped
 langid
+txtsplit
+cached_path
+num2words
+unidic_lite
+unidic
+mecab-python3
+pykakasi
+fugashi
+anyascii
+jamo
+gruut[de,es,fr]
+g2pkk
+loguru
+mecab
