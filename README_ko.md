@@ -156,6 +156,14 @@ source venv/Scripts/activate
 
 **의존성 설치**
 
+- **Pytorch**
+```shell
+# for Apple Silicon Mac and Windows with CPU and Linux with CUDA 12.4
+pip install torch torchvision torchaudio
+# for Windows with CUDA 12.4
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+```
+
 - **Windows 환경**
 ```shell
 pip install -r requirements_windows_amd64.txt
@@ -170,6 +178,11 @@ pip install -r requirements_macos_arm64.txt
 - **Linux 환경**
 ```bash
 pip install -r requirements_linux.txt
+```
+
+- **MeloTTS(Optional)**
+```shell
+pip install git+https://github.com/myshell-ai/MeloTTS.git --no-deps
 ```
 
 ### 맥에서 xformers 설치 시 주의사항

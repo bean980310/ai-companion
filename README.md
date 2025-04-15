@@ -155,6 +155,14 @@ source venv/Scripts/activate # Windows
 
 **Install dependencies**
 
+- **Pytorch**
+```shell
+# for Apple Silicon Mac and Windows with CPU and Linux with CUDA 12.4
+pip install torch torchvision torchaudio
+# for Windows with CUDA 12.4
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+```
+
 - **Windows**
 ```shell
 pip install -r requirements_windows_amd64.txt
@@ -169,6 +177,11 @@ pip install -r requirements_macos_arm64.txt
 - **Linux**
 ```bash
 pip install -r requirements_linux.txt
+```
+
+- **MeloTTS(Optional)**
+```shell
+pip install git+https://github.com/myshell-ai/MeloTTS.git --no-deps
 ```
 
 ### Installing xformers on Mac

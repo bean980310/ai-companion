@@ -157,6 +157,14 @@ source venv/Scripts/activate
 
 **依存関係のインストール**
 
+- **Pytorch**
+```shell
+# for Apple Silicon Mac and Windows with CPU and Linux with CUDA 12.4
+pip install torch torchvision torchaudio
+# for Windows with CUDA 12.4
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+```
+
 - **Windows環境**
 ```shell
 pip install -r requirements_windows_amd64.txt
@@ -171,6 +179,11 @@ pip install -r requirements_macos_arm64.txt
 - **Linux環境**
 ```bash
 pip install -r requirements_linux.txt
+```
+
+- **MeloTTS(Optional)**
+```shell
+pip install git+https://github.com/myshell-ai/MeloTTS.git --no-deps
 ```
 
 ### Macでxformersをインストールする際の注意事項！
