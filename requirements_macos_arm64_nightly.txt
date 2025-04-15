@@ -97,6 +97,12 @@ fastapi
 x_transformers
 torchmetrics
 attrdict
+wavmark
+eng_to_ipa
+inflect
+unidecode
+whisper-timestamped
+langid
 mlx
 mlx_lm
 mlx_vlm

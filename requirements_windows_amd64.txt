@@ -63,7 +63,7 @@ Pillow
 numpy
 websocket-client
 faiss-gpu
-eva-decord;  python_version < '3.12'
+eva-decord
 tensorflow
 tensorboard
 keras
@@ -97,3 +97,9 @@ fastapi
 x_transformers
 torchmetrics
 attrdict
+wavmark
+eng_to_ipa
+inflect
+unidecode
+whisper-timestamped
+langid
