@@ -320,7 +320,7 @@ with open("html/css/style.css", 'r') as f:
 with open("html/js/script.js", 'r') as f:
     js = f.read()
 
-with gr.Blocks(css=css) as demo:
+with gr.Blocks(css=css, fill_height=True, fill_width=True) as demo:
     speech_manager_state = gr.State(initialize_speech_manager)
     
     session_id, loaded_history, session_dropdown, last_character, last_preset, system_message, session_label=on_app_start()
