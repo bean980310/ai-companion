@@ -576,6 +576,11 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                             value=tts_choices[0] if len(tts_choices) > 0 else "Put Your Models",
                             elem_classes="model-dropdown"
                         )
+                        
+            with gr.Column() as translate_side:
+                with gr.Row(elem_classes="model-container"):
+                    with gr.Column():
+                        gr.Markdown("### Under Construction")
                                    
         with gr.Tabs(elem_classes='tabs') as tabs:
             with gr.Tab('Chat', elem_classes='tab') as chat_tab:
@@ -1755,58 +1760,58 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
     )
     
     def select_chat_tab():
-        return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+        return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
     
     def select_image_generation_tab():
-        return gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
+        return gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
     
     def select_storyteller_tab():
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)
+        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
     
     def select_tts_tab():
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
+        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)
     
     def select_translate_tab():
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
     
     def select_download_tab():
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
     
     chat_tab.select(
         fn=select_chat_tab,
         inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side]
+        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side]
     )
     diffusion_tab.select(
         fn=select_image_generation_tab,
         inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side]
+        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side]
     )
     story_tab.select(
         fn=select_storyteller_tab,
         inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side]
+        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side]
     )
     tts_tab.select(
         fn=select_tts_tab,
         inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side]
+        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side]
     )
     translate_tab.select(
         fn=select_translate_tab,
         inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side]
+        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side]
     )
     download_tab.select(
         fn=select_download_tab,
         inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side]
+        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side]
     )
     
     demo.load(
         fn=select_chat_tab,
         inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side]
+        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side]
     )
     
     demo.load(None, None, None).then(
