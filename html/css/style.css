@@ -287,10 +287,20 @@
 }
 
 .profile-image {
+    max-width: 400px !important;
+    max-height: 400px !important;
+    overflow: auto !important;
     border-radius: 12px;
-    overflow: hidden;
     border: 1px solid #e5e7eb;
     margin-bottom: 1rem;
+}
+
+.profile-image img {
+    object-fit: contain !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
 }
 
 .character-dropdown, .preset-dropdown {
