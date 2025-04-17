@@ -124,6 +124,7 @@ class TransformersLlama4ModelHandler(BaseModelHandler):
         self.tokenizer = None
         self.processor = None
         self.model = None
+        self.load_model()
         
     def load_model(self):
         self.config = AutoConfig.from_pretrained(self.local_model_path)

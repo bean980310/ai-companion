@@ -6,7 +6,13 @@ import numpy as np
 import torch
 from src.common.cache import models_cache
 from src.model_handlers import (
-    TransformersCausalModelHandler, TransformersVisionModelHandler, GGUFCausalModelHandler, MlxCausalModelHandler, MlxVisionModelHandler
+    TransformersCausalModelHandler, 
+    TransformersVisionModelHandler, 
+    TransformersLlama4ModelHandler, 
+    GGUFCausalModelHandler, 
+    MlxCausalModelHandler, 
+    MlxVisionModelHandler,
+    MlxLlama4ModelHandler,
 )
 from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models, convert_folder_to_modelid
 import gradio as gr
@@ -65,7 +71,7 @@ def refresh_model_list():
     return gr.update(choices=new_choices), "모델 목록을 새로고침했습니다."
 
 
-def load_model(selected_model, model_type, selected_lora=None, quantization_bit="Q8_0", local_model_path=None, api_key=None, device="cpu", lora_path=None):
+def load_model(selected_model, model_type, selected_lora=None, quantization_bit="Q8_0", local_model_path=None, api_key=None, device="cpu", lora_path=None, image_input=None):
     """
     모델 로드 함수. 특정 모델에 대한 로드 로직을 외부 핸들러로 분리.
     """
@@ -100,7 +106,16 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
         models_cache[cache_key] = handler
         return handler
     elif model_type == "mlx":
-        if "vision" in model_id.lower() or "qwen2-vl" in model_id.lower() or "qwen2.5-vl" in model_id.lower():
+        if "llama-4" in model_id.lower():
+            handler = MlxLlama4ModelHandler(
+                model_id=model_id,
+                lora_model_id=lora_model_id,
+                model_type=model_type,
+                image_input=image_input
+            )
+            models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+            return handler
+        elif "vision" in model_id.lower() or "qwen2-vl" in model_id.lower() or "qwen2.5-vl" in model_id.lower():
             # handler = MlxVisionHandler(
             #     model_id=model_id,  # model_id가 정의되어 있어야 합니다.
             #     lora_model_id=lora_model_id,
@@ -131,7 +146,16 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
     else:
-        if "vision" in model_id.lower() or "qwen2-vl" in model_id.lower() or "qwen2.5-vl" in model_id.lower():
+        if "llama-4" in model_id.lower():
+            handler = TransformersLlama4ModelHandler(
+                model_id=model_id,
+                lora_model_id=lora_model_id,
+                model_type=model_type,
+                device=device
+            )
+            models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+            return handler
+        elif "vision" in model_id.lower() or "qwen2-vl" in model_id.lower() or "qwen2.5-vl" in model_id.lower():
             handler = TransformersVisionModelHandler(
                 model_id=model_id,
                 lora_model_id=lora_model_id,
@@ -304,7 +328,7 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
     else:
         if not handler:
             logger.info(f"[*] 모델 로드 중: {selected_model}")
-            handler = load_model(selected_model, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path)
+            handler = load_model(selected_model, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path, image_input=image_input)
         
         if not handler:
             logger.error("모델 핸들러가 로드되지 않았습니다.")

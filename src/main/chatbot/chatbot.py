@@ -523,6 +523,7 @@ class Chatbot:
             "vision" not in selected_model.lower() and
             "qwen2-vl" not in selected_model.lower() and
             "qwen2.5-vl" not in selected_model.lower() and
+            "llama-4" not in selected_model.lower() and
             selected_model not in [
                 "Bllossom/llama-3.2-Korean-Bllossom-AICA-5B",
                 "THUDM/glm-4v-9b",
@@ -536,6 +537,7 @@ class Chatbot:
             "vision" in selected_model.lower() or
             "qwen2-vl" in selected_model.lower() or
             "qwen2.5-vl" in selected_model.lower() or
+            "llama-4" in selected_model.lower() and
             selected_model in [
                 "Bllossom/llama-3.2-Korean-Bllossom-AICA-5B",
                 "THUDM/glm-4v-9b",
