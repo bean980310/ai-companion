@@ -216,7 +216,7 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
                     temperature=temperature,
                     top_k=top_k,
                     top_p=top_p,
-                    repetition_penalty=repetition_penalty,
+                    # repetition_penalty=repetition_penalty,
                     max_tokens=1024
                 )
                 answer = response.content[0].text
