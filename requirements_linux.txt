@@ -15,6 +15,7 @@ torch
 torchvision
 torchaudio
 accelerate
+optimum
 opencv-python
 opencv-contrib-python
 imutils

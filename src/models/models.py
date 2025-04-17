@@ -116,13 +116,6 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
         elif "vision" in model_id.lower() or "qwen2-vl" in model_id.lower() or "qwen2.5-vl" in model_id.lower():
-            # handler = MlxVisionHandler(
-            #     model_id=model_id,  # model_id가 정의되어 있어야 합니다.
-            #     lora_model_id=lora_model_id,
-            #     local_model_path=local_model_path,
-            #     lora_path=lora_path,
-            #     model_type=model_type,
-            # )
             handler = MlxVisionModelHandler(
                 model_id=model_id,
                 lora_model_id=lora_model_id,
@@ -131,13 +124,6 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
         else:
-            # handler = MlxModelHandler(
-            #     model_id=model_id,  # model_id가 정의되어 있어야 합니다.
-            #     lora_model_id=lora_model_id,
-            #     local_model_path=local_model_path,
-            #     lora_path=lora_path,
-            #     model_type=model_type
-            # )
             handler = MlxCausalModelHandler(
                 model_id=model_id,
                 lora_model_id=lora_model_id,
@@ -202,19 +188,6 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
     if last_message["role"] == "assistant":
         last_message = history[-2]
     
-    # if character_language == "ko":
-    #     # 한국어 모델 사용
-    #     model_id = "klue/bert-base"  # 예시
-    # elif character_language == "en":
-    #     # 영어 모델 사용
-    #     model_id = "bert-base-uncased"  # 예시
-    # elif character_language == "ja":
-    #     # 일본어 모델 사용
-    #     model_id = "tohoku-nlp/bert-base-japanese"  # 예시"
-    # else:
-    #     # 기본 모델 사용
-    #     model_id = "gpt-3.5-turbo"
-    
     if model_type == "api":
         if "claude" in selected_model:
             if not api_key:
@@ -226,6 +199,7 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
             messages = []
             for msg in history:
                 if msg["role"] == "system":
+                    system = msg["content"]
                     continue  # Claude API는 시스템 메시지를 별도로 처리하지 않음
                 messages.append({
                     "role": msg["role"],
@@ -237,8 +211,12 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
             try:
                 response = client.messages.create(
                     model=selected_model,
+                    system=system,
                     messages=messages,
-                    temperature=0.7,
+                    temperature=temperature,
+                    top_k=top_k,
+                    top_p=top_p,
+                    repetition_penalty=repetition_penalty,
                     max_tokens=1024
                 )
                 answer = response.content[0].text
@@ -487,7 +465,7 @@ def generate_text(history, selected_model, model_type, selected_lora=None, local
             logger.error(f"모델 추론 오류: {str(e)}\n\n{traceback.format_exc()}")
             return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
         
-def generate_chat_title(first_message, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, device="cpu"):
+def generate_chat_title(first_message, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, device="cpu", image_input=None):
     """
     첫 번째 메시지를 기반으로 채팅 제목을 생성하는 함수.
     모델 핸들러에 generate_chat_title 메서드가 구현되어 있어야 함.
@@ -506,7 +484,10 @@ def generate_chat_title(first_message, selected_model, model_type, selected_lora
     logger.info(f"[*] Generating chat title using {handler.__class__.__name__}")
     try:
         if hasattr(handler, "generate_chat_title"):
-            title = handler.generate_chat_title(first_message)
+            if image_input:
+                title = handler.generate_chat_title(first_message, image_input)
+            else:
+                title = handler.generate_chat_title(first_message)
             return title
         else:
             logger.error("모델 핸들러에 채팅 제목 생성 기능이 없습니다.")

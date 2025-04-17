@@ -1,7 +1,8 @@
-from transformers import AutoTokenizer, AutoProcessor, AutoModel, AutoConfig, AutoModelForCausalLM, GenerationConfig, Llama4ForConditionalGeneration
+from transformers import AutoTokenizer, AutoProcessor, AutoModel, AutoConfig, AutoModelForCausalLM, GenerationConfig, Llama4ForConditionalGeneration, TextStreamer, TextIteratorStreamer
 from peft import PeftModel
 import os
 import traceback
+import threading
 
 from src import logger
 
@@ -29,18 +30,33 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
 
             input_ids = self.load_template(prompt_messages)
             
-            outputs = self.model.generate(
+            streamer = TextStreamer(self.tokenizer, skip_prompt=True)
+            
+            # outputs = self.model.generate(
+            #     input_ids,
+            #     max_new_tokens=1024,
+            #     do_sample=True,
+            # )
+            
+            _ = self.model.generate(
                 input_ids,
                 max_new_tokens=1024,
                 do_sample=True,
+                streamer=streamer,
             )
             
-            generated_text = self.tokenizer.decode(
-                outputs[0][input_ids.shape[-1]:],
-                skip_special_tokens=True
-            )
+            # generated_text = self.tokenizer.decode(
+            #     outputs[0][input_ids.shape[-1]:],
+            #     skip_special_tokens=True
+            # )
             
+            generated_text = ""
+            
+            for text in streamer:
+                generated_text += text
+                
             return generated_text.strip()
+        
         except Exception as e:
             logger.error(f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}")
             return f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}"
@@ -80,17 +96,31 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
             self.get_settings(**kwargs)
 
             inputs = self.load_template(prompt_messages, image_input)
+            
+            streamer = TextStreamer(self.processor, skip_prompt=True)
 
-            outputs = self.model.generate(
+            # outputs = self.model.generate(
+            #     **inputs,
+            #     max_new_tokens=1024,
+            #     do_sample=True,
+            # )
+            
+            _ = self.model.generate(
                 **inputs,
                 max_new_tokens=1024,
                 do_sample=True,
+                streamer=streamer
             )
 
-            generated_text = self.processor.decode(
-                outputs[0],
-                skip_special_tokens=True
-            )
+            # generated_text = self.processor.decode(
+            #     outputs[0],
+            #     skip_special_tokens=True
+            # )
+            
+            generated_text = ""
+            
+            for text in streamer:
+                generated_text += text
 
             return generated_text.strip()
         except Exception as e:
@@ -142,25 +172,39 @@ class TransformersLlama4ModelHandler(BaseModelHandler):
             self.get_settings(**kwargs)
 
             inputs = self.load_template(prompt_messages, image_input)
+            streamer = TextStreamer(self.processor, skip_prompt=True)
 
-            outputs = self.model.generate(
+            # outputs = self.model.generate(
+            #     **inputs,
+            #     max_new_tokens=1024,
+            #     do_sample=True,
+            # )
+            
+            _ = self.model.generate(
                 **inputs,
                 max_new_tokens=1024,
                 do_sample=True,
+                streamer=streamer
             )
             
-            input_ids = inputs['input_ids']
+            # input_ids = inputs['input_ids']
             
-            if image_input:
-                generated_text = self.processor.decode(
-                outputs[0][input_ids.shape[-1]:],
-                skip_special_tokens=True
-            )
-            else:
-                generated_text = self.tokenizer.decode(
-                    outputs[0][input_ids.shape[-1]:],
-                    skip_special_tokens=True
-                )
+            # if image_input:
+            #     generated_text = self.processor.decode(
+            #     outputs[0][input_ids.shape[-1]:],
+            #     skip_special_tokens=True
+            # )
+            # else:
+            #     generated_text = self.tokenizer.decode(
+            #         outputs[0][input_ids.shape[-1]:],
+            #         skip_special_tokens=True
+            #     )
+                
+            generated_text = ""
+            
+            for text in streamer:
+                generated_text += text
+                
             return generated_text.strip()
         except Exception as e:
             logger.error(f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}")

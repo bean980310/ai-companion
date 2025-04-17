@@ -98,7 +98,7 @@ class MlxVisionModelHandler(BaseVisionModelHandler):
                 add_generation_prompt=True
             )
         
-    def generate_chat_title(self, first_message: str)->str:
+    def generate_chat_title(self, first_message: str, image_input=None)->str:
         from mlx_vlm import generate
         prompt=(
             "Summarize the following message in one sentence and create an appropriate chat title:\n\n"
@@ -133,14 +133,13 @@ class MlxLlama4ModelHandler(BaseModelHandler):
             self.model, self.tokenizer = load(self.local_model_path, adapter_path=self.local_lora_model_path, tokenizer_config={"eos_token": "<|eot_id|>"})
             
     def generate_answer(self, history, **kwargs):
-        image, formatted_prompt = self.load_template(history, self.image_input)
+        image, formatted_prompt = self.load_template(history, image_input=self.image_input)
         
         if image:
-            from mlx_vlm import generate
-            from mlx_vlm.prompt_utils import apply_chat_template
+            from mlx_vlm import stream_generate
             
-            temperature, top_k, top_p, repetition_penalty = self.get_parameters(**kwargs)
-            response = generate(self.model, self.processor, formatted_prompt, image, verbose=False, repetition_penalty=repetition_penalty, top_p=top_p, top_k=top_k, temp=temperature, max_tokens=2048)
+            temperature, top_k, top_p, repetition_penalty = MlxVisionModelHandler.get_settings(**kwargs)
+            response = stream_generate(self.model, self.processor, formatted_prompt, image, verbose=False, repetition_penalty=repetition_penalty, top_p=top_p, top_k=top_k, temp=temperature, max_tokens=2048)
             
         else:
             from mlx_lm import generate
@@ -160,12 +159,9 @@ class MlxLlama4ModelHandler(BaseModelHandler):
         logits_processors = make_logits_processors(repetition_penalty=repetition_penalty)
         return sampler, logits_processors
     
-    def get_parameters(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
-        return temperature, top_k, top_p, repetition_penalty
-    
-    def load_template(self, messages, image_input):
-        from mlx_vlm.prompt_utils import apply_chat_template
+    def load_template(self, messages, image_input=None):
         if image_input:
+            from mlx_vlm.prompt_utils import apply_chat_template
             return image_input, apply_chat_template(
                 processor=self.processor,
                 config=self.config,
@@ -178,3 +174,22 @@ class MlxLlama4ModelHandler(BaseModelHandler):
                 tokenize=False,
                 add_generation_prompt=True
             )
+            
+    def generate_chat_title(self, first_message: str, image_input=None)->str:
+        prompt=(
+            "Summarize the following message in one sentence and create an appropriate chat title:\n\n"
+            f"{first_message}\n\n"
+            "Chat Title:"
+        )
+        logger.info(f"채팅 제목 생성 프롬프트: {prompt}")
+        
+        if image_input:
+            from mlx_vlm import generate
+            title_response=generate(self.model, self.processor, prompt=prompt, verbose=True, max_tokens=20)
+        else:
+            from mlx_lm import generate
+            title_response=generate(self.model, self.tokenizer, prompt=prompt, verbose=True, max_tokens=20)
+        
+        title=title_response.strip()
+        logger.info(f"생성된 채팅 제목: {title}")
+        return title
