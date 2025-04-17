@@ -4,6 +4,7 @@ datasets
 safetensors
 sentencepiece
 tokenizers
+nltk
 diffusers
 peft
 trl
@@ -14,8 +15,16 @@ regex
 torch
 torchvision
 torchaudio
+jax
+jaxlib
+flax
+jinja2
+packaging
 accelerate
 optimum
+optimum-quanto
+torchao
+GitPython
 opencv-python
 opencv-contrib-python
 imutils
