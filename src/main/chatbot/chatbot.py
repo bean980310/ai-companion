@@ -141,7 +141,7 @@ class Chatbot:
         except ValueError as e:
             tb = traceback.format_exc()
             logger.error(f"캐릭터 설정 오류: {str(e)}\n{tb}")
-            history.append({"role": "assistant", "content": f"❌ 캐릭터 설정 중 오류가 발생했습니다."})
+            history.append({"role": "assistant", "content": "❌ 캐릭터 설정 중 오류가 발생했습니다."})
             return "", history, self.filter_messages_for_chatbot(history), "❌ 캐릭터 설정 오류"
     
         
