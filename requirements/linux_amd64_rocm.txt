@@ -1,0 +1,16 @@
+torch --index-url https://download.pytorch.org/whl/rocm6.2.4
+torchvision
+torchaudio
+jax
+jaxlib
+jaxtyping
+jax[rocm]
+flax
+xformers
+bitsandbytes
+onnxruntime-gpu
+faiss-gpu
+eva-decord
+opencc==1.1.1
+vllm
+triton

@@ -155,20 +155,35 @@ pip install torch torchvision torchaudio
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 ```
 
+- **Common**
+```shell
+pip install -r requirements/common.txt
+pip install -r requirements/ai_models.txt
+```
+
 - **Windows 环境**：
 ```shell
-pip install -r requirements_windows_amd64.txt
+# on Windows
+pip install -r requirements/windows_amd64.txt
+# on Windows Subsystem for Linux 2
+pip install -r requirements/windows_amd64_wsl2.txt
 ```
 
 - **macOS 环境（Apple Silicon Mac）**：
 ```zsh
-pip install -r requirements_macos_arm64.txt
+pip install -r requirements/macos_arm64.txt
 ```
-（Intel Mac 请使用requirements.txt）
 
 - **Linux 环境**：
 ```bash
-pip install -r requirements_linux.txt
+# on AMD64 with NVIDIA GPU
+pip install -r requirements/linux_amd64_cuda.txt
+# on AMD64 with AMD GPU
+pip install -r requirements/linux_amd64_rocm.txt
+# on ARM64 (NVIDIA GPU only)
+pip install -r requirements/linux_arm64.txt
+# on Google Colab TPU
+pip install -r requirements/linux_colab_tpu.txt
 ```
 
 - **MeloTTS(Optional)**

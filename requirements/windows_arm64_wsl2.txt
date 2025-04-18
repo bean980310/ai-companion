@@ -1,0 +1,16 @@
+torch
+torchvision
+torchaudio
+jax
+jaxlib
+jaxtyping
+flax
+optimum
+optimum-quanto
+torchao
+# xformers
+# bitsandbytes
+onnxruntime
+faiss-cpu
+eva-decord
+opencc
