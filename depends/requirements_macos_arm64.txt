@@ -131,6 +131,7 @@ gruut[de,es,fr]
 g2pkk
 loguru
 mecab
+k-diffusion
 mlx
 mlx_lm
 # mlx_vlm
