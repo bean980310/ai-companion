@@ -163,17 +163,6 @@ class Chatbot:
             
         chat_title=self.chat_titles.get(session_id)
         try:
-            if chat_title is None and len(history)==2:
-                chat_title=generate_chat_title(
-                    first_message=history[1]["content"],
-                    selected_model=selected_model,
-                    model_type=self.determine_model_type(selected_model),
-                    selected_lora=selected_lora if selected_lora != "None" else None,
-                    local_model_path=custom_path if selected_model == "사용자 지정 모델 경로 변경" else None,
-                    lora_path=None,
-                    device=device,
-                    image_input=image,  # image 인자 전달
-                )
             # 봇 응답 생성
             answer = generate_answer(
                 history=history,
@@ -213,6 +202,18 @@ class Chatbot:
 
         # 업데이트된 히스토리를 Chatbot 형식으로 변환
         chatbot_history = self.filter_messages_for_chatbot(history)
+        
+        if chat_title is None and len(history)==2:
+            chat_title=generate_chat_title(
+                first_message=history[1]["content"],
+                selected_model=selected_model,
+                model_type=self.determine_model_type(selected_model),
+                selected_lora=selected_lora if selected_lora != "None" else None,
+                local_model_path=custom_path if selected_model == "사용자 지정 모델 경로 변경" else None,
+                lora_path=None,
+                device=device,
+                image_input=image,  # image 인자 전달
+            )
 
         return history, chatbot_history, status, chat_title
     
