@@ -25,6 +25,8 @@ mlx_embeddings
 mlx_whisper
 mlx_audio
 mlx_image
+mlx-optimizers
+e2tts-mlx
 coremltools
 argmaxtools
 # diffusionkit

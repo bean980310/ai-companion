@@ -12,3 +12,4 @@ inputs/
 persona_state.db
 *.mp3
 *.wav
+*.patch
