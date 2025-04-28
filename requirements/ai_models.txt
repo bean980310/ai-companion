@@ -17,6 +17,7 @@ accelerate
 basicsr
 facexlib
 gfpgan
+ultralytics
 git+https://github.com/xinntao/Real-ESRGAN.git
 openai
 anthropic
