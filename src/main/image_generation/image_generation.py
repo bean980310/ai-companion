@@ -167,6 +167,41 @@ def api_image_generation(prompt, width, height, model, api_key=None):
             return output_images, history_df
         except Exception as e:
             logger.error(f"Error generating image: {e}")
+            return [], None
+    elif "gpt-image" in model:
+        import base64
+        import openai
+        if not api_key:
+            logger.error("OpenAI API Key가 missing.")
+            return [], None 
+        openai.api_key = api_key
+        try:
+            response = openai.images.generate(
+                model=model,
+                prompt=prompt,
+                size=f"{width}x{height}",
+                n=1,
+            )
+            output_images=[]
+            image = response.data[0].url
+            output_images.append(image)
+            
+            history_entry = {
+                "Positive Prompt": prompt,
+                "Negative Prompt": "",
+                "Generation Steps": "",
+                "Model": model,
+                "Sampler": "",
+                "Scheduler": "",
+                "CFG Scale": "",
+                "Seed": "",
+                "Width": width,
+                "Height": height
+            }
+            history_df = pd.DataFrame([history_entry])
+            return output_images, history_df
+        except Exception as e:
+            logger.error(f"Error generating image: {e}")
             return [], None 
     else:
         from google import genai

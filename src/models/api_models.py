@@ -41,7 +41,9 @@ api_models = [
 ]
 
 diffusion_api_models=[
+    "dall-e-2",
     "dall-e-3",
+    "gpt-image-1",
     "imagen-3.0-generate-002"
 ]
 
