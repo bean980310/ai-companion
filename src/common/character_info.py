@@ -36,14 +36,14 @@ characters={
     },
     "아리아 프린세스 페이트 (アリア·プリンセス·フェイト, Aria Princess Fate)": {
         "default_tone": "존댓말", 
-        "languages": ["ko", "ja", "en"],
+        "languages": ["ko", "ja", "zh_CN", "zh_TW", "en"],
         "default_language": "ko",
         "preset_name": "아리아 프린세스 페이트 (アリア·プリンセス·フェイト, Aria Princess Fate)",
         "profile_image": "assets/4_aria_princess_fate.png"
     },
    "아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)": {
         "default_tone": "반말", 
-        "languages": ["ko", "ja", "en"],
+        "languages": ["ko", "ja", "zh_CN", "zh_TW", "en"],
         "default_language": "ko",
         "preset_name": "아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)",
         "profile_image": "assets/5_aria_prince_fate.png"
