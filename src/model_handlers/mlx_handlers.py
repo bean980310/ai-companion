@@ -195,3 +195,60 @@ class MlxLlama4ModelHandler(BaseModelHandler):
         title=title_response.strip()
         logger.info(f"생성된 채팅 제목: {title}")
         return title
+    
+class MlxQwen3ModelHandler(BaseCausalModelHandler):
+    def __init__(self, model_id, lora_model_id=None, model_type="mlx"):
+        super().__init__(model_id, lora_model_id)
+        self.load_model()
+        
+    def load_model(self):
+        from mlx_lm import load
+        self.model, self.tokenizer = load(self.local_model_path, adapter_path=self.local_lora_model_path)
+        
+    def generate_answer(self, history, **kwargs):
+        from mlx_lm import generate
+        text = self.load_template(history)
+        sampler, logits_processors = self.get_settings(**kwargs)
+        generated = generate(self.model, self.tokenizer, prompt=text, verbose=True, sampler=sampler, logits_processors=logits_processors, max_tokens=32768)
+        
+        try:
+            index = len(generated) - generated[::-1].index(151668)
+        except ValueError:
+            index = 0
+            
+        thinking = generated[:index]
+        response = generated[index:]
+        return response
+    
+    def get_settings(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
+        from mlx_lm.sample_utils import make_sampler, make_logits_processors
+        sampler = make_sampler(
+            temp=temperature,
+            top_p=top_p,
+            top_k=top_k
+        )
+        logits_processors = make_logits_processors(repetition_penalty=repetition_penalty)
+        return sampler, logits_processors
+    
+    def load_template(self, messages):
+        return self.tokenizer.apply_chat_template(
+            conversation=messages,
+            tokenize=False,
+            add_generation_prompt=True,
+            enable_thinking=True
+        )
+        
+    def generate_chat_title(self, first_message: str)->str:
+        from mlx_lm import generate
+        prompt=(
+            "Summarize the following message in one sentence and create an appropriate chat title:\n\n"
+            f"{first_message}\n\n"
+            "Chat Title:"
+        )
+        logger.info(f"채팅 제목 생성 프롬프트: {prompt}")
+        
+        title_response=generate(self.model, self.tokenizer, prompt=prompt, verbose=True, max_tokens=20)
+        
+        title=title_response.strip()
+        logger.info(f"생성된 채팅 제목: {title}")
+        return title

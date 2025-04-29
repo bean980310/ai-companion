@@ -9,10 +9,12 @@ from src.model_handlers import (
     TransformersCausalModelHandler, 
     TransformersVisionModelHandler, 
     TransformersLlama4ModelHandler, 
+    TransformersQwen3ModelHandler,
     GGUFCausalModelHandler, 
     MlxCausalModelHandler, 
     MlxVisionModelHandler,
     MlxLlama4ModelHandler,
+    MlxQwen3ModelHandler
 )
 from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models, convert_folder_to_modelid
 import gradio as gr
@@ -123,6 +125,14 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
+        elif "qwen3" in model_id.lower():
+            handler = MlxQwen3ModelHandler(
+                model_id=model_id,
+                lora_model_id=lora_model_id,
+                model_type=model_type
+            )
+            models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+            return handler
         else:
             handler = MlxCausalModelHandler(
                 model_id=model_id,
@@ -143,6 +153,15 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             return handler
         elif "vision" in model_id.lower() or "qwen2-vl" in model_id.lower() or "qwen2.5-vl" in model_id.lower():
             handler = TransformersVisionModelHandler(
+                model_id=model_id,
+                lora_model_id=lora_model_id,
+                model_type=model_type,
+                device=device
+            )
+            models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+            return handler
+        elif "qwen3" in model_id.lower():
+            handler = TransformersQwen3ModelHandler(
                 model_id=model_id,
                 lora_model_id=lora_model_id,
                 model_type=model_type,

@@ -233,3 +233,81 @@ class TransformersLlama4ModelHandler(BaseModelHandler):
                 tokenize=False,
                 return_dict=True
             )
+            
+class TransformersQwen3ModelHandler(BaseCausalModelHandler):
+    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu'):
+        super().__init__(model_id, lora_model_id)
+        self.device = device
+        self.load_model()
+        
+    def load_model(self):
+        self.config = AutoConfig.from_pretrained(self.local_model_path)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.local_model_path, trust_remote_code=True)
+        self.model = AutoModelForCausalLM.from_pretrained(self.local_model_path, config=self.config, trust_remote_code=True, device_map='auto')
+        
+        if self.local_lora_model_path and os.path.exists(self.local_lora_model_path):
+            self.model = PeftModel.from_pretrained(self.model, self.local_lora_model_path)
+        
+    def generate_answer(self, history, **kwargs):
+        try:
+            prompt_messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
+            
+            self.get_settings(**kwargs)
+
+            input_ids = self.load_template(prompt_messages)
+            
+            model_inputs = self.tokenizer([input_ids], return_tensors="pt").to(self.model.device)
+            streamer = TextStreamer(self.tokenizer, skip_prompt=True)
+            
+            outputs = self.model.generate(
+                **model_inputs,
+                max_new_tokens=32768
+            )
+            
+            generated_ids = outputs[0][len(model_inputs.input_ids[0]):].tolist()
+            
+            # _ = self.model.generate(
+            #     input_ids,
+            #     max_new_tokens=32768,
+            #     do_sample=True,
+            #     streamer=streamer,
+            # )
+            
+            # generated_text = self.tokenizer.decode(
+            #     outputs[0][input_ids.shape[-1]:],
+            #     skip_special_tokens=True
+            # )
+            
+            generated_stream = ""
+            
+            for ids in streamer:
+                generated_ids += ids
+                
+            try:
+                index=len(generated_ids)-generated_ids[::-1].index(151668)
+            except:
+                index=0
+                
+            generated_thinking = self.tokenizer.decode(generated_ids[:index], skip_special_tokens=True)
+            generated_text = self.tokenizer.decode(generated_ids[index:], skip_special_tokens=True)
+                
+            return generated_text.strip()
+        
+        except Exception as e:
+            logger.error(f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}")
+            return f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}"
+        
+    def get_settings(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
+        self.model.config.temperature = temperature
+        self.model.config.top_k = top_k
+        self.model.config.top_p = top_p
+        self.model.config.repetition_penalty = repetition_penalty
+        
+    def load_template(self, messages):
+        return self.tokenizer.apply_chat_template(
+            messages,
+            add_generation_prompt=True,
+            return_tensors="pt",
+            tokenize=False,
+            enable_thinking=True
+        )
