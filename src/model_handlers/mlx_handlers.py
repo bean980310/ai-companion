@@ -211,13 +211,12 @@ class MlxQwen3ModelHandler(BaseCausalModelHandler):
         sampler, logits_processors = self.get_settings(**kwargs)
         generated = generate(self.model, self.tokenizer, prompt=text, verbose=True, sampler=sampler, logits_processors=logits_processors, max_tokens=32768)
         
-        try:
-            index = len(generated) - generated[::-1].index(151668)
-        except ValueError:
-            index = 0
+        if "</think>" in generated:
+            _, response = generated.split("</think>", 1)
+        else:
+            response = generated  # Assign the entire generated text if no </think> tag is found
+            response = response.strip()
             
-        thinking = generated[:index]
-        response = generated[index:]
         return response
     
     def get_settings(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
