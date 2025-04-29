@@ -223,4 +223,4 @@ python app.py
 
 ### Intel Mac支持说明
 
-对基于 Intel CPU 的 Mac 的支持已停止。
+面向本地环境的AI伴侣 不再支持基于 Intel CPU 的 Mac。<br>如果您使用的是基于 Intel CPU 的 Mac，我们建议您考虑迁移到基于 Apple Silicon 的 Mac，或使用 Nvidia GPU 环境的 Windows PC 或 Linux 机器。如果您从基于 Intel CPU 的 Mac 迁移遇到困难，可以使用支持基于 Intel CPU 的 Mac 的配套应用。

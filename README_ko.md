@@ -232,4 +232,4 @@ python app.py
 
 ### Intel Mac 지원 안내
 
-Intel Mac에 대한 AI 컴패니언의 지원이 중단되었습니다.
+로컬 머신을 위한 AI 컴패니언은 Intel 기반의 Mac을 더이상 지원하지 않습니다.<br>Intel Mac을 사용하고 계신경우, Apple Silicon Mac 또는 Nvidia GPU환경의 Windows PC, Linux 머신으로 마이그레이션을 고려하는걸 추천드리며, Intel Mac에서 마이그레이션이 어려울 경우 Intel Mac을 지원하는 컴패니언 애플리케이션을 대신 사용할수 있습니다.

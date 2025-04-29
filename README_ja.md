@@ -232,4 +232,4 @@ python app.py
 
 ### Intel Macについて
 
-Intel搭載Macに対するAIコンパニオンのサポートが終了されました。
+ローカル環境向けAIコンパニオンはIntel搭載Macをサポートしなくなりました。<br>Intel Macをお使いの場合は、Apple Silicon MacまたはNvidia GPU環境のWindows PC、Linuxマシンへの移行を検討することをお勧めします。 Intel Macでの移行が困難な場合は、Intel Macをサポートするコンパニオンアプリケーションを代わりに使用できます。

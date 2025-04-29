@@ -231,4 +231,4 @@ python app.py
 
 ### Support for Intel Macs
 
-Support for Intel CPU-based Macs has been discontinued.
+AI Companion for Local Machines no longer supports Intel CPU-based Macs.<br>If you are using an Intel CPU-based Macs, we recommend that you consider migrating to an Apple Silicon Based Macs or a Windows PC or Linux machine with an Nvidia GPU environment. If you have difficulty migrating from an Intel CPU-based Macs, you can use a companion application that supports Intel CPU-based Macs instead.
