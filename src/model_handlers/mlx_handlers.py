@@ -12,7 +12,7 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
         
     def load_model(self):
         from mlx_lm import load
-        self.model, self.tokenizer = load(self.local_model_path, adapter_path=self.local_lora_model_path, tokenizer_config=self.get_eos_token())
+        self.model, self.tokenizer = load(self.local_model_path, adapter_path=self.local_lora_model_path)
         
     def generate_answer(self, history, **kwargs):
         from mlx_lm import generate
@@ -57,8 +57,10 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
     def get_eos_token(self):
         if "llama-3" in self.local_model_path.lower():
             return {"eos_token": "<|eot_id|>"}
-        elif "qwen2" in self.local_model_path.lower():
+        elif "qwen2" in self.local_model_path.lower() or "qwen3" in self.local_model_path.lower():
             return {"eos_token": "<|im_end|>"}
+        elif "mistral" or "ministral" or "mixtral" in self.local_model_path.lower():
+            return {"eos_token": "</s>"}
         
 class MlxVisionModelHandler(BaseVisionModelHandler):
     def __init__(self, model_id, lora_model_id=None, model_type="mlx"):
