@@ -38,7 +38,8 @@ langchain-huggingface
 langchain-ollama
 qwen-vl-utils
 qwen-omni-utils
-gptqmodel
+# gptqmodel
+git+https://github.com/ModelCloud/GPTQModel.git
 jiwer
 gtts
 pydub
