@@ -1,0 +1,20 @@
+torch>=2.7.0 --index-url https://download.pytorch.org/whl/cu118
+torchvision
+torchaudio
+jax
+jaxlib
+jaxtyping
+# jax[cuda12]
+flax
+optimum
+optimum-quanto
+torchao
+xformers>=0.0.30 --index-url https://download.pytorch.org/whl/cu118
+bitsandbytes
+onnxruntime-gpu
+faiss-gpu
+eva-decord
+opencc==1.1.1
+vllm
+triton
+llmcompressor

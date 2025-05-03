@@ -1,4 +1,4 @@
-torch --index-url https://download.pytorch.org/whl/cu124
+torch>=2.7.0 --index-url https://download.pytorch.org/whl/cu128
 torchvision
 torchaudio
 jax
@@ -9,7 +9,7 @@ flax
 optimum
 optimum-quanto
 torchao
-xformers
+xformers>=0.0.30 --index-url https://download.pytorch.org/whl/cu128
 bitsandbytes
 onnxruntime-gpu
 faiss-gpu

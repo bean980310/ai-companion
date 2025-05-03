@@ -11,10 +11,13 @@
 用户人格主要面向一般用户，而图像、视频、音乐和音频生成服务也可满足专业用户的需求。
 
 ## 主要功能
+
 ### 聊天机器人（Chatbot）
+
 利用LLM与AI进行自然对话。
 
-**支持的模型**
+**支持的模型**  
+
 * **API方式**
 
 |提供商|模型名称|
@@ -32,12 +35,14 @@
 |Qwen|Qwen/Qwen2.5-7B <br> Qwen/Qwen2.5-7B-Instruct <br> Qwen/Qwen2.5-14B <br> Qwen/Qwen2.5-14B-Instruct|
 |mistralai|mistralai/Mistral-7B-v0.3 <br> mistralai/Mistral-7B-Instruct-v0.3 <br> mistralai/Mistral-Small-24B-Base-2501 <br> mistralai/Mistral-Small-24B-Instruct-2501|
 
-**角色人格设置**
+**角色人格设置**  
+
 * **系统提示（System Prompt）**: 定义聊天机器人的基本角色和行为指令（默认值：“你是一个乐于助人的AI助手。”）更改角色或预设时会自动更新。
 * **角色（Character）**: 选择你希望互动的AI角色。
 * **预设（Preset）**: 用户自定义的系统提示，更改角色时自动切换对应的预设。
 
-**超参数设置**<br>如不熟悉超参数，建议保持默认值。
+**超参数设置**  
+如不熟悉超参数，建议保持默认值。
 
 * **种子值（Seed）**: 随机数生成初始值（默认：42）
 * **温度（Temperature）**: 控制回复的创意性和随机性（默认：0.6）
@@ -46,10 +51,13 @@
 * **重复惩罚（Repetition Penalty）**: 控制词汇重复频率（默认：1.1）
 
 ### 图像生成（Image Generation）
+
 通过Stable Diffusion、Flux等模型生成图像。以ComfyUI作为后端服务。
 
-**支持的模型**
-* **API方式**<br>目前仅支持有限的模型。
+**支持的模型**  
+
+* **API方式**  
+目前仅支持有限的模型。
 
 |提供商|模型名称|
 |-------|----|
@@ -57,21 +65,22 @@
 |Google GenAI|imagen-3.0-generate-002|
 
 * **本地方式**：Diffusers、Checkpoints
- - **Diffusers**：目前仅支持模型扫描和选择，尚无法实际生成图像（后续支持）。
- - **Checkpoints**：通过ComfyUI生成图像，模型文件需置于models/checkpoints目录下。
+  * **Diffusers**：目前仅支持模型扫描和选择，尚无法实际生成图像（后续支持）。
+  * **Checkpoints**：通过ComfyUI生成图像，模型文件需置于models/checkpoints目录下。
 
 支持的基础模型：
-- Stable Diffusion 1.5
-- Stable Diffusion 2.x
-- Stable Diffusion XL 1.0
-- Stable Diffusion 3 Medium
-- FLUX.1 Schnell
-- FLUX.1 Dev
-- Stable Diffusion 3.5 Large
-- Stable Diffusion 3.5 Medium
-- Illustrious XL 1.0
 
-**详细选项**
+* Stable Diffusion 1.5
+* Stable Diffusion 2.x
+* Stable Diffusion XL 1.0
+* Stable Diffusion 3 Medium
+* FLUX.1 Schnell
+* FLUX.1 Dev
+* Stable Diffusion 3.5 Large
+* Stable Diffusion 3.5 Medium
+* Illustrious XL 1.0
+
+**详细选项**  
 
 * **LoRA**: 每个基础模型最多支持加载10个LoRA。
 * **VAE**: 默认使用内置VAE，也可自定义。
@@ -79,7 +88,7 @@
 * **ControlNet**: 当前界面未实现，后续支持。
 * **Refiner**: 针对SDXL 1.0，可设定Refiner采样起始步骤。
 
-**图像生成选项**
+**图像生成选项**  
 
 * **Positive Prompt**: 描述想要生成图像的特征。
 * **Negative Prompt**: 描述排除的特征。
@@ -95,7 +104,7 @@
 * **生成步骤（Generation Steps）**: 值越高质量越佳，但耗时越长。
 * **去噪强度（Denoise Strength）**: 调整噪点程度。
 
-**高级设置**
+**高级设置**  
 
 * **采样器（Sampler）**: 选择不同的采样方法。
 * **调度器（Scheduler）**: 即使相同条件，结果也可能不同。
@@ -104,23 +113,28 @@
 * **Clip Skip**: 跳过部分图像生成步骤。
 * **批量大小（Batch Size）**: 每次生成的图像数量。
 
-**图像到图像（Image to Image）**<br>支持对现有图像进行修改和局部重绘（Inpaint）。
+**图像到图像（Image to Image）**  
+支持对现有图像进行修改和局部重绘（Inpaint）。
 
 ### 故事创作（Storyteller）
+
 基于LLM的专门文本创作界面（开发中）。
 
 ### 视频生成（Video Generation）
+
 即将支持。
 
 ### 音频生成（Audio Generation）
+
 即将支持。
 
 ### 翻译器（Translator）
+
 利用翻译模型实现多语言翻译，支持从图像或PDF文件中提取文本进行翻译。
 
 ## 安装方法
 
-**克隆存储库**
+**克隆存储库**  
 
 ```shell
 # 仅克隆一个存储库
@@ -132,7 +146,7 @@ git submodule init
 git submodule update
 ```
 
-- **虚拟环境设置**
+* **虚拟环境设置**
 
 ```shell
 # 使用conda（推荐）
@@ -145,9 +159,10 @@ source venv/bin/activate  # MacOS/Linux
 source venv/Scripts/activate  # Windows
 ```
 
-**安装依赖**
+**安装依赖**  
 
-- **Pytorch**
+* **Pytorch**
+
 ```shell
 # for Apple Silicon Mac and Windows with CPU and Linux with CUDA 12.4
 pip install torch torchvision torchaudio
@@ -155,13 +170,15 @@ pip install torch torchvision torchaudio
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 ```
 
-- **Common**
+* **Common**
+
 ```shell
 pip install -r requirements/common.txt
 pip install -r requirements/ai_models.txt
 ```
 
-- **Windows 环境**：
+* **Windows 环境**：
+
 ```shell
 # on Windows
 pip install -r requirements/windows_amd64.txt
@@ -169,12 +186,14 @@ pip install -r requirements/windows_amd64.txt
 pip install -r requirements/windows_amd64_wsl2.txt
 ```
 
-- **macOS 环境（Apple Silicon Mac）**：
+* **macOS 环境（Apple Silicon Mac）**：
+
 ```zsh
 pip install -r requirements/macos_arm64.txt
 ```
 
-- **Linux 环境**：
+* **Linux 环境**：
+
 ```bash
 # on AMD64 with NVIDIA GPU
 pip install -r requirements/linux_amd64_cuda.txt
@@ -186,7 +205,8 @@ pip install -r requirements/linux_arm64.txt
 pip install -r requirements/linux_colab_tpu.txt
 ```
 
-- **MeloTTS(Optional)**
+* **MeloTTS(Optional)**
+
 ```shell
 pip install git+https://github.com/myshell-ai/MeloTTS.git --no-deps
 ```
@@ -223,4 +243,12 @@ python app.py
 
 ### Intel Mac支持说明
 
-面向本地环境的AI伴侣 不再支持基于 Intel CPU 的 Mac。<br>如果您使用的是基于 Intel CPU 的 Mac，我们建议您考虑迁移到基于 Apple Silicon 的 Mac，或使用 Nvidia GPU 环境的 Windows PC 或 Linux 机器。如果您从基于 Intel CPU 的 Mac 迁移遇到困难，可以使用支持基于 Intel CPU 的 Mac 的配套应用。
+面向本地环境的AI伴侣 不再支持基于 Intel CPU 的 Mac。  
+如果您使用的是基于 Intel CPU 的 Mac，我们建议您考虑迁移到基于 Apple Silicon 的 Mac，或使用 Nvidia GPU 环境的 Windows PC 或 Linux 机器。如果您从基于 Intel CPU 的 Mac 迁移遇到困难，可以使用支持基于 Intel CPU 的 Mac 的配套应用。
+
+### 关于不支持 CUDA 12.4 及以上版本的 GPU 在 Windows 上的支持说明
+
+本地版 AI Companion 支持安装兼容的 PyTorch 与 xformers 依赖项。  
+在 Windows 环境下，低于 CUDA 12.4 的版本无法安装最新版本的 xformers。因此，在 CUDA 11.8 与 12.1 环境下，为兼容最后支持的 xformers **0.0.27.post2**，我们将 PyTorch 固定为 **2.4.0** 版本。  
+未来我们将停止支持安装了 CUDA 12.4 以下版本的 Windows 系统。  
+如果您正在使用 Windows 且 CUDA 版本低于 12.4，建议您升级到 12.4 或更高版本，并重新安装与之对应的 PyTorch 与 xformers。如果您的 GPU 不支持 CUDA 12.4 或更高版本，建议更换为支持 CUDA 12.4 的 GPU，或考虑迁移至更新的计算机。  
