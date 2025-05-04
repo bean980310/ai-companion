@@ -318,8 +318,8 @@ refresh_session_list=chat_bot.refresh_sessions()
 with open("html/css/style.css", 'r') as f:
     css = f.read()
     
-with open("html/js/script.js", 'r') as f:
-    js = f.read()
+with open("html/js/script_confetti.js", 'r') as f:
+    show_confetti = f.read()
 
 with gr.Blocks(css=css, title="AI Companion") as demo:
     speech_manager_state = gr.State(initialize_speech_manager)
@@ -1090,6 +1090,9 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
             session_select_dropdown,
             session_select_info,
             chatbot]  # create_session이 (new_sid, info)를 반환하므로, 필요하면 여기서 받음
+    ).then(
+        fn=None,
+        js="flashSessionTab"
     )
         
     def delete_selected_session(chosen_sid):
@@ -1479,6 +1482,9 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
             *diffusion_lora_unet_sliders
         ],
         outputs=[gallery, image_history]
+    ).then(
+        fn=None,
+        js=show_confetti
     )
 
     random_prompt_btn.click(
