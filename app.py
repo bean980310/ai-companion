@@ -1042,7 +1042,8 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
         if not sessions:
             return gr.update(choices=[], value=None)
         return gr.update(choices=sessions, value=sessions[0])
-        
+    
+    @add_session_icon_btn.click(inputs=[character_dropdown, selected_language_state, speech_manager_state, history_state],outputs=[session_id_state, history_state, session_select_dropdown, session_select_info, chatbot])
     def create_and_apply_session(chosen_character, chosen_language, speech_manager_state, history_state):
         """
         현재 캐릭터/언어에 맞춰 시스템 메시지를 가져온 뒤,
@@ -1076,25 +1077,6 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
             return gr.update(visible=True), f"현재 활성 세션 '{selected_sid}'은(는) 삭제할 수 없습니다."
         return gr.update(visible=True), f"세션 '{selected_sid}'을(를) 삭제하시겠습니까?"
             
-    add_session_icon_btn.click(
-        fn=create_and_apply_session,
-        inputs=[
-            character_dropdown,    # chosen_character
-            selected_language_state,  # chosen_language
-            speech_manager_state, # persona_speech_manager
-            history_state # current history
-        ],
-        outputs=[
-            session_id_state,
-            history_state,
-            session_select_dropdown,
-            session_select_info,
-            chatbot]  # create_session이 (new_sid, info)를 반환하므로, 필요하면 여기서 받음
-    ).then(
-        fn=None,
-        js="flashSessionTab"
-    )
-        
     def delete_selected_session(chosen_sid):
         # 선택된 세션을 삭제 (주의: None 또는 ""인 경우 처리)
         result_msg, _, updated_dropdown = chat_bot.delete_session(chosen_sid, "demo_session")
@@ -1158,20 +1140,17 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
     )
             
     # 프리셋 변경 버튼 클릭 시 호출될 함수 연결
-    change_preset_button.click(
+    gr.on(
+        triggers=[character_dropdown.change, change_preset_button.click],
         fn=chat_bot.handle_change_preset,
         inputs=[preset_dropdown, history_state, selected_language_state],
         outputs=[history_state, system_message_box, profile_image]
     )
-            
+
     character_dropdown.change(
         fn=update_system_message_and_profile,
         inputs=[character_dropdown, language_dropdown, speech_manager_state, session_id_state],
         outputs=[system_message_box, profile_image, preset_dropdown]
-    ).then(
-        fn=chat_bot.handle_change_preset,
-        inputs=[preset_dropdown, history_state, selected_language_state],
-        outputs=[history_state, system_message_box, profile_image]
     )
     
     diffusion_model_dropdown.change(
@@ -1491,6 +1470,11 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
         fn=get_random_prompt,
         outputs=[positive_prompt_input]
     )
+    
+    @language_dropdown.change(
+        inputs=[language_dropdown, character_dropdown],
+        outputs=[title, session_select_info, language_dropdown, system_message_box, model_type_dropdown, model_dropdown, character_dropdown, api_key_text, image_input, msg, multimodal_msg, send_btn, advanced_setting, seed_input, temperature_slider, top_k_slider, top_p_slider, repetition_penalty_slider, reset_btn, reset_all_btn, diffusion_model_type_dropdown, diffusion_model_dropdown, diffusion_api_key_text]
+    )
     def change_language(selected_lang, selected_character):
         """언어 변경 처리 함수"""
         lang_map = {
@@ -1563,37 +1547,6 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
             # 언어 변경 실패 시 아무 것도 하지 않음
             return gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update()
 
-    # 언어 변경 이벤트 연결
-    language_dropdown.change(
-        fn=change_language,
-        inputs=[language_dropdown, character_dropdown],
-        outputs=[
-            title,
-            session_select_info,
-            language_dropdown,
-            system_message_box,
-            model_type_dropdown,
-            model_dropdown,
-            character_dropdown,
-            api_key_text,
-            image_input,
-            msg,
-            multimodal_msg,
-            send_btn,
-            advanced_setting,
-            seed_input,
-            temperature_slider,
-            top_k_slider,
-            top_p_slider,
-            repetition_penalty_slider,
-            reset_btn,
-            reset_all_btn,
-            diffusion_model_type_dropdown,
-            diffusion_model_dropdown,
-            diffusion_api_key_text
-        ]
-    )
-    
         # 메시지 전송 시 함수 연결
     msg.submit(
         fn=chat_bot.process_message_user,
@@ -1887,7 +1840,7 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                     device_tab, device_dropdown=create_device_setting_tab(default_device)
                     
         with gr.Row(elem_classes="popup-footer"):
-            cancel_btn = gr.Button("Cancel", variant="secondary")
+            setting_cancel_btn = gr.Button("Cancel", variant="secondary")
             save_settings_btn = gr.Button("Save Changes", variant="primary")
             
         with gr.Column(visible=False, elem_classes="confirm-dialog") as save_confirm_dialog:
@@ -1896,6 +1849,13 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
             with gr.Row():
                 confirm_no_btn = gr.Button("No", variant="secondary")
                 confirm_yes_btn = gr.Button("Yes", variant="primary")
+                
+        with gr.Column(visible=False, elem_classes="confirm-dialog") as discard_confirm_dialog:
+            gr.Markdown("### Change triggered.")
+            gr.Markdown("Change triggered. Do you want to discard the changes you made?")
+            with gr.Row():
+                confirm_discard_no_btn = gr.Button("No", variant="secondary")
+                confirm_discard_yes_btn = gr.Button("Yes", variant="primary")
         
     # 팝업 동작을 위한 이벤트 핸들러 추가
     def toggle_settings_popup():
@@ -1942,7 +1902,10 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
     def save_and_close():
         """설정 저장 후 팝업 닫기"""
         # 여기에 실제 설정 저장 로직 구현
-        return gr.update(visible=False), gr.update(visible=False) 
+        return gr.update(visible=False), gr.update(visible=False)
+    
+    def hide_cancel_confirm():
+        return gr.update(visible=False)
     
     # 이벤트 연결
     save_settings_btn.click(
@@ -1978,13 +1941,18 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
     def handle_cancel(changed):
         """취소 버튼 처리"""
         if changed:
-            return gr.update(visible=True)  # 변경사항이 있으면 확인 다이얼로그 표시
+            return gr.update(visible=True), gr.update()  # 변경사항이 있으면 확인 다이얼로그 표시
         return gr.update(visible=False), gr.update(visible=False)  # 변경사항이 없으면 바로 닫기
 
-    cancel_btn.click(
+    setting_cancel_btn.click(
         fn=handle_cancel,
         inputs=[settings_changed],
-        outputs=[save_confirm_dialog, settings_popup]
+        outputs=[discard_confirm_dialog, settings_popup]
+    )
+    
+    confirm_discard_no_btn.click(
+        fn=hide_save_confirm,
+        outputs=discard_confirm_dialog
     )
         
     demo.load(
