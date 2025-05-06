@@ -48,4 +48,18 @@ characters={
         "preset_name": "아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)",
         "profile_image": "assets/5_aria_prince_fate.png"
     },
+   "왕 메이린 (王美玲, ワン·メイリン, Wang Mei-Ling)": {
+        "default_tone": "존댓말", 
+        "languages": ["ko", "ja", "zh_TW", "en"],
+        "default_language": "ko",
+        "preset_name": "왕 메이린 (王美玲, ワン·メイリン, Wang Mei-Ling)",
+        "profile_image": "assets/6_wang_mei_ling.png"
+    },
+   "미스티 레인 (ミスティ·レーン, Misty Lane)": {
+        "default_tone": "존댓말", 
+        "languages": ["ko", "ja", "zh_TW", "en"],
+        "default_language": "ko",
+        "preset_name": "미스티 레인 (ミスティ·レーン, Misty Lane)",
+        "profile_image": "assets/7_misty_lane.png"
+    },
 }

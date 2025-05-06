@@ -37,7 +37,17 @@ from src.common.utils import (
 )
 import numpy as np
 
-from presets import AI_ASSISTANT_PRESET, SD_IMAGE_GENERATOR_PRESET, MINAMI_ASUKA_PRESET, MAKOTONO_AOI_PRESET, AINO_KOITO_PRESET, ARIA_PRINCESS_FATE_PRESET, ARIA_PRINCE_FATE_PRESET
+from presets import (
+    AI_ASSISTANT_PRESET, 
+    SD_IMAGE_GENERATOR_PRESET, 
+    MINAMI_ASUKA_PRESET, 
+    MAKOTONO_AOI_PRESET, 
+    AINO_KOITO_PRESET, 
+    ARIA_PRINCESS_FATE_PRESET, 
+    ARIA_PRINCE_FATE_PRESET,
+    WANG_MEI_LING_PRESET,
+    MISTY_LANE_PRESET
+    )
 
 from src.models import api_models, transformers_local, gguf_local, mlx_local, diffusion_api_models, diffusers_local, checkpoints_local, tts_api_models, vits_local
 from src.main.chatbot import (
@@ -1502,7 +1512,9 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                 "마코토노 아오이 (真琴乃葵, まことのあおい, Makotono Aoi)": MAKOTONO_AOI_PRESET,
                 "아이노 코이토 (愛野小糸, あいのこいと, Aino Koito)": AINO_KOITO_PRESET,
                 "아리아 프린세스 페이트 (アリア·プリンセス·フェイト, Aria Princess Fate)": ARIA_PRINCESS_FATE_PRESET,
-                "아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)": ARIA_PRINCE_FATE_PRESET
+                "아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)": ARIA_PRINCE_FATE_PRESET,
+                "왕 메이린 (王美玲, ワン·メイリン, Wang Mei-Ling)": WANG_MEI_LING_PRESET,
+                "미스티 레인 (ミスティ·レーン, Misty Lane)": MISTY_LANE_PRESET,
             }
                 
             preset_name = system_presets.get(selected_character, AI_ASSISTANT_PRESET)

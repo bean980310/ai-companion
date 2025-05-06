@@ -14,3 +14,9 @@ with open('presets/aria_prince_fate_preset.json', 'r') as f:
     
 with open('presets/aria_princess_fate_preset.json', 'r') as f:
     ARIA_PRINCESS_FATE_PRESET = json.load(f)
+    
+with open('presets/wang_meiling_preset.json', 'r') as f:
+    WANG_MEI_LING_PRESET = json.load(f)
+    
+with open('presets/misty_lane_preset.json', 'r') as f:
+    MISTY_LANE_PRESET = json.load(f)

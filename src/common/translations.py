@@ -12,7 +12,9 @@ from presets import (
     AINO_KOITO_PRESET, 
     SD_IMAGE_GENERATOR_PRESET, 
     ARIA_PRINCESS_FATE_PRESET, 
-    ARIA_PRINCE_FATE_PRESET
+    ARIA_PRINCE_FATE_PRESET,
+    WANG_MEI_LING_PRESET,
+    MISTY_LANE_PRESET
     )
 
 from src.common.default_language import default_language
@@ -35,7 +37,9 @@ class TranslationManager:
             'makotono_aoi': MAKOTONO_AOI_PRESET,
             'aino_koito': AINO_KOITO_PRESET,
             'aria_princess_fate': ARIA_PRINCESS_FATE_PRESET,
-            'aria_prince_fate': ARIA_PRINCE_FATE_PRESET
+            'aria_prince_fate': ARIA_PRINCE_FATE_PRESET,
+            'wang_mei_ling': WANG_MEI_LING_PRESET,
+            'misty_lane': MISTY_LANE_PRESET,
         }
         self.load_translations()
 
@@ -548,7 +552,9 @@ class TranslationManager:
             '마코토노 아오이 (真琴乃葵, まことのあおい, Makotono Aoi)': MAKOTONO_AOI_PRESET,
             '아이노 코이토 (愛野小糸, あいのこいと, Aino Koito)': AINO_KOITO_PRESET,
             '아리아 프린세스 페이트 (アリア·プリンセス·フェイト, Aria Princess Fate)': ARIA_PRINCESS_FATE_PRESET,
-            '아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)': ARIA_PRINCE_FATE_PRESET
+            '아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)': ARIA_PRINCE_FATE_PRESET,
+            '왕 메이린 (王美玲, ワン·メイリン, Wang Mei-Ling)': WANG_MEI_LING_PRESET,
+            '미스티 레인 (ミスティ·レーン, Misty Lane)': MISTY_LANE_PRESET,
         }
 
         for lang, translations in default_translations.items():
