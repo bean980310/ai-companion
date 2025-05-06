@@ -391,6 +391,16 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                     elem_classes="custom-dropdown"
                 )
         with gr.Sidebar(elem_classes="sidebar-container") as sidebar:
+            with gr.Column() as tab_side:
+                with gr.Row(elem_classes="session-container"):
+                    with gr.Column():
+                        gr.Markdown("### AI Companion")
+                        chatbot_sidetab = gr.Button(value="Chat")
+                        diffusion_sidetab = gr.Button(value="Image Generation")
+                        storyteller_sidetab = gr.Button(value="Storyteller")
+                        tts_sidetab = gr.Button(value="Text to Speech")
+                        translate_sidetab = gr.Button(value="Translator")
+                        
             with gr.Column() as chatbot_side:
                 with gr.Row(elem_classes="session-container"):
                     with gr.Column():
@@ -1259,6 +1269,7 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
         image = client.upload_image(image, overwrite=True)
         return image, gr.update(value=im)
     
+    @image_inpaint_masking.apply(inputs=[image_inpaint_input, image_inpaint_masking], outputs=stored_image_inpaint)
     def process_uploaded_image_inpaint(original_image, mask_image):
         print(original_image)
         print(mask_image)
@@ -1320,12 +1331,6 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
         fn=toggle_image_inpaint_mask_interactive,
         inputs=image_inpaint_input,
         outputs=image_inpaint_masking
-    )
-    
-    image_inpaint_masking.apply(
-        fn=process_uploaded_image_inpaint,
-        inputs=[image_inpaint_input, image_inpaint_masking],
-        outputs=stored_image_inpaint
     )
     
     image_to_image_mode.change(
@@ -1394,6 +1399,7 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
             updates.append(unet_update)
         return updates
 
+    @random_prompt_btn.click(outputs=[positive_prompt_input])
     def get_random_prompt():
         """랜덤 프롬프트 생성 함수"""
         prompts = [
@@ -1466,11 +1472,6 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
         js=show_confetti
     )
 
-    random_prompt_btn.click(
-        fn=get_random_prompt,
-        outputs=[positive_prompt_input]
-    )
-    
     @language_dropdown.change(
         inputs=[language_dropdown, character_dropdown],
         outputs=[title, session_select_info, language_dropdown, system_message_box, model_type_dropdown, model_dropdown, character_dropdown, api_key_text, image_input, msg, multimodal_msg, send_btn, advanced_setting, seed_input, temperature_slider, top_k_slider, top_p_slider, repetition_penalty_slider, reset_btn, reset_all_btn, diffusion_model_type_dropdown, diffusion_model_dropdown, diffusion_api_key_text]
@@ -1718,60 +1719,29 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
         outputs=[session_select_dropdown]
     )
     
+    @gr.on(triggers=[chat_tab.select, demo.load], inputs=[], outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side])
     def select_chat_tab():
         return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
     
+    @diffusion_tab.select(inputs=[], outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side])
     def select_image_generation_tab():
         return gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
     
+    @story_tab.select(inputs=[], outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side])
     def select_storyteller_tab():
         return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
     
+    @tts_tab.select(inputs=[], outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side])
     def select_tts_tab():
         return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)
     
+    @translate_tab.select(inputs=[], outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side])
     def select_translate_tab():
         return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
     
+    @download_tab.select(inputs=[], outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side])
     def select_download_tab():
         return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
-    
-    chat_tab.select(
-        fn=select_chat_tab,
-        inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side]
-    )
-    diffusion_tab.select(
-        fn=select_image_generation_tab,
-        inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side]
-    )
-    story_tab.select(
-        fn=select_storyteller_tab,
-        inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side]
-    )
-    tts_tab.select(
-        fn=select_tts_tab,
-        inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side]
-    )
-    translate_tab.select(
-        fn=select_translate_tab,
-        inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side]
-    )
-    download_tab.select(
-        fn=select_download_tab,
-        inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side]
-    )
-    
-    demo.load(
-        fn=select_chat_tab,
-        inputs=[],
-        outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side]
-    )
     
     demo.load(None, None, None).then(
         fn=lambda evt: (
@@ -1858,21 +1828,14 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                 confirm_discard_yes_btn = gr.Button("Yes", variant="primary")
         
     # 팝업 동작을 위한 이벤트 핸들러 추가
+    @settings_button.click(outputs=settings_popup)
     def toggle_settings_popup():
         return gr.update(visible=True)
 
+    @close_settings_btn.click(outputs=settings_popup)
     def close_settings_popup():
         return gr.update(visible=False)
 
-    settings_button.click(
-        fn=toggle_settings_popup,
-        outputs=settings_popup
-    )
-
-    close_settings_btn.click(
-        fn=close_settings_popup,
-        outputs=settings_popup
-    )
     def handle_escape_key(evt: gr.SelectData):
         """ESC 키를 누르면 팝업을 닫는 함수"""
         if evt.key == "Escape":
@@ -1891,14 +1854,17 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
         # 설정 저장 로직
         return gr.update(visible=False)
 
+    @save_settings_btn.click(outputs=save_confirm_dialog)
     def show_save_confirm():
         """설정 저장 확인 다이얼로그 표시"""
         return gr.update(visible=True)
     
+    @confirm_no_btn.click(outputs=save_confirm_dialog)
     def hide_save_confirm():
         """저장 확인 다이얼로그 숨김"""
         return gr.update(visible=False)
     
+    @confirm_yes_btn.click(outputs=[save_confirm_dialog, settings_popup])
     def save_and_close():
         """설정 저장 후 팝업 닫기"""
         # 여기에 실제 설정 저장 로직 구현
@@ -1906,22 +1872,6 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
     
     def hide_cancel_confirm():
         return gr.update(visible=False)
-    
-    # 이벤트 연결
-    save_settings_btn.click(
-        fn=show_save_confirm,
-        outputs=save_confirm_dialog
-    )
-
-    confirm_no_btn.click(
-        fn=hide_save_confirm,
-        outputs=save_confirm_dialog
-    )
-
-    confirm_yes_btn.click(
-        fn=save_and_close,
-        outputs=[save_confirm_dialog, settings_popup]
-    )
 
     # 설정 변경 여부 추적을 위한 상태 변수 추가
     settings_changed = gr.State(False)
@@ -1938,17 +1888,12 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
         )
 
     # 취소 버튼 클릭 시 변경사항 확인
+    @setting_cancel_btn.click(inputs=[settings_changed], outputs=[discard_confirm_dialog, settings_popup])
     def handle_cancel(changed):
         """취소 버튼 처리"""
         if changed:
             return gr.update(visible=True), gr.update()  # 변경사항이 있으면 확인 다이얼로그 표시
         return gr.update(visible=False), gr.update(visible=False)  # 변경사항이 없으면 바로 닫기
-
-    setting_cancel_btn.click(
-        fn=handle_cancel,
-        inputs=[settings_changed],
-        outputs=[discard_confirm_dialog, settings_popup]
-    )
     
     confirm_discard_no_btn.click(
         fn=hide_save_confirm,
