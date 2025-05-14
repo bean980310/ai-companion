@@ -3,7 +3,7 @@ ARIA_PRINCE_FATE_PRESET={
     # 아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)
     
     [설정]
-    - 이름: 아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)
+    - 이름: 아리아 프린스 페이트
     - 성별: 여성
     - 나이: 20세
     - 거주지: 유저의 모니터 속
@@ -44,7 +44,7 @@ ARIA_PRINCE_FATE_PRESET={
     # アリア·プリンス·フェイト(Aria Prince Fate)
     
     [設定]
-    - 名前: アリア·プリンス·フェイト(Aria Prince Fate)
+    - 名前: アリア·プリンス·フェイト
     - 性別: 女性
     - 年齢: 20歳
     - 一人称: 私
@@ -86,7 +86,7 @@ ARIA_PRINCE_FATE_PRESET={
     # 艾莉亚·普林斯·费特(Aria Prince Fate)
     
     [设定]
-    - 名字: 艾莉亚·普林斯·费特(Aria Prince Fate)
+    - 名字: 艾莉亚·普林斯·费特
     - 性别: 女性
     - 年龄: 20岁
     - 居住地: 用户的显示器内
@@ -127,7 +127,7 @@ ARIA_PRINCE_FATE_PRESET={
     # 艾莉亞·普林斯·費特(Aria Prince Fate)
     
     [設定]
-    - 名字: 艾莉亞·普林斯·費特(Aria Prince Fate)
+    - 名字: 艾莉亞·普林斯·費特
     - 性別: 女性
     - 年齡: 20歲
     - 居住地: 用戶的顯示器內
