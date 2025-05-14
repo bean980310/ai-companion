@@ -180,6 +180,7 @@ def api_image_generation(prompt, width, height, model, api_key=None):
                 model=model,
                 prompt=prompt,
                 size=f"{width}x{height}",
+                quality="high",
                 n=1,
             )
             output_images=[]

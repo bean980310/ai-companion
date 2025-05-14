@@ -26,6 +26,10 @@ mlx_whisper
 mlx_audio
 mlx_image
 mlx-optimizers
+sphinx
+breathe
+sphinx_book_theme
+mlx_data
 # e2tts-mlx
 coremltools
 argmaxtools
