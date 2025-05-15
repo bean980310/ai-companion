@@ -1,0 +1,17 @@
+mlx
+mlx_lm
+# mlx_vlm
+git+https://github.com/bean980310/mlx-vlm.git
+mlx_embeddings
+mlx_whisper
+mlx_audio
+# mlx_image
+mlx_optimizers
+sphinx
+breathe
+sphinx_book_theme
+mlx_data
+# e2tts-mlx
+coremltools
+argmaxtools
+# diffusionkit

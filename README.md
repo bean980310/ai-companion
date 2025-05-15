@@ -186,7 +186,9 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 
 ```shell
 pip install -r requirements/common.txt
+pip install -r requirements/common_2.txt
 pip install -r requirements/ai_models.txt
+pip install -r requirements/ai_models_gguf.txt
 ```
 
 * **Windows**
@@ -202,6 +204,7 @@ pip install -r requirements/windows_amd64_wsl2.txt
 
 ```zsh
 pip install -r requirements/macos_arm64.txt
+pip install -r requirements/macos_arm64_mlx.txt
 ```
 
 * **Linux**

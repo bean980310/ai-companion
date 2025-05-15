@@ -22,9 +22,6 @@ git+https://github.com/xinntao/Real-ESRGAN.git
 openai
 anthropic
 google-genai
-gguf
-llama-cpp-python
-stable-diffusion-cpp-python
 ollama
 lmstudio
 unstructured
