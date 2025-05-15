@@ -405,11 +405,11 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                 with gr.Row(elem_classes="session-container"):
                     with gr.Column():
                         gr.Markdown("### AI Companion")
-                        chatbot_sidetab = gr.Button(value="Chat")
-                        diffusion_sidetab = gr.Button(value="Image Generation")
-                        storyteller_sidetab = gr.Button(value="Storyteller")
-                        tts_sidetab = gr.Button(value="Text to Speech")
-                        translate_sidetab = gr.Button(value="Translator")
+                        chatbot_sidetab = gr.Button(value="Chat", elem_classes="tab")
+                        diffusion_sidetab = gr.Button(value="Image Generation", elem_classes="tab")
+                        storyteller_sidetab = gr.Button(value="Storyteller", elem_classes="tab")
+                        tts_sidetab = gr.Button(value="Text to Speech", elem_classes="tab")
+                        translate_sidetab = gr.Button(value="Translator", elem_classes="tab")
                         
             with gr.Column() as chatbot_side:
                 with gr.Row(elem_classes="session-container"):
@@ -603,7 +603,7 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                         gr.Markdown("### Under Construction")
                                    
         with gr.Tabs(elem_classes='tabs') as tabs:
-            with gr.Tab('Chat', elem_classes='tab') as chat_tab:
+            with gr.Tab('Chat', elem_classes='tab-active') as chat_tab:
                 with gr.Row(elem_classes="chat-interface"):
                     with gr.Column(scale=7):
                         system_message_box = gr.Textbox(
@@ -742,7 +742,7 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                         reset_all_yes_btn = gr.Button("✅ 예", variant="danger")
                         reset_all_no_btn = gr.Button("❌ 아니요", variant="secondary")
                         
-            with gr.Tab('Image Generation', elem_classes='tab') as diffusion_tab:             
+            with gr.Tab('Image Generation', elem_classes='tab-active') as diffusion_tab:             
                 with gr.Row(elem_classes="model-container"):
                     with gr.Accordion("Image to Image", open=False, elem_classes="accordion-container"):
                         image_to_image_mode = gr.Radio(
@@ -933,7 +933,7 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                         wrap=True,
                         datatype=["str", "str", "str", "str", "str", "str", "str", "str", "str", "str"]
                     )
-            with gr.Tab('Storyteller', elem_classes='tab') as story_tab:
+            with gr.Tab('Storyteller', elem_classes='tab-active') as story_tab:
                 with gr.Row(elem_classes="model-container"):
                     gr.Markdown("# Under Construction")
                 with gr.Row(elem_classes="chat-interface"):
@@ -994,11 +994,11 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                                 interactive=True
                             )
                         
-            with gr.Tab('Text to Speech', elem_classes='tab') as tts_tab:
+            with gr.Tab('Text to Speech', elem_classes='tab-active') as tts_tab:
                 with gr.Row(elem_classes="chat-interface"):
                     gr.Markdown("# Coming Soon!")
                 
-            with gr.Tab('Translator', elem_classes='tab') as translate_tab:
+            with gr.Tab('Translator', elem_classes='tab-active') as translate_tab:
                 with gr.Row(elem_classes="model-container"):
                     with gr.Column():
                         with gr.Row():

@@ -6,11 +6,13 @@
     --color-background-primary: #f8fafc;
     --color-background-secondary: white;
     --color-background-tab: #f0f0f0;
+    --color-background-tab-active: #adadad;
     --color-background-accordion: #f0f0f0;
     
     --color-background-primary-dark: #1a1a1a;
     --color-background-secondary-dark: #2d2d2d;
-    --color-background-tab-dark: #1f1f1f;
+    --color-background-tab-dark: #5c5c5c;
+    --color-background-tab-active-dark: #1f1f1f;
     --color-background-accordion-dark: #1f1f1f;
 }
 
@@ -133,16 +135,20 @@
 }
 
 /* 활성 탭 스타일 */
-/* .tab-active {
+.tab-active {
     background-color: var(--color-background-primary);
     color: #1a1a1a;
     border-bottom: 2px solid var(--color-background-primary);
-} */
+}
 
 /* 탭 호버 효과 */
-/* .tab:hover {
+.tab:hover {
     background-color: #f0f0f0;
-} */
+}
+
+.tab:focus {
+    background-color: var(--color-background-tab-active)
+}
 
 .model-container {
     background-color: var(--color-background-secondary);
@@ -372,7 +378,7 @@
         color: #ffffff;
     }
     
-    /* .tab-active {
+    .tab-active {
         background-color: var(--color-background-primary-dark);
         color: #ffffff;
         border-bottom: 2px solid var(--color-background-primary-dark);
@@ -380,7 +386,11 @@
     
     .tab:hover {
         background-color: #3b3b3b;
-    } */
+    }
+
+    .tab:focus {
+        background-color: var(--color-background-tab-active-dark)
+    }
 }
 /* css 변수에 추가 */
 .settings-popup {

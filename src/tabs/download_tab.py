@@ -17,7 +17,7 @@ from src import logger
 chat_bot=Chatbot()
 
 def create_download_tab():
-    with gr.Tab("Download Center") as download_tab:
+    with gr.Tab("Download Center", elem_classes="tab-active") as download_tab:
         with gr.Tabs():
             # Predefined 탭
             with gr.Tab("Predefined"):
