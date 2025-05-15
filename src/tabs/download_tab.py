@@ -17,7 +17,9 @@ from src import logger
 chat_bot=Chatbot()
 
 def create_download_tab():
-    with gr.Tab("Download Center", elem_classes="tab-active") as download_tab:
+    with gr.Column(elem_classes="tab-container") as download_container:
+        with gr.Row(elem_classes="model-container"):
+            gr.Markdown("### Download Center")
         with gr.Tabs():
             # Predefined 탭
             with gr.Tab("Predefined"):
@@ -82,15 +84,11 @@ def create_download_tab():
                     )
 
                 # 이벤트 핸들러
+                @use_auth.change(inputs=[use_auth], outputs=[auth_column_predefined])
                 def toggle_auth_predefined(use_auth_val):
                     return gr.update(visible=use_auth_val)
-
-                use_auth.change(
-                    fn=toggle_auth_predefined,
-                    inputs=[use_auth],
-                    outputs=[auth_column_predefined]
-                )
-
+                
+                @download_btn_predefined.click(inputs=[predefined_dropdown, target_path, use_auth, hf_token], outputs=[download_status_predefined, download_info_predefined])
                 def download_predefined_model(predefined_choice, target_dir, use_auth_val, token):
                     try:
                         repo_id = predefined_choice
@@ -122,12 +120,6 @@ def create_download_tab():
                         logger.error(f"Error downloading model: {str(e)}")
                         download_status_predefined.update("❌ An error occurred during download.")
                         download_info_predefined.update(f"Error: {str(e)}\n{traceback.format_exc()}")
-
-                download_btn_predefined.click(
-                    fn=download_predefined_model,
-                    inputs=[predefined_dropdown, target_path, use_auth, hf_token],
-                    outputs=[download_status_predefined, download_info_predefined]
-                )
 
             # Custom Repo ID 탭
             with gr.Tab("Custom Repo ID"):
@@ -191,15 +183,11 @@ def create_download_tab():
                     )
 
                 # 이벤트 핸들러
+                @use_auth_custom.change(inputs=[use_auth_custom], outputs=[auth_column_custom])
                 def toggle_auth_custom(use_auth_val):
                     return gr.update(visible=use_auth_val)
-
-                use_auth_custom.change(
-                    fn=toggle_auth_custom,
-                    inputs=[use_auth_custom],
-                    outputs=[auth_column_custom]
-                )
-
+                
+                @download_btn_custom.click(inputs=[custom_repo_id_box, target_path_custom, use_auth_custom, hf_token_custom], outputs=[download_status_custom, download_info_custom])
                 def download_custom_model(custom_repo, target_dir, use_auth_val, token):
                     try:
                         repo_id = custom_repo.strip()
@@ -231,12 +219,6 @@ def create_download_tab():
                         logger.error(f"Error downloading model: {str(e)}")
                         download_status_custom.update("❌ An error occurred during download.")
                         download_info_custom.update(f"Error: {str(e)}\n{traceback.format_exc()}")
-
-                download_btn_custom.click(
-                    fn=download_custom_model,
-                    inputs=[custom_repo_id_box, target_path_custom, use_auth_custom, hf_token_custom],
-                    outputs=[download_status_custom, download_info_custom]
-                )
 
             # Hub 탭
             with gr.Tab("Hub"):
@@ -334,15 +316,11 @@ def create_download_tab():
                     )
 
                 # 이벤트 핸들러
+                @use_auth_hub.change(inputs=[use_auth_hub], outputs=[auth_column_hub])
                 def toggle_auth_hub(use_auth_val):
                     return gr.update(visible=use_auth_val)
-
-                use_auth_hub.change(
-                    fn=toggle_auth_hub,
-                    inputs=[use_auth_hub],
-                    outputs=[auth_column_hub]
-                )
-
+                
+                @search_btn_hub.click(inputs=[search_box_hub, model_type_filter_hub, language_filter_hub, library_filter_hub], outputs=model_list_hub)
                 def search_models_hub(query, model_type, language, library):
                     """Search models on HuggingFace Hub"""
                     try:
@@ -385,12 +363,14 @@ def create_download_tab():
                     except Exception as e:
                         logger.error(f"Error searching models: {str(e)}\n{traceback.format_exc()}")
                         return [["Error occurred", str(e), "", ""]]
-
+                    
+                @model_list_hub.select(inputs=[model_list_hub], outputs=[selected_model_hub])
                 def select_model_hub(evt: gr.SelectData, data):
                     """Select model from dataframe"""
                     selected_model_id = data.at[evt.index[0], "Model ID"] if evt.index else ""
                     return selected_model_id
-
+                    
+                @download_btn_hub.click(inputs=[selected_model_hub, target_path_hub, use_auth_hub, hf_token_hub], outputs=[download_status_hub, download_info_hub])
                 def download_hub_model(model_id, target_dir, use_auth_val, token):
                     try:
                         if not model_id:
@@ -421,23 +401,5 @@ def create_download_tab():
                         logger.error(f"Error downloading model: {str(e)}")
                         download_status_hub.update("❌ An error occurred during download.")
                         download_info_hub.update(f"Error: {str(e)}\n{traceback.format_exc()}")
-
-                search_btn_hub.click(
-                    fn=search_models_hub,
-                    inputs=[search_box_hub, model_type_filter_hub, language_filter_hub, library_filter_hub],
-                    outputs=model_list_hub
-                )
-
-                model_list_hub.select(
-                    fn=select_model_hub,
-                    inputs=[model_list_hub],
-                    outputs=[selected_model_hub]
-                )
-
-                download_btn_hub.click(
-                    fn=download_hub_model,
-                    inputs=[selected_model_hub, target_path_hub, use_auth_hub, hf_token_hub],
-                    outputs=[download_status_hub, download_info_hub]
-                )
                 
-    return download_tab
+    return download_container

@@ -135,7 +135,7 @@
 }
 
 /* 활성 탭 스타일 */
-.tab-active {
+.tab-container {
     background-color: var(--color-background-primary);
     color: #1a1a1a;
     border-bottom: 2px solid var(--color-background-primary);
@@ -146,8 +146,17 @@
     background-color: #f0f0f0;
 }
 
-.tab:focus {
-    background-color: var(--color-background-tab-active)
+.tab-active {
+    display: flex;
+    padding: 0.75rem 1rem;
+    background-color: var(--color-background-tab-active);
+    color: #1a1a1a;
+    font-weight: 500;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-radius: 12px;
+    margin-right: 0.25rem;
+    border-bottom: 2px solid var(--color-background-tab-active);
 }
 
 .model-container {
@@ -378,7 +387,7 @@
         color: #ffffff;
     }
     
-    .tab-active {
+    .tab-container {
         background-color: var(--color-background-primary-dark);
         color: #ffffff;
         border-bottom: 2px solid var(--color-background-primary-dark);
@@ -388,8 +397,17 @@
         background-color: #3b3b3b;
     }
 
-    .tab:focus {
-        background-color: var(--color-background-tab-active-dark)
+    .tab-active {
+        display: flex;
+        padding: 0.75rem 1rem;
+        background-color: var(--color-background-tab-active-dark);
+        color: #ffffff;
+        font-weight: 500;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+        border-radius: 12px;
+        margin-right: 0.25rem;
+        border-bottom: 2px solid var(--color-background-tab-active-dark);
     }
 }
 /* css 변수에 추가 */
