@@ -390,7 +390,8 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                 title = gr.Markdown(f"## {_('main_title')}", elem_classes="title")
                 gr.Markdown("### Beta Release")
             with gr.Column(scale=1):
-                settings_button = gr.Button("⚙️ Settings", elem_classes="settings-button")
+                settings_button = gr.Button("⚙️", elem_classes="settings-button")
+            with gr.Column(scale=1):
                 language_dropdown = gr.Dropdown(
                     label=_('language_select'),
                     choices=["한국어", "日本語", "中文(简体)", "中文(繁體)", "English"],
@@ -400,6 +401,7 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                     container=False,
                     elem_classes="custom-dropdown"
                 )
+                
         with gr.Sidebar(elem_classes="sidebar-container") as sidebar:
             with gr.Column() as tab_side:
                 with gr.Row(elem_classes="session-container"):
@@ -431,6 +433,7 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                         )
                         add_session_icon_btn = gr.Button("📝", elem_classes="icon-button", scale=1, variant="secondary")
                         delete_session_icon_btn = gr.Button("🗑️", elem_classes="icon-button-delete", scale=1, variant="stop")
+                        
                 with gr.Row(elem_classes="model-container"):
                     with gr.Column():
                         gr.Markdown("### Model Selection")
@@ -1791,7 +1794,8 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
     with gr.Column(visible=False, elem_classes="settings-popup") as settings_popup:
         with gr.Row(elem_classes="popup-header"):
             gr.Markdown("## Settings")
-            close_settings_btn = gr.Button("✕", elem_classes="close-button")
+            with gr.Column():
+                close_settings_btn = gr.Button("✕", elem_classes="close-button")
             
         with gr.Tabs():
             create_cache_tab(model_dropdown, language_dropdown)
