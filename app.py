@@ -64,7 +64,7 @@ from src.main.image_generation import (
     toggle_diffusion_api_key_visibility,
     get_allowed_diffusion_models
 )
-from src.main.translator import translate_interface, upload_handler, LANGUAGES
+from src.main.translator import translate_interface, upload_handler, LANGUAGES, create_translate_container
 from src.main.tts import text_to_speech
 
 from src.tabs.cache_tab import create_cache_tab
@@ -1008,56 +1008,7 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                 with gr.Row(elem_classes="chat-interface"):
                     gr.Markdown("# Coming Soon!")
                 
-            with gr.Column(elem_classes='tab-container') as translate_container:
-                with gr.Row(elem_classes="model-container"):
-                    gr.Markdown("### Translate")
-                with gr.Row(elem_classes="model-container"):
-                    with gr.Column():
-                        with gr.Row():
-                            with gr.Column():
-                                upload_file_lang = gr.Dropdown(
-                                    choices=list(dict.fromkeys(LANGUAGES)),
-                                    value=list(dict.fromkeys(LANGUAGES))[0],
-                                    label="File Language"
-                                )
-                                upload_file_btn = gr.Button(
-                                    "Upload File",
-                                    variant="primary",
-                                    elem_classes="send-button-alt"
-                                )
-                            upload_file_input = gr.File(
-                                label="Upload File",
-                                file_types=["text", "image"],
-                                file_count="single"
-                            )
-                        
-                with gr.Row(elem_classes="chat-interface"):
-                    with gr.Column():
-                        with gr.Row():
-                            src_lang_dropdown=gr.Dropdown(
-                                choices=list(dict.fromkeys(LANGUAGES)), 
-                                value=list(dict.fromkeys(LANGUAGES))[0], 
-                                label="Source Language"
-                            )
-                            tgt_lang_dropdown=gr.Dropdown(
-                                choices=list(dict.fromkeys(LANGUAGES)), 
-                                value=list(dict.fromkeys(LANGUAGES))[1], 
-                                label="Target Language"
-                            )
-                        with gr.Row():
-                            src_textbox=gr.Textbox(
-                                label="Source Text",
-                                lines=10,
-                                elem_classes='message-input'
-                            )
-                            translate_result=gr.Textbox(
-                                label='Translate result',
-                                lines=10,
-                                elem_classes='message-output'
-                            )
-                        with gr.Row():
-                            translate_btn = gr.Button("Translate", variant="primary", elem_classes="send-button-alt")
-                            
+            translate_container = create_translate_container()
             download_container = create_download_tab()
                             
         reset_modal, single_reset_content, all_reset_content, cancel_btn, confirm_btn = create_reset_confirm_modal()
@@ -1431,18 +1382,6 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
         fn=generate_diffusion_lora_weight_sliders,
         inputs=[diffusion_lora_multiselect],
         outputs=diffusion_lora_slider_outputs
-    )
-    
-    translate_btn.click(
-        fn=translate_interface,
-        inputs=[src_textbox, src_lang_dropdown, tgt_lang_dropdown],
-        outputs=[translate_result]
-    )
-    
-    upload_file_btn.click(
-        fn=upload_handler,
-        inputs=[upload_file_input, upload_file_lang],
-        outputs=src_textbox
     )
 
     # 이벤트 핸들러 연결
