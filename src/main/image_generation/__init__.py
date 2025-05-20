@@ -2,10 +2,42 @@ from .image_generation import (
     generate_images_wrapper, 
     update_diffusion_model_list,
     toggle_diffusion_api_key_visibility,
-    get_allowed_diffusion_models)
+    get_allowed_diffusion_models,
+)
+
+from ...common.utils import get_diffusion_loras, get_diffusion_vae
+
+from ... import os_name, arch
+from ...start_app import app_state
 
 __all__ = [
     'generate_images_wrapper', 
     'update_diffusion_model_list', 
     'toggle_diffusion_api_key_visibility',
     'get_allowed_diffusion_models']
+
+def share_allowed_diffusion_models():
+    diffusion_choices, diffusion_type_choices = get_allowed_diffusion_models(os_name, arch)
+    
+    diffusion_lora_choices = get_diffusion_loras()
+    diffusion_lora_choices = list(dict.fromkeys(diffusion_lora_choices))
+    diffusion_lora_choices = sorted(diffusion_lora_choices)
+    
+    vae_choices = get_diffusion_vae()
+    
+    diffusion_refiner_choices, diffusion_refiner_type_choices = get_allowed_diffusion_models(os_name, arch)
+    
+    if "None" not in diffusion_refiner_choices:
+        diffusion_refiner_choices.insert(0, "None")
+    
+    if "Default" not in vae_choices:
+        vae_choices.insert(0, "Default")
+    
+    app_state.diffusion_choices = diffusion_choices
+    app_state.diffusion_type_choices = diffusion_type_choices
+    app_state.diffusion_lora_choices = diffusion_lora_choices
+    app_state.vae_choices = vae_choices
+    app_state.diffusion_refiner_choices = diffusion_refiner_choices
+    app_state.diffusion_refiner_type_choices = diffusion_refiner_type_choices
+    
+    return diffusion_choices, diffusion_type_choices, diffusion_lora_choices, vae_choices, diffusion_refiner_choices, diffusion_refiner_type_choices

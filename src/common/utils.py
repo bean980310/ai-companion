@@ -77,7 +77,7 @@ def scan_files_with_extension(root: str, allowed_extensions: set) -> list:
     results = []
     for dirpath, _, filenames in os.walk(root):
         for fname in filenames:
-            if any(fname.lower().endswith(ext) for ext in allowed_extensions):
+            if any(fname.lower().endswith(ext) for ext in allowed_extensions) and not fname.startswith("."):
                 # root로부터의 상대경로 (하위 디렉토리 포함)
                 rel_path = os.path.relpath(os.path.join(dirpath, fname), root)
                 results.append(rel_path)
