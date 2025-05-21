@@ -5,7 +5,7 @@ from .chatbot import Chatbot
 from .chatbot import update_system_message_and_profile
 from .chatbot import create_reset_confirm_modal
 from .chatbot import create_delete_session_modal, get_allowed_llm_models
-from .component import create_chatbot_side_session_container, create_chatbot_side_model_container
+from .component import create_chatbot_side_session_container, create_chatbot_side_model_container, create_chat_container_main_panel, create_chat_container_side_panel
 
 from ... import os_name, arch
 from ...start_app import app_state

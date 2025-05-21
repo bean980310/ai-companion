@@ -1,7 +1,8 @@
 import gradio as gr
 from src.common.database import save_chat_history_db, save_chat_history_csv, save_chat_button_click
+from ..start_app import app_state
 
-def create_save_history_tab(history_state):
+def create_save_history_tab():
     with gr.Tab("채팅 기록 저장"):
         save_button = gr.Button("채팅 기록 저장", variant="secondary")
         save_info = gr.Textbox(label="저장 결과", interactive=False)
@@ -32,19 +33,19 @@ def create_save_history_tab(history_state):
 
         save_csv_button.click(
             fn=save_chat_button_click_csv,
-            inputs=[history_state],
+            inputs=[app_state.history_state],
             outputs=save_csv_info
         )
 
         # save_button이 클릭되면 save_chat_button_click 실행
         save_button.click(
             fn=save_chat_button_click,
-            inputs=[history_state],
+            inputs=[app_state.history_state],
             outputs=save_info
         )
                         
         save_db_button.click(
             fn=save_chat_button_click_db,
-            inputs=[history_state],
+            inputs=[app_state.history_state],
             outputs=save_db_info
         )

@@ -7,9 +7,10 @@ from src.models import api_models
 
 chat_bot=Chatbot()
 
-from src import logger
+from .. import logger
+from ..start_app import ui_component
 
-def create_cache_tab(model_dropdown, language_dropdown):    
+def create_cache_tab():    
     with gr.Tab(_("cache_tab_title")):
         with gr.Row():
             with gr.Column():
@@ -40,7 +41,7 @@ def create_cache_tab(model_dropdown, language_dropdown):
         refresh_button.click(
             fn=refresh_model_list,
             inputs=[],
-            outputs=[model_dropdown, refresh_info]
+            outputs=[ui_component.model_dropdown, refresh_info]
         )
         clear_all_btn.click(
             fn=clear_all_model_cache,
@@ -67,9 +68,9 @@ def create_cache_tab(model_dropdown, language_dropdown):
                 gr.update(label=_("clear_all_result_label"))
             ]
 
-        language_dropdown.change(
+        ui_component.language_dropdown.change(
             fn=change_language,
-            inputs=[language_dropdown],
+            inputs=[ui_component.language_dropdown],
             outputs=[
                 refresh_button,
                 refresh_info,

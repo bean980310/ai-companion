@@ -1,10 +1,12 @@
 import gradio as gr
 from typing import Tuple
-from src.main.chatbot.chatbot import Chatbot
+
+from ..main.chatbot.chatbot import Chatbot
+from ..start_app import app_state, ui_component
 
 chat_bot=Chatbot()
 
-def create_session_management_tab(session_id_state, history_state, session_select_dropdown, system_message_box, chatbot)-> Tuple[gr.Tab, gr.Dropdown, gr.Textbox]:
+def create_session_management_tab()-> Tuple[gr.Tab, gr.Dropdown, gr.Textbox]:
     setting_session_management_tab = gr.Tab("세션 관리")
     with setting_session_management_tab:
         gr.Markdown("### 세션 관리")
@@ -38,9 +40,9 @@ def create_session_management_tab(session_id_state, history_state, session_selec
             interactive=False
         )
 
-        session_id_state.change(
+        app_state.session_id_state.change(
             fn=lambda sid: f"현재 세션: {sid}" if sid else "세션 없음",
-            inputs=[session_id_state],
+            inputs=[app_state.session_id_state],
             outputs=[current_session_display]
         )
                         
@@ -51,40 +53,40 @@ def create_session_management_tab(session_id_state, history_state, session_selec
         ).then(
             fn=chat_bot.refresh_sessions,
             inputs=[],
-            outputs=[session_select_dropdown]
+            outputs=[ui_component.session_select_dropdown]
         )
                         
         # (2) 새 세션 생성
         create_new_session_btn.click(
-            fn=lambda: chat_bot.create_new_session(system_message_box.value),
+            fn=lambda: chat_bot.create_new_session(ui_component.system_message_box.value),
             inputs=[],
-            outputs=[session_id_state, session_manage_info]
+            outputs=[app_state.session_id_state, session_manage_info]
         ).then(
             fn=lambda: [],
             inputs=[],
-            outputs=[history_state]
+            outputs=[app_state.history_state]
         ).then(
             fn=chat_bot.filter_messages_for_chatbot,
-            inputs=[history_state],
-            outputs=[chatbot]
+            inputs=[app_state.history_state],
+            outputs=[ui_component.chatbot]
         ).then(
             fn=chat_bot.refresh_sessions,
             inputs=[],
-            outputs=[session_select_dropdown]
+            outputs=[ui_component.session_select_dropdown]
         )
                         
         apply_session_btn.click(
             fn=chat_bot.apply_session,
             inputs=[existing_sessions_dropdown],
-            outputs=[history_state, session_id_state, session_manage_info]
+            outputs=[app_state.history_state, app_state.session_id_state, session_manage_info]
         ).then(
             fn=chat_bot.filter_messages_for_chatbot,
-            inputs=[history_state],
-            outputs=[chatbot]
+            inputs=[app_state.history_state],
+            outputs=[ui_component.chatbot]
         ).then(
             fn=chat_bot.refresh_sessions,
             inputs=[],
-            outputs=[session_select_dropdown]
+            outputs=[ui_component.session_select_dropdown]
         )
                         
         with gr.Row(visible=False) as delete_session_confirm_row:
@@ -106,7 +108,7 @@ def create_session_management_tab(session_id_state, history_state, session_selec
         # (5) 예 버튼 → 실제 세션 삭제
         delete_session_yes_btn.click(
             fn=chat_bot.delete_session,
-            inputs=[existing_sessions_dropdown, session_id_state],
+            inputs=[existing_sessions_dropdown, app_state.session_id_state],
             outputs=[session_manage_info, delete_session_confirm_msg, existing_sessions_dropdown]
         ).then(
             fn=lambda: (gr.update(visible=False)),
@@ -116,7 +118,7 @@ def create_session_management_tab(session_id_state, history_state, session_selec
         ).then(
             fn=chat_bot.refresh_sessions,
             inputs=[],
-            outputs=[session_select_dropdown]
+            outputs=[ui_component.session_select_dropdown]
         )
 
         # “아니요” 버튼: “취소되었습니다” 메시지 + 문구/버튼 숨기기

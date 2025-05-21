@@ -19,6 +19,7 @@ from src.characters.persona_speech_manager import PersonaSpeechManager
 from src.common.character_info import characters
 from src.common.args import parse_args
 from src.common.translations import _
+from ...start_app import ui_component
 
 import requests
 import base64

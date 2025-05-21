@@ -1,9 +1,10 @@
 import gradio as gr
 import json
 
-from src import logger
+from .. import logger
+from ..start_app import app_state
 
-def create_load_history_tab(history_state):
+def create_load_history_tab():
     with gr.Tab("채팅 히스토리 재로드"):
         upload_json = gr.File(label="대화 JSON 업로드", file_types=[".json"])
         load_info = gr.Textbox(label="로딩 결과", interactive=False)
@@ -28,5 +29,5 @@ def create_load_history_tab(history_state):
         upload_json.change(
             fn=load_chat_from_json,
             inputs=[upload_json],
-            outputs=[history_state, load_info]
+            outputs=[app_state.history_state, load_info]
         )

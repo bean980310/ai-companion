@@ -1,41 +1,12 @@
 # app.py
 
-import warnings
-import platform
-import importlib
 import random
-import pandas as pd
-from pathlib import Path
 from typing import List, Dict, Any, Tuple
 import gradio as gr
-import sqlite3
-from src.common.database import (
-    initialize_database,
-    add_system_preset,
-    delete_system_preset,
-    ensure_demo_session,
-    load_chat_from_db, 
-    load_system_presets, 
-    get_existing_sessions, 
-    get_preset_choices,
-    insert_default_presets,
-    update_system_message_in_db,
-    update_last_character_in_db)
-from src.models.models import default_device
-from src.common.cache import models_cache
-from src.common.translations import translation_manager, _, TranslationManager
-from src.characters.persona_speech_manager import PersonaSpeechManager
-from src.characters import handle_character_change
-from src.common.args import parse_args
-from src.common.default_language import default_language
-from src.common.tmp_dir import TMP_DIR
+from src.common.database import get_existing_sessions
+
+from src.common.translations import translation_manager, _
 from src.common.character_info import characters
-from src.common.utils import (
-    get_all_loras, 
-    get_diffusion_loras, 
-    get_diffusion_vae, 
-    detect_platform
-)
 import numpy as np
 
 from src.common.html import css, show_confetti
@@ -52,7 +23,6 @@ from presets import (
     MISTY_LANE_PRESET
     )
 
-from src.models import api_models, transformers_local, gguf_local, mlx_local, diffusion_api_models, diffusers_local, checkpoints_local, tts_api_models, vits_local
 from src.main.sidebar import create_sidebar
 from src.main.chatbot import (
     Chatbot,
@@ -60,25 +30,18 @@ from src.main.chatbot import (
     update_system_message_and_profile,
     create_reset_confirm_modal,
     create_delete_session_modal,
-    get_allowed_llm_models,
     share_allowed_llm_models,
-    create_chatbot_side_session_container,
-    create_chatbot_side_model_container,
-    create_chatbot_side
+    create_chat_container_main_panel,
+    create_chat_container_side_panel
 )
 from src.main.image_generation import (
     generate_images_wrapper, 
     update_diffusion_model_list,
     toggle_diffusion_api_key_visibility,
-    get_allowed_diffusion_models,
     share_allowed_diffusion_models,
-    create_diffusion_side_model_container,
-    create_diffusion_side_refiner_model_container,
-    create_diffusion_side_lora_container,
-    create_diffusion_side
 )
-from src.main.translator import translate_interface, upload_handler, LANGUAGES, create_translate_container
-from src.main.tts import text_to_speech, get_tts_models
+from src.main.translator import create_translate_container
+from src.main.tts import get_tts_models
 
 from src.tabs.cache_tab import create_cache_tab
 from src.tabs.download_tab import create_download_tab
@@ -88,24 +51,14 @@ from src.tabs.setting_tab_preset import create_system_preset_management_tab
 from src.tabs.setting_tab_save_history import create_save_history_tab
 from src.tabs.setting_tab_load_history import create_load_history_tab
 from src.tabs.setting_tab_session_manager import create_session_management_tab
-from src.tabs.device_setting import set_device, create_device_setting_tab
-
-from presets import __all__ as preset_modules
+from src.tabs.device_setting import create_device_setting_tab
 
 from src.api.comfy_api import client
 
-# os.environ['GRADIO_TEMP_DIR'] = os.path.abspath(TMP_DIR)
-
 # 로깅 설정
-from src import logger, args, os_name, arch
+from src import logger
 
 from src.start_app import (
-    get_last_used_character, 
-    initialize_speech_manager, 
-    load_presets_from_files, 
-    update_presets_on_start, 
-    get_last_used_session,
-    initialize_app,
     on_app_start,
     register_speech_manager_state,
     shared_on_app_start,
@@ -115,7 +68,6 @@ from src.start_app import (
     register_app_state_4,
     register_app_state_5,
     create_header_container,
-    create_tab_side
 )
 
 chat_bot = Chatbot()
@@ -123,38 +75,6 @@ chat_bot = Chatbot()
 ##########################################
 # 3) Gradio UI
 ##########################################
-
-def on_character_and_language_select(character_name, language):
-    """
-    캐릭터와 언어 선택 시 호출되는 함수.
-    - 캐릭터와 언어 설정 적용
-    - 시스템 메시지 프리셋 업데이트
-    """
-    try:
-        speech_manager_state.set_character_and_language(character_name, language)
-        system_message = speech_manager_state.get_system_message()
-        return system_message
-    except ValueError as ve:
-        logger.error(f"Character setting error: {ve}")
-        return "시스템 메시지 로딩 중 오류가 발생했습니다."
-    
-def on_character_change(chosen_character, session_id):
-    # 1) set_character_and_language
-    speech_manager = get_speech_manager(session_id)
-    speech_manager.set_character_and_language(chosen_character, speech_manager.current_language)
-
-    # 2) get updated system message
-    updated_system_msg = speech_manager.get_system_message()
-
-    # 3) system_message_box에 반영 (UI 갱신)
-    #    그리고 DB에 UPDATE
-    system_message_box.update(value=updated_system_msg)
-    update_system_message_in_db(session_id, updated_system_msg)
-    update_last_character_in_db(session_id, chosen_character)
-
-    return updated_system_msg  # UI에 표시
-
-refresh_session_list=chat_bot.refresh_sessions()
 
 with gr.Blocks(css=css, title="AI Companion") as demo:
     speech_manager_state = register_speech_manager_state()
@@ -186,142 +106,13 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                 with gr.Row(elem_classes="model-container"):
                     gr.Markdown("### Chat")
                 with gr.Row(elem_classes="chat-interface"):
-                    with gr.Column(scale=7):
-                        system_message_box = gr.Textbox(
-                            label=_("system_message"),
-                            value=system_message,
-                            placeholder=_("system_message_placeholder"),
-                            elem_classes="system-message"
-                        )
-                        
-                        chatbot = gr.Chatbot(
-                            height=400, 
-                            label="Chatbot", 
-                            type="messages", 
-                            elem_classes=["chat-messages"]
-                        )
-                        
-                        with gr.Row(elem_classes="input-area"):
-                            msg = gr.Textbox(
-                                label=_("message_input_label"),
-                                placeholder=_("message_placeholder"),
-                                scale=9,
-                                show_label=False,
-                                elem_classes="message-input",
-                                submit_btn=True
-                            )
-                            multimodal_msg = gr.MultimodalTextbox(
-                                label=_("message_input_label"),
-                                placeholder=_("message_placeholder"),
-                                file_types=["image"],
-                                scale=9,
-                                show_label=False,
-                                elem_classes="message-input",
-                                submit_btn=True
-                            )
-                            send_btn = gr.Button(
-                                value=_("send_button"),
-                                scale=1,
-                                variant="primary",
-                                elem_classes="send-button",
-                                visible=False
-                            )
-                            image_input = gr.Image(label=_("image_upload_label"), type="pil", visible=False)
-                    with gr.Column(scale=3, elem_classes="side-panel"):
-                        profile_image = gr.Image(
-                            label=_('profile_image_label'),
-                            visible=True,
-                            interactive=False,
-                            show_label=True,
-                            width="auto",
-                            height="auto",
-                            value=characters[last_character]["profile_image"],
-                            elem_classes="profile-image"
-                        )
-                        character_dropdown = gr.Dropdown(
-                            label=_('character_select_label'),
-                            choices=list(characters.keys()),
-                            value=last_character,
-                            interactive=True,
-                            info=_('character_select_info'),
-                            elem_classes='profile-image'
-                        )
-                        advanced_setting=gr.Accordion(_("advanced_setting"), open=False, elem_classes="accordion-container")
-                        with advanced_setting:
-                            seed_input = gr.Number(
-                                label=_("seed_label"),
-                                value=42,
-                                precision=0,
-                                step=1,
-                                interactive=True,
-                                info=_("seed_info"),
-                                elem_classes="seed-input"
-                            )
-                            temperature_slider=gr.Slider(
-                                label=_("temperature_label"),
-                                minimum=0.0,
-                                maximum=1.0,
-                                value=0.6,
-                                step=0.1,
-                                interactive=True
-                            )
-                            top_k_slider=gr.Slider(
-                                label=_("top_k_label"),
-                                minimum=0,
-                                maximum=100,
-                                value=20,
-                                step=1,
-                                interactive=True
-                            )
-                            top_p_slider=gr.Slider(
-                                label=_("top_p_label"),
-                                minimum=0.0,
-                                maximum=1.0,
-                                value=0.9,
-                                step=0.1,
-                                interactive=True
-                            )
-                            repetition_penalty_slider=gr.Slider(
-                                label=_("repetition_penalty_label"),
-                                minimum=0.0,
-                                maximum=2.0,
-                                value=1.1,
-                                step=0.1,
-                                interactive=True
-                            )
-                            preset_dropdown = gr.Dropdown(
-                                label="프리셋 선택",
-                                choices=get_preset_choices(default_language),
-                                value=last_preset,
-                                interactive=True,
-                                elem_classes="preset-dropdown"
-                            )
-                            change_preset_button = gr.Button("프리셋 변경")
-                            reset_btn = gr.Button(
-                                value=_("reset_session_button"),  # "세션 초기화"에 해당하는 번역 키
-                                variant="secondary",
-                                scale=1
-                            )
-                            reset_all_btn = gr.Button(
-                                value=_("reset_all_sessions_button"),  # "모든 세션 초기화"에 해당하는 번역 키
-                                variant="secondary",
-                                scale=1
-                            )
+                    system_message_box, chatbot, msg, multimodal_msg, image_input = create_chat_container_main_panel()
+                    profile_image, character_dropdown, advanced_setting, seed_input, temperature_slider, top_k_slider, top_p_slider, repetition_penalty_slider, preset_dropdown, change_preset_button, reset_btn, reset_all_btn = create_chat_container_side_panel()
                             
                 with gr.Row(elem_classes="status-bar"):
                     status_text = gr.Markdown("Ready", elem_id="status_text")
                     image_info = gr.Markdown("", visible=False)
                     session_select_info = gr.Markdown(_('select_session_info'))
-                    # 초기화 확인 메시지 및 버튼 추가 (숨김 상태로 시작)
-                    with gr.Row(visible=False) as reset_confirm_row:
-                        reset_confirm_msg = gr.Markdown("⚠️ **정말로 현재 세션을 초기화하시겠습니까? 모든 대화 기록이 삭제됩니다.**")
-                        reset_yes_btn = gr.Button("✅ 예", variant="danger")
-                        reset_no_btn = gr.Button("❌ 아니요", variant="secondary")
-
-                    with gr.Row(visible=False) as reset_all_confirm_row:
-                        reset_all_confirm_msg = gr.Markdown("⚠️ **정말로 모든 세션을 초기화하시겠습니까? 모든 대화 기록이 삭제됩니다.**")
-                        reset_all_yes_btn = gr.Button("✅ 예", variant="danger")
-                        reset_all_no_btn = gr.Button("❌ 아니요", variant="secondary")
                         
             with gr.Column(elem_classes='tab-container') as diffusion_container:
                 with gr.Row(elem_classes="model-container"):
@@ -444,7 +235,7 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                         )
 
                     with gr.Column(scale=3, elem_classes="side-panel"):
-                        with gr.Accordion("Advanced Settings", open=False, elem_classes="accordion-container"):
+                        with gr.Accordion("Advanced Settings", open=False, elem_classes="accordion-container") as diff_adv_setting:
                             sampler_dropdown = gr.Dropdown(
                                 label="Sampler",
                                 choices=["euler", "euler_cfg_pp", "euler_ancestral", "euler_ancestral_cfg_pp", "heun", "heunpp2", "dpm_2", "dpm_2_ancestral", "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_2s_ancestral_cfg_pp", "dpmpp_sde", "dpmpp_sde_gpu", "dpmpp_2m", "dpmpp_2m_cfg_pp", "dpmpp_2m_sde", "dpmpp_2m_sde_gpu", "dpmpp_3m_sde", "dpmpp_3m_sde_gpu", "ddpm", "lcm", "ddim"],
@@ -536,7 +327,7 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                             elem_classes="message-output"
                         )
                     with gr.Column(scale=3, elem_classes="side-panel"):
-                        with gr.Accordion(_("advanced_setting"), open=False, elem_classes="accordion-container"):
+                        with gr.Accordion(_("advanced_setting"), open=False, elem_classes="accordion-container") as story_adv_setting:
                             storyteller_seed_input = gr.Number(
                                 label=_("seed_label"),
                                 value=42,
@@ -902,14 +693,12 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
     demo.load(
         fn=lambda selected_model: (
             chat_bot.toggle_api_key_visibility(selected_model),
-            # main_tab.toggle_image_input_visibility(selected_model),
             chat_bot.toggle_lora_visibility(selected_model),
             chat_bot.toggle_multimodal_msg_input_visibility(selected_model),
             chat_bot.toggle_standard_msg_input_visibility(selected_model)
         ),
         inputs=[model_dropdown],
         outputs=[api_key_text, lora_dropdown, multimodal_msg, msg]
-        # outputs=[api_key_text, image_input, lora_dropdown]
     )
         
     def update_character_languages(selected_language, selected_character):
@@ -1004,7 +793,7 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
 
     @language_dropdown.change(
         inputs=[language_dropdown, character_dropdown],
-        outputs=[title, session_select_info, language_dropdown, system_message_box, model_type_dropdown, model_dropdown, character_dropdown, api_key_text, image_input, msg, multimodal_msg, send_btn, advanced_setting, seed_input, temperature_slider, top_k_slider, top_p_slider, repetition_penalty_slider, reset_btn, reset_all_btn, diffusion_model_type_dropdown, diffusion_model_dropdown, diffusion_api_key_text]
+        outputs=[title, session_select_info, language_dropdown, system_message_box, model_type_dropdown, model_dropdown, character_dropdown, api_key_text, image_input, msg, multimodal_msg, advanced_setting, seed_input, temperature_slider, top_k_slider, top_p_slider, repetition_penalty_slider, reset_btn, reset_all_btn, diffusion_model_type_dropdown, diffusion_model_dropdown, diffusion_api_key_text]
     )
     def change_language(selected_lang, selected_character):
         """언어 변경 처리 함수"""
@@ -1063,7 +852,6 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                     label=_("message_input_label"),
                     placeholder=_("message_placeholder")
                 ),
-                gr.update(value=_("send_button")),
                 gr.update(label=_("advanced_setting")),
                 gr.update(label=_("seed_label"), info=_("seed_info")),
                 gr.update(label=_("temperature_label")),
@@ -1078,7 +866,7 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
             ]
         else:
             # 언어 변경 실패 시 아무 것도 하지 않음
-            return gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update()
+            return gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update()
 
         # 메시지 전송 시 함수 연결
     msg.submit(
@@ -1149,49 +937,6 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
             lora_dropdown,
             custom_model_path_state,
             multimodal_msg,
-            api_key_text,
-            selected_device_state,
-            seed_state,
-            temperature_state,
-            top_k_state,
-            top_p_state,
-            repetition_penalty_state,
-            selected_language_state
-        ],
-        outputs=[
-            history_state,
-            chatbot,
-            status_text,  # 상태 메시지
-            chat_title_box
-        ],
-        queue=True  # 모델 추론이 들어가므로 True
-    )
-
-    send_btn.click(
-        fn=chat_bot.process_message_user,
-        inputs=[
-            msg,  # 사용자 입력
-            session_id_state,
-            history_state,
-            system_message_box,
-            character_dropdown,
-            selected_language_state
-        ],
-        outputs=[
-            msg,            # 사용자 입력 필드 초기화
-            history_state,  # 히스토리 업데이트
-            chatbot,        # Chatbot UI 업데이트
-        ],
-        queue=False
-    ).then(
-        fn=chat_bot.process_message_bot,
-        inputs=[
-            session_id_state,
-            history_state,
-            model_dropdown,
-            lora_dropdown,
-            custom_model_path_state,
-            image_input,
             api_key_text,
             selected_device_state,
             seed_state,
@@ -1312,7 +1057,7 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                 close_settings_btn = gr.Button("✕", elem_classes="close-button")
             
         with gr.Tabs():
-            create_cache_tab(model_dropdown, language_dropdown)
+            create_cache_tab()
             create_util_tab()
         
             with gr.Tab("설정"):
@@ -1320,16 +1065,8 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
 
                 with gr.Tabs():
                     # 사용자 지정 모델 경로 설정 섹션
-                    create_custom_model_tab(custom_model_path_state)
-                    create_system_preset_management_tab(
-                        default_language=default_language,
-                        session_id_state=session_id_state,
-                        history_state=history_state,
-                        selected_language_state=selected_language_state,
-                        system_message_box=system_message_box,
-                        profile_image=profile_image,
-                        chatbot=chatbot
-                    )
+                    create_custom_model_tab()
+                    create_system_preset_management_tab()
                     # 프리셋 Dropdown 초기화
                     demo.load(
                         fn=chat_bot.initial_load_presets,
@@ -1337,10 +1074,10 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                         outputs=[preset_dropdown],
                         queue=False
                     )                        
-                    create_save_history_tab(history_state)
-                    create_load_history_tab(history_state)
-                    setting_session_management_tab, existing_sessions_dropdown, current_session_display=create_session_management_tab(session_id_state, history_state, session_select_dropdown, system_message_box, chatbot)
-                    device_tab, device_dropdown=create_device_setting_tab(default_device)
+                    create_save_history_tab()
+                    create_load_history_tab()
+                    setting_session_management_tab, existing_sessions_dropdown, current_session_display=create_session_management_tab()
+                    device_tab, device_dropdown=create_device_setting_tab()
                     
         with gr.Row(elem_classes="popup-footer"):
             setting_cancel_btn = gr.Button("Cancel", variant="secondary")

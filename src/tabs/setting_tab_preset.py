@@ -3,6 +3,8 @@ from src.common.database import preset_exists, handle_add_preset, load_system_pr
 from src.main.chatbot.chatbot import Chatbot
 
 from src.characters.preset_images import PRESET_IMAGES
+from ..common.default_language import default_language
+from ..start_app import app_state, ui_component
 
 chat_bot=Chatbot()
 
@@ -49,7 +51,7 @@ def apply_preset(name, session_id, history, language=None):
     image_path = PRESET_IMAGES.get(name)
     return f"✅ '{name}' 프리셋이 적용되었습니다.", new_history, gr.update(value=content), gr.update(value=image_path) if image_path else gr.update()
 
-def create_system_preset_management_tab(default_language, session_id_state, history_state, selected_language_state, system_message_box, profile_image, chatbot):
+def create_system_preset_management_tab():
     with gr.Tab("시스템 메시지 프리셋 관리"):
         with gr.Row():
             preset_dropdown = gr.Dropdown(
@@ -60,7 +62,7 @@ def create_system_preset_management_tab(default_language, session_id_state, hist
             refresh_preset_button = gr.Button("프리셋 목록 갱신")
             refresh_preset_button.click(
                 fn=chat_bot.refresh_preset_list,
-                inputs=[selected_language_state],
+                inputs=[app_state.selected_language_state],
                 outputs=[preset_dropdown]
             )
             apply_preset_btn = gr.Button("프리셋 적용")
@@ -158,10 +160,10 @@ def create_system_preset_management_tab(default_language, session_id_state, hist
                 
         apply_preset_btn.click(
             fn=apply_preset,
-            inputs=[preset_dropdown, session_id_state, history_state, selected_language_state],
-            outputs=[preset_info, history_state, system_message_box, profile_image]
+            inputs=[preset_dropdown, app_state.session_id_state, app_state.history_state, app_state.selected_language_state],
+            outputs=[preset_info, app_state.history_state, ui_component.system_message_box, ui_component.profile_image]
         ).then(
             fn=chat_bot.filter_messages_for_chatbot,
-            inputs=[history_state],
-            outputs=chatbot
+            inputs=[app_state.history_state],
+            outputs=ui_component.chatbot
         )

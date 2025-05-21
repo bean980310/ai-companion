@@ -37,4 +37,31 @@ class UIComponent:
     tts_model_type_dropdown: gr.Radio = None
     tts_model_dropdown: gr.Dropdown = None
     
+    system_message_box: gr.Textbox = None
+    chatbot: gr.Chatbot = None
+    msg: gr.Textbox = None
+    multimodal_msg: gr.MultimodalTextbox = None
+    
+    profile_image: gr.Image = None
+    character_dropdown: gr.Dropdown = None
+    
+    seed_input: gr.Number = None
+    temperature_slider: gr.Slider = None
+    top_k_slider: gr.Slider = None
+    top_p_slider: gr.Slider = None
+    repetition_penalty_slider: gr.Slider = None
+    preset_dropdown: gr.Dropdown = None
+    change_preset_button: gr.Button = None
+    reset_btn: gr.Button = None
+    reset_all_btn: gr.Button = None
+    
 ui_component = UIComponent()
+
+@dataclass
+class ContainerComponent:
+    system_message_box: gr.Textbox = None
+    chatbot: gr.Chatbot = None
+    msg: gr.Textbox = None
+    multimodal_msg: gr.MultimodalTextbox = None
+    
+container_component = ContainerComponent()

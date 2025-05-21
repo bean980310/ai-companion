@@ -3,7 +3,7 @@ import platform
 import gradio as gr
 from typing import Tuple
 
-from src.models.models import get_default_device
+from src.models.models import get_default_device, default_device
 
 from src import logger
 
@@ -32,7 +32,7 @@ def set_device(selection):
     logger.info(device_info_message)
     return gr.update(value=device_info_message), device
 
-def create_device_setting_tab(default_device)->Tuple[gr.Tab, gr.Dropdown]:
+def create_device_setting_tab()->Tuple[gr.Tab, gr.Dropdown]:
     device_setting=gr.Tab("장치 설정")
     with device_setting:
         device_dropdown = gr.Dropdown(
