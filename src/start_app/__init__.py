@@ -26,57 +26,8 @@ from ..common.default_language import default_language
 
 from ..characters.persona_speech_manager import PersonaSpeechManager
 
-@dataclass
-class AppState:
-    speech_manager_state: gr.State = None
-    
-    session_id = None
-    loaded_history = None
-    session_dropdown = None
-    last_character = None
-    last_preset = None
-    system_message = None
-    session_label = None
-    
-    last_sid_state: gr.State = None
-    history_state: gr.State = None
-    last_character_state: gr.State = None
-    session_list_state: gr.State = None
-    overwrite_state: gr.State = None
-    
-    custom_model_path_state: gr.State = None
-    session_id_state: gr.State = None
-    selected_device_state: gr.State = None
-    character_state: gr.State = None
-    system_message_state: gr.State = None
-    
-    seed_state: gr.State = None
-    temperature_state: gr.State = None
-    top_k_state: gr.State = None
-    top_p_state: gr.State = None
-    repetition_penalty_state: gr.State = None
-    selected_language_state: gr.State = None
-    
-    reset_confirmation: gr.State = None
-    reset_all_confirmation: gr.State = None
-    
-    max_diffusion_lora_rows = None
-    stored_image: gr.State = None
-    stored_image_inpaint: gr.State = None
-    
-    initial_choices = None
-    llm_type_choices = None
-    
-    diffusion_choices = None
-    diffusion_type_choices = None
-    diffusion_lora_choices = None
-    vae_choices = None
-    diffusion_refiner_choices = None
-    diffusion_refiner_type_choices = None
-    
-    tts_choices = None
-    
-app_state = AppState()
+from .app_state_manager import app_state
+from .ui_component_manager import ui_component
 
 def register_speech_manager_state():
     speech_manager_state = gr.State(initialize_speech_manager)
@@ -162,6 +113,44 @@ def register_app_state_5():
     app_state.stored_image_inpaint = stored_image_inpaint
     
     return max_diffusion_lora_rows, stored_image, stored_image_inpaint
+
+def create_header_container():
+    with gr.Row(elem_classes="header-container"):
+        with gr.Column(scale=3):
+            title = gr.Markdown(f"## {_('main_title')}", elem_classes="title")
+            gr.Markdown("### Beta Release")
+        with gr.Column(scale=1):
+            settings_button = gr.Button("⚙️", elem_classes="settings-button")
+        with gr.Column(scale=1):
+            language_dropdown = gr.Dropdown(
+                label=_('language_select'),
+                choices=["한국어", "日本語", "中文(简体)", "中文(繁體)", "English"],
+                value=translation_manager.get_language_display_name(default_language),
+                interactive=True,
+                info=_('language_info'),
+                container=False,
+                elem_classes="custom-dropdown"
+            )
+            
+    ui_component.title = title
+    ui_component.settings_button = settings_button
+    ui_component.language_dropdown = language_dropdown
+    
+    return title, settings_button, language_dropdown
+
+def create_tab_side():
+    with gr.Column() as tab_side:
+        with gr.Row(elem_classes="session-container"):
+            with gr.Column():
+                gr.Markdown("### AI Companion")
+                chatbot_sidetab = gr.Button(value="Chat", elem_classes="tab")
+                diffusion_sidetab = gr.Button(value="Image Generation", elem_classes="tab")
+                storyteller_sidetab = gr.Button(value="Storyteller", elem_classes="tab")
+                tts_sidetab = gr.Button(value="Text to Speech", elem_classes="tab")
+                translate_sidetab = gr.Button(value="Translator", elem_classes="tab")
+                download_sidetab = gr.Button(value="Download Center", elem_classes="tab")
+                
+    return tab_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab
 
 def get_last_used_character(session_id):
     try:
@@ -352,3 +341,4 @@ def on_app_start(language=None):  # language 매개변수에 기본값 설정
         display_system,
         f"현재 세션: {sid}"
     )
+    
