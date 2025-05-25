@@ -1,5 +1,5 @@
 import gradio as gr
-from ...start_app import ui_component, app_state, container_component
+from ...start_app import ui_component, app_state
 from ...common.translations import _
 from ...common.utils import get_all_loras
 from ...common.default_language import default_language

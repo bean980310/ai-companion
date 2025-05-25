@@ -27,7 +27,7 @@ from ..common.default_language import default_language
 from ..characters.persona_speech_manager import PersonaSpeechManager
 
 from .app_state_manager import app_state
-from .ui_component_manager import ui_component, container_component
+from .ui_component_manager import ui_component
 
 def register_speech_manager_state():
     speech_manager_state = gr.State(initialize_speech_manager)

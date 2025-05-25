@@ -31,14 +31,15 @@ from src.main.chatbot import (
     create_reset_confirm_modal,
     create_delete_session_modal,
     share_allowed_llm_models,
-    create_chat_container_main_panel,
-    create_chat_container_side_panel
+    create_chat_container
 )
 from src.main.image_generation import (
     generate_images_wrapper, 
     update_diffusion_model_list,
     toggle_diffusion_api_key_visibility,
     share_allowed_diffusion_models,
+    create_diffusion_container_image_to_image_panel,
+    create_diffusion_container_main_panel
 )
 from src.main.translator import create_translate_container
 from src.main.tts import get_tts_models
@@ -95,138 +96,15 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
         sidebar, tab_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chatbot_side, session_select_dropdown, chat_title_box, add_session_icon_btn, delete_session_icon_btn, model_type_dropdown, model_dropdown, api_key_text, lora_dropdown, diffusion_side, diffusion_model_type_dropdown, diffusion_model_dropdown, diffusion_api_key_text, diffusion_refiner_model_dropdown, diffusion_refiner_start, diffusion_with_refiner_image_to_image_start, diffusion_lora_multiselect, diffusion_lora_text_encoder_sliders, diffusion_lora_unet_sliders, storyteller_side, storytelling_model_type_dropdown, storytelling_model_dropdown, storytelling_api_key_text, storytelling_lora_dropdown, tts_side, tts_model_type_dropdown, tts_model_dropdown, translate_side = create_sidebar()
                                    
         with gr.Row(elem_classes='tabs'):
-            with gr.Column(elem_classes='tab-container') as chat_container:
-                with gr.Row(elem_classes="model-container"):
-                    gr.Markdown("### Chat")
-                with gr.Row(elem_classes="chat-interface"):
-                    system_message_box, chatbot, msg, multimodal_msg, image_input = create_chat_container_main_panel()
-                    profile_image, character_dropdown, advanced_setting, seed_input, temperature_slider, top_k_slider, top_p_slider, repetition_penalty_slider, preset_dropdown, change_preset_button, reset_btn, reset_all_btn = create_chat_container_side_panel()
-                            
-                with gr.Row(elem_classes="status-bar"):
-                    status_text = gr.Markdown("Ready", elem_id="status_text")
-                    image_info = gr.Markdown("", visible=False)
-                    session_select_info = gr.Markdown(_('select_session_info'))
+            chat_container, system_message_box, chatbot, msg, multimodal_msg, image_input, profile_image, character_dropdown, advanced_setting, seed_input, temperature_slider, top_k_slider, top_p_slider, repetition_penalty_slider, preset_dropdown, change_preset_button, reset_btn, reset_all_btn, status_text, image_info, session_select_info = create_chat_container()
                         
             with gr.Column(elem_classes='tab-container') as diffusion_container:
                 with gr.Row(elem_classes="model-container"):
-                    gr.Markdown("### Image Generation")        
-                with gr.Row(elem_classes="model-container"):
-                    with gr.Accordion("Image to Image", open=False, elem_classes="accordion-container"):
-                        image_to_image_mode = gr.Radio(
-                            label="Image to Image Mode",
-                            choices=["None", "Image to Image", "Inpaint", "Inpaint Upload"],
-                            value="None",
-                            elem_classes="model-dropdown"
-                        )
-                        with gr.Column():
-                            with gr.Row():
-                                image_to_image_input = gr.Image(
-                                    label="Image to Image",
-                                    type="filepath",
-                                    sources="upload",
-                                    format="png",
-                                    visible=False
-                                )
-                                image_inpaint_input = gr.Image(
-                                    label="Image Inpaint",
-                                    type="filepath",
-                                    sources="upload",
-                                    format="png",
-                                    visible=False
-                                )
-                                image_inpaint_masking = gr.ImageMask(
-                                    label="Image Inpaint Mask",
-                                    type="filepath",
-                                    sources="upload",
-                                    format="png",
-                                    visible=False
-                                )
-                            image_inpaint_copy = gr.Button(
-                                value="Copy",
-                                visible=False
-                            )
-                            
-                        blur_radius_slider = gr.Slider(
-                            label="Blur Radius",
-                            minimum=0,
-                            maximum=10,
-                            step=0.5,
-                            value=5,
-                            visible=False
-                        )
-                        blur_expansion_radius_slider = gr.Slider(
-                            label="Blur Expansion Radius",
-                            minimum=0,
-                            maximum=100,
-                            step=1,
-                            value=1,
-                            visible=False
-                        )
-                        denoise_strength_slider = gr.Slider(
-                            label="Denoise Strength",
-                            minimum=0.0,
-                            maximum=1.0,
-                            step=0.01,
-                            value=0.5,
-                            visible=False
-                        )
+                    gr.Markdown("### Image Generation")
+                image_to_image_mode, image_to_image_input, image_inpaint_input, image_inpaint_masking, blur_radius_slider, blur_expansion_radius_slider, denoise_strength_slider = create_diffusion_container_image_to_image_panel()
 
                 with gr.Row(elem_classes="chat-interface"):
-                    with gr.Column(scale=7):
-                        positive_prompt_input = gr.TextArea(
-                            label="Positive Prompt",
-                            placeholder="Enter positive prompt...",
-                            elem_classes="message-input"
-                        )
-                        negative_prompt_input = gr.TextArea(
-                            label="Negative Prompt",
-                            placeholder="Enter negative prompt...",
-                            elem_classes="message-input"
-                        )
-                        
-                        with gr.Row():
-                            style_dropdown = gr.Dropdown(
-                                label="Style",
-                                choices=["Photographic", "Digital Art", "Oil Painting", "Watercolor"],
-                                value="Photographic"
-                            )
-                            
-                        with gr.Row():
-                            width_slider = gr.Slider(
-                                label="Width",
-                                minimum=128,
-                                maximum=2048,
-                                step=64,
-                                value=512
-                            )
-                            height_slider = gr.Slider(
-                                label="Height",
-                                minimum=128,
-                                maximum=2048,
-                                step=64,
-                                value=512
-                            )
-                        
-                        with gr.Row():
-                            generation_step_slider=gr.Slider(
-                                label="Generation Steps",
-                                minimum=1,
-                                maximum=50,
-                                step=1,
-                                value=20
-                            )
-                        
-                        with gr.Row():
-                            random_prompt_btn = gr.Button("🎲 Random Prompt", variant="secondary", elem_classes="random-button")
-                            generate_btn = gr.Button("🎨 Generate", variant="primary", elem_classes="send-button-alt")
-                        
-                        gallery = gr.Gallery(
-                            label="Generated Images",
-                            format="png",
-                            columns=2,
-                            rows=2
-                        )
-
+                    positive_prompt_input, negative_prompt_input, style_dropdown, width_slider, height_slider, generation_step_slider, random_prompt_btn, generate_btn, gallery = create_diffusion_container_main_panel()
                     with gr.Column(scale=3, elem_classes="side-panel"):
                         with gr.Accordion("Advanced Settings", open=False, elem_classes="accordion-container") as diff_adv_setting:
                             sampler_dropdown = gr.Dropdown(
@@ -300,6 +178,7 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
                         wrap=True,
                         datatype=["str", "str", "str", "str", "str", "str", "str", "str", "str", "str"]
                     )
+                    
             with gr.Column(elem_classes='tab-container') as story_container:
                 with gr.Row(elem_classes="model-container"):
                     gr.Markdown("### Storyteller")
@@ -379,6 +258,16 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
         메인탭에서 세션이 선택되면 바로 main_tab.apply_session을 호출해 세션 적용.
         """
         return chat_bot.apply_session(chosen_sid)
+    
+    session_select_dropdown.change(
+        fn=apply_session_immediately,
+        inputs=[session_select_dropdown],
+        outputs=[history_state, session_id_state, session_select_info]
+    ).then(
+        fn=chat_bot.filter_messages_for_chatbot,
+        inputs=[history_state],
+        outputs=[chatbot]
+    )
 
     def init_session_dropdown(sessions):
         if not sessions:
@@ -613,10 +502,6 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
     def toggle_image_inpaint_mask(mode):
         image_visible = mode == "Inpaint"
         return gr.update(visible=image_visible)
-    
-    def toggle_image_inpaint_copy(mode, image):
-        button_visible = mode == "Inpaint" and image is not None
-        return gr.update(visible=button_visible)
         
     def toggle_image_inpaint_mask_interactive(image):
         image_interactive = image is not None
@@ -648,12 +533,6 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
         inputs=[image_inpaint_input, image_inpaint_masking],
         outputs=image_inpaint_masking
     ).then(
-        fn=toggle_image_inpaint_mask_interactive,
-        inputs=image_inpaint_input,
-        outputs=image_inpaint_masking
-    )
-    
-    image_inpaint_copy.click(
         fn=toggle_image_inpaint_mask_interactive,
         inputs=image_inpaint_input,
         outputs=image_inpaint_masking
@@ -953,16 +832,6 @@ with gr.Blocks(css=css, title="AI Companion") as demo:
         inputs=[],
         outputs=[session_select_dropdown],
         queue=False
-    )
-        
-    session_select_dropdown.change(
-        fn=apply_session_immediately,
-        inputs=[session_select_dropdown],
-        outputs=[history_state, session_id_state, session_select_info]
-    ).then(
-        fn=chat_bot.filter_messages_for_chatbot,
-        inputs=[history_state],
-        outputs=[chatbot]
     )
     
     reset_btn.click(

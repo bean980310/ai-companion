@@ -55,13 +55,30 @@ class UIComponent:
     reset_btn: gr.Button = None
     reset_all_btn: gr.Button = None
     
-ui_component = UIComponent()
-
-@dataclass
-class ContainerComponent:
-    system_message_box: gr.Textbox = None
-    chatbot: gr.Chatbot = None
-    msg: gr.Textbox = None
-    multimodal_msg: gr.MultimodalTextbox = None
+    status_text: gr.Markdown = None
+    image_info: gr.Markdown = None
+    session_select_info: gr.Markdown = None
     
-container_component = ContainerComponent()
+    image_to_image_mode: gr.Radio = None
+    image_to_image_input: gr.Image = None
+    image_inpaint_input: gr.Image = None
+    image_inpaint_masking: gr.ImageMask = None
+    
+    blur_radius_slider: gr.Slider = None
+    blur_expansion_radius_slider: gr.Slider = None
+    denoise_strength_slider: gr.Slider = None
+    
+    positive_prompt_input: gr.TextArea = None
+    negative_prompt_input: gr.TextArea = None
+    style_dropdown: gr.Dropdown = None
+    
+    width_slider: gr.Slider = None
+    height_slider: gr.Slider = None
+    
+    generation_step_slider: gr.Slider = None
+    random_prompt_btn: gr.Button = None
+    generate_btn: gr.Button = None
+    
+    gallery: gr.Gallery = None
+    
+ui_component = UIComponent()
