@@ -81,4 +81,18 @@ class UIComponent:
     
     gallery: gr.Gallery = None
     
+    sampler_dropdown: gr.Dropdown = None
+    scheduler_dropdown: gr.Dropdown = None
+    cfg_scale_slider: gr.Slider = None
+    diffusion_seed_input: gr.Number = None
+    random_seed_checkbox: gr.Checkbox = None
+    vae_dropdown: gr.Dropdown = None
+    clip_skip_slider: gr.Slider = None
+    enable_clip_skip_checkbox: gr.Checkbox = None
+    clip_g_checkbox: gr.Checkbox = None
+    batch_size_input: gr.Number = None
+    batch_count_input: gr.Number = None
+    
+    image_history: gr.Dataframe = None
+    
 ui_component = UIComponent()
