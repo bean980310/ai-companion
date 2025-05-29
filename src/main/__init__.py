@@ -23,7 +23,8 @@ from presets import (
     ARIA_PRINCESS_FATE_PRESET, 
     ARIA_PRINCE_FATE_PRESET,
     WANG_MEI_LING_PRESET,
-    MISTY_LANE_PRESET
+    MISTY_LANE_PRESET,
+    LILY_EMPRESS_PRESET
     )
 
 def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
@@ -481,6 +482,7 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
                 "아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)": ARIA_PRINCE_FATE_PRESET,
                 "왕 메이린 (王美玲, ワン·メイリン, Wang Mei-Ling)": WANG_MEI_LING_PRESET,
                 "미스티 레인 (ミスティ·レーン, Misty Lane)": MISTY_LANE_PRESET,
+                '릴리 엠프레스 (リリー·エンプレス, Lily Empress)': LILY_EMPRESS_PRESET,
             }
                 
             preset_name = system_presets.get(selected_character, AI_ASSISTANT_PRESET)

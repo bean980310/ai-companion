@@ -20,3 +20,6 @@ with open('presets/wang_meiling_preset.json', 'r') as f:
     
 with open('presets/misty_lane_preset.json', 'r') as f:
     MISTY_LANE_PRESET = json.load(f)
+    
+with open('presets/lily_empress_preset.json', 'r') as f:
+    LILY_EMPRESS_PRESET = json.load(f)

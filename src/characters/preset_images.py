@@ -10,4 +10,5 @@ PRESET_IMAGES = {
     "아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)": os.path.join("assets", "5_aria_prince_fate.png"),
     "왕 메이린 (王美玲, ワン·メイリン, Wang Mei-Ling)": os.path.join("assets", "6_wang_mei_ling.png"),
     "미스티 레인 (ミスティ·レーン, Misty Lane)": os.path.join("assets", "7_misty_lane.png"),
+    "릴리 엠프레스 (リリー·エンプレス, Lily Empress)": os.path.join("assets", "8_lily_empress.png"),
 }

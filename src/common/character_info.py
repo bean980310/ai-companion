@@ -56,10 +56,17 @@ characters={
         "profile_image": "assets/6_wang_mei_ling.png"
     },
    "미스티 레인 (ミスティ·レーン, Misty Lane)": {
-        "default_tone": "존댓말", 
+        "default_tone": "반말", 
         "languages": ["ko", "ja", "zh_TW", "en"],
         "default_language": "ko",
         "preset_name": "미스티 레인 (ミスティ·レーン, Misty Lane)",
         "profile_image": "assets/7_misty_lane.png"
     },
+   "릴리 엠프레스 (リリー·エンプレス, Lily Empress)": {
+        "default_tone": "반말",
+        "languages": ["ko", "ja", "en"],
+        "default_language": "ko",
+        "preset_name": "릴리 엠프레스 (リリー·エンプレス, Lily Empress)",
+        "profile_image": "assets/8_lily_empress.png"
+    }
 }

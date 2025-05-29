@@ -72,6 +72,7 @@ DEFAULT_PRESETS = frozenset([
     '아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)',
     '왕 메이린 (王美玲, ワン·メイリン, Wang Mei-Ling)',
     '미스티 레인 (ミスティ·レーン, Misty Lane)',
+    '릴리 엠프레스 (リリー·エンプレス, Lily Empress)',
 ])
 
 class DatabaseError(Exception):
@@ -268,7 +269,8 @@ def insert_default_presets(translation_manager, overwrite=True) -> None:
         PresetConfig("아리아 프린세스 페이트 (アリア·プリンセス·フェイト, Aria Princess Fate)", "aria_princess_fate"),
         PresetConfig("아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)", "aria_prince_fate"),
         PresetConfig("왕 메이린 (王美玲, ワン·メイリン, Wang Mei-Ling)", "wang_mei_ling"),
-        PresetConfig("미스티 레인 (ミスティ·レーン, Misty Lane)", "misty_lane")
+        PresetConfig("미스티 레인 (ミスティ·レーン, Misty Lane)", "misty_lane"),
+        PresetConfig("릴리 엠프레스 (リリー·エンプレス, Lily Empress)", "lily_empress"),
     ]
     
     try:
