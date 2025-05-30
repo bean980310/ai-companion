@@ -95,4 +95,14 @@ class UIComponent:
     
     image_history: gr.Dataframe = None
     
+    storytelling_input: gr.Textbox = None
+    storytelling_btn: gr.Button = None
+    storytelling_output: gr.Textbox = None
+    
+    storyteller_seed_input: gr.Number = None
+    storyteller_temperature_slider: gr.Slider = None
+    storyteller_top_k_slider: gr.Slider = None
+    storyteller_top_p_slider: gr.Slider = None
+    storyteller_repetition_penalty_slider: gr.Slider = None
+    
 ui_component = UIComponent()

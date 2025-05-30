@@ -143,14 +143,15 @@ def create_tab_side():
         with gr.Row(elem_classes="session-container"):
             with gr.Column():
                 gr.Markdown("### AI Companion")
+                llm_integrated_sidetab = gr.Button(value="LLM", elem_classes="tab")
                 chatbot_sidetab = gr.Button(value="Chat", elem_classes="tab")
                 diffusion_sidetab = gr.Button(value="Image Generation", elem_classes="tab")
                 storyteller_sidetab = gr.Button(value="Storyteller", elem_classes="tab")
                 tts_sidetab = gr.Button(value="Text to Speech", elem_classes="tab")
                 translate_sidetab = gr.Button(value="Translator", elem_classes="tab")
                 download_sidetab = gr.Button(value="Download Center", elem_classes="tab")
-                
-    return tab_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab
+
+    return tab_side, llm_integrated_sidetab, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab
 
 def get_last_used_character(session_id):
     try:
