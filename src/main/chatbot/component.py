@@ -74,12 +74,13 @@ def create_chatbot_side_model_container():
 
 def create_chat_container_main_panel():
     with gr.Column(scale=7):
-        system_message_box = gr.Textbox(
-            label=_("system_message"),
-            value=app_state.system_message,
-            placeholder=_("system_message_placeholder"),
-            elem_classes="system-message"
-        )
+        with gr.Accordion(_("system_message"), elem_classes="accordion-container") as system_message_accordion:
+            system_message_box = gr.Textbox(
+                label=_("system_message"),
+                value=app_state.system_message,
+                placeholder=_("system_message_placeholder"),
+                elem_classes="system-message"
+            )
                         
         chatbot = gr.Chatbot(
             height=400, 
@@ -113,7 +114,7 @@ def create_chat_container_main_panel():
     ui_component.msg = msg
     ui_component.multimodal_msg = multimodal_msg
     
-    return system_message_box, chatbot, msg, multimodal_msg, image_input
+    return system_message_accordion, system_message_box, chatbot, msg, multimodal_msg, image_input
 
 def create_chat_container_side_panel():
     with gr.Column(scale=3, elem_classes="side-panel"):

@@ -40,7 +40,7 @@ def create_chat_container():
         with gr.Row(elem_classes="model-container"):
             gr.Markdown("### Chat")
         with gr.Row(elem_classes="chat-interface"):
-            system_message_box, chatbot, msg, multimodal_msg, image_input = create_chat_container_main_panel()
+            system_message_accordion, system_message_box, chatbot, msg, multimodal_msg, image_input = create_chat_container_main_panel()
             profile_image, character_dropdown, advanced_setting, seed_input, temperature_slider, top_k_slider, top_p_slider, repetition_penalty_slider, preset_dropdown, change_preset_button, reset_btn, reset_all_btn = create_chat_container_side_panel()
                             
         with gr.Row(elem_classes="status-bar"):
@@ -53,7 +53,7 @@ def create_chat_container():
     ui_component.session_select_info = session_select_info
             
     return [chat_container,
-            system_message_box, chatbot, msg, multimodal_msg, image_input,
+            system_message_accordion, system_message_box, chatbot, msg, multimodal_msg, image_input,
             profile_image, character_dropdown, advanced_setting, seed_input, temperature_slider, top_k_slider, top_p_slider, repetition_penalty_slider, preset_dropdown, change_preset_button, reset_btn, reset_all_btn,
             status_text, image_info, session_select_info]
     
@@ -62,7 +62,7 @@ def create_chat_container_2():
         with gr.Row(elem_classes="model-container"):
             gr.Markdown("### Chat")
         with gr.Row(elem_classes="chat-interface"):
-            system_message_box, chatbot, msg, multimodal_msg, image_input = create_chat_container_main_panel()
+            system_message_accordion, system_message_box, chatbot, msg, multimodal_msg, image_input = create_chat_container_main_panel()
             profile_image, character_dropdown, advanced_setting, seed_input, temperature_slider, top_k_slider, top_p_slider, repetition_penalty_slider, preset_dropdown, change_preset_button, reset_btn, reset_all_btn = create_chat_container_side_panel()
                             
         with gr.Row(elem_classes="status-bar"):
@@ -75,7 +75,7 @@ def create_chat_container_2():
     ui_component.session_select_info = session_select_info
             
     return [chat_tab,
-            system_message_box, chatbot, msg, multimodal_msg, image_input,
+            system_message_accordion, system_message_box, chatbot, msg, multimodal_msg, image_input,
             profile_image, character_dropdown, advanced_setting, seed_input, temperature_slider, top_k_slider, top_p_slider, repetition_penalty_slider, preset_dropdown, change_preset_button, reset_btn, reset_all_btn,
             status_text, image_info, session_select_info]
 
