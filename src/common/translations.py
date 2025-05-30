@@ -15,7 +15,9 @@ from presets import (
     ARIA_PRINCE_FATE_PRESET,
     WANG_MEI_LING_PRESET,
     MISTY_LANE_PRESET,
-    LILY_EMPRESS_PRESET
+    LILY_EMPRESS_PRESET,
+    CHOI_YUNA_PRESET,
+    CHOI_YURI_PRESET
     )
 
 from src.common.default_language import default_language
@@ -41,7 +43,9 @@ class TranslationManager:
             'aria_prince_fate': ARIA_PRINCE_FATE_PRESET,
             'wang_mei_ling': WANG_MEI_LING_PRESET,
             'misty_lane': MISTY_LANE_PRESET,
-            'lily_empress': LILY_EMPRESS_PRESET
+            'lily_empress': LILY_EMPRESS_PRESET,
+            'choi_yuna': CHOI_YUNA_PRESET,
+            'choi_yuri': CHOI_YURI_PRESET
         }
         self.load_translations()
 
@@ -558,6 +562,8 @@ class TranslationManager:
             '왕 메이린 (王美玲, ワン·メイリン, Wang Mei-Ling)': WANG_MEI_LING_PRESET,
             '미스티 레인 (ミスティ·レーン, Misty Lane)': MISTY_LANE_PRESET,
             '릴리 엠프레스 (リリー·エンプレス, Lily Empress)': LILY_EMPRESS_PRESET,
+            '최유나 (崔有娜, チェ·ユナ, Choi Yuna)': CHOI_YUNA_PRESET,
+            '최유리 (崔有利, チェ·ユリ, Choi Yuri)': CHOI_YURI_PRESET
         }
 
         for lang, translations in default_translations.items():

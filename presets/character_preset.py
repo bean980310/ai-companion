@@ -23,3 +23,9 @@ with open('presets/misty_lane_preset.json', 'r') as f:
     
 with open('presets/lily_empress_preset.json', 'r') as f:
     LILY_EMPRESS_PRESET = json.load(f)
+    
+with open('presets/choi_yuna_preset.json', 'r') as f:
+    CHOI_YUNA_PRESET = json.load(f)
+
+with open('presets/choi_yuri_preset.json', 'r') as f:
+    CHOI_YURI_PRESET = json.load(f)

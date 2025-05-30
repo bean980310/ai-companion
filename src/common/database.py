@@ -73,6 +73,8 @@ DEFAULT_PRESETS = frozenset([
     '왕 메이린 (王美玲, ワン·メイリン, Wang Mei-Ling)',
     '미스티 레인 (ミスティ·レーン, Misty Lane)',
     '릴리 엠프레스 (リリー·エンプレス, Lily Empress)',
+    '최유나 (崔有娜, チェ·ユナ, Choi Yuna)',
+    '최유리 (崔有莉, チェ·ユリ, Choi Yuri)',
 ])
 
 class DatabaseError(Exception):
@@ -271,6 +273,8 @@ def insert_default_presets(translation_manager, overwrite=True) -> None:
         PresetConfig("왕 메이린 (王美玲, ワン·メイリン, Wang Mei-Ling)", "wang_mei_ling"),
         PresetConfig("미스티 레인 (ミスティ·レーン, Misty Lane)", "misty_lane"),
         PresetConfig("릴리 엠프레스 (リリー·エンプレス, Lily Empress)", "lily_empress"),
+        PresetConfig("최유나 (崔有娜, チェ·ユナ, Choi Yuna)", "choi_yuna"),
+        PresetConfig("최유리 (崔有莉, チェ·ユリ, Choi Yuri)", "choi_yuri"),
     ]
     
     try:

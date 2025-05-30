@@ -11,4 +11,6 @@ PRESET_IMAGES = {
     "왕 메이린 (王美玲, ワン·メイリン, Wang Mei-Ling)": os.path.join("assets", "6_wang_mei_ling.png"),
     "미스티 레인 (ミスティ·レーン, Misty Lane)": os.path.join("assets", "7_misty_lane.png"),
     "릴리 엠프레스 (リリー·エンプレス, Lily Empress)": os.path.join("assets", "8_lily_empress.png"),
+    "최유나 (崔有娜, チェ·ユナ, Choi Yuna)": os.path.join("assets", "9_choi_yuna.png"),
+    "최유리 (崔有莉, チェ·ユリ, Choi Yuri)": os.path.join("assets", "A_choi_yuri.png"),
 }
