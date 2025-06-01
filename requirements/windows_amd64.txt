@@ -15,6 +15,6 @@ torchao
 # xformers
 # bitsandbytes
 onnxruntime
-faiss-cpu
+# faiss-cpu
 eva-decord
 opencc

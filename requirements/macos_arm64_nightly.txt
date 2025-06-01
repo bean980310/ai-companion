@@ -1,3 +1,7 @@
+tensorflow
+tensorboard
+keras
+tf-keras
 tensorflow-metal
 torch --pre --index-url https://download.pytorch.org/whl/nightly/cpu
 torchvision
@@ -7,9 +11,9 @@ jaxlib
 jaxtyping
 jax-metal
 flax
-optimum
-optimum-quanto
-torchao
+# optimum
+# optimum-quanto
+# torchao
 onnxruntime
 faiss-cpu
 eva-decord;  python_version < '3.12'
