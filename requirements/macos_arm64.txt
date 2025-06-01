@@ -1,3 +1,7 @@
+tensorflow
+tensorboard
+keras
+tf-keras
 tensorflow-metal
 torch>=2.7.0
 torchvision
@@ -7,10 +11,10 @@ jaxlib
 jaxtyping
 jax-metal
 flax
-optimum
-optimum-quanto
-torchao
-xformers
+# optimum
+# optimum-quanto
+# torchao
+# xformers
 # bitsandbytes
 onnxruntime
 faiss-cpu

@@ -1,15 +1,13 @@
-transformers
+transformers[ja, sklearn, tiktoken, serving, testing, sentencepiece, num2words, video, quality]
 x_transformers
 sentence_transformers
-datasets
+datasets[audio]
 safetensors
-sentencepiece
 tokenizers
-diffusers
-k-diffusion
-peft
+diffusers[quality, docs, test]
+peft[test]
 trl
-huggingface_hub
+huggingface_hub[cli, hf_transfer]
 modelscope
 evaluate
 gradio
@@ -23,7 +21,7 @@ openai
 anthropic
 google-genai
 ollama
-lmstudio
+lmstudio[dev, sync-sdk-schema, docs]
 unstructured
 langchain
 langchain-core
@@ -40,7 +38,6 @@ git+https://github.com/ModelCloud/GPTQModel.git
 jiwer
 gtts
 pydub
-librosa
 samplerate
 pyworld
 ffmpeg-python
@@ -50,3 +47,5 @@ openai-whisper
 Faster_whisper
 wavmark
 whisper-timestamped
+llama-cpp-python
+stable-diffusion-cpp-python

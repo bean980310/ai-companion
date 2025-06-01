@@ -1,5 +1,5 @@
-mlx
-mlx_lm
+mlx[dev]
+mlx_lm[test, evaluate, lwq]
 # mlx_vlm
 git+https://github.com/bean980310/mlx-vlm.git
 mlx_embeddings

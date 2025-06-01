@@ -1,3 +1,7 @@
+tensorflow
+tensorboard
+keras
+tf-keras
 torch
 torchvision
 torchaudio

@@ -1,3 +1,7 @@
+tensorflow
+tensorboard
+keras
+tf-keras
 torch>=2.7.0
 torchvision
 torchaudio

@@ -1,16 +1,12 @@
 blake3
 inflect
 wordsegment
-unidic_lite
-unidic
 mecab
 mecab-python3
 python_mecab_ko
 g2p_en
-num2words
 jamo
 pykakasi
-fugashi==1.3.0
 anyascii
 jieba_fast
 jieba
@@ -20,7 +16,6 @@ fasttext
 langid
 txtsplit
 gruut[de,es,fr]
-tiktoken
 cn2an==0.5.22
 eng_to_ipa
 pypinyin
@@ -29,7 +24,6 @@ ko_pron
 opencc
 split-lang
 fast_langdetect
-pydantic
 tensorflow
 tensorboard
 keras
@@ -47,6 +41,4 @@ flax
 opencv-python
 opencv-python-headless
 opencv-contrib-python
-pytesseract
-pdf2image
 onnx
