@@ -173,22 +173,10 @@ source venv/Scripts/activate # Windows
 
 **Install dependencies**  
 
-* **Pytorch**
-
-```shell
-# for Apple Silicon Mac and Windows with CPU and Linux with CUDA 12.4
-pip install torch torchvision torchaudio
-# for Windows with CUDA 12.4
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
-```
-
 * **Common**
 
 ```shell
 pip install -r requirements/common.txt
-pip install -r requirements/common_2.txt
-pip install -r requirements/ai_models.txt
-pip install -r requirements/ai_models_gguf.txt
 ```
 
 * **Windows**
@@ -198,12 +186,15 @@ pip install -r requirements/ai_models_gguf.txt
 pip install -r requirements/windows_amd64.txt
 # on Windows Subsystem for Linux 2
 pip install -r requirements/windows_amd64_wsl2.txt
+# Common
+pip install -r requirements/ai_models.txt
 ```
 
 * **macOS(Apple Silicon Mac)**
 
 ```zsh
 pip install -r requirements/macos_arm64.txt
+pip install -r requirements/ai_models.txt
 pip install -r requirements/macos_arm64_mlx.txt
 ```
 
@@ -218,6 +209,8 @@ pip install -r requirements/linux_amd64_rocm.txt
 pip install -r requirements/linux_arm64.txt
 # on Google Colab TPU
 pip install -r requirements/linux_colab_tpu.txt
+# Common
+pip install -r requirements/ai_models.txt
 ```
 
 * **MeloTTS(Optional)**
