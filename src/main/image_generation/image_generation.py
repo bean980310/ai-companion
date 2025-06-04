@@ -13,7 +13,7 @@ import traceback
 import os
 import gradio as gr
 
-from src.handlers import generate_images, generate_images_with_refiner, generate_images_to_images, generate_images_to_images_with_refiner, generate_images_inpaint, generate_images_inpaint_with_refiner
+from src.pipelines.diffusion import generate_images, generate_images_with_refiner, generate_images_to_images, generate_images_to_images_with_refiner, generate_images_inpaint, generate_images_inpaint_with_refiner
 
 from src.common.utils import get_all_diffusion_models
 from src.models import diffusion_api_models, diffusers_local, checkpoints_local

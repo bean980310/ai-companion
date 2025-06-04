@@ -5,7 +5,7 @@ import platform
 import numpy as np
 import torch
 from src.common.cache import models_cache
-from src.model_handlers import (
+from src.pipelines.llm import (
     TransformersCausalModelHandler, 
     TransformersVisionModelHandler, 
     TransformersLlama4ModelHandler, 
