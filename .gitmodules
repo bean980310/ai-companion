@@ -1,3 +1,6 @@
 [submodule "ComfyUI"]
 	path = ComfyUI
 	url = https://github.com/comfyanonymous/ComfyUI.git
+[submodule "backend/Wan2.1"]
+	path = backend/Wan2.1
+	url = https://github.com/Wan-Video/Wan2.1.git
