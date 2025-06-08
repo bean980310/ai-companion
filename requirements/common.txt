@@ -1,4 +1,3 @@
-cached_path
 python-json-logger
 ninja
 cmake>=3.18,<4.0

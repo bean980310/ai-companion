@@ -8,6 +8,8 @@ diffusers[quality, docs, test]
 peft[test]
 trl
 huggingface_hub[cli, hf_transfer]
+hf_transfer
+hf_xet<2.0.0
 modelscope
 evaluate
 gradio
@@ -22,15 +24,8 @@ anthropic
 google-genai
 ollama
 lmstudio[dev, sync-sdk-schema, docs]
-unstructured
-langchain
-langchain-core
-langchain-openai
-langchain-anthropic
-langchain-google-genai
-langchain-community
-langchain-huggingface
-langchain-ollama
+unstructured[pdf]
+langchain[community, anthropic, openai, google-genai, ollama, huggingface]
 qwen-vl-utils
 qwen-omni-utils
 # gptqmodel
