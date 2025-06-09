@@ -107,3 +107,9 @@ def load_inpaint_sdxl_with_refiner_workflow_clip_skip():
         data=json.load(f)
         
     return data
+
+def load_image2video_wan_workflow():
+    with open('workflows/image2video_wan.json') as f:
+        data=json.load(f)
+        
+    return data
