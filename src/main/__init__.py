@@ -497,12 +497,12 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
                 gr.update(value=_('select_session_info')),
                 gr.update(label=_('language_select'),
                 info=_('language_info')),
+                gr.update(label=_("system_message")),
                 gr.update(
                     label=_("system_message"),
                     value=system_content,
                     placeholder=_("system_message_placeholder")
                 ),
-                gr.update(label=_("system_message")),
                 gr.update(label=_("model_type_label")),
                 gr.update(label=_("model_select_label")),
                 gr.update(label=_('character_select_label'), info=_('character_select_info')),
@@ -530,7 +530,7 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
             ]
         else:
             # 언어 변경 실패 시 아무 것도 하지 않음
-            return gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update()
+            return gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update()
 
         # 메시지 전송 시 함수 연결
     msg.submit(
