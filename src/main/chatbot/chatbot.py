@@ -115,7 +115,7 @@ class Chatbot:
         """
         if isinstance(user_input, dict):
             text = user_input.get("text", "")
-            files = user_input.get("files", [])
+            files = user_input.get("files", None)
             if not text.strip() and not files:
                 # 빈 입력일 경우 아무 것도 하지 않음
                 return "", history, self.filter_messages_for_chatbot(history), ""
@@ -147,7 +147,7 @@ class Chatbot:
     
         
         if isinstance(user_input, dict):
-            history.append({"role": "user", "content": files})
+            # history.append({"role": "user", "content": files})
             history.append({"role": "user", "content": text})
             speech_manager.update_tone(text)
         else:
@@ -526,6 +526,7 @@ class Chatbot:
             "qwen2-vl" not in selected_model.lower() and
             "qwen2.5-vl" not in selected_model.lower() and
             "llama-4" not in selected_model.lower() and
+            "mistral-small-3.1-24b" not in selected_model.lower() and
             selected_model not in [
                 "Bllossom/llama-3.2-Korean-Bllossom-AICA-5B",
                 "THUDM/glm-4v-9b",
@@ -539,7 +540,8 @@ class Chatbot:
             "vision" in selected_model.lower() or
             "qwen2-vl" in selected_model.lower() or
             "qwen2.5-vl" in selected_model.lower() or
-            "llama-4" in selected_model.lower() and
+            "llama-4" in selected_model.lower() or
+            "mistral-small-3.1-24b" in selected_model.lower() or
             selected_model in [
                 "Bllossom/llama-3.2-Korean-Bllossom-AICA-5B",
                 "THUDM/glm-4v-9b",

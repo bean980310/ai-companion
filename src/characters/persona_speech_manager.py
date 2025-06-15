@@ -145,6 +145,9 @@ class PersonaSpeechManager:
         한국어 존댓말을 반말로 변환 (정규 표현식 사용)
         """
         # 예시: "입니다"를 "야"로 변환
+        # if not isinstance(content, str):
+        #     content = str(content)
+
         content = re.sub(r'안녕하세요\b', '안녕', content)
         content = re.sub(r'\b합시다\b', '하자', content)
         content = re.sub(r'\b드려요\b', '줘', content)
@@ -180,6 +183,9 @@ class PersonaSpeechManager:
         """
         한국어 반말을 존댓말로 변환 (정규 표현식 사용)
         """
+        # if not isinstance(content, str):
+        #     content = str(content)
+
         # 예시: "야"를 "예요"로 변환
         content = re.sub(r'\b야\b', '예요', content)
         content = re.sub(r'\b응\b', '예요', content)

@@ -20,7 +20,7 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
         sampler, logits_processors = self.get_settings(**kwargs)
         response = generate(self.model, self.tokenizer, prompt=text, verbose=True, sampler=sampler, logits_processors=logits_processors, max_tokens=2048)
         
-        return response
+        return response.strip()
     
     def get_settings(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
         from mlx_lm.sample_utils import make_sampler, make_logits_processors
@@ -79,7 +79,7 @@ class MlxVisionModelHandler(BaseVisionModelHandler):
         temperature, top_k, top_p, repetition_penalty = self.get_settings(**kwargs)
         response = generate(self.model, self.processor, formatted_prompt, image, verbose=False, repetition_penalty=repetition_penalty, top_p=top_p, top_k=top_k, temp=temperature, max_tokens=2048)
 
-        return response
+        return response[0].strip()
 
     def get_settings(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
         return temperature, top_k, top_p, repetition_penalty
@@ -91,7 +91,8 @@ class MlxVisionModelHandler(BaseVisionModelHandler):
                 processor=self.processor,
                 config=self.config,
                 prompt=messages,
-                num_images=1 # <-- history 자체를 전달
+                num_images=1, # <-- history 자체를 전달
+                add_generation_prompt=True,
             )
         else:
             return None, self.processor.apply_chat_template(

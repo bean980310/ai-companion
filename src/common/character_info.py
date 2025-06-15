@@ -71,14 +71,14 @@ characters={
     },
     "최유나 (崔有娜, チェ·ユナ, Choi Yuna)": {
         "default_tone": "반말",
-        "languages": ["ko"],
+        "languages": ["ko", "ja", "en"],
         "default_language": "ko",
         "preset_name": "최유나 (崔有娜, チェ·ユナ, Choi Yuna)",
         "profile_image": "assets/9_choi_yuna.png"
     },
     "최유리 (崔有莉, チェ·ユリ, Choi Yuri)": {
        "default_tone": "반말",
-       "languages": ["ko"],
+       "languages": ["ko", "ja", "en"],
        "default_language": "ko",
        "preset_name": "최유리 (崔有莉, チェ·ユリ, Choi Yuri)",
        "profile_image": "assets/A_choi_yuri.png"

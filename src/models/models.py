@@ -117,7 +117,7 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
-        elif "vision" in model_id.lower() or "qwen2-vl" in model_id.lower() or "qwen2.5-vl" in model_id.lower():
+        elif "vision" in model_id.lower() or "qwen2-vl" in model_id.lower() or "qwen2.5-vl" in model_id.lower() or "mistral-small-3.1-24b" in model_id.lower():
             handler = MlxVisionModelHandler(
                 model_id=model_id,
                 lora_model_id=lora_model_id,
