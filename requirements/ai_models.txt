@@ -10,6 +10,7 @@ trl
 huggingface_hub[cli, hf_transfer]
 hf_transfer
 hf_xet<2.0.0
+fastrtc
 modelscope
 evaluate
 gradio
@@ -23,13 +24,13 @@ openai
 anthropic
 google-genai
 ollama
-lmstudio[dev, sync-sdk-schema, docs]
+lmstudio
 unstructured[pdf]
 langchain[community, anthropic, openai, google-genai, ollama, huggingface]
 qwen-vl-utils
 qwen-omni-utils
 # gptqmodel
-git+https://github.com/ModelCloud/GPTQModel.git
+gptqmodel @ git+https://github.com/ModelCloud/GPTQModel.git
 jiwer
 gtts
 pydub
