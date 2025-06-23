@@ -7,9 +7,9 @@ tokenizers
 diffusers[quality, docs, test]
 peft[test]
 trl
-huggingface_hub[cli, hf_transfer]
-hf_transfer
-hf_xet<2.0.0
+huggingface_hub[cli, hf_transfer, hf_xet]
+# hf_transfer
+# hf_xet<2.0.0
 fastrtc
 modelscope
 evaluate
