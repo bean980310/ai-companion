@@ -1,4 +1,5 @@
 numpy<2.2.0
+protobuf==5.29.3
 python-json-logger
 ninja
 cmake>=3.18,<4.0
