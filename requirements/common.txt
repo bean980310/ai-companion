@@ -1,3 +1,4 @@
+numpy<2.2.0
 python-json-logger
 ninja
 cmake>=3.18,<4.0
