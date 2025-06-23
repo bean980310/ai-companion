@@ -46,3 +46,4 @@ whisper-timestamped
 gguf
 llama-cpp-python
 stable-diffusion-cpp-python
+tipo-kgen
