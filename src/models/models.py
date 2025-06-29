@@ -269,7 +269,7 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
             except Exception as e:
                 logger.error(f"Google API 오류: {str(e)}\n\n{traceback.format_exc()}")
                 return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
-        elif "gpt" in selected_model:
+        elif "gpt" in selected_model or "o1" in selected_model or "o3" in selected_model or "o4" in selected_model:
             if not api_key:
                 logger.error("OpenAI API Key가 missing.")
                 return "OpenAI API Key가 필요합니다."
@@ -290,6 +290,36 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
                 return answer
             except Exception as e:
                 logger.error(f"OpenAI API 오류: {str(e)}\n\n{traceback.format_exc()}")
+                return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+        elif "sonar" in selected_model:
+            if not api_key:
+                logger.error("Perplexity API Key가 missing.")
+                return "Perplexity API Key가 필요합니다."
+            messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
+            logger.info(f"[*] Perplexity API 요청: {messages}")
+            
+            try:
+                url = "https://api.perplexity.ai/chat/completions"
+                payload = { 
+                    "model": selected_model,
+                    "messages": messages,
+                    "max_tokens": 1024,
+                    "temperature": temperature,
+                    "top_p": top_p,
+                    "top_k": top_k,
+                    "presence_penalty": repetition_penalty
+                }
+                headers = {
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                }
+                response = requests.request("POST", url, json=payload, headers=headers)
+                answer = response.text
+                logger.info(f"[*] Perplexity 응답: {answer}")
+                return answer
+            
+            except Exception as e:
+                logger.error(f"Perplexity API 오류: {str(e)}\n\n{traceback.format_exc()}")
                 return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
         else:
             if not api_key:
