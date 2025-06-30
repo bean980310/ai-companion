@@ -5,6 +5,8 @@ app.log*
 .gradio
 .vscode
 .idea
+.venv
+venv/
 __pycache__
 chat_history.db
 chat_history_backup.db
