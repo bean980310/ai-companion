@@ -1,36 +1,36 @@
-transformers[ja, sklearn, tiktoken, serving, testing, sentencepiece, num2words, video, quality]
+transformers[ja, sklearn, tiktoken, serving, testing, sentencepiece, num2words, video, quality]>=4.53.0
 x_transformers
 sentence_transformers
-datasets[audio]
+datasets[audio]>=3.6.0
 safetensors
-tokenizers
-diffusers[quality, docs, test]
-peft[test]
-trl
-huggingface_hub[cli, hf_transfer, hf_xet]
-# hf_transfer
-# hf_xet<2.0.0
-fastrtc
-modelscope
-evaluate
-gradio
-accelerate
-basicsr
-facexlib
-gfpgan
-ultralytics
+tokenizers>=0.21.2
+diffusers[docs, test]>=0.34.0
+peft>=0.15.2
+trl>=0.19.0
+huggingface_hub[cli, hf_transfer, hf_xet]>=0.33.1
+hf_transfer>=0.1.9
+hf_xet<2.0.0
+fastrtc>=0.0.28
+modelscope>=1.27.1
+evaluate>=0.4.4
+gradio>=5.35.0
+accelerate>=1.8.1
+basicsr>=1.4.2
+facexlib>=0.3.0
+gfpgan>=1.3.8
+ultralytics==8.3.161
 git+https://github.com/xinntao/Real-ESRGAN.git
-openai
-anthropic
-google-genai
-ollama
-lmstudio
-unstructured[pdf]
-langchain[community, anthropic, openai, google-genai, ollama, huggingface]
+openai>=1.93.0
+anthropic>=0.55.0
+google-genai>=1.23.0
+ollama==0.5.1
+lmstudio==1.4.0
+unstructured[pdf]==0.18.1
+langchain[community, anthropic, openai, google-genai, ollama, huggingface]>=0.3.26
 qwen-vl-utils
 qwen-omni-utils
 # gptqmodel
-gptqmodel @ git+https://github.com/ModelCloud/GPTQModel.git
+gptqmodel @ git+https://github.com/ModelCloud/GPTQModel.git@251224794250748b666756623574d75c11e9ad1e
 jiwer
 gtts
 pydub
