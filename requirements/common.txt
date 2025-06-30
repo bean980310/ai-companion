@@ -1,6 +1,10 @@
 setuptools
 wheel
+scikit-build-core
 numpy<2.2.0
+pandas
+matplotlib
+scikit-learn
 protobuf==5.29.3
 fsspec==2025.3.0
 python-json-logger
