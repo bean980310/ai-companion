@@ -165,10 +165,17 @@ conda create -n ai-companion python=3.11
 # Python 3.12
 conda create -n ai-companion python=3.12
 conda activate ai-companion
+# Other virtual environments
+cd ai-companion
 # venv
 python3 -m venv venv
+# uv
+uv venv --python 3.10 
+uv venv --python 3.11
+uv venv --python 3.12
 source venv/bin/activate # macOS/Linux
-source venv/Scripts/activate # Windows
+source venv/Scripts/activate # Windows WSL
+.\venv\Scripts\activate # Windows Powershell
 ```
 
 **Install dependencies**  

@@ -165,12 +165,20 @@ conda create -n ai-companion python=3.11
 # Python 3.12
 conda create -n ai-companion python=3.12
 conda activate ai-companion
+# 그 외 가상 환경 
+cd ai-companion
 # venv
 python3 -m venv venv
+# uv
+uv venv --python 3.10 
+uv venv --python 3.11
+uv venv --python 3.12
 # MacOS, Linux 환경
 source venv/bin/activate 
 # Windows 환경
-source venv/Scripts/activate 
+source venv/Scripts/activate
+# Windows Powershell 환경
+.\venv\Scripts\activate
 ```
 
 **의존성 설치**  

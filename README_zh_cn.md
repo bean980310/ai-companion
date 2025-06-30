@@ -153,10 +153,17 @@ git submodule update
 conda create -n ai-companion python=3.10
 conda activate ai-companion
 
+# 使用其他python版本
+cd ai-companion
 # 使用venv
 python3 -m venv venv
+# 使用uv
+uv venv --python 3.10 
+uv venv --python 3.11
+uv venv --python 3.12
 source venv/bin/activate  # MacOS/Linux
 source venv/Scripts/activate  # Windows
+.\venv\Scripts\activate # Windows Powershell
 ```
 
 **安装依赖**  
