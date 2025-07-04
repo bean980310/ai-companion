@@ -20,3 +20,4 @@ loguru
 imutils
 pytesseract
 pdf2image
+neo4j
