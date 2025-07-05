@@ -31,7 +31,7 @@ google-genai>=1.23.0
 ollama==0.5.1
 lmstudio==1.4.0
 unstructured[pdf]==0.18.1
-langchain[community, anthropic, openai, google-genai, ollama, huggingface]>=0.3.26
+langchain[community, anthropic, openai, google-genai, ollama, huggingface, perplexity, xai]>=0.3.26
 qwen-vl-utils
 qwen-omni-utils
 # gptqmodel
