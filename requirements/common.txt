@@ -2,6 +2,7 @@ setuptools
 wheel
 scikit-build-core
 numpy<2.2.0
+numba>=0.59.0
 pandas
 matplotlib
 scikit-learn

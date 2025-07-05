@@ -1,4 +1,7 @@
-transformers[ja, sklearn, tiktoken, serving, testing, sentencepiece, num2words, video, quality]>=4.53.0
+torch>=2.7.0
+torchvision
+torchaudio
+transformers[ja, sklearn, tiktoken, serving, testing, sentencepiece, num2words, video, quality]>=4.53.1
 x_transformers
 sentence_transformers
 datasets[audio]>=3.6.0
@@ -7,10 +10,12 @@ tokenizers>=0.21.2
 diffusers[docs, test]>=0.34.0
 peft>=0.15.2
 trl>=0.19.0
+numba>=0.59.0
 huggingface_hub[cli, hf_transfer, hf_xet]>=0.33.1
 hf_transfer>=0.1.9
 hf_xet<2.0.0
 fastrtc>=0.0.28
+aiortc>=1.13.0
 modelscope>=1.27.1
 evaluate>=0.4.4
 gradio>=5.35.0
@@ -32,7 +37,8 @@ qwen-omni-utils
 # gptqmodel
 gptqmodel @ git+https://github.com/ModelCloud/GPTQModel.git@251224794250748b666756623574d75c11e9ad1e
 jiwer
-gtts
+gtts>=2.5.4
+chromadb
 pydub
 samplerate
 pyworld
