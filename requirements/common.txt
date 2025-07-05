@@ -12,6 +12,7 @@ python-json-logger
 ninja
 cmake>=3.18,<4.0
 unidecode
+sqlite-vec
 filelock>=3.18.0
 chardet
 attrdict
