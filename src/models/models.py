@@ -235,8 +235,8 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
                     temperature=temperature,
                     top_k=top_k,
                     top_p=top_p,
-                    # repetition_penalty=repetition_penalty,
-                    max_tokens=1024
+                    # frequency_penalty=repetition_penalty,
+                    max_tokens=1024,
                 )
                 answer = response.content[0].text
                 logger.info(f"[*] Anthropic 응답: {answer}")
@@ -253,8 +253,10 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
             messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
             config = types.GenerateContentConfig(
                 max_output_tokens=1024,
-                temperature=0.7,
-                top_p=0.9
+                temperature=temperature,
+                top_p=top_p,
+                top_k=top_k,
+                frequency_penalty=repetition_penalty
             )
             logger.info(f"[*] Google API 요청: {messages}")
             try: 
@@ -281,9 +283,11 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
                 response = openai.chat.completions.create(
                     model=selected_model,
                     messages=messages,
-                    temperature=0.7,
+                    temperature=temperature,
                     max_tokens=1024,
-                    top_p=0.9,
+                    top_logprobs=top_k,
+                    frequency_penalty=repetition_penalty,
+                    top_p=top_p,
                 )
                 answer = response.choices[0].message["content"]
                 logger.info(f"[*] OpenAI 응답: {answer}")
