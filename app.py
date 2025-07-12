@@ -13,4 +13,4 @@ if __name__=="__main__":
     initialize_app()
 
     demo = create_app()
-    demo.queue().launch(debug=args.debug, share=args.share, inbrowser=args.inbrowser, server_port=args.port, width=800)
+    demo.queue().launch(debug=args.debug, share=args.share, inbrowser=args.inbrowser, server_port=args.port, width=800, mcp_server=args.mcp_server, pwa=True)

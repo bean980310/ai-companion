@@ -8,8 +8,15 @@ from .base_handlers import BaseCausalModelHandler, BaseVisionModelHandler
 from src import logger
 
 class GGUFCausalModelHandler(BaseCausalModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="gguf", device='cpu'):
+    def __init__(self, model_id, lora_model_id=None, model_type="gguf", device='cpu', **kwargs):
         super().__init__(model_id, lora_model_id)
+
+        self.max_tokens=2048
+        self.temperature = kwargs.get("temperature", 1.0)
+        self.top_k = kwargs.get("top_k", 50)
+        self.top_p = kwargs.get("top_p", 1.0)
+        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
+
         self.n_gpu_layers = -1 if device != 'cpu' else 0
         self.load_model()
         
@@ -27,10 +34,10 @@ class GGUFCausalModelHandler(BaseCausalModelHandler):
         temperature, top_k, top_p, repetition_penalty = self.get_settings(**kwargs)
         response = self.model.create_chat_completion(
             messages=prompt,
-            temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
-            repeat_penalty=repetition_penalty
+            temperature=self.temperature,
+            top_k=self.top_k,
+            top_p=self.top_p,
+            repeat_penalty=self.repetition_penalty
         )
         return response["choices"][0]["message"]["content"]
     

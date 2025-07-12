@@ -1,13 +1,19 @@
 setuptools
 wheel
 scikit-build-core
-numpy<2.2.0
-numba>=0.59.0
-pandas
+numpy>=2.0.2,<2.2.0
+numba>=0.60.0
+pandas>=2.0.0
 matplotlib
 scikit-learn
-protobuf==5.29.3
+beautifulsoup4==4.13.4
+sympy==1.14.0
+scipy==1.16.0
+protobuf==5.29.5
+packaging==24.2
 fsspec==2025.3.0
+pyyaml==6.0.2
+jinja2==3.1.6
 python-json-logger
 ninja
 cmake>=3.18,<4.0
@@ -23,3 +29,9 @@ imutils
 pytesseract
 pdf2image
 neo4j
+
+# fasttext
+# txtsplit
+# split-lang
+# fast_langdetect
+# langid

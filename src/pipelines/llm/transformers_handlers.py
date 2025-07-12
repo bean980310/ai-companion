@@ -9,8 +9,15 @@ from src import logger
 from .base_handlers import BaseCausalModelHandler, BaseVisionModelHandler, BaseModelHandler
 
 class TransformersCausalModelHandler(BaseCausalModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu'):
+    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', **kwargs):
         super().__init__(model_id, lora_model_id)
+
+        self.max_new_tokens = kwargs.get("max_new_tokens", 1024)
+        self.temperature = kwargs.get("temperature", 1.0)
+        self.top_k = kwargs.get("top_k", 50)
+        self.top_p = kwargs.get("top_p", 1.0)
+        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
+
         self.device = device
         self.load_model()
         
@@ -25,8 +32,8 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
     def generate_answer(self, history, **kwargs):
         try:
             prompt_messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
-            
-            self.get_settings(**kwargs)
+            # If kwargs are provided, update the settings
+            self.get_settings()
 
             input_ids = self.load_template(prompt_messages)
             
@@ -40,7 +47,7 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
             
             _ = self.model.generate(
                 input_ids,
-                max_new_tokens=1024,
+                max_new_tokens=self.max_new_tokens,
                 do_sample=True,
                 streamer=streamer,
             )
@@ -61,12 +68,12 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
             logger.error(f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}")
             return f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}"
         
-    def get_settings(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
-        self.model.config.temperature = temperature
-        self.model.config.top_k = top_k
-        self.model.config.top_p = top_p
-        self.model.config.repetition_penalty = repetition_penalty
-        
+    def get_settings(self):
+        self.model.config.temperature = self.temperature
+        self.model.config.top_k = self.top_k
+        self.model.config.top_p = self.top_p
+        self.model.config.repetition_penalty = self.repetition_penalty
+
     def load_template(self, messages):
         return self.tokenizer.apply_chat_template(
             messages,
@@ -76,8 +83,15 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
         )
         
 class TransformersVisionModelHandler(BaseVisionModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu'):
+    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', **kwargs):
         super().__init__(model_id, lora_model_id)
+
+        self.max_new_tokens = kwargs.get("max_new_tokens", 1024)
+        self.temperature = kwargs.get("temperature", 1.0)
+        self.top_k = kwargs.get("top_k", 50)
+        self.top_p = kwargs.get("top_p", 1.0)
+        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
+
         self.device = device
         self.load_model()
 
@@ -93,7 +107,7 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
         try:
             prompt_messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
 
-            self.get_settings(**kwargs)
+            self.get_settings()
 
             inputs = self.load_template(prompt_messages, image_input)
             
@@ -107,7 +121,7 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
             
             _ = self.model.generate(
                 **inputs,
-                max_new_tokens=1024,
+                max_new_tokens=self.max_new_tokens,
                 do_sample=True,
                 streamer=streamer
             )
@@ -127,11 +141,11 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
             logger.error(f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}")
             return f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}"
 
-    def get_settings(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
-        self.model.config.temperature = temperature
-        self.model.config.top_k = top_k
-        self.model.config.top_p = top_p
-        self.model.config.repetition_penalty = repetition_penalty
+    def get_settings(self):
+        self.model.config.temperature = self.temperature
+        self.model.config.top_k = self.top_k
+        self.model.config.top_p = self.top_p
+        self.model.config.repetition_penalty = self.repetition_penalty
 
     def load_template(self, messages, image_input):
         if image_input:
@@ -149,11 +163,19 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
             )
             
 class TransformersLlama4ModelHandler(BaseModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu'):
+    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', **kwargs):
         super().__init__(model_id, lora_model_id)
+
+        self.max_new_tokens = kwargs.get("max_new_tokens", 1024)
+        self.temperature = kwargs.get("temperature", 1.0)
+        self.top_k = kwargs.get("top_k", 50)
+        self.top_p = kwargs.get("top_p", 1.0)
+        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
+
         self.tokenizer = None
         self.processor = None
         self.model = None
+
         self.load_model()
         
     def load_model(self):
@@ -169,7 +191,7 @@ class TransformersLlama4ModelHandler(BaseModelHandler):
         try:
             prompt_messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
 
-            self.get_settings(**kwargs)
+            self.get_settings()
 
             inputs = self.load_template(prompt_messages, image_input)
             streamer = TextStreamer(self.processor, skip_prompt=True)
@@ -182,7 +204,7 @@ class TransformersLlama4ModelHandler(BaseModelHandler):
             
             _ = self.model.generate(
                 **inputs,
-                max_new_tokens=1024,
+                max_new_tokens=self.max_new_tokens,
                 do_sample=True,
                 streamer=streamer
             )
@@ -209,13 +231,13 @@ class TransformersLlama4ModelHandler(BaseModelHandler):
         except Exception as e:
             logger.error(f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}")
             return f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}"
-            
-    def get_settings(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
-        self.model.config.temperature = temperature
-        self.model.config.top_k = top_k
-        self.model.config.top_p = top_p
-        self.model.config.repetition_penalty = repetition_penalty
-            
+
+    def get_settings(self):
+        self.model.config.temperature = self.temperature
+        self.model.config.top_k = self.top_k
+        self.model.config.top_p = self.top_p
+        self.model.config.repetition_penalty = self.repetition_penalty
+
     def load_template(self, messages, image_input):
         if image_input:
             return self.processor.apply_chat_template(
@@ -235,8 +257,15 @@ class TransformersLlama4ModelHandler(BaseModelHandler):
             )
             
 class TransformersQwen3ModelHandler(BaseCausalModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu'):
+    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', **kwargs):
         super().__init__(model_id, lora_model_id)
+
+        self.max_new_tokens = kwargs.get("max_new_tokens", 32768)
+        self.temperature = kwargs.get("temperature", 1.0)
+        self.top_k = kwargs.get("top_k", 50)
+        self.top_p = kwargs.get("top_p", 1.0)
+        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
+
         self.device = device
         self.load_model()
         
@@ -261,7 +290,7 @@ class TransformersQwen3ModelHandler(BaseCausalModelHandler):
             
             outputs = self.model.generate(
                 **model_inputs,
-                max_new_tokens=32768
+                max_new_tokens=self.max_new_tokens
             )
             
             generated_ids = outputs[0][len(model_inputs.input_ids[0]):].tolist()
@@ -297,11 +326,11 @@ class TransformersQwen3ModelHandler(BaseCausalModelHandler):
             logger.error(f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}")
             return f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}"
         
-    def get_settings(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
-        self.model.config.temperature = temperature
-        self.model.config.top_k = top_k
-        self.model.config.top_p = top_p
-        self.model.config.repetition_penalty = repetition_penalty
+    def get_settings(self):
+        self.model.config.temperature = self.temperature
+        self.model.config.top_k = self.top_k
+        self.model.config.top_p = self.top_p
+        self.model.config.repetition_penalty = self.repetition_penalty
         
     def load_template(self, messages):
         return self.tokenizer.apply_chat_template(

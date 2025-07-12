@@ -6,8 +6,15 @@ from src import logger
 from .base_handlers import BaseCausalModelHandler, BaseVisionModelHandler, BaseModelHandler
 
 class MlxCausalModelHandler(BaseCausalModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="mlx"):
+    def __init__(self, model_id, lora_model_id=None, model_type="mlx", use_langchain: bool = True, *, session_id="demo_session", **kwargs):
         super().__init__(model_id, lora_model_id)
+
+        self.max_tokens=2048
+        self.temperature = kwargs.get("temperature", 1.0)
+        self.top_k = kwargs.get("top_k", 50)
+        self.top_p = kwargs.get("top_p", 1.0)
+        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
+
         self.load_model()
         
     def load_model(self):
@@ -17,19 +24,19 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
     def generate_answer(self, history, **kwargs):
         from mlx_lm import generate
         text = self.load_template(history)
-        sampler, logits_processors = self.get_settings(**kwargs)
-        response = generate(self.model, self.tokenizer, prompt=text, verbose=True, sampler=sampler, logits_processors=logits_processors, max_tokens=2048)
+        sampler, logits_processors = self.get_settings()
+        response = generate(self.model, self.tokenizer, prompt=text, verbose=True, sampler=sampler, logits_processors=logits_processors, max_tokens=self.max_tokens)
         
         return response.strip()
     
-    def get_settings(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
+    def get_settings(self):
         from mlx_lm.sample_utils import make_sampler, make_logits_processors
         sampler = make_sampler(
-            temp=temperature,
-            top_p=top_p,
-            top_k=top_k
+            temp=self.temperature,
+            top_p=self.top_p,
+            top_k=self.top_k
         )
-        logits_processors = make_logits_processors(repetition_penalty=repetition_penalty)
+        logits_processors = make_logits_processors(repetition_penalty=self.repetition_penalty)
         return sampler, logits_processors
     
     def load_template(self, messages):
@@ -63,8 +70,15 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
             return {"eos_token": "</s>"}
         
 class MlxVisionModelHandler(BaseVisionModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="mlx"):
+    def __init__(self, model_id, lora_model_id=None, model_type="mlx", **kwargs):
         super().__init__(model_id, lora_model_id)
+
+        self.max_tokens=2048
+        self.temperature = kwargs.get("temperature", 1.0)
+        self.top_k = kwargs.get("top_k", 50)
+        self.top_p = kwargs.get("top_p", 1.0)
+        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
+
         self.load_model()
 
     def load_model(self):
@@ -74,10 +88,10 @@ class MlxVisionModelHandler(BaseVisionModelHandler):
         self.config = load_config(self.local_model_path)
 
     def generate_answer(self, history, image_input=None, **kwargs):
-        from mlx_vlm import generate
+        from mlx_vlm import generate, stream_generate
         image, formatted_prompt = self.load_template(history, image_input)
-        temperature, top_k, top_p, repetition_penalty = self.get_settings(**kwargs)
-        response = generate(self.model, self.processor, formatted_prompt, image, verbose=False, repetition_penalty=repetition_penalty, top_p=top_p, top_k=top_k, temp=temperature, max_tokens=2048)
+        # temperature, top_k, top_p, repetition_penalty = self.get_settings(**kwargs)
+        response = stream_generate(self.model, self.processor, formatted_prompt, image, verbose=False, repetition_penalty=self.repetition_penalty, top_p=self.top_p, top_k=self.top_k, temp=self.temperature, max_tokens=self.max_tokens)
 
         return response[0].strip()
 
@@ -117,12 +131,19 @@ class MlxVisionModelHandler(BaseVisionModelHandler):
         return title
     
 class MlxLlama4ModelHandler(BaseModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="mlx", image_input=None):
+    def __init__(self, model_id, lora_model_id=None, model_type="mlx", image_input=None, **kwargs):
         super().__init__(model_id, lora_model_id)
         self.tokenizer = None
         self.processor = None
         self.model = None
         self.image_input = image_input
+
+        self.max_tokens=2048
+        self.temperature = kwargs.get("temperature", 1.0)
+        self.top_k = kwargs.get("top_k", 50)
+        self.top_p = kwargs.get("top_p", 1.0)
+        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
+
         self.load_model()
         
     def load_model(self):
@@ -141,25 +162,29 @@ class MlxLlama4ModelHandler(BaseModelHandler):
         if image:
             from mlx_vlm import stream_generate
             
-            temperature, top_k, top_p, repetition_penalty = MlxVisionModelHandler.get_settings(**kwargs)
-            response = stream_generate(self.model, self.processor, formatted_prompt, image, verbose=False, repetition_penalty=repetition_penalty, top_p=top_p, top_k=top_k, temp=temperature, max_tokens=2048)
-            
+            # temperature, top_k, top_p, repetition_penalty = MlxVisionModelHandler.get_settings(**kwargs)
+            response = stream_generate(self.model, self.processor, formatted_prompt, image, verbose=False, repetition_penalty=self.repetition_penalty, top_p=self.top_p, top_k=self.top_k, temp=self.temperature, max_tokens=self.max_tokens)
+
+            response = response[0].strip()
+
         else:
             from mlx_lm import generate
             
-            sampler, logits_processors = self.get_settings(**kwargs)
-            response = generate(self.model, self.tokenizer, prompt=formatted_prompt, verbose=True, sampler=sampler, logits_processors=logits_processors, max_tokens=2048)
+            sampler, logits_processors = self.get_settings()
+            response = generate(self.model, self.tokenizer, prompt=formatted_prompt, verbose=True, sampler=sampler, logits_processors=logits_processors, max_tokens=self.max_tokens)
+
+            response = response.strip()
             
         return response
             
-    def get_settings(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
+    def get_settings(self):
         from mlx_lm.sample_utils import make_sampler, make_logits_processors
         sampler = make_sampler(
-            temp=temperature,
-            top_p=top_p,
-            top_k=top_k
+            temp=self.temperature,
+            top_p=self.top_p,
+            top_k=self.top_k
         )
-        logits_processors = make_logits_processors(repetition_penalty=repetition_penalty)
+        logits_processors = make_logits_processors(repetition_penalty=self.repetition_penalty)
         return sampler, logits_processors
     
     def load_template(self, messages, image_input=None):
@@ -198,8 +223,15 @@ class MlxLlama4ModelHandler(BaseModelHandler):
         return title
     
 class MlxQwen3ModelHandler(BaseCausalModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="mlx"):
+    def __init__(self, model_id, lora_model_id=None, model_type="mlx", **kwargs):
         super().__init__(model_id, lora_model_id)
+
+        self.max_tokens=32768
+        self.temperature = kwargs.get("temperature", 1.0)
+        self.top_k = kwargs.get("top_k", 50)
+        self.top_p = kwargs.get("top_p", 1.0)
+        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
+
         self.load_model()
         
     def load_model(self):
@@ -209,8 +241,8 @@ class MlxQwen3ModelHandler(BaseCausalModelHandler):
     def generate_answer(self, history, **kwargs):
         from mlx_lm import generate
         text = self.load_template(history)
-        sampler, logits_processors = self.get_settings(**kwargs)
-        generated = generate(self.model, self.tokenizer, prompt=text, verbose=True, sampler=sampler, logits_processors=logits_processors, max_tokens=32768)
+        sampler, logits_processors = self.get_settings()
+        generated = generate(self.model, self.tokenizer, prompt=text, verbose=True, sampler=sampler, logits_processors=logits_processors, max_tokens=self.max_tokens)
         
         if "</think>" in generated:
             _, response = generated.split("</think>", 1)
@@ -220,14 +252,14 @@ class MlxQwen3ModelHandler(BaseCausalModelHandler):
             
         return response
     
-    def get_settings(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
+    def get_settings(self):
         from mlx_lm.sample_utils import make_sampler, make_logits_processors
         sampler = make_sampler(
-            temp=temperature,
-            top_p=top_p,
-            top_k=top_k
+            temp=self.temperature,
+            top_p=self.top_p,
+            top_k=self.top_k
         )
-        logits_processors = make_logits_processors(repetition_penalty=repetition_penalty)
+        logits_processors = make_logits_processors(repetition_penalty=self.repetition_penalty)
         return sampler, logits_processors
     
     def load_template(self, messages):
