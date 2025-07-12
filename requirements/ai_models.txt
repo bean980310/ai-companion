@@ -41,6 +41,7 @@ gptqmodel @ git+https://github.com/ModelCloud/GPTQModel.git@5d2911a4b2a709afb094
 jiwer
 gtts>=2.5.4
 chromadb
+outetts==0.3.3
 pydub
 samplerate
 pyworld

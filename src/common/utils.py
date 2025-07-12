@@ -264,9 +264,15 @@ def get_all_diffusion_models():
     
 def get_all_tts_models():
     models = scan_tts_models()
+    transformers = [m["model_id"] for m in models if m["model_type"] == "transformers"]
+    mlx = [m["model_id"] for m in models if m["model_type"] == "mlx"]
     vits = [m["model_id"] for m in models if m["model_type"] == "vits"]
+    outetts = [m["model_id"] for m in models if m["model_type"] == "outetts"]
     return {
-        "vits": vits
+        "transformers": transformers,
+        "mlx": mlx,
+        "vits": vits,
+        "outetts": outetts
     }
     
 def remove_hf_cache(model_id):

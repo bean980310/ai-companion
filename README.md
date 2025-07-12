@@ -230,24 +230,24 @@ pip install git+https://github.com/myshell-ai/MeloTTS.git --no-deps
 
 ```zsh
 brew update
-brew install gcc cmake llvm@16 libomp
+brew install gcc cmake llvm@18 libomp
 ```
 
 ```zsh
-export PATH="/opt/homebrew/opt/llvm@16/bin:$PATH"
+export PATH="/opt/homebrew/opt/llvm@18/bin:$PATH"
 
 export LDFLAGS="-L/opt/homebrew/opt/libomp/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/libomp/include"
 export CXXFLAGS="-Xpreprocessor -fopenmp"
 
-export CC=/opt/homebrew/opt/llvm@16/bin/clang
-export CXX=/opt/homebrew/opt/llvm@16/bin/clang++
-export LDFLAGS="-L/opt/homebrew/opt/llvm@16/lib"
-export CPPFLAGS="-I/opt/homebrew/opt/llvm@16/include"
+export CC=/opt/homebrew/opt/llvm@18/bin/clang
+export CXX=/opt/homebrew/opt/llvm@18/bin/clang++
+export LDFLAGS="-L/opt/homebrew/opt/llvm@18/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/llvm@18/include"
 ```
 
 ```zsh
-pip install xformers
+pip install --no-build-isolation --upgrade xformers
 ```
 
 ## Run
