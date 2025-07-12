@@ -44,5 +44,11 @@ def parse_args():
         choices=["ko", "ja", "en", "zh_CN", "zh_TW"],
         help="애플리케이션의 기본 언어를 지정합니다. (default: %(default)s)"
     )
+
+    parser.add_argument(
+        "--mcp_server",
+        action="store_true",
+        help="MCP 서버를 활성화합니다."
+    )
     
     return parser.parse_args()

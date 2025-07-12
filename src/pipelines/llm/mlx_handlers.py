@@ -1,27 +1,80 @@
 import traceback
 import os
 
+from typing import Any, Dict, List, Optional, Union, Iterator
+
+from langchain_core.callbacks import CallbackManagerForLLMRun
+from langchain_core.language_models import BaseLLM
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.output_parsers import StrOutputParser, BaseOutputParser, JsonOutputParser, XMLOutputParser, PydanticOutputParser
+from langchain.output_parsers import RetryOutputParser, RetryWithErrorOutputParser
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.runnables import RunnableConfig, RunnablePassthrough, RunnableWithMessageHistory
+from langchain_community.chat_message_histories import ChatMessageHistory, SQLChatMessageHistory
+from langchain.memory import ConversationBufferMemory
+from langchain.chains.conversation.base import ConversationChain
+from langchain.chains.llm import LLMChain
+
 from src import logger
 
 from .base_handlers import BaseCausalModelHandler, BaseVisionModelHandler, BaseModelHandler
 
 class MlxCausalModelHandler(BaseCausalModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="mlx"):
+    def __init__(self, model_id, lora_model_id=None, model_type="mlx", use_langchain: bool = True, *, session_id="demo_session", **kwargs):
         super().__init__(model_id, lora_model_id)
+        self.session_id = session_id
+        self.use_langchain = use_langchain
+
+        self.max_tokens=2048
+        self.temperature = kwargs.get("temperature", 1.0)
+        self.top_k = kwargs.get("top_k", 50)
+        self.top_p = kwargs.get("top_p", 1.0)
+        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
+        
+        self.kwargs = self.get_settings_with_langchain(**kwargs) if use_langchain else None
+        self.sampler, self.logits_processors = self.get_settings(**kwargs) if not use_langchain else (None, None)
+        
+        self.llm = None
+        self.memory = None
+        self.prompt = None
+        self.user_message = None
+        self.chat_history = None
+        self.chain = None
         self.load_model()
         
     def load_model(self):
         from mlx_lm import load
-        self.model, self.tokenizer = load(self.local_model_path, adapter_path=self.local_lora_model_path)
+        if self.use_langchain:
+            from langchain_mlx.llms.mlx_pipeline import MLXPipeline
+            self.model, self.tokenizer = load(self.local_model_path, adapter_path=self.local_lora_model_path)
+            self.llm = MLXPipeline(model=self.model, tokenizer=self.tokenizer, adapter_file=self.local_lora_model_path)
+            # self.memory = ConversationBufferMemory(memory_key="history", return_messages=True)
+            # self.chain = ConversationChain(llm=self.llm, memory=self.memory, verbose=True)
+        else:
+            self.model, self.tokenizer = load(self.local_model_path, adapter_path=self.local_lora_model_path)
         
     def generate_answer(self, history, **kwargs):
-        from mlx_lm import generate
-        text = self.load_template(history)
-        sampler, logits_processors = self.get_settings(**kwargs)
-        response = generate(self.model, self.tokenizer, prompt=text, verbose=True, sampler=sampler, logits_processors=logits_processors, max_tokens=2048)
-        
-        return response.strip()
-    
+        if self.use_langchain:
+            from langchain_mlx.chat_models.mlx import ChatMLX
+            self.load_template_with_langchain(history)
+            self.chain = self.llm | self.prompt
+            chain_with_history = RunnableWithMessageHistory(
+                self.chain,
+                lambda session_id: self.chat_history,
+                input_messages_key="input",
+                history_messages_key="self.chat_history"
+            )
+
+            response = chain_with_history.invoke({"input": self.user_message.content}, config={"session_id": "default"})
+
+            return response
+        else:
+            from mlx_lm import generate
+            text = self.load_template(history)
+            response = generate(self.model, self.tokenizer, prompt=text, verbose=True, sampler=self.sampler, logits_processors=self.logits_processors, max_tokens=self.max_tokens)
+            
+            return response.strip()
+
     def get_settings(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
         from mlx_lm.sample_utils import make_sampler, make_logits_processors
         sampler = make_sampler(
@@ -32,11 +85,32 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
         logits_processors = make_logits_processors(repetition_penalty=repetition_penalty)
         return sampler, logits_processors
     
+    def get_settings_with_langchain(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
+        return {"max_tokens": 2048, "temp": temperature, "top_p": top_p, "top_k": top_k, "repetition_penalty": repetition_penalty}
+    
     def load_template(self, messages):
         return self.tokenizer.apply_chat_template(
             conversation=messages,
             tokenize=False,
             add_generation_prompt=True
+        )
+    
+    def load_template_with_langchain(self, messages):
+        self.chat_history = ChatMessageHistory()
+        for msg in messages[:-1]:
+            if msg["role"] == "system":
+                system_message = SystemMessage(content=msg["content"])
+            if msg["role"] == "user":
+                self.chat_history.add_user_message(msg["content"])
+            if msg["role"] == "assistant":
+                self.chat_history.add_ai_message(msg["content"])
+        self.user_message = HumanMessage(content=messages[-1]["content"])
+        self.prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", system_message.content),
+                ("placeholder", "{history}"),
+                ("user", "{input}")
+            ]
         )
         
     def generate_chat_title(self, first_message: str)->str:
@@ -61,10 +135,19 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
             return {"eos_token": "<|im_end|>"}
         elif "mistral" or "ministral" or "mixtral" in self.local_model_path.lower():
             return {"eos_token": "</s>"}
+        else:
+            return {"eos_token": self.tokenizer._eos_token_ids }
         
 class MlxVisionModelHandler(BaseVisionModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="mlx"):
+    def __init__(self, model_id, lora_model_id=None, model_type="mlx", **kwargs):
         super().__init__(model_id, lora_model_id)
+
+        self.max_tokens=2048
+        self.temperature = kwargs.get("temperature", 1.0)
+        self.top_k = kwargs.get("top_k", 50)
+        self.top_p = kwargs.get("top_p", 1.0)
+        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
+
         self.load_model()
 
     def load_model(self):
@@ -76,8 +159,8 @@ class MlxVisionModelHandler(BaseVisionModelHandler):
     def generate_answer(self, history, image_input=None, **kwargs):
         from mlx_vlm import generate
         image, formatted_prompt = self.load_template(history, image_input)
-        temperature, top_k, top_p, repetition_penalty = self.get_settings(**kwargs)
-        response = generate(self.model, self.processor, formatted_prompt, image, verbose=False, repetition_penalty=repetition_penalty, top_p=top_p, top_k=top_k, temp=temperature, max_tokens=2048)
+        # temperature, top_k, top_p, repetition_penalty = self.get_settings(**kwargs)
+        response = generate(self.model, self.processor, formatted_prompt, image, verbose=False, repetition_penalty=self.repetition_penalty, top_p=self.top_p, top_k=self.top_k, temp=self.temperature, max_tokens=2048)
 
         return response[0].strip()
 
@@ -117,7 +200,7 @@ class MlxVisionModelHandler(BaseVisionModelHandler):
         return title
     
 class MlxLlama4ModelHandler(BaseModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="mlx", image_input=None):
+    def __init__(self, model_id, lora_model_id=None, model_type="mlx", image_input=None, **kwargs):
         super().__init__(model_id, lora_model_id)
         self.tokenizer = None
         self.processor = None
@@ -198,7 +281,7 @@ class MlxLlama4ModelHandler(BaseModelHandler):
         return title
     
 class MlxQwen3ModelHandler(BaseCausalModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="mlx"):
+    def __init__(self, model_id, lora_model_id=None, model_type="mlx", **kwargs):
         super().__init__(model_id, lora_model_id)
         self.load_model()
         

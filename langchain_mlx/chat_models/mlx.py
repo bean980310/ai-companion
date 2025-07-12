@@ -175,7 +175,7 @@ class ChatMLX(BaseChatModel):
             "repetition_penalty", None
         )
         repetition_context_size: Optional[int] = model_kwargs.get(
-            "repetition_context_size", None
+            "repetition_context_size", 20
         )
         top_p: float = model_kwargs.get("top_p", 1.0)
         min_p: float = model_kwargs.get("min_p", 0.0)

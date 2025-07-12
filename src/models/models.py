@@ -73,7 +73,7 @@ def refresh_model_list():
     return gr.update(choices=new_choices), "모델 목록을 새로고침했습니다."
 
 
-def load_model(selected_model, model_type, selected_lora=None, quantization_bit="Q8_0", local_model_path=None, api_key=None, device="cpu", lora_path=None, image_input=None):
+def load_model(selected_model, model_type, selected_lora=None, quantization_bit="Q8_0", local_model_path=None, api_key=None, device="cpu", lora_path=None, image_input=None, **kwargs):
     """
     모델 로드 함수. 특정 모델에 대한 로드 로직을 외부 핸들러로 분리.
     """
@@ -102,7 +102,8 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             model_id=model_id,
             lora_model_id=lora_model_id,
             model_type=model_type,
-            device=device
+            device=device, 
+            **kwargs
         )
         cache_key = build_model_cache_key(model_id, model_type)
         models_cache[cache_key] = handler
@@ -113,7 +114,8 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
                 model_id=model_id,
                 lora_model_id=lora_model_id,
                 model_type=model_type,
-                image_input=image_input
+                image_input=image_input, 
+                **kwargs
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
@@ -121,7 +123,8 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             handler = MlxVisionModelHandler(
                 model_id=model_id,
                 lora_model_id=lora_model_id,
-                model_type=model_type
+                model_type=model_type, 
+                **kwargs
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
@@ -129,7 +132,8 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             handler = MlxQwen3ModelHandler(
                 model_id=model_id,
                 lora_model_id=lora_model_id,
-                model_type=model_type
+                model_type=model_type, 
+                **kwargs
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
@@ -137,7 +141,8 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             handler = MlxCausalModelHandler(
                 model_id=model_id,
                 lora_model_id=lora_model_id,
-                model_type=model_type
+                model_type=model_type, 
+                **kwargs
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
@@ -147,7 +152,8 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
                 model_id=model_id,
                 lora_model_id=lora_model_id,
                 model_type=model_type,
-                device=device
+                device=device, 
+                **kwargs
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
@@ -156,7 +162,8 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
                 model_id=model_id,
                 lora_model_id=lora_model_id,
                 model_type=model_type,
-                device=device
+                device=device, 
+                **kwargs
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
@@ -165,7 +172,8 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
                 model_id=model_id,
                 lora_model_id=lora_model_id,
                 model_type=model_type,
-                device=device
+                device=device, 
+                **kwargs
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
@@ -174,11 +182,13 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
                 model_id=model_id, 
                 lora_model_id=lora_model_id, 
                 model_type=model_type,
-                device=device)
+                device=device, 
+                **kwargs
+            )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
 
-def generate_answer(history, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, image_input=None, api_key=None, device="cpu", seed=42, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0, character_language='ko'):
+def generate_answer(history, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, image_input=None, api_key=None, device="cpu", seed=42, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0, character_language='ko', session_id="demo_session"):
     """
     사용자 히스토리를 기반으로 답변 생성.
     """
@@ -359,7 +369,7 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
     else:
         if not handler:
             logger.info(f"[*] 모델 로드 중: {selected_model}")
-            handler = load_model(selected_model, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path, image_input=image_input)
+            handler = load_model(selected_model, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path, image_input=image_input, session_id="demo_session", temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty)
         
         if not handler:
             logger.error("모델 핸들러가 로드되지 않았습니다.")
