@@ -1,4 +1,4 @@
-transformers[ja, audio, sklearn, tiktoken, serving, testing, sentencepiece, num2words, video, quality]>=4.53.1
+transformers[ja, sklearn, tiktoken, serving, testing, sentencepiece, num2words, video, quality]>=4.53.1
 x_transformers
 sentence_transformers
 datasets[audio]>=3.6.0
@@ -32,8 +32,8 @@ ollama==0.5.1
 lmstudio==1.4.1
 unstructured[pdf]==0.18.3
 langchain[community, anthropic, openai, google-genai, ollama, huggingface, perplexity, xai]>=0.3.26
-langchain-chroma>=0.1.2
-langchain-neo4j>=0.4.0
+# langchain-chroma>=0.1.2
+# langchain-neo4j>=0.4.0
 qwen-vl-utils
 qwen-omni-utils
 # gptqmodel
@@ -41,7 +41,7 @@ gptqmodel @ git+https://github.com/ModelCloud/GPTQModel.git@5d2911a4b2a709afb094
 jiwer
 gtts>=2.5.4
 chromadb
-outetts==0.3.3
+# outetts==0.3.3
 pydub
 samplerate
 pyworld

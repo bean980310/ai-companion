@@ -1,9 +1,12 @@
-import outetts
 import os
 import torch
 
 class OuteTTSTransformersHandler:
     def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', speaker='speaker.json', **kwargs):
+        import outetts
+
+        self.outetts = outetts
+
         self.model = None
         self.tokenizer = None
         self.config = None
@@ -27,6 +30,9 @@ class OuteTTSTransformersHandler:
         self.local_model_path = os.path.join("./models/tts/outetts", model_id)
 
     def load_model(self):
+        outetts = self.outetts
+        # import outetts
+
         self.config = outetts.ModelConfig(
             model_path=self.local_model_path,
             tokenizer_path=self.local_model_path,
@@ -40,6 +46,9 @@ class OuteTTSTransformersHandler:
         self.speaker = self.interface.load_speaker(self.speaker)
 
     def generate_tts(self, prompt):
+        # import outetts
+        outetts = self.outetts
+
         output = self.interface.generate(
             config=outetts.GenerationConfig(
                 text=prompt,
