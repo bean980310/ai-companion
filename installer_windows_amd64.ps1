@@ -10,13 +10,12 @@ echo "Installing requirements..."
 %HomePath%\.local\bin\uv.exe pip install -r requirements/windows_amd64.txt --no-build-isolation
 
 echo "Installing requirements..."
-%HomePath%\.local\bin\uv.exe pip install librosa pyctcdecode phonemizer kenlm
+%HomePath%\.local\bin\uv.exe pip install "transformers[audio]"
 
 echo "Installing requirements..."
 %HomePath%\.local\bin\uv.exe pip install -r requirements/ai_models.txt --no-build-isolation
 
 echo "Installing requirements..."
-%HomePath%\.local\bin\uv.exe pip install "transformers[audio]"
 %HomePath%\.local\bin\uv.exe pip install outetts
 %HomePath%\.local\bin\uv.exe pip install llama-cpp-python protobuf==5.29.5 transformers --upgrade
 %HomePath%\.local\bin\uv.exe pip install xai-sdk

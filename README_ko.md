@@ -174,11 +174,14 @@ uv venv --python 3.10
 uv venv --python 3.11
 uv venv --python 3.12
 # MacOS, Linux 환경
-source venv/bin/activate 
+source venv/bin/activate # venv
+source .venv/bin/activate # uv
 # Windows 환경
-source venv/Scripts/activate
+source venv/Scripts/activate # venv
+source .venv/Scripts/activate # uv
 # Windows Powershell 환경
-.\venv\Scripts\activate
+.\venv\Scripts\activate.bat # venv
+.\.venv\Scripts\activate.bat # uv
 ```
 
 **의존성 설치**  

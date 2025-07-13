@@ -4,7 +4,7 @@ sentence_transformers
 datasets[audio]>=3.6.0
 safetensors
 tokenizers>=0.21.2
-diffusers[docs, test]>=0.34.0
+diffusers[docs]>=0.34.0
 peft>=0.15.2
 trl>=0.19.0
 huggingface_hub[cli, hf_transfer, hf_xet]>=0.33.1

@@ -174,9 +174,11 @@ uv venv --python 3.10
 uv venv --python 3.11
 uv venv --python 3.12
 # MacOS、Linux環境
-source venv/bin/activate 
+source venv/bin/activate # venv
+source .venv/bin/activate # uv
 # Windows環境
-source venv/Scripts/activate 
+source venv/Scripts/activate # venv
+source .venv/Scripts/activate # uv
 # Windows Powershell環境
 .\venv\Scripts\activate
 ```
