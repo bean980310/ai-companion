@@ -19,6 +19,4 @@ onnxruntime-gpu
 faiss-gpu
 eva-decord
 opencc==1.1.1
-vllm
 triton
-llmcompressor

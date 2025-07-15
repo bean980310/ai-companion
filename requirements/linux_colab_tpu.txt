@@ -25,5 +25,4 @@ wavmark
 eng_to_ipa
 inflect
 unidecode
-vllm
 triton
