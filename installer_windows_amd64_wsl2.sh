@@ -3,6 +3,7 @@
 
 echo "Installing requirements..."
 uv pip install -r requirements/common.txt
+uv pip install jupyter jupyterlab jupyterlab_widgets ipython ipykernel ipywidgets
 
 echo "Installing pytorch..."
 uv pip install torch torchvision torchaudio

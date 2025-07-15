@@ -1,4 +1,4 @@
-# Make sure you have uv installed and activated virtual environment before running this script.
+@echo off
 
 echo "Installing requirements..."
 %HomePath%\.local\bin\uv.exe pip install -r requirements/common.txt

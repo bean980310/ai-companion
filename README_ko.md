@@ -173,57 +173,46 @@ python3 -m venv venv
 uv venv --python 3.10 
 uv venv --python 3.11
 uv venv --python 3.12
-# MacOS, Linux 환경
+# MacOS, Linux, Windows WSL2 환경
 source venv/bin/activate # venv
 source .venv/bin/activate # uv
 # Windows 환경
-source venv/Scripts/activate # venv
-source .venv/Scripts/activate # uv
-# Windows Powershell 환경
 .\venv\Scripts\activate.bat # venv
 .\.venv\Scripts\activate.bat # uv
 ```
 
 **의존성 설치**  
 
-* **공통 환경**  
-
-```shell
-pip install -r requirements/common.txt
-```
-
 * **Windows 환경**  
 
 ```shell
 # on Windows
-pip install -r requirements/windows_amd64.txt
+.\installer_windows_amd64.bat
+# on Windows (Powershell)
+.\installer_windows_amd64.ps1
+```
+
+```bash
 # on Windows Subsystem for Linux 2
-pip install -r requirements/windows_amd64_wsl2.txt
-# Common
-pip install -r requirements/ai_models.txt
+bash installer_windows_amd64_wsl2.sh
+# or
+./installer_windows_amd64_wsl2.sh
 ```
 
 * **macOS 환경(Apple Silicon을 탑재한 Mac)**  
 
 ```zsh
-pip install -r requirements/macos_arm64.txt
-pip install -r requirements/ai_models.txt
-pip install -r requirements/macos_arm64_mlx.txt
+zsh installer_macos_arm64.sh
+# or
+./installer_macos_arm64.sh
 ```
 
 * **Linux 환경**  
 
 ```bash
-# on AMD64 with NVIDIA GPU
-pip install -r requirements/linux_amd64_cuda.txt
-# on AMD64 with AMD GPU
-pip install -r requirements/linux_amd64_rocm.txt
-# on ARM64 (NVIDIA GPU only)
-pip install -r requirements/linux_arm64.txt
-# on Google Colab TPU
-pip install -r requirements/linux_colab_tpu.txt
-# Common
-pip install -r requirements/ai_models.txt
+bash installer_linux_amd64_cuda.sh
+# or
+./installer_linux_amd64_cuda.sh
 ```
 
 * **MeloTTS(Optional)**  

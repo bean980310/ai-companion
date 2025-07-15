@@ -173,51 +173,46 @@ python3 -m venv venv
 uv venv --python 3.10 
 uv venv --python 3.11
 uv venv --python 3.12
-source venv/bin/activate # macOS/Linux
-source venv/Scripts/activate # Windows WSL
-.\venv\Scripts\activate # Windows Powershell
+# MacOS/Linux/Windows WSL2
+source venv/bin/activate # venv
+source .venv/bin/activate # uv
+# Windows
+.\venv\Scripts\activate.bat # venv
+.\.venv\Scripts\activate.bat # uv
 ```
 
 **Install dependencies**  
-
-* **Common**
-
-```shell
-pip install -r requirements/common.txt
-```
 
 * **Windows**
 
 ```shell
 # on Windows
-pip install -r requirements/windows_amd64.txt
+.\installer_windows_amd64.bat
+# on Windows (Powershell)
+.\installer_windows_amd64.ps1
+```
+
+```bash
 # on Windows Subsystem for Linux 2
-pip install -r requirements/windows_amd64_wsl2.txt
-# Common
-pip install -r requirements/ai_models.txt
+bash installer_windows_amd64_wsl2.sh
+# or
+./installer_windows_amd64_wsl2.sh
 ```
 
 * **macOS(Apple Silicon Mac)**
 
 ```zsh
-pip install -r requirements/macos_arm64.txt
-pip install -r requirements/ai_models.txt
-pip install -r requirements/macos_arm64_mlx.txt
+zsh installer_macos_arm64.sh
+# or
+./installer_macos_arm64.sh
 ```
 
 * **Linux**
 
 ```bash
-# on AMD64 with NVIDIA GPU
-pip install -r requirements/linux_amd64_cuda.txt
-# on AMD64 with AMD GPU
-pip install -r requirements/linux_amd64_rocm.txt
-# on ARM64 (NVIDIA GPU only)
-pip install -r requirements/linux_arm64.txt
-# on Google Colab TPU
-pip install -r requirements/linux_colab_tpu.txt
-# Common
-pip install -r requirements/ai_models.txt
+bash installer_linux_amd64_cuda.sh
+# or
+./installer_linux_amd64_cuda.sh
 ```
 
 * **MeloTTS(Optional)**
