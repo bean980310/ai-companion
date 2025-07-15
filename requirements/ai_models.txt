@@ -16,6 +16,7 @@ modelscope>=1.27.1
 civitai-model-downloader
 evaluate>=0.4.4
 gradio[mcp]==5.35.0
+gradio_webrtc
 mcp[cli]
 fastmcp
 accelerate>=1.8.1
