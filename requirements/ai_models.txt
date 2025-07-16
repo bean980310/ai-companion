@@ -73,5 +73,5 @@ scikit-learn
 fsspec==2025.3.0
 numba>=0.60.0
 
-vllm; platform_system == 'Linux'
-llmcompressor; platform_system == 'Linux'
+# vllm; platform_system == 'Linux'
+# llmcompressor; platform_system == 'Linux'
