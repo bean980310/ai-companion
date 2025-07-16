@@ -491,7 +491,7 @@ def convert_and_save(model_id, output_dir, push_to_hub, quant_type, model_type="
             return "모델 변환에 실패했습니다."
     elif quant_type == 'int4':
         if not output_dir:
-            output_dir = os.path.join(base_output_dir, f"{model_id.replace('/', '__')}-int8")
+            output_dir = os.path.join(base_output_dir, f"{model_id.replace('/', '__')}-int4")
         success = convert_model_to_int4(model_id, output_dir, push_to_hub)
         if success:
             return f"모델이 성공적으로 4비트로 변환되었습니다: {output_dir}"
@@ -516,8 +516,7 @@ def build_model_cache_key(model_id: str, model_type: str, lora_model_id: str = N
         if lora_model_id:
             lora_dirname = make_local_dir_name(lora_model_id)
             lora_dirpath = os.path.join("./models/llm/loras", lora_dirname)
-            unique_loras=sorted(set(lora_dirpath))
-            lora_part = "::".join(unique_loras)
+            lora_part = lora_dirpath
             if quantization_bit:
                 return f"auto::{model_type}::{local_dirpath}::hf::{model_id}::{quantization_bit}::lora::{lora_part}"
             else:
