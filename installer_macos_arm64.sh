@@ -25,7 +25,7 @@ uv pip install -r requirements/macos_arm64_mlx.txt --no-build-isolation
 
 echo "Installing requirements..."
 uv pip install outetts
-uv pip install llama-cpp-pytho protobuf==5.29.5 transformers --upgrade
+uv pip install llama-cpp-python protobuf==5.29.5 transformers --upgrade
 uv pip install xai-sdk
 uv pip install "langchain-chroma>=0.1.2" "langchain-neo4j>=0.4.0"
 uv pip install mlx_image
