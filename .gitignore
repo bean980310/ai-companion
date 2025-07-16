@@ -6,6 +6,7 @@ app.log*
 .vscode
 .idea
 .venv
+.claude
 venv/
 __pycache__
 chat_history.db
