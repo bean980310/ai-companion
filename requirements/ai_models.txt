@@ -7,7 +7,8 @@ tokenizers>=0.21.2
 diffusers[docs]>=0.34.0
 peft>=0.15.2
 trl>=0.19.0
-huggingface_hub[cli, hf_transfer, hf_xet]>=0.33.1
+huggingface_hub[cli, hf_transfer, hf_xet, mcp]>=0.33.1
+k_diffusion==0.0.12
 hf_transfer>=0.1.9
 hf_xet<2.0.0
 fastrtc[vad,tts,stt]>=0.0.28
