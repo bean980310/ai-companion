@@ -1,6 +1,6 @@
 transformers[ja, sklearn, tiktoken, serving, testing, sentencepiece, num2words, video, quality]>=4.53.1
 x_transformers
-sentence_transformers
+sentence_transformers>=5.0.0
 datasets[audio]>=3.6.0
 safetensors
 tokenizers>=0.21.2
