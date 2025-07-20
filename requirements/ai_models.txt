@@ -16,7 +16,7 @@ aiortc>=1.13.0
 modelscope>=1.27.1
 civitai-model-downloader
 evaluate>=0.4.4
-gradio[mcp]==5.37.0
+gradio[mcp]==5.38.0
 gradio_webrtc
 twilio
 mcp[cli]
@@ -27,7 +27,7 @@ groq
 spaces
 facexlib>=0.3.0
 gfpgan>=1.3.8
-ultralytics==8.3.163
+ultralytics==8.3.168
 realesrgan @ git+https://github.com/xinntao/Real-ESRGAN.git
 openai>=1.93.0
 anthropic>=0.55.0
@@ -42,7 +42,7 @@ langchain[community, anthropic, openai, google-genai, ollama, huggingface, perpl
 qwen-vl-utils
 qwen-omni-utils
 # gptqmodel
-gptqmodel @ git+https://github.com/ModelCloud/GPTQModel.git@5d2911a4b2a709afb0941d53c3882d0cd80b9649
+gptqmodel @ git+https://github.com/ModelCloud/GPTQModel.git@037c5c0f6c9e33c500d975b038d02e7ca437546d
 jiwer
 gtts>=2.5.4
 chromadb
