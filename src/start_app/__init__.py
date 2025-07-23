@@ -144,10 +144,10 @@ def create_tab_side():
             with gr.Column():
                 gr.Markdown("### AI Companion")
                 # llm_integrated_sidetab = gr.Button(value="LLM", elem_classes="tab")
-                chatbot_sidetab = gr.Button(value="Chat", elem_classes="tab")
-                diffusion_sidetab = gr.Button(value="Image Generation", elem_classes="tab")
+                chatbot_sidetab = gr.Button(value="Text Section", elem_classes="tab")
+                diffusion_sidetab = gr.Button(value="Vision Section", elem_classes="tab")
                 storyteller_sidetab = gr.Button(value="Storyteller", elem_classes="tab")
-                tts_sidetab = gr.Button(value="Text to Speech", elem_classes="tab")
+                tts_sidetab = gr.Button(value="Audio Section", elem_classes="tab")
                 translate_sidetab = gr.Button(value="Translator", elem_classes="tab")
                 download_sidetab = gr.Button(value="Download Center", elem_classes="tab")
 

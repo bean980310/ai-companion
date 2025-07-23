@@ -47,8 +47,16 @@ def parse_args():
 
     parser.add_argument(
         "--mcp_server",
-        action="store_true",
+        type=bool,
+        default=True,
         help="MCP 서버를 활성화합니다."
+    )
+
+    parser.add_argument(
+        "--pwa",
+        type=bool,
+        default=True,
+        help="PWA를 활성화합니다."
     )
     
     return parser.parse_args()

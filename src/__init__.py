@@ -26,4 +26,4 @@ args = parse_args()
 os_name, arch = detect_platform()
 
 __all__ = ['logger']
-
+__version__ = "0.1.0b1"

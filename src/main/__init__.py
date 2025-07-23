@@ -14,6 +14,8 @@ from ..common.html import show_confetti
 from ..common.translations import translation_manager, _
 from ..api.comfy_api import ComfyUIClient
 
+from .. import __version__
+
 from presets import (
     AI_ASSISTANT_PRESET, 
     SD_IMAGE_GENERATOR_PRESET, 
@@ -36,9 +38,12 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
         sidebar, tab_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chatbot_side, session_select_dropdown, chat_title_box, add_session_icon_btn, delete_session_icon_btn, model_type_dropdown, model_dropdown, api_key_text, lora_dropdown, diffusion_side, diffusion_model_type_dropdown, diffusion_model_dropdown, diffusion_api_key_text, diffusion_refiner_model_dropdown, diffusion_refiner_start, diffusion_with_refiner_image_to_image_start, diffusion_lora_multiselect, diffusion_lora_text_encoder_sliders, diffusion_lora_unet_sliders, storyteller_side, storytelling_model_type_dropdown, storytelling_model_dropdown, storytelling_api_key_text, storytelling_lora_dropdown, tts_side, tts_model_type_dropdown, tts_model_dropdown, translate_side = create_sidebar()
                                    
         chat_container, system_message_accordion, system_message_box, chatbot, msg, multimodal_msg, image_input, profile_image, character_dropdown, advanced_setting, seed_input, temperature_slider, top_k_slider, top_p_slider, repetition_penalty_slider, preset_dropdown, change_preset_button, reset_btn, reset_all_btn, status_text, image_info, session_select_info, diffusion_container, image_to_image_mode, image_to_image_input, image_inpaint_input, image_inpaint_masking, blur_radius_slider, blur_expansion_radius_slider, denoise_strength_slider, positive_prompt_input, negative_prompt_input, style_dropdown, width_slider, height_slider, generation_step_slider, random_prompt_btn, generate_btn, gallery, diff_adv_setting, sampler_dropdown, scheduler_dropdown, cfg_scale_slider, diffusion_seed_input, random_seed_checkbox, vae_dropdown, clip_skip_slider, enable_clip_skip_checkbox, clip_g_checkbox, batch_size_input, batch_count_input, image_history, story_container, storytelling_input, storytelling_btn, storytelling_output, story_adv_setting, storyteller_seed_input, storyteller_temperature_slider, storyteller_top_k_slider, storyteller_top_p_slider, storyteller_repetition_penalty_slider, tts_container, translate_container, download_container = create_body_container()
+
+        with gr.Row():
+            gr.Markdown(f"Version: {__version__}")
                             
         reset_modal, single_reset_content, all_reset_content, cancel_btn, confirm_btn = create_reset_confirm_modal()
-        delete_modal, delete_message, delete_cancel_btn, delete_confirm_btn = create_delete_session_modal()      
+        delete_modal, delete_message, delete_cancel_btn, delete_confirm_btn = create_delete_session_modal()
         
     # 아래는 변경 이벤트 등록
     def apply_session_immediately(chosen_sid):

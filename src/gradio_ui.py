@@ -27,7 +27,7 @@ from src.start_app import (
 ##########################################
 
 def create_app():
-    with gr.Blocks(css=css, title="AI Companion") as demo:
+    with gr.Blocks(css_paths="html/css/style.css", title="AI Companion", fill_height=True) as demo:
         speech_manager_state = register_speech_manager_state()
         
         session_id, loaded_history, session_dropdown, last_character, last_preset, system_message, session_label=shared_on_app_start()

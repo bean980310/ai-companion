@@ -16,6 +16,7 @@ from src.pipelines.llm import (
     MlxLlama4ModelHandler,
     MlxQwen3ModelHandler
 )
+from src.pipelines.llm.api import AnthropicClientWrapper
 from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models, convert_folder_to_modelid
 import gradio as gr
 from src.models import api_models
@@ -219,41 +220,14 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
     
     if model_type == "api":
         if "claude" in selected_model:
-            if not api_key:
-                logger.error("Anthropic API Key가 missing.")
-                return "Anthropic API Key가 필요합니다."
-            
-            client = anthropic.Client(api_key=api_key)
-            # Anthropic 메시지 형식으로 변환
-            messages = []
-            for msg in history:
-                if msg["role"] == "system":
-                    system = msg["content"]
-                    continue  # Claude API는 시스템 메시지를 별도로 처리하지 않음
-                messages.append({
-                    "role": msg["role"],
-                    "content": msg["content"]
-                })
-            
-            logger.info(f"[*] Anthropic API 요청: {messages}")
-            
+            wrapper = AnthropicClientWrapper(selected_model, api_key=api_key)
             try:
-                response = client.messages.create(
-                    model=selected_model,
-                    system=system,
-                    messages=messages,
-                    temperature=temperature,
-                    top_k=top_k,
-                    top_p=top_p,
-                    # frequency_penalty=repetition_penalty,
-                    max_tokens=1024,
-                )
-                answer = response.content[0].text
-                logger.info(f"[*] Anthropic 응답: {answer}")
+                answer = wrapper.generate_answer(history=history)
                 return answer
             except Exception as e:
                 logger.error(f"Anthropic API 오류: {str(e)}\n\n{traceback.format_exc()}")
                 return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+            
         elif "gemini" in selected_model:
             if not api_key:
                 logger.error("Google API Key가 missing.")
