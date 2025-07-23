@@ -1,5 +1,6 @@
 from .... import logger
 import traceback
+
 import anthropic
 class AnthropicClientWrapper:
     def __init__(self, selected_model, api_key="None", **kwargs):
@@ -13,10 +14,6 @@ class AnthropicClientWrapper:
         self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
 
     def generate_answer(self, history, **kwargs):
-        if not self.api_key:
-            logger.error("Anthropic API Key가 missing.")
-            return "Anthropic API Key가 필요합니다."
-                
         client = anthropic.Client(api_key=self.api_key)
         # Anthropic 메시지 형식으로 변환
         messages = []

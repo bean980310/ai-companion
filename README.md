@@ -18,7 +18,7 @@ Interact with AI using Large Language Models (LLMs).
 
 **Supported Models**  
 
-* **API**
+* **API**  
 
 |Provider|Model Name|
 |-------|----|
@@ -27,7 +27,7 @@ Interact with AI using Large Language Models (LLMs).
 |Google GenAI|gemini-1.5-flash <br> gemini-1.5-flash-8b <br> gemini-1.5-pro <br> gemini-2.0-flash|
 
 * **Local**: Transformers, GGUF, MLX (Apple Silicon Macs only)  
-Pre-downloaded Transformer models are available via the Download Center.
+Pre-downloaded Transformer models are available via the Download Center.  
 
 |Provider|Model Name|
 |--------|-----|

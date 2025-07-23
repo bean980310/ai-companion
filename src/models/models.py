@@ -16,7 +16,13 @@ from src.pipelines.llm import (
     MlxLlama4ModelHandler,
     MlxQwen3ModelHandler
 )
-from src.pipelines.llm.api import AnthropicClientWrapper
+
+from src.pipelines.llm.api import (
+    AnthropicClientWrapper,
+    GoogleAIClientWrapper,
+    OpenAIClientWrapper,
+    PerplexityClientWrapper
+)
 from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models, convert_folder_to_modelid
 import gradio as gr
 from src.models import api_models
@@ -220,6 +226,10 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
     
     if model_type == "api":
         if "claude" in selected_model:
+            if not api_key:
+                logger.error("Anthropic API Key가 missing.")
+                return "Anthropic API Key가 필요합니다."
+            
             wrapper = AnthropicClientWrapper(selected_model, api_key=api_key)
             try:
                 answer = wrapper.generate_answer(history=history)
@@ -233,79 +243,36 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
                 logger.error("Google API Key가 missing.")
                 return "Google API Key가 필요합니다."
 
-            client = genai.Client(api_key=api_key)
-            messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
-            config = types.GenerateContentConfig(
-                max_output_tokens=1024,
-                temperature=temperature,
-                top_p=top_p,
-                top_k=top_k,
-                frequency_penalty=repetition_penalty
-            )
-            logger.info(f"[*] Google API 요청: {messages}")
+            wrapper = GoogleAIClientWrapper(selected_model, api_key=api_key)
             try: 
-                response = client.models.generate_content(
-                    model=selected_model,
-                    contents=messages,
-                    config=config
-                )
-                answer = response.text
-                logger.info(f"[*] Google 응답: {answer}")
+                answer = wrapper.generate_answer(history=history)
                 return answer
             except Exception as e:
                 logger.error(f"Google API 오류: {str(e)}\n\n{traceback.format_exc()}")
                 return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+            
         elif "gpt" in selected_model or "o1" in selected_model or "o3" in selected_model or "o4" in selected_model:
             if not api_key:
                 logger.error("OpenAI API Key가 missing.")
                 return "OpenAI API Key가 필요합니다."
-            openai.api_key = api_key
-            messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
-            logger.info(f"[*] OpenAI API 요청: {messages}")
             
+            wrapper = OpenAIClientWrapper(selected_model, api_key=api_key)
             try:
-                response = openai.chat.completions.create(
-                    model=selected_model,
-                    messages=messages,
-                    temperature=temperature,
-                    max_tokens=1024,
-                    top_logprobs=top_k,
-                    frequency_penalty=repetition_penalty,
-                    top_p=top_p,
-                )
-                answer = response.choices[0].message["content"]
-                logger.info(f"[*] OpenAI 응답: {answer}")
+                answer = wrapper.generate_answer(history=history)
                 return answer
             except Exception as e:
                 logger.error(f"OpenAI API 오류: {str(e)}\n\n{traceback.format_exc()}")
                 return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+            
         elif "sonar" in selected_model:
             if not api_key:
                 logger.error("Perplexity API Key가 missing.")
                 return "Perplexity API Key가 필요합니다."
-            messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
-            logger.info(f"[*] Perplexity API 요청: {messages}")
             
+            wrapper = PerplexityClientWrapper(selected_model, api_key=api_key)
             try:
-                url = "https://api.perplexity.ai/chat/completions"
-                payload = { 
-                    "model": selected_model,
-                    "messages": messages,
-                    "max_tokens": 1024,
-                    "temperature": temperature,
-                    "top_p": top_p,
-                    "top_k": top_k,
-                    "presence_penalty": repetition_penalty
-                }
-                headers = {
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json"
-                }
-                response = requests.request("POST", url, json=payload, headers=headers)
-                answer = response.text
-                logger.info(f"[*] Perplexity 응답: {answer}")
+                answer = wrapper.generate_answer(history=history)
                 return answer
-            
             except Exception as e:
                 logger.error(f"Perplexity API 오류: {str(e)}\n\n{traceback.format_exc()}")
                 return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
