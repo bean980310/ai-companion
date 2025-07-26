@@ -3,6 +3,7 @@ import os
 
 from typing import Any, Dict, List, Optional, Union, Iterator
 
+import langchain.globals
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.language_models import BaseLLM
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -18,6 +19,10 @@ from langchain.chains.llm import LLMChain
 from src import logger
 
 from .base_handlers import BaseCausalModelHandler, BaseVisionModelHandler, BaseModelHandler
+
+langchain.globals.set_debug(True)
+langchain.globals.set_verbose(True)
+langchain.globals.set_verbose(True)
 
 class MlxCausalModelHandler(BaseCausalModelHandler):
     def __init__(self, model_id, lora_model_id=None, model_type="mlx", use_langchain: bool = True, *, session_id="demo_session", **kwargs):
@@ -66,6 +71,7 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
             )
 
             response = chain_with_history.invoke({"input": self.user_message.content}, config={"session_id": "default"})
+            response = response["output"]
 
             return response
         else:
