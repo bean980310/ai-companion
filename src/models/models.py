@@ -135,7 +135,7 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
-        elif "qwen3" in model_id.lower():
+        elif "qwen3" in model_id.lower() and "instruct" not in model_id.lower():
             handler = MlxQwen3ModelHandler(
                 model_id=model_id,
                 lora_model_id=lora_model_id,
@@ -174,7 +174,7 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
-        elif "qwen3" in model_id.lower():
+        elif "qwen3" in model_id.lower() and "instruct" not in model_id.lower():
             handler = TransformersQwen3ModelHandler(
                 model_id=model_id,
                 lora_model_id=lora_model_id,
