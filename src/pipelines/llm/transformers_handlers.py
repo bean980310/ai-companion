@@ -99,8 +99,6 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
             _ = self.model.generate(
                 input_ids,
                 generation_config=self.config,
-                max_new_tokens=self.max_new_tokens,
-                do_sample=True,
                 streamer=streamer,
             )
             
@@ -119,6 +117,7 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
     def get_settings(self):
         return GenerationConfig(
             max_new_tokens=self.max_new_tokens,
+            do_sample=True,
             temperature=self.temperature,
             top_k=self.top_k,
             top_p=self.top_p,
@@ -202,8 +201,6 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
             _ = self.model.generate(
                 **inputs,
                 generation_config=self.config,
-                max_new_tokens=self.max_new_tokens,
-                do_sample=True,
                 streamer=streamer
             )
 
@@ -225,6 +222,7 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
     def get_settings(self):
         return GenerationConfig(
             max_new_tokens=self.max_new_tokens,
+            do_sample=True,
             temperature=self.temperature,
             top_k=self.top_k,
             top_p=self.top_p,
@@ -288,8 +286,6 @@ class TransformersLlama4ModelHandler(BaseModelHandler):
             _ = self.model.generate(
                 **inputs,
                 generation_config=self.config,
-                max_new_tokens=self.max_new_tokens,
-                do_sample=True,
                 streamer=streamer
             )
             
@@ -319,6 +315,7 @@ class TransformersLlama4ModelHandler(BaseModelHandler):
     def get_settings(self):
         return GenerationConfig(
             max_new_tokens=self.max_new_tokens,
+            do_sample=True,
             temperature=self.temperature,
             top_k=self.top_k,
             top_p=self.top_p,
@@ -377,7 +374,6 @@ class TransformersQwen3ModelHandler(BaseCausalModelHandler):
             outputs = self.model.generate(
                 **model_inputs,
                 generation_config=self.config,
-                max_new_tokens=self.max_new_tokens,
             )
             
             generated_ids = outputs[0][len(model_inputs.input_ids[0]):].tolist()
@@ -416,6 +412,7 @@ class TransformersQwen3ModelHandler(BaseCausalModelHandler):
     def get_settings(self):
         return GenerationConfig(
             max_new_tokens=self.max_new_tokens,
+            do_sample=True,
             temperature=self.temperature,
             top_k=self.top_k,
             top_p=self.top_p,
@@ -464,8 +461,7 @@ class TransformersQwen3MoeModelHandler(BaseCausalModelHandler):
             
             outputs = self.model.generate(
                 **model_inputs,
-                generation_config=self.config,
-                max_new_tokens=self.max_new_tokens
+                generation_config=self.config
             )
             
             generated_ids = outputs[0][len(model_inputs.input_ids[0]):].tolist()
@@ -504,6 +500,7 @@ class TransformersQwen3MoeModelHandler(BaseCausalModelHandler):
     def get_settings(self):
         return GenerationConfig(
             max_new_tokens=self.max_new_tokens,
+            do_sample=True,
             temperature=self.temperature,
             top_k=self.top_k,
             top_p=self.top_p,
