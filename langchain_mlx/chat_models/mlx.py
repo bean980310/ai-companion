@@ -36,7 +36,7 @@ from langchain_core.runnables import Runnable
 from langchain_core.tools import BaseTool
 from langchain_core.utils.function_calling import convert_to_openai_tool
 
-from langchain_community.llms.mlx_pipeline import MLXPipeline
+from langchain_mlx.llms.mlx_pipeline import MLXPipeline
 
 DEFAULT_SYSTEM_PROMPT = """You are a helpful, respectful, and honest assistant."""
 

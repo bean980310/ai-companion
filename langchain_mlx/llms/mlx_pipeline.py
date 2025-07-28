@@ -72,6 +72,10 @@ class MLXPipeline(LLM):
           for applying repetition penalty, default is None.
         - top_p (float): The cumulative probability threshold for
           top-p filtering, default is 1.0.
+        - min_tokens_to_keep (int): The minimum number of tokens to keep
+          for top-p filtering, default is 1.
+        - top_k (int): The number of highest probability vocabulary tokens
+          to keep for top-k filtering, default is 0.
 
     """
 

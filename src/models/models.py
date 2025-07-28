@@ -188,7 +188,7 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
 
-def generate_answer(history, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, image_input=None, api_key=None, device="cpu", seed=42, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0, character_language='ko', session_id="demo_session"):
+def generate_answer(history, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, image_input=None, api_key=None, device="cpu", seed=42, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0, character_language='ko'):
     """
     사용자 히스토리를 기반으로 답변 생성.
     """
@@ -369,7 +369,7 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
     else:
         if not handler:
             logger.info(f"[*] 모델 로드 중: {selected_model}")
-            handler = load_model(selected_model, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path, image_input=image_input, session_id="demo_session", temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty)
+            handler = load_model(selected_model, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path, image_input=image_input, temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty)
         
         if not handler:
             logger.error("모델 핸들러가 로드되지 않았습니다.")
