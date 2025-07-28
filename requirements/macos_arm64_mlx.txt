@@ -2,9 +2,11 @@ mlx[dev]
 mlx_lm[test, evaluate, quant]
 # mlx_vlm
 mlx_vlm @ git+https://github.com/bean980310/mlx-vlm.git
+mlx_lm_omni
 mlx_embeddings
 mlx_whisper
 mlx_audio
+mlx_lm_lora
 # mlx_image
 mlx_optimizers
 sphinx

@@ -41,6 +41,11 @@ def image_to_text(image_path: str, lang: str='eng') -> str:
     return text
 
 def upload_handler(file_path, language):
+    """
+    Args:
+        file_path: 업로드된 파일 경로
+        language: 언어
+    """
     lang=languages[language]
     if file_path.endswith('.pdf'):
         # PDF 파일 처리

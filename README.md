@@ -18,7 +18,7 @@ Interact with AI using Large Language Models (LLMs).
 
 **Supported Models**  
 
-* **API**
+* **API**  
 
 |Provider|Model Name|
 |-------|----|
@@ -27,7 +27,7 @@ Interact with AI using Large Language Models (LLMs).
 |Google GenAI|gemini-1.5-flash <br> gemini-1.5-flash-8b <br> gemini-1.5-pro <br> gemini-2.0-flash|
 
 * **Local**: Transformers, GGUF, MLX (Apple Silicon Macs only)  
-Pre-downloaded Transformer models are available via the Download Center.
+Pre-downloaded Transformer models are available via the Download Center.  
 
 |Provider|Model Name|
 |--------|-----|
@@ -173,51 +173,46 @@ python3 -m venv venv
 uv venv --python 3.10 
 uv venv --python 3.11
 uv venv --python 3.12
-source venv/bin/activate # macOS/Linux
-source venv/Scripts/activate # Windows WSL
-.\venv\Scripts\activate # Windows Powershell
+# MacOS/Linux/Windows WSL2
+source venv/bin/activate # venv
+source .venv/bin/activate # uv
+# Windows
+.\venv\Scripts\activate.bat # venv
+.\.venv\Scripts\activate.bat # uv
 ```
 
 **Install dependencies**  
-
-* **Common**
-
-```shell
-pip install -r requirements/common.txt
-```
 
 * **Windows**
 
 ```shell
 # on Windows
-pip install -r requirements/windows_amd64.txt
+.\installer_windows_amd64.bat
+# on Windows (Powershell)
+.\installer_windows_amd64.ps1
+```
+
+```bash
 # on Windows Subsystem for Linux 2
-pip install -r requirements/windows_amd64_wsl2.txt
-# Common
-pip install -r requirements/ai_models.txt
+bash installer_windows_amd64_wsl2.sh
+# or
+./installer_windows_amd64_wsl2.sh
 ```
 
 * **macOS(Apple Silicon Mac)**
 
 ```zsh
-pip install -r requirements/macos_arm64.txt
-pip install -r requirements/ai_models.txt
-pip install -r requirements/macos_arm64_mlx.txt
+zsh installer_macos_arm64.sh
+# or
+./installer_macos_arm64.sh
 ```
 
 * **Linux**
 
 ```bash
-# on AMD64 with NVIDIA GPU
-pip install -r requirements/linux_amd64_cuda.txt
-# on AMD64 with AMD GPU
-pip install -r requirements/linux_amd64_rocm.txt
-# on ARM64 (NVIDIA GPU only)
-pip install -r requirements/linux_arm64.txt
-# on Google Colab TPU
-pip install -r requirements/linux_colab_tpu.txt
-# Common
-pip install -r requirements/ai_models.txt
+bash installer_linux_amd64_cuda.sh
+# or
+./installer_linux_amd64_cuda.sh
 ```
 
 * **MeloTTS(Optional)**
@@ -230,24 +225,24 @@ pip install git+https://github.com/myshell-ai/MeloTTS.git --no-deps
 
 ```zsh
 brew update
-brew install gcc cmake llvm@16 libomp
+brew install gcc cmake llvm@18 libomp
 ```
 
 ```zsh
-export PATH="/opt/homebrew/opt/llvm@16/bin:$PATH"
+export PATH="/opt/homebrew/opt/llvm@18/bin:$PATH"
 
 export LDFLAGS="-L/opt/homebrew/opt/libomp/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/libomp/include"
 export CXXFLAGS="-Xpreprocessor -fopenmp"
 
-export CC=/opt/homebrew/opt/llvm@16/bin/clang
-export CXX=/opt/homebrew/opt/llvm@16/bin/clang++
-export LDFLAGS="-L/opt/homebrew/opt/llvm@16/lib"
-export CPPFLAGS="-I/opt/homebrew/opt/llvm@16/include"
+export CC=/opt/homebrew/opt/llvm@18/bin/clang
+export CXX=/opt/homebrew/opt/llvm@18/bin/clang++
+export LDFLAGS="-L/opt/homebrew/opt/llvm@18/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/llvm@18/include"
 ```
 
 ```zsh
-pip install xformers
+pip install --no-build-isolation --upgrade xformers
 ```
 
 ## Run

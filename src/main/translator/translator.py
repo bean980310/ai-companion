@@ -23,6 +23,16 @@ def translate(text, src_lang, tgt_lang):
     return translated[0]
 
 def translate_interface(text, src_language, tgt_language):
+    
+    """
+    Translates text from source language to target language using the MBart model.
+    Args:
+        text: The text to translate.
+        src_language: The source language as a string.
+        tgt_language: The target language as a strings.
+    Returns:
+        The translated text as a string.
+    """
     src_lang = languages[src_language]
     tgt_lang = languages[tgt_language]
     return translate(text, src_lang, tgt_lang)

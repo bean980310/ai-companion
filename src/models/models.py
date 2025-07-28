@@ -16,6 +16,13 @@ from src.pipelines.llm import (
     MlxLlama4ModelHandler,
     MlxQwen3ModelHandler
 )
+
+from src.pipelines.llm.api import (
+    AnthropicClientWrapper,
+    GoogleAIClientWrapper,
+    OpenAIClientWrapper,
+    PerplexityClientWrapper
+)
 from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models, convert_folder_to_modelid
 import gradio as gr
 from src.models import api_models
@@ -128,7 +135,7 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
-        elif "qwen3" in model_id.lower():
+        elif "qwen3" in model_id.lower() and "instruct" not in model_id.lower():
             handler = MlxQwen3ModelHandler(
                 model_id=model_id,
                 lora_model_id=lora_model_id,
@@ -167,7 +174,7 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
-        elif "qwen3" in model_id.lower():
+        elif "qwen3" in model_id.lower() and "instruct" not in model_id.lower():
             handler = TransformersQwen3ModelHandler(
                 model_id=model_id,
                 lora_model_id=lora_model_id,
@@ -188,7 +195,7 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
 
-def generate_answer(history, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, image_input=None, api_key=None, device="cpu", seed=42, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0, character_language='ko'):
+def generate_answer(history, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, image_input=None, api_key=None, device="cpu", seed=42, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0, character_language='ko', session_id="demo_session"):
     """
     사용자 히스토리를 기반으로 답변 생성.
     """
@@ -223,115 +230,49 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
                 logger.error("Anthropic API Key가 missing.")
                 return "Anthropic API Key가 필요합니다."
             
-            client = anthropic.Client(api_key=api_key)
-            # Anthropic 메시지 형식으로 변환
-            messages = []
-            for msg in history:
-                if msg["role"] == "system":
-                    system = msg["content"]
-                    continue  # Claude API는 시스템 메시지를 별도로 처리하지 않음
-                messages.append({
-                    "role": msg["role"],
-                    "content": msg["content"]
-                })
-            
-            logger.info(f"[*] Anthropic API 요청: {messages}")
-            
+            wrapper = AnthropicClientWrapper(selected_model, api_key=api_key)
             try:
-                response = client.messages.create(
-                    model=selected_model,
-                    system=system,
-                    messages=messages,
-                    temperature=temperature,
-                    top_k=top_k,
-                    top_p=top_p,
-                    # frequency_penalty=repetition_penalty,
-                    max_tokens=1024,
-                )
-                answer = response.content[0].text
-                logger.info(f"[*] Anthropic 응답: {answer}")
+                answer = wrapper.generate_answer(history=history)
                 return answer
             except Exception as e:
                 logger.error(f"Anthropic API 오류: {str(e)}\n\n{traceback.format_exc()}")
                 return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+            
         elif "gemini" in selected_model:
             if not api_key:
                 logger.error("Google API Key가 missing.")
                 return "Google API Key가 필요합니다."
 
-            client = genai.Client(api_key=api_key)
-            messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
-            config = types.GenerateContentConfig(
-                max_output_tokens=1024,
-                temperature=temperature,
-                top_p=top_p,
-                top_k=top_k,
-                frequency_penalty=repetition_penalty
-            )
-            logger.info(f"[*] Google API 요청: {messages}")
+            wrapper = GoogleAIClientWrapper(selected_model, api_key=api_key)
             try: 
-                response = client.models.generate_content(
-                    model=selected_model,
-                    contents=messages,
-                    config=config
-                )
-                answer = response.text
-                logger.info(f"[*] Google 응답: {answer}")
+                answer = wrapper.generate_answer(history=history)
                 return answer
             except Exception as e:
                 logger.error(f"Google API 오류: {str(e)}\n\n{traceback.format_exc()}")
                 return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+            
         elif "gpt" in selected_model or "o1" in selected_model or "o3" in selected_model or "o4" in selected_model:
             if not api_key:
                 logger.error("OpenAI API Key가 missing.")
                 return "OpenAI API Key가 필요합니다."
-            openai.api_key = api_key
-            messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
-            logger.info(f"[*] OpenAI API 요청: {messages}")
             
+            wrapper = OpenAIClientWrapper(selected_model, api_key=api_key)
             try:
-                response = openai.chat.completions.create(
-                    model=selected_model,
-                    messages=messages,
-                    temperature=temperature,
-                    max_tokens=1024,
-                    top_logprobs=top_k,
-                    frequency_penalty=repetition_penalty,
-                    top_p=top_p,
-                )
-                answer = response.choices[0].message["content"]
-                logger.info(f"[*] OpenAI 응답: {answer}")
+                answer = wrapper.generate_answer(history=history)
                 return answer
             except Exception as e:
                 logger.error(f"OpenAI API 오류: {str(e)}\n\n{traceback.format_exc()}")
                 return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+            
         elif "sonar" in selected_model:
             if not api_key:
                 logger.error("Perplexity API Key가 missing.")
                 return "Perplexity API Key가 필요합니다."
-            messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
-            logger.info(f"[*] Perplexity API 요청: {messages}")
             
+            wrapper = PerplexityClientWrapper(selected_model, api_key=api_key)
             try:
-                url = "https://api.perplexity.ai/chat/completions"
-                payload = { 
-                    "model": selected_model,
-                    "messages": messages,
-                    "max_tokens": 1024,
-                    "temperature": temperature,
-                    "top_p": top_p,
-                    "top_k": top_k,
-                    "presence_penalty": repetition_penalty
-                }
-                headers = {
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json"
-                }
-                response = requests.request("POST", url, json=payload, headers=headers)
-                answer = response.text
-                logger.info(f"[*] Perplexity 응답: {answer}")
+                answer = wrapper.generate_answer(history=history)
                 return answer
-            
             except Exception as e:
                 logger.error(f"Perplexity API 오류: {str(e)}\n\n{traceback.format_exc()}")
                 return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
@@ -369,7 +310,7 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
     else:
         if not handler:
             logger.info(f"[*] 모델 로드 중: {selected_model}")
-            handler = load_model(selected_model, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path, image_input=image_input, temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty)
+            handler = load_model(selected_model, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path, image_input=image_input, session_id="demo_session", temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty)
         
         if not handler:
             logger.error("모델 핸들러가 로드되지 않았습니다.")

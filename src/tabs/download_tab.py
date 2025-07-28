@@ -86,10 +86,23 @@ def create_download_tab():
                 # 이벤트 핸들러
                 @use_auth.change(inputs=[use_auth], outputs=[auth_column_predefined])
                 def toggle_auth_predefined(use_auth_val):
+                    """
+                    Toggle authentication visibility based on the checkbox value.
+                    Args:
+                        use_auth_val (bool): Value of the checkbox.
+                    """
                     return gr.update(visible=use_auth_val)
                 
                 @download_btn_predefined.click(inputs=[predefined_dropdown, target_path, use_auth, hf_token], outputs=[download_status_predefined, download_info_predefined])
                 def download_predefined_model(predefined_choice, target_dir, use_auth_val, token):
+                    """
+                    Download a predefined model.
+                    Args:
+                        predefined_choice (str): Predefined model choice.
+                        target_dir (str): Target directory for saving the model.
+                        use_auth_val (bool): Value of the authentication checkbox.
+                        token (str): HuggingFace token for authentication.
+                    """
                     try:
                         repo_id = predefined_choice
                         if not repo_id:
@@ -185,10 +198,23 @@ def create_download_tab():
                 # 이벤트 핸들러
                 @use_auth_custom.change(inputs=[use_auth_custom], outputs=[auth_column_custom])
                 def toggle_auth_custom(use_auth_val):
+                    """
+                    Toggle authentication visibility based on the checkbox value.
+                    Args:
+                        use_auth_val (bool): Value of the checkbox.
+                    """
                     return gr.update(visible=use_auth_val)
                 
                 @download_btn_custom.click(inputs=[custom_repo_id_box, target_path_custom, use_auth_custom, hf_token_custom], outputs=[download_status_custom, download_info_custom])
                 def download_custom_model(custom_repo, target_dir, use_auth_val, token):
+                    """
+                    Download a custom model.
+                    Args:
+                        custom_repo (str): Custom model repository ID.
+                        target_dir (str): Target directory for saving the model.
+                        use_auth_val (bool): Value of the authentication checkbox.
+                        token (str): HuggingFace token for authentication.
+                    """
                     try:
                         repo_id = custom_repo.strip()
                         if not repo_id:
@@ -318,11 +344,23 @@ def create_download_tab():
                 # 이벤트 핸들러
                 @use_auth_hub.change(inputs=[use_auth_hub], outputs=[auth_column_hub])
                 def toggle_auth_hub(use_auth_val):
+                    """
+                    Toggle authentication visibility based on the checkbox value.
+                    Args:
+                        use_auth_val (bool): Value of the checkbox.
+                    """
                     return gr.update(visible=use_auth_val)
                 
                 @search_btn_hub.click(inputs=[search_box_hub, model_type_filter_hub, language_filter_hub, library_filter_hub], outputs=model_list_hub)
                 def search_models_hub(query, model_type, language, library):
-                    """Search models on HuggingFace Hub"""
+                    """
+                    Search models on HuggingFace Hub
+                    Args:
+                        query (str): Search query.
+                        model_type (str): Model type filter.
+                        language (list): Language filter.
+                        library (list): Library filter.
+                    """
                     try:
                         api = HfApi()
                         filter_str = ""
@@ -366,12 +404,25 @@ def create_download_tab():
                     
                 @model_list_hub.select(inputs=[model_list_hub], outputs=[selected_model_hub])
                 def select_model_hub(evt: gr.SelectData, data):
-                    """Select model from dataframe"""
+                    """
+                    Select model from dataframe
+                    Args:
+                        evt (gr.SelectData): Event data.
+                        data (gr.Dataframe): Dataframe.
+                    """
                     selected_model_id = data.at[evt.index[0], "Model ID"] if evt.index else ""
                     return selected_model_id
                     
                 @download_btn_hub.click(inputs=[selected_model_hub, target_path_hub, use_auth_hub, hf_token_hub], outputs=[download_status_hub, download_info_hub])
                 def download_hub_model(model_id, target_dir, use_auth_val, token):
+                    """
+                    Download a model from HuggingFace Hub.
+                    Args:
+                        model_id (str): Model ID.
+                        target_dir (str): Target directory for saving the model.
+                        use_auth_val (bool): Value of the authentication checkbox.
+                        token (str): HuggingFace token for authentication.
+                    """
                     try:
                         if not model_id:
                             download_status_hub.update("❌ No model selected.")

@@ -173,54 +173,46 @@ python3 -m venv venv
 uv venv --python 3.10 
 uv venv --python 3.11
 uv venv --python 3.12
-# MacOS、Linux環境
-source venv/bin/activate 
+# MacOS、Linux、Windows WSL2環境
+source venv/bin/activate # venv
+source .venv/bin/activate # uv
 # Windows環境
-source venv/Scripts/activate 
-# Windows Powershell環境
-.\venv\Scripts\activate
+.\venv\Scripts\activate.bat # venv
+.\.venv\Scripts\activate.bat # uv
 ```
 
 **依存関係のインストール**  
-
-* **一般環境**
-
-```shell
-pip install -r requirements/common.txt
-```
 
 * **Windows環境**
 
 ```shell
 # on Windows
-pip install -r requirements/windows_amd64.txt
+.\installer_windows_amd64.bat
+# on Windows (Powershell)
+.\installer_windows_amd64.ps1
+```
+
+```bash
 # on Windows Subsystem for Linux 2
-pip install -r requirements/windows_amd64_wsl2.txt
-# Common
-pip install -r requirements/ai_models.txt
+bash installer_windows_amd64_wsl2.sh
+# or
+./installer_windows_amd64_wsl2.sh
 ```
 
 * **macOS環境(Apple Siliconを搭載したMac)**
 
 ```zsh
-pip install -r requirements/macos_arm64.txt
-pip install -r requirements/ai_models.txt
-pip install -r requirements/macos_arm64_mlx.txt
+zsh installer_macos_arm64.sh
+# or
+./installer_macos_arm64.sh
 ```
 
 * **Linux環境**
 
 ```bash
-# on AMD64 with NVIDIA GPU
-pip install -r requirements/linux_amd64_cuda.txt
-# on AMD64 with AMD GPU
-pip install -r requirements/linux_amd64_rocm.txt
-# on ARM64 (NVIDIA GPU only)
-pip install -r requirements/linux_arm64.txt
-# on Google Colab TPU
-pip install -r requirements/linux_colab_tpu.txt
-# Common
-pip install -r requirements/ai_models.txt
+bash installer_linux_amd64_cuda.sh
+# or
+./installer_linux_amd64_cuda.sh
 ```
 
 * **MeloTTS(Optional)**
@@ -233,24 +225,24 @@ pip install git+https://github.com/myshell-ai/MeloTTS.git --no-deps
 
 ```zsh
 brew update
-brew install gcc cmake llvm@16 libomp
+brew install gcc cmake llvm@18 libomp
 ```
 
 ```zsh
-export PATH="/opt/homebrew/opt/llvm@16/bin:$PATH"
+export PATH="/opt/homebrew/opt/llvm@18/bin:$PATH"
 
 export LDFLAGS="-L/opt/homebrew/opt/libomp/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/libomp/include"
 export CXXFLAGS="-Xpreprocessor -fopenmp"
 
-export CC=/opt/homebrew/opt/llvm@16/bin/clang
-export CXX=/opt/homebrew/opt/llvm@16/bin/clang++
-export LDFLAGS="-L/opt/homebrew/opt/llvm@16/lib"
-export CPPFLAGS="-I/opt/homebrew/opt/llvm@16/include"
+export CC=/opt/homebrew/opt/llvm@18/bin/clang
+export CXX=/opt/homebrew/opt/llvm@18/bin/clang++
+export LDFLAGS="-L/opt/homebrew/opt/llvm@18/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/llvm@18/include"
 ```
 
 ```zsh
-pip install xformers
+pip install --no-build-isolation --upgrade xformers
 ```
 
 ## 実行方法
