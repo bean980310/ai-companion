@@ -72,6 +72,10 @@ class MLXPipeline(LLM):
           for applying repetition penalty, default is None.
         - top_p (float): The cumulative probability threshold for
           top-p filtering, default is 1.0.
+        - min_tokens_to_keep (int): The minimum number of tokens to keep
+          for top-p filtering, default is 1.
+        - top_k (int): The number of highest probability vocabulary tokens
+          to keep for top-k filtering, default is 0.
 
     """
 
@@ -161,7 +165,7 @@ class MLXPipeline(LLM):
             "repetition_penalty", None
         )
         repetition_context_size: Optional[int] = pipeline_kwargs.get(
-            "repetition_context_size", None
+            "repetition_context_size", 20
         )
         top_p: float = pipeline_kwargs.get("top_p", 1.0)
         min_p: float = pipeline_kwargs.get("min_p", 0.0)
@@ -210,7 +214,7 @@ class MLXPipeline(LLM):
             "repetition_penalty", None
         )
         repetition_context_size: Optional[int] = pipeline_kwargs.get(
-            "repetition_context_size", None
+            "repetition_context_size", 20
         )
         top_p: float = pipeline_kwargs.get("top_p", 1.0)
         min_p: float = pipeline_kwargs.get("min_p", 0.0)

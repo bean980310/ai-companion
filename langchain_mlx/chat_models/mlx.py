@@ -36,7 +36,7 @@ from langchain_core.runnables import Runnable
 from langchain_core.tools import BaseTool
 from langchain_core.utils.function_calling import convert_to_openai_tool
 
-from langchain_community.llms.mlx_pipeline import MLXPipeline
+from langchain_mlx.llms.mlx_pipeline import MLXPipeline
 
 DEFAULT_SYSTEM_PROMPT = """You are a helpful, respectful, and honest assistant."""
 
@@ -175,7 +175,7 @@ class ChatMLX(BaseChatModel):
             "repetition_penalty", None
         )
         repetition_context_size: Optional[int] = model_kwargs.get(
-            "repetition_context_size", None
+            "repetition_context_size", 20
         )
         top_p: float = model_kwargs.get("top_p", 1.0)
         min_p: float = model_kwargs.get("min_p", 0.0)

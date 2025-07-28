@@ -655,3 +655,22 @@ def _(key: str, **kwargs) -> str:
 def get_character_message(character: str = 'minami_asuka', lang: Optional[str]=None) -> str:
     """캐릭터 설정 메시지 반환"""
     return translation_manager.get_character_setting(character, lang=lang)
+
+from translations.load_i18n import i18n_en, i18n_ja, i18n_ko, i18n_zh_CN, i18n_zh_TW
+import gradio as gr
+
+I18N_EN = i18n_en()
+I18N_JA = i18n_ja()
+I18N_KO = i18n_ko()
+I18N_ZH_CN = i18n_zh_CN()
+I18N_ZH_TW = i18n_zh_TW()
+
+
+def load_i18n_translations():
+    return gr.I18n(
+        en=I18N_EN,
+        ja=I18N_JA,
+        ko=I18N_KO,
+        zh_CN=I18N_ZH_CN,
+        zh_TW=I18N_ZH_TW
+    )
