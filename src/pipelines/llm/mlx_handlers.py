@@ -25,7 +25,7 @@ langchain.globals.set_verbose(True)
 # langchain.globals.set_llm_cache(True)
 
 class MlxCausalModelHandler(BaseCausalModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="mlx", use_langchain: bool = True, *, session_id="demo_session", **kwargs):
+    def __init__(self, model_id, lora_model_id=None, model_type="mlx", use_langchain: bool = True, **kwargs):
         super().__init__(model_id, lora_model_id)
         self.use_langchain = use_langchain
 
