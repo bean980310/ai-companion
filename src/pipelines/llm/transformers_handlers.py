@@ -46,7 +46,7 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
             
             _ = self.model.generate(
                 input_ids,
-                generation_config = self.config,
+                generation_config=self.config,
                 streamer=streamer,
             )
             
@@ -122,7 +122,7 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
             
             _ = self.model.generate(
                 **inputs,
-                generation_config = self.config,
+                generation_config=self.config,
                 streamer=streamer
             )
 
@@ -207,7 +207,7 @@ class TransformersLlama4ModelHandler(BaseModelHandler):
             
             _ = self.model.generate(
                 **inputs,
-                generation_config = self.config,
+                generation_config=self.config,
                 streamer=streamer
             )
             
@@ -295,7 +295,7 @@ class TransformersQwen3ModelHandler(BaseCausalModelHandler):
             
             outputs = self.model.generate(
                 **model_inputs,
-                generation_config = self.config,
+                generation_config=self.config,
             )
             
             generated_ids = outputs[0][len(model_inputs.input_ids[0]):].tolist()
@@ -383,7 +383,7 @@ class TransformersQwen3MoeModelHandler(BaseCausalModelHandler):
             
             outputs = self.model.generate(
                 **model_inputs,
-                generation_config = self.config,
+                generation_config=self.config,
             )
             
             generated_ids = outputs[0][len(model_inputs.input_ids[0]):].tolist()
