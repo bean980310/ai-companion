@@ -1,4 +1,4 @@
-from transformers import AutoTokenizer, AutoProcessor, AutoModel, AutoConfig, AutoModelForCausalLM, GenerationConfig, Llama4ForConditionalGeneration, TextStreamer, TextIteratorStreamer
+from transformers import AutoTokenizer, AutoProcessor, AutoModel, AutoConfig, AutoModelForCausalLM, GenerationConfig, Llama4ForConditionalGeneration, TextStreamer, TextIteratorStreamer, Qwen3ForCausalLM, Qwen3MoeForCausalLM
 from peft import PeftModel
 import os
 import traceback
@@ -22,9 +22,8 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
         self.load_model()
         
     def load_model(self):
-        self.config = AutoConfig.from_pretrained(self.local_model_path)
         self.tokenizer = AutoTokenizer.from_pretrained(self.local_model_path, trust_remote_code=True)
-        self.model = AutoModelForCausalLM.from_pretrained(self.local_model_path, config=self.config, trust_remote_code=True, device_map='auto')
+        self.model = AutoModelForCausalLM.from_pretrained(self.local_model_path, trust_remote_code=True, device_map='auto')
         
         if self.local_lora_model_path and os.path.exists(self.local_lora_model_path):
             self.model = PeftModel.from_pretrained(self.model, self.local_lora_model_path)
@@ -33,7 +32,7 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
         try:
             prompt_messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
             # If kwargs are provided, update the settings
-            self.get_settings()
+            self.config = self.get_settings()
 
             input_ids = self.load_template(prompt_messages)
             
@@ -47,8 +46,7 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
             
             _ = self.model.generate(
                 input_ids,
-                max_new_tokens=self.max_new_tokens,
-                do_sample=True,
+                generation_config = self.config,
                 streamer=streamer,
             )
             
@@ -69,10 +67,14 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
             return f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}"
         
     def get_settings(self):
-        self.model.config.temperature = self.temperature
-        self.model.config.top_k = self.top_k
-        self.model.config.top_p = self.top_p
-        self.model.config.repetition_penalty = self.repetition_penalty
+        return GenerationConfig(
+            max_new_tokens=self.max_new_tokens,
+            do_sample=True,
+            temperature=self.temperature,
+            top_k=self.top_k,
+            top_p=self.top_p,
+            repetition_penalty=self.repetition_penalty
+        )
 
     def load_template(self, messages):
         return self.tokenizer.apply_chat_template(
@@ -96,9 +98,8 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
         self.load_model()
 
     def load_model(self):
-        self.config = AutoConfig.from_pretrained(self.local_model_path)
         self.processor = AutoProcessor.from_pretrained(self.local_model_path)
-        self.model = AutoModel.from_pretrained(self.local_model_path, config=self.config)
+        self.model = AutoModel.from_pretrained(self.local_model_path)
 
         if self.local_lora_model_path and os.path.exists(self.local_lora_model_path):
             self.model = PeftModel.from_pretrained(self.model, self.local_lora_model_path)
@@ -107,7 +108,7 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
         try:
             prompt_messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
 
-            self.get_settings()
+            self.config = self.get_settings()
 
             inputs = self.load_template(prompt_messages, image_input)
             
@@ -121,8 +122,7 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
             
             _ = self.model.generate(
                 **inputs,
-                max_new_tokens=self.max_new_tokens,
-                do_sample=True,
+                generation_config = self.config,
                 streamer=streamer
             )
 
@@ -142,10 +142,14 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
             return f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}"
 
     def get_settings(self):
-        self.model.config.temperature = self.temperature
-        self.model.config.top_k = self.top_k
-        self.model.config.top_p = self.top_p
-        self.model.config.repetition_penalty = self.repetition_penalty
+        return GenerationConfig(
+            max_new_tokens=self.max_new_tokens,
+            do_sample=True,
+            temperature=self.temperature,
+            top_k=self.top_k,
+            top_p=self.top_p,
+            repetition_penalty=self.repetition_penalty
+        )
 
     def load_template(self, messages, image_input):
         if image_input:
@@ -179,10 +183,9 @@ class TransformersLlama4ModelHandler(BaseModelHandler):
         self.load_model()
         
     def load_model(self):
-        self.config = AutoConfig.from_pretrained(self.local_model_path)
         self.tokenizer = AutoTokenizer.from_pretrained(self.local_model_path, trust_remote_code=True)
         self.processor = AutoProcessor.from_pretrained(self.local_model_path)
-        self.model = Llama4ForConditionalGeneration.from_pretrained(self.local_model_path, config=self.config)
+        self.model = Llama4ForConditionalGeneration.from_pretrained(self.local_model_path)
 
         if self.local_lora_model_path and os.path.exists(self.local_lora_model_path):
             self.model = PeftModel.from_pretrained(self.model, self.local_lora_model_path)
@@ -191,7 +194,7 @@ class TransformersLlama4ModelHandler(BaseModelHandler):
         try:
             prompt_messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
 
-            self.get_settings()
+            self.config = self.get_settings()
 
             inputs = self.load_template(prompt_messages, image_input)
             streamer = TextStreamer(self.processor, skip_prompt=True)
@@ -204,8 +207,7 @@ class TransformersLlama4ModelHandler(BaseModelHandler):
             
             _ = self.model.generate(
                 **inputs,
-                max_new_tokens=self.max_new_tokens,
-                do_sample=True,
+                generation_config = self.config,
                 streamer=streamer
             )
             
@@ -233,10 +235,14 @@ class TransformersLlama4ModelHandler(BaseModelHandler):
             return f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}"
 
     def get_settings(self):
-        self.model.config.temperature = self.temperature
-        self.model.config.top_k = self.top_k
-        self.model.config.top_p = self.top_p
-        self.model.config.repetition_penalty = self.repetition_penalty
+        return GenerationConfig(
+            max_new_tokens=self.max_new_tokens,
+            do_sample=True,
+            temperature=self.temperature,
+            top_k=self.top_k,
+            top_p=self.top_p,
+            repetition_penalty=self.repetition_penalty
+        )
 
     def load_template(self, messages, image_input):
         if image_input:
@@ -270,9 +276,8 @@ class TransformersQwen3ModelHandler(BaseCausalModelHandler):
         self.load_model()
         
     def load_model(self):
-        self.config = AutoConfig.from_pretrained(self.local_model_path)
         self.tokenizer = AutoTokenizer.from_pretrained(self.local_model_path, trust_remote_code=True)
-        self.model = AutoModelForCausalLM.from_pretrained(self.local_model_path, config=self.config, trust_remote_code=True, device_map='auto')
+        self.model = Qwen3ForCausalLM.from_pretrained(self.local_model_path, trust_remote_code=True, device_map='auto')
         
         if self.local_lora_model_path and os.path.exists(self.local_lora_model_path):
             self.model = PeftModel.from_pretrained(self.model, self.local_lora_model_path)
@@ -281,7 +286,7 @@ class TransformersQwen3ModelHandler(BaseCausalModelHandler):
         try:
             prompt_messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
             
-            self.get_settings(**kwargs)
+            self.config = self.get_settings(**kwargs)
 
             input_ids = self.load_template(prompt_messages)
             
@@ -290,7 +295,7 @@ class TransformersQwen3ModelHandler(BaseCausalModelHandler):
             
             outputs = self.model.generate(
                 **model_inputs,
-                max_new_tokens=self.max_new_tokens
+                generation_config = self.config,
             )
             
             generated_ids = outputs[0][len(model_inputs.input_ids[0]):].tolist()
@@ -327,10 +332,102 @@ class TransformersQwen3ModelHandler(BaseCausalModelHandler):
             return f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}"
         
     def get_settings(self):
-        self.model.config.temperature = self.temperature
-        self.model.config.top_k = self.top_k
-        self.model.config.top_p = self.top_p
-        self.model.config.repetition_penalty = self.repetition_penalty
+        return GenerationConfig(
+            max_new_tokens=self.max_new_tokens,
+            do_sample=True,
+            temperature=self.temperature,
+            top_k=self.top_k,
+            top_p=self.top_p,
+            repetition_penalty=self.repetition_penalty
+        )
+        
+    def load_template(self, messages):
+        return self.tokenizer.apply_chat_template(
+            messages,
+            add_generation_prompt=True,
+            return_tensors="pt",
+            tokenize=False,
+            enable_thinking=True
+        )
+    
+class TransformersQwen3MoeModelHandler(BaseCausalModelHandler):
+    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', **kwargs):
+        super().__init__(model_id, lora_model_id)
+
+        self.max_new_tokens = kwargs.get("max_new_tokens", 32768)
+        self.temperature = kwargs.get("temperature", 1.0)
+        self.top_k = kwargs.get("top_k", 50)
+        self.top_p = kwargs.get("top_p", 1.0)
+        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
+
+        self.device = device
+        self.load_model()
+        
+    def load_model(self):
+        self.tokenizer = AutoTokenizer.from_pretrained(self.local_model_path, trust_remote_code=True)
+        self.model = Qwen3MoeForCausalLM.from_pretrained(self.local_model_path, trust_remote_code=True, device_map='auto')
+        
+        if self.local_lora_model_path and os.path.exists(self.local_lora_model_path):
+            self.model = PeftModel.from_pretrained(self.model, self.local_lora_model_path)
+        
+    def generate_answer(self, history, **kwargs):
+        try:
+            prompt_messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
+            
+            self.config = self.get_settings(**kwargs)
+
+            input_ids = self.load_template(prompt_messages)
+            
+            model_inputs = self.tokenizer([input_ids], return_tensors="pt").to(self.model.device)
+            streamer = TextStreamer(self.tokenizer, skip_prompt=True)
+            
+            outputs = self.model.generate(
+                **model_inputs,
+                generation_config = self.config,
+            )
+            
+            generated_ids = outputs[0][len(model_inputs.input_ids[0]):].tolist()
+            
+            # _ = self.model.generate(
+            #     input_ids,
+            #     max_new_tokens=32768,
+            #     do_sample=True,
+            #     streamer=streamer,
+            # )
+            
+            # generated_text = self.tokenizer.decode(
+            #     outputs[0][input_ids.shape[-1]:],
+            #     skip_special_tokens=True
+            # )
+            
+            generated_stream = ""
+            
+            for ids in streamer:
+                generated_ids += ids
+                
+            try:
+                index=len(generated_ids)-generated_ids[::-1].index(151668)
+            except:
+                index=0
+                
+            generated_thinking = self.tokenizer.decode(generated_ids[:index], skip_special_tokens=True)
+            generated_text = self.tokenizer.decode(generated_ids[index:], skip_special_tokens=True)
+                
+            return generated_text.strip()
+        
+        except Exception as e:
+            logger.error(f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}")
+            return f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}"
+        
+    def get_settings(self):
+        return GenerationConfig(
+            max_new_tokens=self.max_new_tokens,
+            do_sample=True,
+            temperature=self.temperature,
+            top_k=self.top_k,
+            top_p=self.top_p,
+            repetition_penalty=self.repetition_penalty
+        )
         
     def load_template(self, messages):
         return self.tokenizer.apply_chat_template(
