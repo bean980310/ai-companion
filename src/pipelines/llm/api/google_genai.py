@@ -23,18 +23,14 @@ class GoogleAIClientWrapper:
             temperature=self.temperature,
             top_p=self.top_p,
             top_k=self.top_k,
-            frequency_penalty=self.repetition_penalty
+            frequency_penalty=self.repetition_penalty,
+            presence_penalty=self.repetition_penalty,
         )
         logger.info(f"[*] Google API 요청: {messages}")
-        try: 
-            response = client.models.generate_content(
-                model=self.model,
-                contents=messages,
-                config=config
-            )
-            answer = response.text
-            logger.info(f"[*] Google 응답: {answer}")
-            return answer
-        except Exception as e:
-            logger.error(f"Google API 오류: {str(e)}\n\n{traceback.format_exc()}")
-            return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+        response = client.models.generate_content(
+            model=self.model,
+            contents=messages,
+            config=config
+        )
+        answer = response.text
+        return answer

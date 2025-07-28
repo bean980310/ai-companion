@@ -17,26 +17,21 @@ class PerplexityClientWrapper:
         messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
         logger.info(f"[*] Perplexity API 요청: {messages}")
             
-        try:
-            url = "https://api.perplexity.ai/chat/completions"
-            payload = { 
-                "model": self.model,
-                "messages": messages,
-                "max_tokens": self.max_tokens,
-                "temperature": self.temperature,
-                "top_p": self.top_p,
-                "top_k": self.top_k,
-                "frequency_penalty": self.repetition_penalty
-            }
-            headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
-            }
-            response = requests.request("POST", url, json=payload, headers=headers)
-            answer = response.text
-            logger.info(f"[*] Perplexity 응답: {answer}")
-            return answer
-            
-        except Exception as e:
-            logger.error(f"Perplexity API 오류: {str(e)}\n\n{traceback.format_exc()}")
-            return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+        url = "https://api.perplexity.ai/chat/completions"
+        payload = { 
+            "model": self.model,
+            "messages": messages,
+            "max_tokens": self.max_tokens,
+            "temperature": self.temperature,
+            "top_p": self.top_p,
+            "top_k": self.top_k,
+            "frequency_penalty": self.repetition_penalty,
+            "presence_penalty": self.repetition_penalty,
+        }
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        response = requests.request("POST", url, json=payload, headers=headers)
+        answer = response.text
+        return answer

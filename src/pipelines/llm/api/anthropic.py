@@ -2,6 +2,8 @@ from .... import logger
 import traceback
 
 import anthropic
+
+from langchain_anthropic.chat_models import ChatAnthropic
 class AnthropicClientWrapper:
     def __init__(self, selected_model, api_key="None", **kwargs):
         self.model = selected_model
@@ -28,20 +30,15 @@ class AnthropicClientWrapper:
                 
         logger.info(f"[*] Anthropic API 요청: {messages}")
                 
-        try:
-            response = client.messages.create(
-                model=self.model,
-                system=system,
-                messages=messages,
-                temperature=self.temperature,
-                top_k=self.top_k,
-                top_p=self.top_p,
-                # frequency_penalty=repetition_penalty,
-                max_tokens=self.max_tokens,
-            )
-            answer = response.content[0].text
-            logger.info(f"[*] Anthropic 응답: {answer}")
-            return answer
-        except Exception as e:
-            logger.error(f"Anthropic API 오류: {str(e)}\n\n{traceback.format_exc()}")
-            return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+        response = client.messages.create(
+            model=self.model,
+            system=system,
+            messages=messages,
+            temperature=self.temperature,
+            top_k=self.top_k,
+            top_p=self.top_p,
+            # frequency_penalty=repetition_penalty,
+            max_tokens=self.max_tokens,
+        )
+        answer = response.content[0].text
+        return answer
