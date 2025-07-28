@@ -47,7 +47,6 @@ class OpenAIClientWrapper:
         except Exception as e:
             logger.error(f"OpenAI API 오류: {str(e)}\n\n{traceback.format_exc()}")
             return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
-from src import logger
 
 class OpenAILangChainIntegration:
     def __init__(self, api_key=None, model="gpt-4o-mini", temperature=0.6, top_p=0.9, top_k=40, repetition_penalty=1.0):
