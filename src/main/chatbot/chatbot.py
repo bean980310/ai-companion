@@ -180,8 +180,7 @@ class Chatbot:
                 top_k=top_k,
                 top_p=top_p,
                 repetition_penalty=repetition_penalty,
-                character_language=language,
-                session_id=session_id,
+                character_language=language
             )
             
             speech_manager = get_speech_manager(session_id)
