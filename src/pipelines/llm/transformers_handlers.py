@@ -1,19 +1,19 @@
 from transformers import AutoTokenizer, AutoProcessor, AutoModel, AutoModelForCausalLM, GenerationConfig, Llama4ForConditionalGeneration, TextStreamer, TextIteratorStreamer, Qwen3ForCausalLM, Qwen3MoeForCausalLM, pipeline
 
-import langchain.globals
+from langchain_huggingface.llms import HuggingFacePipeline
+from langchain_huggingface.chat_models import ChatHuggingFace
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.language_models import BaseLLM
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser, BaseOutputParser, JsonOutputParser, XMLOutputParser, PydanticOutputParser
 from langchain.output_parsers import RetryOutputParser, RetryWithErrorOutputParser
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig, RunnablePassthrough, RunnableWithMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory, SQLChatMessageHistory
-from langchain.memory import ConversationBufferMemory
-from langchain.chains.conversation.base import ConversationChain
-from langchain_huggingface.llms import HuggingFacePipeline
-from langchain_huggingface.chat_models import ChatHuggingFace
-from langchain.chains.llm import LLMChain
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_chroma.vectorstores import Chroma
+from langchain_community.vectorstores import FAISS
+from langchain_community.document_loaders import WebBaseLoader
 
 from peft import PeftModel
 import os
@@ -22,34 +22,18 @@ import threading
 
 from src import logger
 
-langchain.globals.set_debug(True)
-langchain.globals.set_verbose(True)
-# langchain.globals.set_llm_cache(True)
-
 from .base_handlers import BaseCausalModelHandler, BaseVisionModelHandler, BaseModelHandler
 
 class TransformersCausalModelHandler(BaseCausalModelHandler):
     def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', use_langchain: bool = True, **kwargs):
-        super().__init__(model_id, lora_model_id)
-        self.use_langchain = use_langchain
+        super().__init__(model_id, lora_model_id, use_langchain, **kwargs)
 
-        self.max_new_tokens = kwargs.get("max_new_tokens", 2048)
-        self.temperature = kwargs.get("temperature", 1.0)
-        self.top_k = kwargs.get("top_k", 50)
-        self.top_p = kwargs.get("top_p", 1.0)
-        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
+        self.max_new_tokens = self.max_tokens
 
         self.kwargs = self.get_settings_with_langchain()
         self.device = device
 
         self.pipe = None
-        self.llm = None
-        self.chat = None
-        self.memory = None
-        self.prompt = None
-        self.user_message = None
-        self.chat_history = None
-        self.chain = None
         self.load_model()
         
     def load_model(self):
@@ -62,7 +46,7 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
         if self.use_langchain:
             self.pipe = pipeline(model=self.model, tokenizer=self.tokenizer, task="text-generation", temperature=self.temperature, max_new_tokens=self.max_new_tokens, repetition_penalty=self.repetition_penalty, top_k=self.top_k, top_p=self.top_p)
             self.llm = HuggingFacePipeline(pipeline=self.pipe)
-            self.chat = ChatHuggingFace(llm=self.llm)
+            self.chat = ChatHuggingFace(llm=self.llm, verbose=True)
         
     def generate_answer(self, history, **kwargs):
         if self.use_langchain:
@@ -163,14 +147,10 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
             )
         
 class TransformersVisionModelHandler(BaseVisionModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', **kwargs):
-        super().__init__(model_id, lora_model_id)
+    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', use_langchain: bool = True, **kwargs):
+        super().__init__(model_id, lora_model_id, use_langchain, **kwargs)
 
-        self.max_new_tokens = kwargs.get("max_new_tokens", 1024)
-        self.temperature = kwargs.get("temperature", 1.0)
-        self.top_k = kwargs.get("top_k", 50)
-        self.top_p = kwargs.get("top_p", 1.0)
-        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
+        self.max_new_tokens = self.max_tokens
 
         self.device = device
         self.load_model()
@@ -245,14 +225,10 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
             )
             
 class TransformersLlama4ModelHandler(BaseModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', **kwargs):
-        super().__init__(model_id, lora_model_id)
+    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', use_langchain: bool = True, **kwargs):
+        super().__init__(model_id, lora_model_id, use_langchain, **kwargs)
 
-        self.max_new_tokens = kwargs.get("max_new_tokens", 1024)
-        self.temperature = kwargs.get("temperature", 1.0)
-        self.top_k = kwargs.get("top_k", 50)
-        self.top_p = kwargs.get("top_p", 1.0)
-        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
+        self.max_new_tokens = self.max_tokens
 
         self.tokenizer = None
         self.processor = None
@@ -341,14 +317,10 @@ class TransformersLlama4ModelHandler(BaseModelHandler):
             )
             
 class TransformersQwen3ModelHandler(BaseCausalModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', **kwargs):
-        super().__init__(model_id, lora_model_id)
+    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', use_langchain: bool = True, **kwargs):
+        super().__init__(model_id, lora_model_id, use_langchain, **kwargs)
 
         self.max_new_tokens = kwargs.get("max_new_tokens", 32768)
-        self.temperature = kwargs.get("temperature", 1.0)
-        self.top_k = kwargs.get("top_k", 50)
-        self.top_p = kwargs.get("top_p", 1.0)
-        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
 
         self.device = device
         self.load_model()
@@ -429,15 +401,11 @@ class TransformersQwen3ModelHandler(BaseCausalModelHandler):
         )
     
 class TransformersQwen3MoeModelHandler(BaseCausalModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', **kwargs):
-        super().__init__(model_id, lora_model_id)
+    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', use_langchain: bool = True, **kwargs):
+        super().__init__(model_id, lora_model_id, use_langchain, **kwargs)
 
         self.max_new_tokens = kwargs.get("max_new_tokens", 32768)
-        self.temperature = kwargs.get("temperature", 1.0)
-        self.top_k = kwargs.get("top_k", 50)
-        self.top_p = kwargs.get("top_p", 1.0)
-        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
-
+        
         self.device = device
         self.load_model()
         

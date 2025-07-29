@@ -2,11 +2,27 @@ from abc import ABC, abstractmethod
 import os
 
 class BaseModelHandler(ABC):
-    def __init__(self, model_id, lora_model_id=None):
+    def __init__(self, model_id, lora_model_id=None, use_langchain: bool = True, **kwargs):
         self.model_id = model_id
         self.config = None
         self.local_model_path = os.path.join("./models/llm", model_id)
         self.local_lora_model_path = os.path.join("./models/llm/loras", lora_model_id) if lora_model_id else None
+
+        self.use_langchain = use_langchain
+
+        self.max_tokens=2048
+        self.temperature = kwargs.get("temperature", 1.0)
+        self.top_k = kwargs.get("top_k", 50)
+        self.top_p = kwargs.get("top_p", 1.0)
+        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
+
+        self.llm = None
+        self.chat = None
+        self.memory = None
+        self.prompt = None
+        self.user_message = None
+        self.chat_history = None
+        self.chain = None
     
     @abstractmethod
     def load_model(self):
@@ -25,8 +41,8 @@ class BaseModelHandler(ABC):
         pass
         
 class BaseCausalModelHandler(BaseModelHandler):
-    def __init__(self, model_id, lora_model_id=None):
-        super().__init__(model_id, lora_model_id)
+    def __init__(self, model_id, lora_model_id=None, use_langchain: bool = True, **kwargs):
+        super().__init__(model_id, lora_model_id, use_langchain, **kwargs)
         self.tokenizer = None
         self.model = None
         
@@ -39,7 +55,7 @@ class BaseCausalModelHandler(BaseModelHandler):
         pass
     
     @abstractmethod
-    def get_settings(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
+    def get_settings(self):
         pass
     
     @abstractmethod
@@ -47,8 +63,8 @@ class BaseCausalModelHandler(BaseModelHandler):
         pass
     
 class BaseVisionModelHandler(BaseModelHandler):
-    def __init__(self, model_id, lora_model_id=None):
-        super().__init__(model_id, lora_model_id)
+    def __init__(self, model_id, lora_model_id=None, use_langchain: bool = True, **kwargs):
+        super().__init__(model_id, lora_model_id, use_langchain, **kwargs)
         self.processor = None
         self.model = None
         
@@ -61,10 +77,42 @@ class BaseVisionModelHandler(BaseModelHandler):
         pass
     
     @abstractmethod
-    def get_settings(self, *, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0):
+    def get_settings(self):
         pass
     
     @abstractmethod
     def load_template(self, messages, image_input):
         pass
     
+class BaseAPIClientWrapper(ABC):
+    def __init__(self, selected_model, api_key="None", use_langchain: bool = True, **kwargs):
+        self.model = selected_model
+        self.api_key = api_key
+
+        self.use_langchain = use_langchain
+
+        self.max_tokens=2048
+        self.temperature = kwargs.get("temperature", 1.0)
+        self.top_k = kwargs.get("top_k", 50)
+        self.top_p = kwargs.get("top_p", 1.0)
+        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
+
+        self.llm = None
+        self.chat = None
+        self.memory = None
+        self.prompt = None
+        self.user_message = None
+        self.chat_history = None
+        self.chain = None
+
+    @abstractmethod
+    def load_model(self):
+        pass
+
+    @abstractmethod
+    def generate_answer(self, history, **kwargs):
+        pass
+
+    @abstractmethod
+    def load_template_with_langchain(self, messages):
+        pass

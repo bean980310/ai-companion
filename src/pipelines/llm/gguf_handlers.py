@@ -2,52 +2,34 @@ import llama_cpp
 from llama_cpp import Llama # gguf 모델을 로드하기 위한 라이브러리
 from llama_cpp.llama_tokenizer import LlamaHFTokenizer
 
-import langchain.globals
+from langchain_community.chat_models.llamacpp import ChatLlamaCpp
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.language_models import BaseLLM
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser, BaseOutputParser, JsonOutputParser, XMLOutputParser, PydanticOutputParser
 from langchain.output_parsers import RetryOutputParser, RetryWithErrorOutputParser
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig, RunnablePassthrough, RunnableWithMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory, SQLChatMessageHistory
-from langchain.memory import ConversationBufferMemory
-from langchain.chains.conversation.base import ConversationChain
-from langchain_community.llms.llamacpp import LlamaCpp
-from langchain_community.chat_models.llamacpp import ChatLlamaCpp
-from langchain.chains.llm import LLMChain
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_chroma.vectorstores import Chroma
+from langchain_community.vectorstores import FAISS
+from langchain_community.document_loaders import WebBaseLoader
+
 import os
 
 from .base_handlers import BaseCausalModelHandler, BaseVisionModelHandler
 
 from src import logger
 
-langchain.globals.set_debug(True)
-langchain.globals.set_verbose(True)
-# langchain.globals.set_llm_cache(True)
-
 class GGUFCausalModelHandler(BaseCausalModelHandler):
     def __init__(self, model_id, lora_model_id=None, model_type="gguf", device='cpu', use_langchain: bool = True, **kwargs):
-        super().__init__(model_id, lora_model_id)
-        self.use_langchain = use_langchain
-
-        self.max_tokens=2048
-        self.temperature = kwargs.get("temperature", 1.0)
-        self.top_k = kwargs.get("top_k", 50)
-        self.top_p = kwargs.get("top_p", 1.0)
-        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
+        super().__init__(model_id, lora_model_id, use_langchain, **kwargs)
 
         self.n_gpu_layers = -1 if device != 'cpu' else 0
         self.sampler = None
         self.logits_processors = None
         
-        self.llm = None
-        self.chat = None
-        self.memory = None
-        self.prompt = None
-        self.user_message = None
-        self.chat_history = None
-        self.chain = None
         self.load_model()
         
     def load_model(self):
@@ -60,7 +42,8 @@ class GGUFCausalModelHandler(BaseCausalModelHandler):
                 temperature=self.temperature,
                 top_p=self.top_p,
                 top_k=self.top_k,
-                repeat_penalty=self.repetition_penalty
+                repeat_penalty=self.repetition_penalty,
+                verbose=True
             )
             self.chat = self.llm
         else:
