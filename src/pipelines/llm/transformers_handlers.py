@@ -39,6 +39,7 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
     def load_model(self):
         self.tokenizer = AutoTokenizer.from_pretrained(self.local_model_path, trust_remote_code=True)
         self.model = AutoModelForCausalLM.from_pretrained(self.local_model_path, trust_remote_code=True, device_map='auto')
+        self.model = AutoModelForCausalLM.from_pretrained(self.local_model_path, trust_remote_code=True, device_map='auto')
         
         if self.local_lora_model_path and os.path.exists(self.local_lora_model_path):
             self.model = PeftModel.from_pretrained(self.model, self.local_lora_model_path)
@@ -67,6 +68,7 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
         else:
             prompt_messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
             # If kwargs are provided, update the settings
+            self.config = self.get_settings()
             self.config = self.get_settings()
 
             input_ids = self.load_template(prompt_messages)
@@ -200,6 +202,14 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
             return f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}"
 
     def get_settings(self):
+        return GenerationConfig(
+            max_new_tokens=self.max_new_tokens,
+            do_sample=True,
+            temperature=self.temperature,
+            top_k=self.top_k,
+            top_p=self.top_p,
+            repetition_penalty=self.repetition_penalty
+        )
         return GenerationConfig(
             max_new_tokens=self.max_new_tokens,
             do_sample=True,
@@ -421,6 +431,7 @@ class TransformersQwen3MoeModelHandler(BaseCausalModelHandler):
             prompt_messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
             
             self.config = self.get_settings(**kwargs)
+            self.config = self.get_settings(**kwargs)
 
             input_ids = self.load_template(prompt_messages)
             
@@ -466,6 +477,14 @@ class TransformersQwen3MoeModelHandler(BaseCausalModelHandler):
             return f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}"
         
     def get_settings(self):
+        return GenerationConfig(
+            max_new_tokens=self.max_new_tokens,
+            do_sample=True,
+            temperature=self.temperature,
+            top_k=self.top_k,
+            top_p=self.top_p,
+            repetition_penalty=self.repetition_penalty
+        )
         return GenerationConfig(
             max_new_tokens=self.max_new_tokens,
             do_sample=True,
