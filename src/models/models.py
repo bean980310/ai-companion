@@ -233,6 +233,7 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
             wrapper = AnthropicClientWrapper(selected_model, api_key=api_key)
             try:
                 answer = wrapper.generate_answer(history=history)
+                logger.info(f"[*] Anthropic 응답: {answer}")
                 return answer
             except Exception as e:
                 logger.error(f"Anthropic API 오류: {str(e)}\n\n{traceback.format_exc()}")
@@ -246,6 +247,7 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
             wrapper = GoogleAIClientWrapper(selected_model, api_key=api_key)
             try: 
                 answer = wrapper.generate_answer(history=history)
+                logger.info(f"[*] Google 응답: {answer}")
                 return answer
             except Exception as e:
                 logger.error(f"Google API 오류: {str(e)}\n\n{traceback.format_exc()}")
@@ -259,6 +261,7 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
             wrapper = OpenAIClientWrapper(selected_model, api_key=api_key)
             try:
                 answer = wrapper.generate_answer(history=history)
+                logger.info(f"[*] OpenAI 응답: {answer}")
                 return answer
             except Exception as e:
                 logger.error(f"OpenAI API 오류: {str(e)}\n\n{traceback.format_exc()}")
@@ -272,6 +275,7 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
             wrapper = PerplexityClientWrapper(selected_model, api_key=api_key)
             try:
                 answer = wrapper.generate_answer(history=history)
+                logger.info(f"[*] Perplexity 응답: {answer}")
                 return answer
             except Exception as e:
                 logger.error(f"Perplexity API 오류: {str(e)}\n\n{traceback.format_exc()}")

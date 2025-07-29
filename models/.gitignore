@@ -17,4 +17,5 @@ assets/
 *.md
 *.bin
 *.pth
+*.jinja
 LICENSE
