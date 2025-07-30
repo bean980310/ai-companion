@@ -61,6 +61,7 @@ class GoogleAIClientWrapper(BaseAPIClientWrapper):
             return response
         else:
             client = genai.Client(api_key=self.api_key)
+
             messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
             config = types.GenerateContentConfig(
                 max_output_tokens=self.max_tokens,

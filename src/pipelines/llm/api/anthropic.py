@@ -21,7 +21,7 @@ from langchain_community.document_loaders import WebBaseLoader
 class AnthropicClientWrapper(BaseAPIClientWrapper):
     def __init__(self, selected_model, api_key="None", use_langchain: bool = True, **kwargs):
         super().__init__(selected_model, api_key, use_langchain, **kwargs)
-
+        
         if self.use_langchain:
             self.load_model()
 
@@ -55,6 +55,7 @@ class AnthropicClientWrapper(BaseAPIClientWrapper):
             return response
         else:
             client = anthropic.Client(api_key=self.api_key)
+
             # Anthropic 메시지 형식으로 변환
             messages = []
             for msg in history:

@@ -1,13 +1,17 @@
 from abc import ABC, abstractmethod
+from typing import Any
 import os
 
-class BaseModelHandler(ABC):
-    def __init__(self, model_id, lora_model_id=None, use_langchain: bool = True, **kwargs):
-        self.model_id = model_id
-        self.config = None
-        self.local_model_path = os.path.join("./models/llm", model_id)
-        self.local_lora_model_path = os.path.join("./models/llm/loras", lora_model_id) if lora_model_id else None
+class BaseModel(ABC):
+    llm = None
+    chat = None
+    memory = None
+    prompt = None
+    user_message = None
+    chat_history = None
+    chain = None
 
+    def __init__(self, use_langchain: bool = True, **kwargs):
         self.use_langchain = use_langchain
 
         self.max_tokens=2048
@@ -16,14 +20,26 @@ class BaseModelHandler(ABC):
         self.top_p = kwargs.get("top_p", 1.0)
         self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
 
-        self.llm = None
-        self.chat = None
-        self.memory = None
-        self.prompt = None
-        self.user_message = None
-        self.chat_history = None
-        self.chain = None
-    
+    @abstractmethod
+    def load_model(self):
+        pass
+
+    @abstractmethod
+    def generate_answer(self, history, **kwargs):
+        pass
+
+    @abstractmethod
+    def load_template_with_langchain(self, messages):
+        pass
+
+class BaseModelHandler(BaseModel):
+    def __init__(self, model_id: str, lora_model_id=None, use_langchain: bool = True, **kwargs):
+        super().__init__(use_langchain, **kwargs)
+        self.model_id = model_id
+        self.config = None
+        self.local_model_path = os.path.join("./models/llm", model_id)
+        self.local_lora_model_path = os.path.join("./models/llm/loras", lora_model_id) if lora_model_id else None
+
     @abstractmethod
     def load_model(self):
         pass
@@ -38,6 +54,10 @@ class BaseModelHandler(ABC):
     
     @abstractmethod
     def load_template(self, messages):
+        pass
+
+    @abstractmethod
+    def load_template_with_langchain(self, messages):
         pass
         
 class BaseCausalModelHandler(BaseModelHandler):
@@ -61,6 +81,11 @@ class BaseCausalModelHandler(BaseModelHandler):
     @abstractmethod
     def load_template(self, messages):
         pass
+
+    @abstractmethod
+    def load_template_with_langchain(self, messages):
+        pass
+
     
 class BaseVisionModelHandler(BaseModelHandler):
     def __init__(self, model_id, lora_model_id=None, use_langchain: bool = True, **kwargs):
@@ -83,27 +108,17 @@ class BaseVisionModelHandler(BaseModelHandler):
     @abstractmethod
     def load_template(self, messages, image_input):
         pass
+
+    @abstractmethod
+    def load_template_with_langchain(self, messages):
+        pass
+
     
-class BaseAPIClientWrapper(ABC):
+class BaseAPIClientWrapper(BaseModel):
     def __init__(self, selected_model, api_key="None", use_langchain: bool = True, **kwargs):
+        super().__init__(use_langchain, **kwargs)
         self.model = selected_model
         self.api_key = api_key
-
-        self.use_langchain = use_langchain
-
-        self.max_tokens=2048
-        self.temperature = kwargs.get("temperature", 1.0)
-        self.top_k = kwargs.get("top_k", 50)
-        self.top_p = kwargs.get("top_p", 1.0)
-        self.repetition_penalty = kwargs.get("repetition_penalty", 1.0)
-
-        self.llm = None
-        self.chat = None
-        self.memory = None
-        self.prompt = None
-        self.user_message = None
-        self.chat_history = None
-        self.chain = None
 
     @abstractmethod
     def load_model(self):

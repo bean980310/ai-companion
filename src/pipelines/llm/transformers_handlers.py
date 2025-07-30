@@ -69,7 +69,6 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
             prompt_messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
             # If kwargs are provided, update the settings
             self.config = self.get_settings()
-            self.config = self.get_settings()
 
             input_ids = self.load_template(prompt_messages)
             
@@ -233,6 +232,10 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
                 add_special_tokens=False,
                 return_tensors="pt"
             )
+        
+    def load_template_with_langchain(self, messages):
+        pass
+
             
 class TransformersLlama4ModelHandler(BaseModelHandler):
     def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', use_langchain: bool = True, **kwargs):
@@ -325,6 +328,9 @@ class TransformersLlama4ModelHandler(BaseModelHandler):
                 tokenize=False,
                 return_dict=True
             )
+        
+    def load_template_with_langchain(self, messages):
+        pass
             
 class TransformersQwen3ModelHandler(BaseCausalModelHandler):
     def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', use_langchain: bool = True, **kwargs):
@@ -409,6 +415,9 @@ class TransformersQwen3ModelHandler(BaseCausalModelHandler):
             tokenize=False,
             enable_thinking=True
         )
+    
+    def load_template_with_langchain(self, messages):
+        pass
     
 class TransformersQwen3MoeModelHandler(BaseCausalModelHandler):
     def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', use_langchain: bool = True, **kwargs):
@@ -502,3 +511,6 @@ class TransformersQwen3MoeModelHandler(BaseCausalModelHandler):
             tokenize=False,
             enable_thinking=True
         )
+    
+    def load_template_with_langchain(self, messages):
+        pass

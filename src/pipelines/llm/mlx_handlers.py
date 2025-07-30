@@ -188,6 +188,9 @@ class MlxVisionModelHandler(BaseVisionModelHandler):
                 add_generation_prompt=True
             )
         
+    def load_template_with_langchain(self, messages):
+        pass
+        
     def generate_chat_title(self, first_message: str, image_input=None)->str:
         from mlx_vlm import generate
         prompt=(
@@ -276,6 +279,9 @@ class MlxLlama4ModelHandler(BaseModelHandler):
                 tokenize=False,
                 add_generation_prompt=True
             )
+        
+    def load_template_with_langchain(self, messages):
+        pass
             
     def generate_chat_title(self, first_message: str, image_input=None)->str:
         prompt=(
@@ -341,6 +347,9 @@ class MlxQwen3ModelHandler(BaseCausalModelHandler):
             add_generation_prompt=True,
             enable_thinking=True
         )
+    
+    def load_template_with_langchain(self, messages):
+        pass
         
     def generate_chat_title(self, first_message: str)->str:
         from mlx_lm import generate
