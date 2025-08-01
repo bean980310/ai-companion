@@ -1,5 +1,5 @@
-transformers[ja, sklearn, tiktoken, serving, testing, sentencepiece, num2words, video, quality]>=4.53.3
-x_transformers
+transformers[ja, sklearn, tiktoken, serving, testing, sentencepiece, num2words, video, quality]>=4.54.1
+x_transformers>=2.5.6
 sentence_transformers>=5.0.0
 datasets[audio]>=3.6.0
 safetensors
@@ -7,7 +7,7 @@ tokenizers>=0.21.2
 diffusers[docs]>=0.34.0
 peft>=0.15.2
 trl>=0.19.0
-huggingface_hub[cli, hf_transfer, hf_xet, mcp]>=0.33.1
+huggingface_hub[cli, hf_transfer, hf_xet, mcp]>=0.34.2
 k_diffusion==0.0.12
 hf_transfer>=0.1.9
 hf_xet<2.0.0
@@ -16,7 +16,7 @@ aiortc>=1.13.0
 modelscope>=1.27.1
 civitai-model-downloader
 evaluate>=0.4.4
-gradio[mcp]==5.38.0
+gradio[mcp]==5.39.0
 gradio_webrtc
 twilio
 mcp[cli]
@@ -42,7 +42,7 @@ langchain[community, anthropic, openai, google-genai, ollama, huggingface, perpl
 qwen-vl-utils
 qwen-omni-utils
 # gptqmodel
-gptqmodel @ git+https://github.com/ModelCloud/GPTQModel.git@037c5c0f6c9e33c500d975b038d02e7ca437546d
+gptqmodel @ git+https://github.com/ModelCloud/GPTQModel.git@29402342228414b81020a28a4c5b5828c1e76d59
 jiwer
 gtts>=2.5.4
 chromadb
