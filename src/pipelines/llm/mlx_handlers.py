@@ -266,7 +266,7 @@ class MlxQwen3ModelHandler(BaseCausalModelHandler):
 
         self.max_tokens=32768
 
-        self.enable_thinking = kwargs.get("enable_thinking", False)
+        self.enable_thinking = kwargs.get("enable_thinking", True)
 
         self.sampler = None
         self.logits_processors = None
