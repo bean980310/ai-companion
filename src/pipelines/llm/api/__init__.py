@@ -5,4 +5,4 @@ from .perplexity import PerplexityClientWrapper
 from .xai import XAIClientWrapper
 from .openrouter import OpenRouterClientWrapper
 from .huggingface import HuggingfaceInferenceClientWrapper
-from ..langchain_integrator import LangchainIntegrator
+from ..langchain_integrator.langchain import LangchainIntegrator
