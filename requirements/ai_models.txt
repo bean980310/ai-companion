@@ -36,7 +36,7 @@ google-genai>=1.23.0
 ollama==0.5.1
 lmstudio==1.4.1
 unstructured[pdf]==0.18.3
-langchain[community, anthropic, openai, google-genai, ollama, huggingface, perplexity, xai]>=0.3.26
+langchain[community, anthropic, openai, google-genai, ollama, huggingface, perplexity, xai, mistralai]>=0.3.26
 # langchain-chroma>=0.1.2
 # langchain-neo4j>=0.4.0
 qwen-vl-utils

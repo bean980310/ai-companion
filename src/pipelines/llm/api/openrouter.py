@@ -6,6 +6,8 @@ from huggingface_hub import InferenceClient
 
 import requests
 
+from . import LangchainIntegrator
+
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.language_models import BaseLLM
@@ -28,37 +30,21 @@ class OpenRouterClientWrapper(BaseAPIClientWrapper):
             self.load_model()
 
     def load_model(self):
-        self.llm = ChatOpenAI(
-            model=self.model,
-            temperature=self.temperature,
+        self.langchain_integrator = LangchainIntegrator(
+            backend_type="openrouter",
+            model_name=self.model,
             api_key=self.api_key,
-            base_url="https://openrouter.ai/api/v1",
             max_tokens=self.max_tokens,
+            temperature=self.temperature,
             top_p=self.top_p,
-            model_kwargs={
-                "top_k": self.top_k,
-                "repetition_penalty": self.repetition_penalty
-            },
-            verbose=True,
+            top_k=self.top_k,
+            repetition_penalty=self.repetition_penalty,
+            verbose=True
         )
-        self.chat = self.llm
 
     def generate_answer(self, history, **kwargs):
         if self.use_langchain:
-            self.load_template_with_langchain(history)
-            self.chain = self.prompt | self.chat | StrOutputParser()
-            if not self.chat_history.messages:
-                response = self.chain.invoke({"input": self.user_message.content})
-            else:
-                chain_with_history = RunnableWithMessageHistory(
-                    self.chain,
-                    lambda session_id: self.chat_history,
-                    input_messages_key="input",
-                    history_messages_key="chat_history"
-                )
-                response = chain_with_history.invoke({"input": self.user_message.content}, {"configurable": {"session_id": "unused"}})
-
-            return response
+            return self.langchain_integrator.generate_answer(history)
         else:
             client = InferenceClient(
                 base_url="https://openrouter.ai/api/v1",
@@ -82,30 +68,3 @@ class OpenRouterClientWrapper(BaseAPIClientWrapper):
 
             answer = chat_completion.choices[0].message.content
             return answer
-    
-    def load_template_with_langchain(self, messages):
-        self.chat_history = ChatMessageHistory()
-        for msg in messages[:-1]:
-            if msg["role"] == "system":
-                system_message = SystemMessage(content=msg["content"])
-            if msg["role"] == "user":
-                self.chat_history.add_user_message(msg["content"])
-            if msg["role"] == "assistant":
-                self.chat_history.add_ai_message(msg["content"])
-        self.user_message = HumanMessage(content=messages[-1]["content"])
-        # logger.info(len(self.chat_history.messages))
-        if not self.chat_history.messages:
-            self.prompt = ChatPromptTemplate.from_messages(
-                [
-                    ("system", system_message.content),
-                    ("user", "{input}")
-                ]
-            )
-        else:
-            self.prompt = ChatPromptTemplate.from_messages(
-                [
-                    ("system", system_message.content),
-                    MessagesPlaceholder(variable_name="chat_history"),
-                    ("user", "{input}")
-                ]
-            )

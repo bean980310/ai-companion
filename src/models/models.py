@@ -241,7 +241,7 @@ def generate_answer(history, selected_model, model_type, selected_lora=None, loc
                 logger.error(f"Anthropic API 오류: {str(e)}\n\n{traceback.format_exc()}")
                 return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
             
-        elif "gemini" in selected_model:
+        elif "gemini" in selected_model or "gemma" in selected_model:
             if not api_key:
                 logger.error("Google API Key가 missing.")
                 return "Google API Key가 필요합니다."

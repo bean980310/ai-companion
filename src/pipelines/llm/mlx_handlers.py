@@ -3,6 +3,8 @@ import os
 
 from typing import Any, Dict, List, Optional, Union, Iterator
 
+from . import LangchainIntegrator
+
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.language_models import BaseLLM
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, MessagesPlaceholder
@@ -24,43 +26,35 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
     def __init__(self, model_id, lora_model_id=None, model_type="mlx", use_langchain: bool = True, **kwargs):
         super().__init__(model_id, lora_model_id, use_langchain, **kwargs)
         
-        self.kwargs = self.get_settings_with_langchain()
         self.sampler = None
         self.logits_processors = None
 
         self.load_model()
         
     def load_model(self):
+        from mlx_lm import load
         # from mlx_lm import load
         if self.use_langchain:
-            from langchain_mlx.llms.mlx_pipeline import MLXPipeline
-            from langchain_mlx.chat_models.mlx import ChatMLX
-            self.llm = MLXPipeline.from_model_id(model_id=self.local_model_path, adapter_file=self.local_lora_model_path, pipeline_kwargs=self.kwargs)
-            self.chat = ChatMLX(llm=self.llm, verbose=True)
-            # self.memory = ConversationBufferMemory(memory_key="history", return_messages=True)
-            # self.chain = ConversationChain(llm=self.llm, memory=self.memory, verbose=True)
+            self.langchain_integrator = LangchainIntegrator(
+                backend_type="mlx",
+                model_name=self.local_model_path,
+                lora_model_name=self.local_lora_model_path,
+                max_tokens=self.max_tokens,
+                temperature=self.temperature,
+                top_k=self.top_k,
+                top_p=self.top_p,
+                repetition_penalty=self.repetition_penalty,
+                verbose=True
+            )
+
         else:
-            from mlx_lm import load
             self.model, self.tokenizer = load(self.local_model_path, adapter_path=self.local_lora_model_path)
         
     def generate_answer(self, history, **kwargs):
+        from mlx_lm import generate
         if self.use_langchain:
-            self.load_template_with_langchain(history)
-            self.chain = self.prompt | self.chat | StrOutputParser()
-            if not self.chat_history.messages:
-                response = self.chain.invoke({"input": self.user_message.content})
-            else:
-                chain_with_history = RunnableWithMessageHistory(
-                    self.chain,
-                    lambda session_id: self.chat_history,
-                    input_messages_key="input",
-                    history_messages_key="chat_history"
-                )
-                response = chain_with_history.invoke({"input": self.user_message.content}, {"configurable": {"session_id": "unused"}})
-
-            return response
+            return self.langchain_integrator.generate_answer(history)
         else:
-            from mlx_lm import generate
             text = self.load_template(history)
             self.get_settings()
             response = generate(self.model, self.tokenizer, prompt=text, verbose=True, sampler=self.sampler, logits_processors=self.logits_processors, max_tokens=self.max_tokens)
@@ -75,9 +69,6 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
             top_k=self.top_k
         )
         self.logits_processors = make_logits_processors(repetition_penalty=self.repetition_penalty)
-
-    def get_settings_with_langchain(self):
-        return {"max_tokens": self.max_tokens, "temp": self.temperature, "top_p": self.top_p, "top_k": self.top_k, "repetition_penalty": self.repetition_penalty}
     
     def load_template(self, messages):
         return self.tokenizer.apply_chat_template(
@@ -85,33 +76,6 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
             tokenize=False,
             add_generation_prompt=True
         )
-    
-    def load_template_with_langchain(self, messages):
-        self.chat_history = ChatMessageHistory()
-        for msg in messages[:-1]:
-            if msg["role"] == "system":
-                system_message = SystemMessage(content=msg["content"])
-            if msg["role"] == "user":
-                self.chat_history.add_user_message(msg["content"])
-            if msg["role"] == "assistant":
-                self.chat_history.add_ai_message(msg["content"])
-        self.user_message = HumanMessage(content=messages[-1]["content"])
-        # logger.info(len(self.chat_history.messages))
-        if not self.chat_history.messages:
-            self.prompt = ChatPromptTemplate.from_messages(
-                [
-                    ("system", system_message.content),
-                    ("user", "{input}")
-                ]
-            )
-        else:
-            self.prompt = ChatPromptTemplate.from_messages(
-                [
-                    ("system", system_message.content),
-                    MessagesPlaceholder(variable_name="chat_history"),
-                    ("user", "{input}")
-                ]
-            )
         
     def generate_chat_title(self, first_message: str)->str:
         from mlx_lm import generate
@@ -154,7 +118,7 @@ class MlxVisionModelHandler(BaseVisionModelHandler):
         self.config = load_config(self.local_model_path)
 
     def generate_answer(self, history, image_input=None, **kwargs):
-        from mlx_vlm import stream_generate
+        from mlx_vlm import load, generate, stream_generate
         image, formatted_prompt = self.load_template(history, image_input)
         self.get_settings()
         response = stream_generate(self.model, self.processor, formatted_prompt, image, verbose=False, temperature=self.temperature, top_p=self.top_p, top_k=self.top_k, repetition_penalty=self.repetition_penalty, max_tokens=self.max_tokens)
@@ -187,10 +151,7 @@ class MlxVisionModelHandler(BaseVisionModelHandler):
                 tokenize=False,
                 add_generation_prompt=True
             )
-        
-    def load_template_with_langchain(self, messages):
-        pass
-        
+
     def generate_chat_title(self, first_message: str, image_input=None)->str:
         from mlx_vlm import generate
         prompt=(
@@ -279,9 +240,6 @@ class MlxLlama4ModelHandler(BaseModelHandler):
                 tokenize=False,
                 add_generation_prompt=True
             )
-        
-    def load_template_with_langchain(self, messages):
-        pass
             
     def generate_chat_title(self, first_message: str, image_input=None)->str:
         prompt=(
@@ -347,9 +305,6 @@ class MlxQwen3ModelHandler(BaseCausalModelHandler):
             add_generation_prompt=True,
             enable_thinking=True
         )
-    
-    def load_template_with_langchain(self, messages):
-        pass
         
     def generate_chat_title(self, first_message: str)->str:
         from mlx_lm import generate
