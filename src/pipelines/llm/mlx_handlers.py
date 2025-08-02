@@ -266,6 +266,8 @@ class MlxQwen3ModelHandler(BaseCausalModelHandler):
 
         self.max_tokens=32768
 
+        self.enable_thinking = kwargs.get("enable_thinking", False)
+
         self.sampler = None
         self.logits_processors = None
 
@@ -303,7 +305,7 @@ class MlxQwen3ModelHandler(BaseCausalModelHandler):
             conversation=messages,
             tokenize=False,
             add_generation_prompt=True,
-            enable_thinking=True
+            enable_thinking=self.enable_thinking
         )
         
     def generate_chat_title(self, first_message: str)->str:
