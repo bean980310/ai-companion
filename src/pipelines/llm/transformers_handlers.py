@@ -1,6 +1,6 @@
 from transformers import AutoTokenizer, AutoProcessor, AutoModel, AutoModelForImageTextToText, AutoModelForCausalLM, GenerationConfig, Llama4ForConditionalGeneration, TextStreamer, TextIteratorStreamer, Qwen3ForCausalLM, Qwen3MoeForCausalLM, Mistral3ForConditionalGeneration
 
-from . import LangchainIntegrator
+from .langchain_integrator import LangchainIntegrator
 
 from peft import PeftModel
 import os

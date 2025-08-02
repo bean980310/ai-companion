@@ -3,7 +3,7 @@ import os
 
 from typing import Any, Dict, List, Optional, Union, Iterator
 
-from . import LangchainIntegrator
+from .langchain_integrator import LangchainIntegrator
 
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.language_models import BaseLLM

@@ -5,7 +5,7 @@ from ..base_handlers import BaseAPIClientWrapper
 from google import genai
 from google.genai import types
 
-from . import LangchainIntegrator
+from ..langchain_integrator import LangchainIntegrator
 
 class GoogleAIClientWrapper(BaseAPIClientWrapper):
     def __init__(self, selected_model, api_key="None", use_langchain: bool = True, **kwargs):

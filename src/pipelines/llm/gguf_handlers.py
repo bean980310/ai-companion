@@ -2,7 +2,7 @@ import llama_cpp
 from llama_cpp import Llama # gguf 모델을 로드하기 위한 라이브러리
 from llama_cpp.llama_tokenizer import LlamaHFTokenizer
 
-from . import LangchainIntegrator
+from .langchain_integrator import LangchainIntegrator
 
 import os
 

@@ -4,7 +4,7 @@ from ..base_handlers import BaseAPIClientWrapper
 
 import requests
 
-from . import LangchainIntegrator
+from ..langchain_integrator import LangchainIntegrator
 
 class PerplexityClientWrapper(BaseAPIClientWrapper):
     def __init__(self, selected_model, api_key="None", use_langchain: bool = True, **kwargs):

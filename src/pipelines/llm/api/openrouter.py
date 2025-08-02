@@ -6,7 +6,7 @@ from huggingface_hub import InferenceClient
 
 import requests
 
-from . import LangchainIntegrator
+from ..langchain_integrator import LangchainIntegrator
 
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.callbacks import CallbackManagerForLLMRun

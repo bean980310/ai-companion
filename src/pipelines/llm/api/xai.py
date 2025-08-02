@@ -4,7 +4,7 @@ from ..base_handlers import BaseAPIClientWrapper
 
 import xai_sdk
 
-from . import LangchainIntegrator
+from ..langchain_integrator import LangchainIntegrator
 
 class XAIClientWrapper(BaseAPIClientWrapper):
     def __init__(self, selected_model, api_key="None", use_langchain: bool = True, **kwargs):

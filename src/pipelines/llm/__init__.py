@@ -1,7 +1,7 @@
 from .transformers_handlers import TransformersCausalModelHandler, TransformersVisionModelHandler, TransformersLlama4ModelHandler, TransformersQwen3ModelHandler
 from .gguf_handlers import GGUFCausalModelHandler
 from .mlx_handlers import MlxCausalModelHandler, MlxVisionModelHandler, MlxLlama4ModelHandler, MlxQwen3ModelHandler
-from .langchain_integrator.langchain import LangchainIntegrator
+# from .langchain_integrator.langchain import LangchainIntegrator
 
 __all__ = [
     "TransformersCausalModelHandler",
