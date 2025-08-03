@@ -115,7 +115,7 @@ class Chatbot:
         """
         if isinstance(user_input, dict):
             text = user_input.get("text", "")
-            files = user_input.get("files", None)
+            files = user_input.get("files", [])
             if not text.strip() and not files:
                 # 빈 입력일 경우 아무 것도 하지 않음
                 return "", history, self.filter_messages_for_chatbot(history), ""
@@ -147,7 +147,11 @@ class Chatbot:
     
         
         if isinstance(user_input, dict):
-            # history.append({"role": "user", "content": files})
+            if isinstance(files, (list, dict)):
+                for f in files:
+                    history.append({"role": "user", "content": files[f]})
+            else:
+                history.append({"role": "user", "content": files})
             history.append({"role": "user", "content": text})
             speech_manager.update_tone(text)
         else:
@@ -160,7 +164,12 @@ class Chatbot:
     def process_message_bot(self, session_id, history, selected_model, selected_lora, custom_path, image, api_key, device, seed, temperature, top_k, top_p, repetition_penalty, language):
         if isinstance(image, dict):
             files = image.get("files", [])
-            image = files
+            if isinstance(files, (list, dict)):
+                image = []
+                for f in files:
+                    image.append(files[f])
+            else:
+                image = files
             
         chat_title=self.chat_titles.get(session_id)
         try:

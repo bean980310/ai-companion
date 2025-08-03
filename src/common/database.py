@@ -30,7 +30,7 @@ class PresetResult:
 class ChatMessage:
     """채팅 메시지를 표현하는 데이터 클래스"""
     role: str
-    content: str
+    content: Any
     timestamp: Optional[datetime] = None
 
 @dataclass
@@ -581,17 +581,23 @@ def save_chat_history_db(history, session_id="demo_session", selected_character=
                 logger.info(f"Created new session: {session_id}")
             
             for msg in history:
+                raw_content = msg.get("content")
+                content_serialized = (
+                    json.dumps(raw_content, ensure_ascii=False)
+                    if isinstance(raw_content, (list, dict))
+                    else str(raw_content)
+                )
                 cursor.execute("""
                     SELECT COUNT(*) FROM chat_history
                     WHERE session_id = ? AND role = ? AND content = ?
-                """, (session_id, msg.get("role"), msg.get("content")))
+                """, (session_id, msg.get("role"), content_serialized))
                 count = cursor.fetchone()[0]
 
                 if count == 0:
                     cursor.execute("""
                         INSERT INTO chat_history (session_id, role, content)
                         VALUES (?, ?, ?)
-                    """, (session_id, msg.get("role"), msg.get("content")))
+                    """, (session_id, msg.get("role"), content_serialized))
 
             conn.commit()
             logger.info(f"DB에 채팅 히스토리 저장 완료 (session_id={session_id})")
@@ -679,9 +685,13 @@ def load_chat_from_db(session_id: str) -> List[Dict[str, str]]:
             history = []
             for row in cursor.fetchall():
                 role, content, timestamp = row
+                try:
+                    content_parsed = json.loads(content)
+                except (json.JSONDecodeError, TypeError):
+                    content_parsed = content
                 message = ChatMessage(
                     role=role,
-                    content=content,
+                    content=content_parsed,
                     timestamp=datetime.fromisoformat(timestamp) if timestamp else None
                 )
                 history.append({"role": message.role, "content": message.content})

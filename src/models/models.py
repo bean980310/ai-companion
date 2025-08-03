@@ -8,13 +8,9 @@ from src.common.cache import models_cache
 from src.pipelines.llm import (
     TransformersCausalModelHandler, 
     TransformersVisionModelHandler, 
-    TransformersLlama4ModelHandler, 
-    TransformersQwen3ModelHandler,
     GGUFCausalModelHandler, 
     MlxCausalModelHandler, 
     MlxVisionModelHandler,
-    MlxLlama4ModelHandler,
-    MlxQwen3ModelHandler
 )
 
 from src.pipelines.llm.api import (
@@ -118,30 +114,12 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
         models_cache[cache_key] = handler
         return handler
     elif model_type == "mlx":
-        if "llama-4" in model_id.lower():
-            handler = MlxLlama4ModelHandler(
-                model_id=model_id,
-                lora_model_id=lora_model_id,
-                model_type=model_type,
-                image_input=image_input, 
-                **kwargs
-            )
-            models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
-            return handler
-        elif "vision" in model_id.lower() or "qwen2-vl" in model_id.lower() or "qwen2.5-vl" in model_id.lower() or "mistral-small-3.1-24b" in model_id.lower():
+        if image_input is not None:
             handler = MlxVisionModelHandler(
                 model_id=model_id,
                 lora_model_id=lora_model_id,
-                model_type=model_type, 
-                **kwargs
-            )
-            models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
-            return handler
-        elif "qwen3" in model_id.lower() and "instruct" not in model_id.lower():
-            handler = MlxQwen3ModelHandler(
-                model_id=model_id,
-                lora_model_id=lora_model_id,
-                model_type=model_type, 
+                model_type=model_type,
+                image_input=image_input,
                 **kwargs
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
@@ -156,32 +134,13 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
     else:
-        if "llama-4" in model_id.lower():
-            handler = TransformersLlama4ModelHandler(
-                model_id=model_id,
-                lora_model_id=lora_model_id,
-                model_type=model_type,
-                device=device, 
-                **kwargs
-            )
-            models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
-            return handler
-        elif "vision" in model_id.lower() or "qwen2-vl" in model_id.lower() or "qwen2.5-vl" in model_id.lower():
+        if image_input is not None:
             handler = TransformersVisionModelHandler(
                 model_id=model_id,
                 lora_model_id=lora_model_id,
                 model_type=model_type,
-                device=device, 
-                **kwargs
-            )
-            models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
-            return handler
-        elif "qwen3" in model_id.lower() and "instruct" not in model_id.lower():
-            handler = TransformersQwen3ModelHandler(
-                model_id=model_id,
-                lora_model_id=lora_model_id,
-                model_type=model_type,
-                device=device, 
+                device=device,
+                image_input=image_input, 
                 **kwargs
             )
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
@@ -197,7 +156,7 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
 
-def generate_answer(history, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, image_input=None, api_key=None, device="cpu", seed=42, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0, character_language='ko'):
+def generate_answer(message, history, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, image_input=None, api_key=None, device="cpu", seed=42, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0, character_language='ko'):
     """
     사용자 히스토리를 기반으로 답변 생성.
     """

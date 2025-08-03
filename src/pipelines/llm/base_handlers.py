@@ -23,12 +23,18 @@ class BaseModel(ABC):
         pass
 
 class BaseModelHandler(BaseModel):
-    def __init__(self, model_id: str, lora_model_id: str = None, use_langchain: bool = True, **kwargs):
+    def __init__(self, model_id: str, lora_model_id: str = None, use_langchain: bool = True, image_input = None, **kwargs):
         super().__init__(use_langchain, **kwargs)
         self.model_id = model_id
+        self.lora_model_id = lora_model_id
         self.config = None
         self.local_model_path = os.path.join("./models/llm", model_id)
         self.local_lora_model_path = os.path.join("./models/llm/loras", lora_model_id) if lora_model_id else None
+        self.image_input = image_input
+
+        self.processor = None
+        self.tokenizer = None
+        self.model = None
 
     @abstractmethod
     def load_model(self):
@@ -49,8 +55,6 @@ class BaseModelHandler(BaseModel):
 class BaseCausalModelHandler(BaseModelHandler):
     def __init__(self, model_id: str, lora_model_id: str = None, use_langchain: bool = True, **kwargs):
         super().__init__(model_id, lora_model_id, use_langchain, **kwargs)
-        self.tokenizer = None
-        self.model = None
         
     @abstractmethod
     def load_model(self):
@@ -68,17 +72,15 @@ class BaseCausalModelHandler(BaseModelHandler):
     def load_template(self, messages):
         pass
 class BaseVisionModelHandler(BaseModelHandler):
-    def __init__(self, model_id: str, lora_model_id: str = None, use_langchain: bool = True, **kwargs):
-        super().__init__(model_id, lora_model_id, use_langchain, **kwargs)
-        self.processor = None
-        self.model = None
+    def __init__(self, model_id: str, lora_model_id: str = None, use_langchain: bool = True, image_input = None, **kwargs):
+        super().__init__(model_id, lora_model_id, use_langchain, image_input, **kwargs)
         
     @abstractmethod
     def load_model(self):
         pass
     
     @abstractmethod
-    def generate_answer(self, history, image_input=None, **kwargs):
+    def generate_answer(self, history, **kwargs):
         pass
     
     @abstractmethod
@@ -86,7 +88,7 @@ class BaseVisionModelHandler(BaseModelHandler):
         pass
     
     @abstractmethod
-    def load_template(self, messages, image_input):
+    def load_template(self, messages):
         pass
 class BaseAPIClientWrapper(BaseModel):
     def __init__(self, selected_model: str, api_key: str = "None", use_langchain: bool = True, **kwargs):
