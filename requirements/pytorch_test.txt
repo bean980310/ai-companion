@@ -1,0 +1,4 @@
+--extra-index-url https://download.pytorch.org/whl/test/cpu
+torch==2.8.0
+torchvision
+torchaudio
