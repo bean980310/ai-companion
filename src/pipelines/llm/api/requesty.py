@@ -3,6 +3,7 @@ import traceback
 from ..base_handlers import BaseAPIClientWrapper
 
 from huggingface_hub import InferenceClient
+import openai
 
 import requests
 
@@ -17,14 +18,12 @@ class OpenRouterClientWrapper(BaseAPIClientWrapper):
 
     def load_model(self):
         self.langchain_integrator = LangchainIntegrator(
-            backend_type="openrouter",
+            backend_type="requesty",
             model_name=self.model,
             api_key=self.api_key,
             max_tokens=self.max_tokens,
             temperature=self.temperature,
             top_p=self.top_p,
-            top_k=self.top_k,
-            repetition_penalty=self.repetition_penalty,
             verbose=True
         )
 
@@ -33,12 +32,12 @@ class OpenRouterClientWrapper(BaseAPIClientWrapper):
             return self.langchain_integrator.generate_answer(history)
         else:
             client = InferenceClient(
-                base_url="https://openrouter.ai/api/v1",
+                base_url="https://router.requesty.ai/v1",
                 api_key=self.api_key
             )
 
             messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
-            logger.info(f"[*] OpenRouter API 요청: {messages}")
+            logger.info(f"[*] Requesty API 요청: {messages}")
 
             chat_completion = client.chat.completions.create(
                 model=self.model,
@@ -46,10 +45,6 @@ class OpenRouterClientWrapper(BaseAPIClientWrapper):
                 max_tokens=self.max_tokens,
                 temperature=self.temperature,
                 top_p=self.top_p,
-                extra_body={
-                    "top_k": self.top_k,
-                    "repetition_penalty": self.repetition_penalty
-                }
             )
 
             answer = chat_completion.choices[0].message.content
