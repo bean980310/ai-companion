@@ -28,7 +28,7 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
         
         self.sampler = None
         self.logits_processors = None
-        self.tokenizer_config = kwargs.get("tokenizer_config", {})
+        self.tokenizer_config = self.get_eos_token()
         self.enable_thinking = kwargs.get("enable_thinking", True)
 
         if "qwen3" in self.model_id.lower():
@@ -112,15 +112,15 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
         logger.info(f"생성된 채팅 제목: {title}")
         return title
         
-    # def get_eos_token(self):
-    #     if "llama-3" in self.local_model_path.lower():
-    #         return {"eos_token": "<|eot_id|>"}
-    #     elif "qwen2" in self.local_model_path.lower() or "qwen3" in self.local_model_path.lower():
-    #         return {"eos_token": "<|im_end|>"}
-    #     elif "mistral" or "ministral" or "mixtral" in self.local_model_path.lower():
-    #         return {"eos_token": "</s>"}
-    #     else:
-    #         return {"eos_token": self.tokenizer._eos_token_ids }
+    def get_eos_token(self):
+        if "llama-3" in self.local_model_path.lower():
+            return {"eos_token": "<|eot_id|>", "trust_remote_code": True}
+        elif "qwen2" in self.local_model_path.lower() or "qwen3" in self.local_model_path.lower():
+            return {"eos_token": "<|im_end|>", "trust_remote_code": True}
+        elif "mistral" or "ministral" or "mixtral" in self.local_model_path.lower():
+            return {"eos_token": "</s>", "trust_remote_code": True}
+        else:
+            return {}
         
 class MlxVisionModelHandler(BaseVisionModelHandler):
     def __init__(self, model_id, lora_model_id=None, model_type="mlx", use_langchain: bool = True, image_input=None, **kwargs):

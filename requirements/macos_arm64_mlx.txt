@@ -1,5 +1,5 @@
 mlx[dev]
-mlx_lm[test, evaluate, quant]
+mlx_lm[test, evaluate, train]
 # mlx_vlm
 mlx_vlm @ git+https://github.com/bean980310/mlx-vlm.git@1385d52616653f879a8762627bba0bb2428b7677
 mlx_lm_omni

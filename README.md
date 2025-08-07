@@ -188,6 +188,9 @@ source .venv/bin/activate # uv
 ```shell
 # on Windows
 .\installer_windows_amd64.bat
+```
+
+```pwsh
 # on Windows (Powershell)
 .\installer_windows_amd64.ps1
 ```
