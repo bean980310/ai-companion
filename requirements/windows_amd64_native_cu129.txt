@@ -2,7 +2,7 @@ tensorflow
 tensorboard
 keras
 tf-keras
-torch>=2.7.0 --index-url https://download.pytorch.org/whl/cu128
+torch>=2.8.0 --index-url https://download.pytorch.org/whl/cu129
 torchvision
 torchaudio
 jax
@@ -12,7 +12,7 @@ flax
 optimum
 optimum-quanto
 torchao
-xformers --index-url https://download.pytorch.org/whl/cu128
+# xformers --index-url https://download.pytorch.org/whl/cu129
 bitsandbytes
 onnxruntime
 # faiss-cpu

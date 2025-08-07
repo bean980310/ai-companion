@@ -3,7 +3,7 @@ tensorboard
 keras
 tf-keras
 tensorflow-metal
-torch>=2.7.0
+torch>=2.8.0
 torchvision
 torchaudio
 jax

@@ -1,0 +1,21 @@
+tensorflow
+tensorboard
+keras
+tf-keras
+torch>=2.8.0 --index-url https://download.pytorch.org/whl/cu128
+torchvision
+torchaudio
+jax
+jaxlib
+jaxtyping
+flax
+optimum
+optimum-quanto
+torchao
+# xformers --index-url https://download.pytorch.org/whl/cu128
+bitsandbytes
+onnxruntime
+# faiss-cpu
+eva-decord
+opencc
+triton-windows

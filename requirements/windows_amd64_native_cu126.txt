@@ -8,16 +8,14 @@ torchaudio
 jax
 jaxlib
 jaxtyping
-jax[cuda12]
 flax
 optimum
 optimum-quanto
 torchao
-# xformers>=0.0.30 --index-url https://download.pytorch.org/whl/cu126
+# xformers --index-url https://download.pytorch.org/whl/cu128
 bitsandbytes
-onnxruntime-gpu
-faiss-gpu
+onnxruntime
+# faiss-cpu
 eva-decord
 opencc
-vllm
-triton
+triton-windows

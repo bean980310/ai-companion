@@ -8,7 +8,7 @@ echo "Installing pytorch..."
 %HomePath%\.local\bin\uv.exe pip install torch torchvision torchaudio
 
 echo "Installing requirements..."
-%HomePath%\.local\bin\uv.exe pip install -r requirements/windows_amd64.txt --no-build-isolation
+%HomePath%\.local\bin\uv.exe pip install -r requirements/windows_amd64_native.txt --no-build-isolation
 
 echo "Installing requirements..."
 %HomePath%\.local\bin\uv.exe pip install "transformers[audio]"

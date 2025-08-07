@@ -9,7 +9,7 @@ echo "Installing pytorch..."
 uv pip install torch torchvision torchaudio
 
 echo "Installing requirements..."
-uv pip install -r requirements/windows_amd64_wsl2.txt --no-build-isolation
+uv pip install -r requirements/windows_amd64_wsl2_cu128.txt --no-build-isolation
 
 echo "Installing requirements..."
 uv pip install "transformers[audio]"
