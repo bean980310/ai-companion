@@ -1,7 +1,4 @@
 api_models = [
-    "gpt-3.5-turbo",
-    "gpt-4",
-    "gpt-4-turbo",
     "gpt-4o",
     "gpt-4o-mini",
     "gpt-4.1",
@@ -10,15 +7,16 @@ api_models = [
     "gpt-5",
     "gpt-5-mini",
     "gpt-5-nano",
+    "gpt-5-chat-latest",
     "o1",
     "o1-pro",
+    "gpt-oss-20b",
     "o3-mini",
     "o3",
     "o3-pro",
+    "gpt-oss-120b",
     "o4-mini",
-    "claude-3-haiku-20240307",
     "claude-3-5-haiku-latest",
-    "claude-3-5-sonnet-20240620",
     "claude-3-5-sonnet-latest",
     "claude-3-7-sonnet-latest",
     "claude-sonnet-4-0",
@@ -66,7 +64,6 @@ api_models = [
 ]
 
 diffusion_api_models=[
-    "dall-e-2",
     "dall-e-3",
     "gpt-image-1",
     "imagen-3.0-generate-002",
