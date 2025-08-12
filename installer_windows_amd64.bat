@@ -8,13 +8,13 @@ echo "Installing pytorch..."
 %HomePath%\.local\bin\uv.exe pip install torch torchvision torchaudio
 
 echo "Installing requirements..."
-%HomePath%\.local\bin\uv.exe pip install -r requirements/windows_amd64_native/requirements.txt --no-build-isolation
+%HomePath%\.local\bin\uv.exe pip install -r requirements/windows_amd64_native_cu128/requirements.txt --no-build-isolation
 
 echo "Installing requirements..."
 %HomePath%\.local\bin\uv.exe pip install "transformers[audio]"
 
 echo "Installing requirements..."
-%HomePath%\.local\bin\uv.exe pip install -r requirements/windows_amd64_native/requirements_ai_models.txt --no-build-isolation
+%HomePath%\.local\bin\uv.exe pip install -r requirements/windows_amd64_native_cu128/requirements_ai_models.txt --no-build-isolation
 
 echo "Installing requirements..."
 %HomePath%\.local\bin\uv.exe pip install outetts
