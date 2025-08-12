@@ -1,0 +1,7 @@
+fugashi
+ipadic
+unidic_lite
+unidic
+sudachipy
+sudachidict_core
+rhoknp

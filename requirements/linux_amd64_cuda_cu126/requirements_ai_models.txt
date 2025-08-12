@@ -61,21 +61,71 @@ wavmark
 whisper-timestamped
 gguf
 # llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
-# llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124
+llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124
 # llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/metal
 stable-diffusion-cpp-python
 tipo-kgen
 
-torch>=2.8.0
-torchvision
-torchaudio
-protobuf==5.29.5
+setuptools
+wheel
+scikit-build-core
 numpy>=2.0.2,<2.2.0
-pandas
+numba>=0.60.0
+pandas>=2.0.0
 matplotlib
 scikit-learn
+beautifulsoup4==4.13.4
+sympy==1.14.0
+scipy==1.16.0
+protobuf==5.29.5
+packaging==25.0
 fsspec==2025.3.0
-numba>=0.60.0
+pyyaml==6.0.2
+jinja2==3.1.6
+python-json-logger
+xgboost
+ninja
+cmake>=3.18,<4.0
+unidecode
+sqlite-vec
+sqlalchemy
+filelock>=3.18.0
+chardet
+attrdict
+twine
+websocket-client
+loguru
+imutils
+pytesseract
+easyocr
+pdf2image
+neo4j
 
-# vllm; platform_system == 'Linux'
-# llmcompressor; platform_system == 'Linux'
+tensorflow
+tensorboard
+keras
+tf-keras
+torch>=2.8.0 --index-url https://download.pytorch.org/whl/cu126
+torchvision
+torchaudio
+jax
+jaxlib
+jaxtyping
+jax[cuda12]
+flax
+optimum
+optimum-quanto
+torchao
+# xformers>=0.0.30 --index-url https://download.pytorch.org/whl/cu128
+bitsandbytes
+onnxruntime-gpu
+faiss-gpu
+eva-decord
+opencc==1.1.1
+triton
+# vllm
+# llmcompressor
+mlx[cuda]
+
+vllm
+llmcompressor

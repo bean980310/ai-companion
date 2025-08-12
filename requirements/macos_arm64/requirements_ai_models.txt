@@ -60,22 +60,82 @@ Faster_whisper
 wavmark
 whisper-timestamped
 gguf
-# llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
-# llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124
-# llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/metal
+llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/metal
 stable-diffusion-cpp-python
 tipo-kgen
 
+# mlx[dev]
+mlx_lm[test, evaluate, train]
+mlx_vlm @ git+https://github.com/bean980310/mlx-vlm.git@1385d52616653f879a8762627bba0bb2428b7677
+mlx_lm_omni
+mlx_embeddings
+mlx_whisper
+mlx_audio
+mlx_lm_lora
+mlx_optimizers
+sphinx
+breathe
+sphinx_book_theme
+mlx_data
+coremltools
+argmaxtools
+
+setuptools
+wheel
+scikit-build-core
+numpy>=2.0.2,<2.2.0
+numba>=0.60.0
+pandas>=2.0.0
+matplotlib
+scikit-learn
+beautifulsoup4==4.13.4
+sympy==1.14.0
+scipy==1.16.0
+protobuf==5.29.5
+packaging==25.0
+fsspec==2025.3.0
+pyyaml==6.0.2
+jinja2==3.1.6
+python-json-logger
+xgboost
+ninja
+cmake>=3.18,<4.0
+unidecode
+sqlite-vec
+sqlalchemy
+filelock>=3.18.0
+chardet
+attrdict
+twine
+websocket-client
+loguru
+imutils
+pytesseract
+easyocr
+pdf2image
+neo4j
+
+tensorflow
+tensorboard
+keras
+tf-keras
+tensorflow-metal
 torch>=2.8.0
 torchvision
 torchaudio
-protobuf==5.29.5
-numpy>=2.0.2,<2.2.0
-pandas
-matplotlib
-scikit-learn
-fsspec==2025.3.0
-numba>=0.60.0
-
-# vllm; platform_system == 'Linux'
-# llmcompressor; platform_system == 'Linux'
+jax
+jaxlib
+jaxtyping
+jax-metal
+flax
+# optimum
+# optimum-quanto
+# torchao
+# xformers
+# bitsandbytes
+onnxruntime
+faiss-cpu
+eva-decord;  python_version < '3.12'
+eva-decord-plus; python_version == '3.12'
+opencc
+mlx[dev]
