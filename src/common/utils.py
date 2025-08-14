@@ -22,7 +22,12 @@ from src.common.cache import models_cache
 from src import logger
 
 LOCAL_MODELS_ROOT = "./models"
-comfyui_path=os.path.join(os.path.expanduser('~'), 'ComfyUI', 'models')
+COMFYUI_PATH=os.environ.get('COMFYUI_PATH')
+
+if COMFYUI_PATH is None:
+    COMFYUI_PATH=os.path.join(os.path.expanduser('~'), 'ComfyUI')
+
+comfyui_path=os.path.join(COMFYUI_PATH, 'models')
 class DownloadTracker:
     """다운로드 진행 상황을 추적하는 클래스"""
     def __init__(self, total_size: int, progress_callback: Optional[Callable] = None):
