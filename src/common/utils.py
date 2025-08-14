@@ -177,7 +177,7 @@ def scan_local_models(root="./models/llm", model_type=None):
     logger.info(f"Scanned local models: {local_models}")
     return local_models
 
-def scan_tts_models(root="./models/tts", model_type=None):
+def scan_tts_models(root="./models/audio/tts", model_type=None):
     if not os.path.isdir(root):
         os.makedirs(root, exist_ok=True)
         
