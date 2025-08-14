@@ -77,9 +77,9 @@ google_image_api_models = [
 xai_image_api_models = [
     "grok-2-image"
 ]
-diffusion_api_models.append(openai_image_api_models)
-diffusion_api_models.append(google_image_api_models)
-diffusion_api_models.append(xai_image_api_models)
+diffusion_api_models.extend(openai_image_api_models)
+diffusion_api_models.extend(google_image_api_models)
+diffusion_api_models.extend(xai_image_api_models)
 
 diffusion_video_api_models=[
     "veo-2.0-generate-001",
