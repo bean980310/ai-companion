@@ -18,4 +18,8 @@ assets/
 *.bin
 *.pth
 *.jinja
+*.webp
+*.webm
+*.bak
+*.mp4
 LICENSE
