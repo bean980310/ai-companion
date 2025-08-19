@@ -1,0 +1,1 @@
+wan @ https://github.com/osama-ata/Wan2.2-mlx.git

@@ -1,4 +1,5 @@
 # import logging
+from typing import Any
 import gradio as gr
 import os
 import secrets
@@ -39,14 +40,7 @@ DEFAULT_PROFILE_IMAGE = None
 
 os_name, arch = detect_platform()
 
-speech_manager = PersonaSpeechManager(translation_manager=translation_manager, characters=characters)
-
-session_speech_managers = {}
-
-def get_speech_manager(session_id: str) -> PersonaSpeechManager:
-    if session_id not in session_speech_managers:
-        session_speech_managers[session_id] = PersonaSpeechManager(translation_manager=translation_manager, characters=characters)
-    return session_speech_managers[session_id]
+# speech_manager = PersonaSpeechManager(translation_manager=translation_manager, characters=characters)
 
 class Chatbot:
     def __init__(self):
@@ -56,8 +50,50 @@ class Chatbot:
         self.characters=characters
         self.reset_type = None
         self.chat_titles={}
+
+        self.vision_model = False
+
+        self.os_name, self.arch = detect_platform()
+        self.session_speech_managers = {}
+
+    def get_speech_manager(self, session_id: str) -> PersonaSpeechManager:
+        if session_id not in self.session_speech_managers:
+            self.session_speech_managers[session_id] = PersonaSpeechManager(translation_manager=translation_manager, characters=self.characters)
+        return self.session_speech_managers[session_id]
+    
+    def update_system_message_and_profile(
+        self,
+        character_name: str, 
+        language_display_name: str, 
+        session_id: str
+    ):
+        """
+        캐릭터와 언어 선택 시 호출되는 함수.
+        - 캐릭터와 언어 설정 적용
+        - 시스템 메시지 프리셋 업데이트
+        - DB에 system 메시지를 저장/갱신
+        """
+        try:
+            speech_manager = self.get_speech_manager(session_id)
+            language_code = translation_manager.get_language_code(language_display_name)
+            speech_manager.set_character_and_language(character_name, language_code)
+
+            # 실제 프리셋 로딩은 speech_manager 내부에서 처리
+            system_message = speech_manager.get_system_message()
+            selected_profile_image = speech_manager.characters[character_name]["profile_image"]
+            
+            # -- DB 업데이트 로직 추가 --
+            # session_id가 유효하다면, 새 시스템 메시지를 DB에 반영
+            if session_id:
+                update_system_message_in_db(session_id, system_message)
+                update_last_character_in_db(session_id, character_name)
+
+            return system_message, selected_profile_image, gr.update(value=character_name)
+        except ValueError as ve:
+            logger.error(f"Character setting error: {ve}")
+            return "시스템 메시지 로딩 중 오류가 발생했습니다.", None, gr.update()
         
-    def handle_change_preset(self, new_preset_name, history, language):
+    def handle_change_preset(self, new_preset_name: str, history: list[dict[str, str | Any]], language: str):
         """
         프리셋을 변경하고, 새로운 시스템 메시지를 히스토리에 추가하며, 프로필 이미지를 변경합니다.
 
@@ -94,7 +130,7 @@ class Chatbot:
         else:
             return history, gr.update(value=content), None
 
-    def process_message_user(self, user_input, session_id, history, system_msg, selected_character, language):
+    def process_message_user(self, user_input: str | dict[str, str | Any] | Any, session_id: str, history: list[dict[str, str | Any]], system_msg: str, selected_character: str, language: str):
         """
         사용자 메시지를 처리하고 봇 응답을 생성하는 통합 함수.
 
@@ -136,7 +172,7 @@ class Chatbot:
             }
             history = [system_message]
 
-        speech_manager = get_speech_manager(session_id)
+        speech_manager = self.get_speech_manager(session_id)
         try:
             speech_manager.set_character_and_language(selected_character, language)
         except ValueError as e:
@@ -160,10 +196,10 @@ class Chatbot:
             speech_manager.update_tone(user_input)
         
         return "", history, self.filter_messages_for_chatbot(history)
-    
-    def process_message_bot(self, session_id, history, selected_model, selected_lora, custom_path, image, api_key, device, seed, temperature, top_k, top_p, repetition_penalty, language):
-        if isinstance(image, dict):
-            files = image.get("files", [])
+
+    def process_message_bot(self, session_id: str, history: list[dict[str, str | Any]], selected_model: str, selected_lora: str, custom_path: str, user_input: str | dict[str, str | Any] | Any, api_key: str, device: str, seed: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float, language: str):
+        if isinstance(user_input, dict):
+            files = user_input.get("files", [])
             if isinstance(files, (list, dict)):
                 image = []
                 for f in files:
@@ -189,10 +225,11 @@ class Chatbot:
                 top_k=top_k,
                 top_p=top_p,
                 repetition_penalty=repetition_penalty,
-                character_language=language
+                character_language=language,
+                vision_model=self.vision_model
             )
             
-            speech_manager = get_speech_manager(session_id)
+            speech_manager = self.get_speech_manager(session_id)
             styled_answer = speech_manager.generate_response(answer)
             
             # 응답을 히스토리에 추가
@@ -226,8 +263,9 @@ class Chatbot:
             )
 
         return history, chatbot_history, status, chat_title
-    
-    def determine_model_type(self, selected_model):
+
+    @staticmethod
+    def determine_model_type(selected_model: str) -> str:
         if selected_model in api_models:
             return "api"
         elif selected_model in transformers_local:
@@ -239,8 +277,8 @@ class Chatbot:
         else:
             return "transformers"
     
-
-    def filter_messages_for_chatbot(self, history):
+    @staticmethod
+    def filter_messages_for_chatbot(history: list[dict[str, str | Any]]) -> list[dict[str, str | Any]]:
         """
         채팅 히스토리를 Gradio Chatbot 컴포넌트에 맞는 형식으로 변환
 
@@ -262,7 +300,7 @@ class Chatbot:
                 messages_for_chatbot.append({"role": msg["role"], "content": display_content})
         return messages_for_chatbot
 
-    def reset_session(self, history, chatbot, system_message_default, language=None, session_id="demo_session"):
+    def reset_session(self, history: list[dict[str, str | Any]], chatbot: list[dict[str, str | Any]], system_message_default: str, language: str | None = None, session_id: str="demo_session"):
         """
         특정 세션을 초기화하는 함수.
         
@@ -320,7 +358,7 @@ class Chatbot:
                 f"❌ 세션 초기화 중 오류가 발생했습니다: {str(e)}"  # status
             )
 
-    def reset_all_sessions(self, history, chatbot, system_message_default, language=None):
+    def reset_all_sessions(self, history: list[dict[str, str | Any]], chatbot: list[dict[str, str | Any]], system_message_default: str, language: str | None = None):
         """
         모든 세션을 초기화하는 함수.
         
@@ -378,14 +416,15 @@ class Chatbot:
                 f"❌ 모든 세션 초기화 중 오류가 발생했습니다: {str(e)}"  # status
             )
 
-    def refresh_preset_list(self, language=None):
+    def refresh_preset_list(self, language: str | None = None):
         """프리셋 목록을 갱신하는 함수."""
         if language is None:
             language = self.default_language
         presets = get_preset_choices(language)
         return gr.update(choices=presets, value=presets[0] if presets else None)
-    
-    def refresh_sessions(self):
+
+    @staticmethod
+    def refresh_sessions():
         """
         세션 목록을 갱신하고, (Dropdown) choices를 반환합니다.
         """
@@ -394,7 +433,8 @@ class Chatbot:
             return gr.update(choices=[], value=None), "DB에 세션이 없습니다."
         return gr.update(choices=sessions, value=sessions[0])
 
-    def create_new_session(self, system_message_box_value: str, selected_character):
+    @staticmethod
+    def create_new_session(system_message_box_value: str, selected_character: str):
         """
         새 세션을 생성하고 DB에 기본 system_message를 저장합니다.
         """
@@ -409,7 +449,8 @@ class Chatbot:
         save_chat_history_db(new_history, session_id=new_sid, selected_character=selected_character)
         return new_sid, f"현재 세션: {new_sid}", new_history
 
-    def apply_session(self, chosen_sid: str):
+    @staticmethod
+    def apply_session(chosen_sid: str):
         """
         선택된 세션의 히스토리를 불러오고, session_id_state를 갱신.
         """
@@ -428,7 +469,8 @@ class Chatbot:
             
         return loaded_history, chosen_sid, f"세션 {chosen_sid}이 적용되었습니다."
 
-    def delete_session(self, chosen_sid: str, current_sid: str):
+    @staticmethod
+    def delete_session(chosen_sid: str, current_sid: str):
         """
         특정 세션 삭제 로직
         
@@ -470,7 +512,7 @@ class Chatbot:
                 gr.update()  # no dropdown update
             )
 
-    def initial_load_presets(self, language=None):
+    def initial_load_presets(self, language: str | None = None):
         """초기 프리셋 로딩 함수"""
         if language is None:
             language = self.default_language
@@ -478,7 +520,7 @@ class Chatbot:
         return gr.update(choices=presets, value=presets[0] if presets else None)
 
 
-    def process_character_conversation(self, history, selected_characters, model_type, selected_model, custom_path, image, api_key, device, seed, temperature, top_k, top_p, repetition_penalty):
+    def process_character_conversation(self, history: list[dict[str, str | Any]], selected_characters: str, model_type: str, selected_model: str, custom_path: str, image, api_key: str, device: str, seed: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float):
         try:
             for i, character in enumerate(selected_characters):
                 # 각 캐릭터의 시스템 메시지 설정
@@ -522,44 +564,60 @@ class Chatbot:
             history.append({"role": "assistant", "content": f"❌ 오류 발생: {str(e)}", "character": "System"})
             return history, None  # 오류 발생시에도 None 반환
     
-    def toggle_api_key_visibility(self, selected_model):
+    @staticmethod
+    def toggle_api_key_visibility(selected_model: str) -> bool:
         """
         OpenAI API Key 입력 필드의 가시성을 제어합니다.
         """
         api_visible = selected_model in api_models
         return gr.update(visible=api_visible)
-    
-    def toggle_standard_msg_input_visibility(self, selected_model):
-        msg_visible = (
-            "vision" not in selected_model.lower() and
-            "qwen2-vl" not in selected_model.lower() and
-            "qwen2.5-vl" not in selected_model.lower() and
-            "llama-4" not in selected_model.lower() and
-            "mistral-small-3.1-24b" not in selected_model.lower() and
-            selected_model not in [
-                "Bllossom/llama-3.2-Korean-Bllossom-AICA-5B",
-                "THUDM/glm-4v-9b",
-                "openbmb/MiniCPM-Llama3-V-2_5"
+
+    def toggle_standard_msg_input_visibility(self, selected_model: str) -> bool:
+        msg_visible = all(x not in selected_model.lower() for x in [
+                "vision",
+                "llava",
+                "qwen2-vl",
+                "qwen2.5-vl",
+                "qwen2.5-omni",
+                "llama-4",
+                "pixtral",
+                "mistral-small-3",
+                "paligemma",
+                "gemma-3-4b",
+                "gemma-3-12b",
+                "gemma-3-27b",
+                "gemma-3n",
+                "phi-4-multimodal",
+                "glm4v",
             ]
         )
-        return gr.update(visible=msg_visible)
-    
-    def toggle_multimodal_msg_input_visibility(self, selected_model):
-        msg_visible = (
-            "vision" in selected_model.lower() or
-            "qwen2-vl" in selected_model.lower() or
-            "qwen2.5-vl" in selected_model.lower() or
-            "llama-4" in selected_model.lower() or
-            "mistral-small-3.1-24b" in selected_model.lower() or
-            selected_model in [
-                "Bllossom/llama-3.2-Korean-Bllossom-AICA-5B",
-                "THUDM/glm-4v-9b",
-                "openbmb/MiniCPM-Llama3-V-2_5"
-            ]
-        )
+        self.vision_model = msg_visible
         return gr.update(visible=msg_visible)
 
-    def toggle_image_input_visibility(self, selected_model):
+    def toggle_multimodal_msg_input_visibility(self, selected_model: str) -> bool:
+        msg_visible = any(x in selected_model.lower() for x in [
+                "vision",
+                "llava",
+                "qwen2-vl",
+                "qwen2.5-vl",
+                "qwen2.5-omni",
+                "llama-4",
+                "pixtral",
+                "mistral-small-3",
+                "paligemma",
+                "gemma-3-4b",
+                "gemma-3-12b",
+                "gemma-3-27b",
+                "gemma-3n",
+                "phi-4-multimodal",
+                "glm4v",
+            ]
+        )
+        self.vision_model = msg_visible
+        return gr.update(visible=msg_visible)
+
+    @staticmethod
+    def toggle_image_input_visibility(selected_model: str) -> bool:
         """
         이미지 입력 필드의 가시성을 제어합니다.
         """
@@ -575,14 +633,15 @@ class Chatbot:
         )
         return gr.update(visible=image_visible)
 
-    def toggle_lora_visibility(self, selected_model):
+    @staticmethod
+    def toggle_lora_visibility(selected_model: str) -> bool:
         """
         LORA 파일 경로 입력 필드의 가시성을 제어합니다.
         """
         lora_visible = selected_model in transformers_local or selected_model in mlx_local
         return gr.update(visible=lora_visible)
 
-    def update_model_list(self, selected_type):
+    def update_model_list(self, selected_type: str):
         local_models_data = get_all_local_models()
         transformers_local = local_models_data["transformers"]
         gguf_local = local_models_data["gguf"]
@@ -590,7 +649,7 @@ class Chatbot:
                 
         # "전체 목록"이면 => API 모델 + 모든 로컬 모델 + "사용자 지정 모델 경로 변경"
         if selected_type == "all":
-            all_models = self.update_allowed_models(os_name, arch)
+            all_models = self.update_allowed_models()
             all_models = sorted(list(dict.fromkeys(all_models)))
             # 중복 제거 후 정렬
             return gr.update(choices=all_models, value=all_models[0] if all_models else None)
@@ -615,16 +674,16 @@ class Chatbot:
         updated_list = sorted(list(dict.fromkeys(updated_list)))
         return gr.update(choices=updated_list, value=updated_list[0] if updated_list else None)
     
-    def update_allowed_models(self, os_name, arch):
-        if os_name == "Darwin":
-            if arch == "arm64":
+    def update_allowed_models(self):
+        if self.os_name == "Darwin":
+            if self.arch == "arm64":
                 return api_models + transformers_local + gguf_local + mlx_local
             else:
                 return api_models + gguf_local
         else:
             return api_models + transformers_local + gguf_local
 
-    def show_reset_modal(self, reset_type):
+    def show_reset_modal(self, reset_type: bool):
         """초기화 확인 모달 표시"""
         self.reset_type = reset_type
         return (
@@ -633,7 +692,8 @@ class Chatbot:
             gr.update(visible=reset_type == "all"),  # all_content
         )
 
-    def hide_reset_modal(self):
+    @staticmethod
+    def hide_reset_modal():
         """초기화 확인 모달 숨김"""
         return (
             gr.update(visible=False),  # modal
@@ -641,7 +701,7 @@ class Chatbot:
             gr.update(visible=False),  # all_content
         )
 
-    def handle_reset_confirm(self, history, chatbot, system_msg, language=None, session_id="demo_session"):
+    def handle_reset_confirm(self, history: list[dict[str, str | Any]], chatbot: list[dict[str, str | Any]], system_msg: str, language: str | None = None, session_id: str = "demo_session"):
         """초기화 확인 시 처리"""
         try:
             if self.reset_type == "single":
@@ -675,78 +735,50 @@ class Chatbot:
                 self.filter_messages_for_chatbot(history),  # 현재 chatbot 상태 유지
                 f"❌ 초기화 중 오류가 발생했습니다: {str(e)}"  # status
             )
-    
-def update_system_message_and_profile(
-    character_name: str, 
-    language_display_name: str, 
-    speech_manager: PersonaSpeechManager,
-    session_id: str
-):
-    """
-    캐릭터와 언어 선택 시 호출되는 함수.
-    - 캐릭터와 언어 설정 적용
-    - 시스템 메시지 프리셋 업데이트
-    - DB에 system 메시지를 저장/갱신
-    """
-    try:
-        language_code = translation_manager.get_language_code(language_display_name)
-        speech_manager.set_character_and_language(character_name, language_code)
-
-        # 실제 프리셋 로딩은 speech_manager 내부에서 처리
-        system_message = speech_manager.get_system_message()
-        selected_profile_image = speech_manager.characters[character_name]["profile_image"]
         
-        # -- DB 업데이트 로직 추가 --
-        # session_id가 유효하다면, 새 시스템 메시지를 DB에 반영
-        if session_id:
-            update_system_message_in_db(session_id, system_message)
-            update_last_character_in_db(session_id, character_name)
-
-        return system_message, selected_profile_image, gr.update(value=character_name)
-    except ValueError as ve:
-        logger.error(f"Character setting error: {ve}")
-        return "시스템 메시지 로딩 중 오류가 발생했습니다.", None
-    
-def create_reset_confirm_modal():
-    """초기화 확인 모달 생성"""
-    with gr.Column(visible=False, elem_classes="reset-confirm-modal") as reset_modal:
-        gr.Markdown("# ⚠️ 확인", elem_classes="reset-confirm-title")
-        with gr.Column() as single_reset_content:
-            gr.Markdown("현재 세션의 모든 대화 내용이 삭제됩니다. 계속하시겠습니까?", 
-                       elem_classes="reset-confirm-message")
-        with gr.Column(visible=False) as all_reset_content:
-            gr.Markdown("모든 세션의 대화 내용이 삭제됩니다. 계속하시겠습니까?", 
-                       elem_classes="reset-confirm-message")
-        with gr.Row(elem_classes="reset-confirm-buttons"):
-            cancel_btn = gr.Button("취소", variant="secondary")
-            confirm_btn = gr.Button("확인", variant="primary")
-            
-    return (reset_modal, single_reset_content, all_reset_content, 
-            cancel_btn, confirm_btn)
-    
-def create_delete_session_modal():
-    """삭제 확인 모달 생성"""
-    with gr.Column(visible=False, elem_classes="delete-session-modal") as delete_modal:
-        gr.Markdown("# ⚠️ 세션 삭제 확인", elem_classes="delete-session-title")
-        message = gr.Markdown("", elem_classes="delete-session-message")
-        with gr.Row(elem_classes="delete-session-buttons"):
-            cancel_btn = gr.Button("취소", variant="secondary")
-            confirm_btn = gr.Button("삭제", variant="stop")
+    @staticmethod
+    def create_reset_confirm_modal():
+        """초기화 확인 모달 생성"""
+        with gr.Column(visible=False, elem_classes="reset-confirm-modal") as reset_modal:
+            gr.Markdown("# ⚠️ 확인", elem_classes="reset-confirm-title")
+            with gr.Column() as single_reset_content:
+                gr.Markdown("현재 세션의 모든 대화 내용이 삭제됩니다. 계속하시겠습니까?", 
+                        elem_classes="reset-confirm-message")
+            with gr.Column(visible=False) as all_reset_content:
+                gr.Markdown("모든 세션의 대화 내용이 삭제됩니다. 계속하시겠습니까?", 
+                        elem_classes="reset-confirm-message")
+            with gr.Row(elem_classes="reset-confirm-buttons"):
+                cancel_btn = gr.Button("취소", variant="secondary")
+                confirm_btn = gr.Button("확인", variant="primary")
                 
-    return delete_modal, message, cancel_btn, confirm_btn
-
-def get_allowed_llm_models(os_name, arch):
-    if os_name == "Darwin":
-        if arch == "arm64":
-            allowed = api_models + transformers_local + gguf_local + mlx_local
-            allowed_type = ["all", "api", "transformers", "gguf", "mlx"]
-        else:
-            allowed = api_models + gguf_local
-            allowed_type = ["all", "api", "gguf"]
-    else:
-        allowed = api_models + transformers_local + gguf_local
-        allowed_type = ["all", "api", "transformers", "gguf"]
-        
-    allowed = list(dict.fromkeys(allowed))
+        return (reset_modal, single_reset_content, all_reset_content, 
+                cancel_btn, confirm_btn)
     
-    return sorted(allowed), allowed_type
+    @staticmethod
+    def create_delete_session_modal():
+        """삭제 확인 모달 생성"""
+        with gr.Column(visible=False, elem_classes="delete-session-modal") as delete_modal:
+            gr.Markdown("# ⚠️ 세션 삭제 확인", elem_classes="delete-session-title")
+            message = gr.Markdown("", elem_classes="delete-session-message")
+            with gr.Row(elem_classes="delete-session-buttons"):
+                cancel_btn = gr.Button("취소", variant="secondary")
+                confirm_btn = gr.Button("삭제", variant="stop")
+                    
+        return delete_modal, message, cancel_btn, confirm_btn
+    
+    @staticmethod
+    def get_allowed_llm_models(os_name: str, arch: str) -> tuple[list[str], list[str]]:
+        if os_name == "Darwin":
+            if arch == "arm64":
+                allowed = api_models + transformers_local + gguf_local + mlx_local
+                allowed_type = ["all", "api", "transformers", "gguf", "mlx"]
+            else:
+                allowed = api_models + gguf_local
+                allowed_type = ["all", "api", "gguf"]
+        else:
+            allowed = api_models + transformers_local + gguf_local
+            allowed_type = ["all", "api", "transformers", "gguf"]
+            
+        allowed = list(dict.fromkeys(allowed))
+        
+        return sorted(allowed), allowed_type

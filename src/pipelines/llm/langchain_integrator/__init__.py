@@ -21,9 +21,21 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_perplexity import ChatPerplexity        # Perplexity AI
 from langchain_xai import ChatXAI                      # xAI Grok
 
+import warnings
+import platform
+
 from transformers import pipeline, AutoTokenizer, AutoProcessor, AutoModelForCausalLM, AutoModelForImageTextToText, Qwen3ForCausalLM, Qwen3MoeForCausalLM, Llama4ForCausalLM, Llama4ForConditionalGeneration, Mistral3ForConditionalGeneration, Qwen2VLForConditionalGeneration, Qwen2_5_VLForConditionalGeneration
 
 from typing import Any
+
+try:
+    from langchain_mlx.llms import MLXPipeline
+    from langchain_mlx.chat_models import ChatMLX
+except ImportError:
+    if platform.system() == "Darwin" and platform.machine() == "arm64":
+        warnings.warn("langchain_mlx is not installed. Please install it to use MLX features.", UserWarning)
+    else:
+        pass
 
 class LangchainIntegrator:
     def __init__(self, backend_type: str, model_name: str = None, lora_model_name: str = None, model: AutoModelForCausalLM | AutoModelForImageTextToText | Qwen3ForCausalLM | Qwen3MoeForCausalLM | Llama4ForCausalLM | Llama4ForConditionalGeneration | Mistral3ForConditionalGeneration | Qwen2VLForConditionalGeneration | Qwen2_5_VLForConditionalGeneration = None, tokenizer: AutoTokenizer = None, processor: AutoProcessor = None, max_tokens: int = 512, temperature: float = 1.0, top_k: int = 50, top_p: float = 1.0, repetition_penalty: float = 1.0, api_key: str = None, **kwargs):
@@ -112,8 +124,6 @@ class LangchainIntegrator:
             )
         elif backend_type == "mlx":
             # apple/mlx backend via llama.cpp; requires backend='mlx'
-            from langchain_mlx.llms import MLXPipeline
-            from langchain_mlx.chat_models import ChatMLX
             pipeline_kwargs = {"max_tokens": self.max_tokens, "temp": self.temperature, "top_p": self.top_p, "top_k": self.top_k, "repetition_penalty": self.repetition_penalty}
             llm = MLXPipeline.from_model_id(model_id=self.model_name, adapter_file=self.lora_model_name, pipeline_kwargs=pipeline_kwargs)
             return ChatMLX(llm=llm, verbose=self.verbose)

@@ -9,6 +9,7 @@ chat_bot=Chatbot()
 
 from .. import logger
 from ..start_app import ui_component
+from ..main import ChatbotMain
 
 def create_cache_tab():    
     with gr.Tab(_("cache_tab_title")):

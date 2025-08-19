@@ -36,7 +36,8 @@ class UIComponent:
     
     tts_model_type_dropdown: gr.Radio = None
     tts_model_dropdown: gr.Dropdown = None
-    
+
+    system_message_accordion: gr.Accordion = None
     system_message_box: gr.Textbox = None
     chatbot: gr.Chatbot = None
     msg: gr.Textbox = None
@@ -44,7 +45,8 @@ class UIComponent:
     
     profile_image: gr.Image = None
     character_dropdown: gr.Dropdown = None
-    
+
+    text_advanced_settings: gr.Accordion = None
     seed_input: gr.Number = None
     temperature_slider: gr.Slider = None
     top_k_slider: gr.Slider = None
@@ -80,7 +82,8 @@ class UIComponent:
     generate_btn: gr.Button = None
     
     gallery: gr.Gallery = None
-    
+
+    diffusion_advanced_settings: gr.Accordion = None
     sampler_dropdown: gr.Dropdown = None
     scheduler_dropdown: gr.Dropdown = None
     cfg_scale_slider: gr.Slider = None

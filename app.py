@@ -1,6 +1,6 @@
 # app.py
 import warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="gradio")
+warnings.filterwarnings("ignore", module="gradio")
 
 from src import os_name, arch, args, __version__
 from src.gradio_ui import create_app

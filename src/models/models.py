@@ -2,6 +2,7 @@
 
 import random
 import platform
+from typing import Any
 import numpy as np
 import torch
 from src.common.cache import models_cache
@@ -78,12 +79,13 @@ def refresh_model_list():
     return gr.update(choices=new_choices), "모델 목록을 새로고침했습니다."
 
 
-def load_model(selected_model, model_type, selected_lora=None, quantization_bit="Q8_0", local_model_path=None, api_key=None, device="cpu", lora_path=None, image_input=None, **kwargs):
+def load_model(selected_model, model_type, selected_lora=None, quantization_bit="Q8_0", local_model_path=None, api_key=None, device="cpu", lora_path=None, image_input=None, vision_model=False, **kwargs):
     """
     모델 로드 함수. 특정 모델에 대한 로드 로직을 외부 핸들러로 분리.
     """
     model_id = selected_model
     lora_model_id = selected_lora if selected_lora else None
+    # vision_model: bool = kwargs.get("vision_model", False)
     if model_type != "transformers" and model_type != "gguf" and model_type != "mlx" and model_type != "api":
         logger.error(f"지원되지 않는 모델 유형: {model_type}")
         return None
@@ -114,7 +116,7 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
         models_cache[cache_key] = handler
         return handler
     elif model_type == "mlx":
-        if image_input is not None:
+        if vision_model:
             handler = MlxVisionModelHandler(
                 model_id=model_id,
                 lora_model_id=lora_model_id,
@@ -134,7 +136,7 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
     else:
-        if image_input is not None:
+        if vision_model:
             handler = TransformersVisionModelHandler(
                 model_id=model_id,
                 lora_model_id=lora_model_id,
@@ -156,7 +158,7 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
 
-def generate_answer(message, history, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, image_input=None, api_key=None, device="cpu", seed=42, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0, character_language='ko'):
+def generate_answer(history: list[dict[str, str | Any]], selected_model: str, model_type: str, selected_lora: str | None = None, local_model_path: str | None = None, lora_path: str | None = None, image_input: Any | None = None, api_key: str | None = None, device: str = "cpu", seed: int = 42, temperature: float = 1.0, top_k: int = 50, top_p: float = 1.0, repetition_penalty: float = 1.0, character_language: str = 'ko', vision_model: bool = False):
     """
     사용자 히스토리를 기반으로 답변 생성.
     """
@@ -271,7 +273,7 @@ def generate_answer(message, history, selected_model, model_type, selected_lora=
     else:
         if not handler:
             logger.info(f"[*] 모델 로드 중: {selected_model}")
-            handler = load_model(selected_model, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path, image_input=image_input, temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty)
+            handler = load_model(selected_model, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path, image_input=image_input, temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty, vision_model=vision_model)
         
         if not handler:
             logger.error("모델 핸들러가 로드되지 않았습니다.")

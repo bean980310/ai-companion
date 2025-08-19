@@ -4,9 +4,10 @@ import gradio as gr
 
 from src.common.html import css
 
+from src.start_app import app_state
 from src.main import create_main_container
-from src.main.chatbot import share_allowed_llm_models
-from src.main.image_generation import share_allowed_diffusion_models
+from src.main.chatbot import chat_main
+from src.main.image_generation import diff_main
 from src.main.tts import get_tts_models
 
 from src.tabs import create_settings_popup
@@ -28,22 +29,19 @@ from src.start_app import (
 
 def create_app():
     with gr.Blocks(css_paths="html/css/style.css", title="AI Companion", fill_height=True) as demo:
-        speech_manager_state = register_speech_manager_state()
+        register_speech_manager_state()
         
-        session_id, loaded_history, session_dropdown, last_character, last_preset, system_message, session_label=shared_on_app_start()
-        last_sid_state, history_state, last_character_state, session_list_state, overwrite_state = register_app_state()
+        shared_on_app_start()
+        register_app_state()
 
         # 단일 history_state와 selected_device_state 정의 (중복 제거)
-        custom_model_path_state, session_id_state, selected_device_state, character_state, system_message_state = register_app_state_2()
-        seed_state, temperature_state, top_k_state, top_p_state, repetition_penalty_state, selected_language_state = register_app_state_3()
+        register_app_state_2()
+        register_app_state_3()
+        register_app_state_4()
+        register_app_state_5()
+        chat_main.share_allowed_llm_models()
         
-        reset_confirmation, reset_all_confirmation = register_app_state_4()
-        
-        max_diffusion_lora_rows, stored_image, stored_image_inpaint = register_app_state_5()
-        
-        initial_choices, llm_type_choices = share_allowed_llm_models()
-        
-        diffusion_choices, diffusion_type_choices, diffusion_lora_choices, vae_choices, diffusion_refiner_choices, diffusion_refiner_type_choices = share_allowed_diffusion_models()
+        diff_main.share_allowed_diffusion_models()
         
         tts_choices = get_tts_models()
             
@@ -127,7 +125,7 @@ def create_app():
         demo.load(
             fn=on_app_start,
             inputs=[], # 언어 상태는 이미 초기화됨
-            outputs=[session_id_state, history_state, existing_sessions_dropdown, character_state, preset_dropdown, system_message_state, current_session_display],
+            outputs=[app_state.session_id_state, app_state.history_state, existing_sessions_dropdown, app_state.character_state, preset_dropdown, app_state.system_message_state, current_session_display],
             queue=False
         )
         

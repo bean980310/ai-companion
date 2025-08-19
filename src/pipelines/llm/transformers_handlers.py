@@ -67,7 +67,6 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
             # outputs = self.model.generate(
             #     input_ids,
             #     generation_config=self.config,
-            #     max_new_tokens=1024,
             #     do_sample=True,
             # )
             
@@ -140,10 +139,10 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
     def load_model(self):
         if self.image_input:
             self.processor = AutoProcessor.from_pretrained(self.local_model_path, trust_remote_code=True)
+            self.model = AutoModelForImageTextToText.from_pretrained(self.local_model_path, trust_remote_code=True)
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(self.local_model_path, trust_remote_code=True)
-
-        self.model = AutoModelForImageTextToText.from_pretrained(self.local_model_path, trust_remote_code=True)
+            self.model = AutoModelForCausalLM.from_pretrained(self.local_model_path, trust_remote_code=True)
 
         if self.local_lora_model_path and os.path.exists(self.local_lora_model_path):
             self.model = PeftModel.from_pretrained(self.model, self.local_lora_model_path)
@@ -160,7 +159,7 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
 
             # outputs = self.model.generate(
             #     **inputs,
-            #     max_new_tokens=1024,
+            #     generation_config=self.config,
             #     do_sample=True,
             # )
             

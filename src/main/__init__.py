@@ -3,9 +3,10 @@ import numpy as np
 import random
 from typing import List
 
-from ..start_app import create_header_container, app_state, ui_component
-from .chatbot import create_reset_confirm_modal, create_delete_session_modal, Chatbot, update_system_message_and_profile, get_speech_manager
-from .image_generation import toggle_diffusion_api_key_visibility, update_diffusion_model_list, generate_images_wrapper
+from ..start_app import app_state, ui_component
+from .chatbot import Chatbot, ChatbotComponent, chat_bot, chat_main
+from .chatbot import ChatbotMain, chat_main
+from .image_generation import toggle_diffusion_api_key_visibility, update_diffusion_model_list, generate_images_wrapper, diff_main
 from .sidebar import create_sidebar
 from .container import create_body_container
 from ..common.database import get_existing_sessions
@@ -13,6 +14,7 @@ from ..common.character_info import characters
 from ..common.html import show_confetti
 from ..common.translations import translation_manager, _
 from ..api.comfy_api import ComfyUIClient
+from .header import HeaderUIComponent
 
 from .. import __version__
 
@@ -31,20 +33,110 @@ from presets import (
     CHOI_YURI_PRESET
     )
 
-def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
+def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient()):
     with gr.Column(elem_classes="main-container"):    
-        title, settings_button, language_dropdown = create_header_container()
-        
-        sidebar, tab_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chatbot_side, session_select_dropdown, chat_title_box, add_session_icon_btn, delete_session_icon_btn, model_type_dropdown, model_dropdown, api_key_text, lora_dropdown, diffusion_side, diffusion_model_type_dropdown, diffusion_model_dropdown, diffusion_api_key_text, diffusion_refiner_model_dropdown, diffusion_refiner_start, diffusion_with_refiner_image_to_image_start, diffusion_lora_multiselect, diffusion_lora_text_encoder_sliders, diffusion_lora_unet_sliders, storyteller_side, storytelling_model_type_dropdown, storytelling_model_dropdown, storytelling_api_key_text, storytelling_lora_dropdown, tts_side, tts_model_type_dropdown, tts_model_dropdown, translate_side = create_sidebar()
-                                   
-        chat_container, system_message_accordion, system_message_box, chatbot, msg, multimodal_msg, image_input, profile_image, character_dropdown, advanced_setting, seed_input, temperature_slider, top_k_slider, top_p_slider, repetition_penalty_slider, preset_dropdown, change_preset_button, reset_btn, reset_all_btn, status_text, image_info, session_select_info, diffusion_container, image_to_image_mode, image_to_image_input, image_inpaint_input, image_inpaint_masking, blur_radius_slider, blur_expansion_radius_slider, denoise_strength_slider, positive_prompt_input, negative_prompt_input, style_dropdown, width_slider, height_slider, generation_step_slider, random_prompt_btn, generate_btn, gallery, diff_adv_setting, sampler_dropdown, scheduler_dropdown, cfg_scale_slider, diffusion_seed_input, random_seed_checkbox, vae_dropdown, clip_skip_slider, enable_clip_skip_checkbox, clip_g_checkbox, batch_size_input, batch_count_input, image_history, story_container, storytelling_input, storytelling_btn, storytelling_output, story_adv_setting, storyteller_seed_input, storyteller_temperature_slider, storyteller_top_k_slider, storyteller_top_p_slider, storyteller_repetition_penalty_slider, tts_container, translate_container, download_container = create_body_container()
+        header_ui_component = HeaderUIComponent.create_header_container()
+
+        sidebar, tab_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_side, diff_side, storyteller_side, storytelling_model_type_dropdown, storytelling_model_dropdown, storytelling_api_key_text, storytelling_lora_dropdown, tts_side, tts_model_type_dropdown, tts_model_dropdown, translate_side = create_sidebar()
+
+        chat_container, diff_container, story_container, storytelling_input, storytelling_btn, storytelling_output, story_adv_setting, storyteller_seed_input, storyteller_temperature_slider, storyteller_top_k_slider, storyteller_top_p_slider, storyteller_repetition_penalty_slider, tts_container, translate_container, download_container = create_body_container()
 
         with gr.Row():
             gr.Markdown(f"Version: {__version__}")
                             
-        reset_modal, single_reset_content, all_reset_content, cancel_btn, confirm_btn = create_reset_confirm_modal()
-        delete_modal, delete_message, delete_cancel_btn, delete_confirm_btn = create_delete_session_modal()
-        
+        reset_modal, single_reset_content, all_reset_content, cancel_btn, confirm_btn = chat_bot.create_reset_confirm_modal()
+        delete_modal, delete_message, delete_cancel_btn, delete_confirm_btn = chat_bot.create_delete_session_modal()
+
+    title = header_ui_component.title
+    settings_button = header_ui_component.settings_button
+    language_dropdown = header_ui_component.language_dropdown
+
+    session_select_dropdown = chat_side.session.session_select_dropdown
+    chat_title_box = chat_side.session.chat_title_box
+    add_session_icon_btn = chat_side.session.add_session_icon_btn
+    delete_session_icon_btn = chat_side.session.delete_session_icon_btn
+
+    text_model_type_dropdown = chat_side.model.model_type_dropdown
+    text_model_dropdown = chat_side.model.model_dropdown
+    text_api_key_text = chat_side.model.api_key_text
+    text_lora_dropdown = chat_side.model.lora_dropdown
+
+    system_message_accordion = chat_container.main_panel.system_message_accordion
+    system_message_box = chat_container.main_panel.system_message_box
+    chatbot = chat_container.main_panel.chatbot
+    msg = chat_container.main_panel.msg
+    multimodal_msg = chat_container.main_panel.multimodal_msg
+
+    profile_image = chat_container.side_panel.profile_image
+    character_dropdown = chat_container.side_panel.character_dropdown
+
+    text_advanced_settings = chat_container.side_panel.advanced_setting
+
+    text_seed_input = chat_container.side_panel.seed_input
+    text_temperature_slider = chat_container.side_panel.temperature_slider
+    text_top_k_slider = chat_container.side_panel.top_k_slider
+    text_top_p_slider = chat_container.side_panel.top_p_slider
+    text_repetition_penalty_slider = chat_container.side_panel.repetition_penalty_slider
+    preset_dropdown = chat_container.side_panel.preset_dropdown
+    change_preset_button = chat_container.side_panel.change_preset_button
+    reset_btn = chat_container.side_panel.reset_btn
+    reset_all_btn = chat_container.side_panel.reset_all_btn
+
+    status_text = chat_container.status_bar.status_text
+    image_info = chat_container.status_bar.image_info
+    session_select_info = chat_container.status_bar.session_select_info
+
+    diffusion_model_type_dropdown = diff_side.model.model_type_dropdown
+    diffusion_model_dropdown = diff_side.model.model_dropdown
+    diffusion_api_key_text = diff_side.model.api_key_text
+
+    diffusion_refiner_model_dropdown = diff_side.refiner.refiner_model_dropdown
+    diffusion_refiner_start = diff_side.refiner.refiner_start
+    diffusion_with_refiner_image_to_image_start = diff_side.refiner.with_refiner_image_to_image_start
+
+    diffusion_lora_multiselect = diff_side.lora.lora_multiselect
+    diffusion_lora_text_encoder_sliders = diff_side.lora.lora_text_encoder_sliders
+    diffusion_lora_unet_sliders = diff_side.lora.lora_unet_sliders
+
+    image_to_image_mode = diff_container.image_panel.image_to_image_mode
+    image_to_image_input = diff_container.image_panel.image_to_image_input
+    image_inpaint_input = diff_container.image_panel.image_inpaint_input
+    image_inpaint_masking = diff_container.image_panel.image_inpaint_masking
+
+    blur_radius_slider = diff_container.image_panel.blur_radius_slider
+    blur_expansion_radius_slider = diff_container.image_panel.blur_expansion_radius_slider
+    denoise_strength_slider = diff_container.image_panel.denoise_strength_slider
+
+    positive_prompt_input = diff_container.main_panel.positive_prompt_input
+    negative_prompt_input = diff_container.main_panel.negative_prompt_input
+    style_dropdown = diff_container.main_panel.style_dropdown
+
+    width_slider = diff_container.main_panel.width_slider
+    height_slider = diff_container.main_panel.height_slider
+    generation_step_slider = diff_container.main_panel.generation_step_slider
+    random_prompt_btn = diff_container.main_panel.random_prompt_btn
+    generate_btn = diff_container.main_panel.generate_btn
+    gallery = diff_container.main_panel.gallery
+
+    diffusion_advanced_settings = diff_container.side_panel.advanced_setting
+
+    sampler_dropdown = diff_container.side_panel.sampler_dropdown
+    scheduler_dropdown = diff_container.side_panel.scheduler_dropdown
+    cfg_scale_slider = diff_container.side_panel.cfg_scale_slider
+
+    diffusion_seed_input = diff_container.side_panel.seed_input
+    random_seed_checkbox = diff_container.side_panel.random_seed_checkbox
+    vae_dropdown = diff_container.side_panel.vae_dropdown
+
+    clip_skip_slider = diff_container.side_panel.clip_skip_slider
+    enable_clip_skip_checkbox = diff_container.side_panel.enable_clip_skip_checkbox
+    clip_g_checkbox = diff_container.side_panel.clip_g_checkbox
+
+    batch_size_input = diff_container.side_panel.batch_size_input
+    batch_count_input = diff_container.side_panel.batch_count_input
+
+    image_history = diff_container.history_panel.image_history
+
     # 아래는 변경 이벤트 등록
     def apply_session_immediately(chosen_sid):
         """
@@ -53,7 +145,7 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
         return chat_bot.apply_session(chosen_sid)
     
     session_select_dropdown.change(
-        fn=apply_session_immediately,
+        fn=chat_main.apply_session_immediately,
         inputs=[session_select_dropdown],
         outputs=[app_state.history_state, app_state.session_id_state, session_select_info]
     ).then(
@@ -66,7 +158,7 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
         if not sessions:
             return gr.update(choices=[], value=None)
         return gr.update(choices=sessions, value=sessions[0])
-    
+
     @add_session_icon_btn.click(inputs=[character_dropdown, app_state.selected_language_state, app_state.speech_manager_state, app_state.history_state],outputs=[app_state.session_id_state, app_state.history_state, session_select_dropdown, session_select_info, chatbot])
     def create_and_apply_session(chosen_character, chosen_language, speech_manager_state, history_state):
         """
@@ -131,29 +223,29 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
     )
     
     # 시드 입력과 상태 연결
-    seed_input.change(
+    text_seed_input.change(
         fn=lambda seed: seed if seed is not None else 42,
-        inputs=[seed_input],
+        inputs=[text_seed_input],
         outputs=[app_state.seed_state]
     )
-    temperature_slider.change(
+    text_temperature_slider.change(
         fn=lambda temp: temp if temp is not None else 0.6,
-        inputs=[temperature_slider],
+        inputs=[text_temperature_slider],
         outputs=[app_state.temperature_state]
     )
-    top_k_slider.change(
+    text_top_k_slider.change(
         fn=lambda top_k: top_k if top_k is not None else 20,
-        inputs=[top_k_slider],
+        inputs=[text_top_k_slider],
         outputs=[app_state.top_k_state]
     )
-    top_p_slider.change(
+    text_top_p_slider.change(
         fn=lambda top_p: top_p if top_p is not None else 0.9,
-        inputs=[top_p_slider],
+        inputs=[text_top_p_slider],
         outputs=[app_state.top_p_state]
     )
-    repetition_penalty_slider.change(
+    text_repetition_penalty_slider.change(
         fn=lambda repetition_penalty: repetition_penalty if repetition_penalty is not None else 1.1,
-        inputs=[repetition_penalty_slider],
+        inputs=[text_repetition_penalty_slider],
         outputs=[app_state.repetition_penalty_state]
     )
             
@@ -166,7 +258,7 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
     )
 
     character_dropdown.change(
-        fn=update_system_message_and_profile,
+        fn=chat_bot.update_system_message_and_profile,
         inputs=[character_dropdown, language_dropdown, app_state.speech_manager_state, app_state.session_id_state],
         outputs=[system_message_box, profile_image, preset_dropdown]
     )
@@ -188,15 +280,15 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
     )
         
     # 모델 선택 변경 시 가시성 토글
-    model_dropdown.change(
+    text_model_dropdown.change(
         fn=lambda selected_model: (
             chat_bot.toggle_api_key_visibility(selected_model),
             chat_bot.toggle_lora_visibility(selected_model),
             chat_bot.toggle_multimodal_msg_input_visibility(selected_model),
             chat_bot.toggle_standard_msg_input_visibility(selected_model)
         ),
-        inputs=[model_dropdown],
-        outputs=[api_key_text, lora_dropdown, multimodal_msg, msg]
+        inputs=[text_model_dropdown],
+        outputs=[text_api_key_text, text_lora_dropdown, multimodal_msg, msg]
     )
     
     storytelling_model_dropdown.change(
@@ -221,11 +313,11 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
         inputs=[storytelling_model_type_dropdown],
         outputs=[storytelling_model_dropdown]
     )
-        
-    model_type_dropdown.change(
+
+    text_model_type_dropdown.change(
         fn=chat_bot.update_model_list,
-        inputs=[model_type_dropdown],
-        outputs=[model_dropdown]
+        inputs=[text_model_type_dropdown],
+        outputs=[text_model_dropdown]
     )
     
     diffusion_model_type_dropdown.change(
@@ -353,7 +445,7 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
         outputs=[blur_radius_slider, blur_expansion_radius_slider]
     )
         
-    bot_message_inputs = [app_state.session_id_state, app_state.history_state, model_dropdown, app_state.custom_model_path_state, image_input, api_key_text, app_state.selected_device_state, app_state.seed_state]
+    bot_message_inputs = [app_state.session_id_state, app_state.history_state, text_model_dropdown, app_state.custom_model_path_state, text_api_key_text, app_state.selected_device_state, app_state.seed_state]
     
     demo.load(
         fn=lambda selected_model: (
@@ -362,15 +454,15 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
             chat_bot.toggle_multimodal_msg_input_visibility(selected_model),
             chat_bot.toggle_standard_msg_input_visibility(selected_model)
         ),
-        inputs=[model_dropdown],
-        outputs=[api_key_text, lora_dropdown, multimodal_msg, msg]
+        inputs=[text_model_dropdown],
+        outputs=[text_api_key_text, text_lora_dropdown, multimodal_msg, msg]
     )
         
     def update_character_languages(selected_language, selected_character):
         """
         인터페이스 언어에 따라 선택된 캐릭터의 언어를 업데이트합니다.
         """
-        speech_manager = get_speech_manager(app_state.session_id_state)
+        speech_manager = chat_bot.get_speech_manager(app_state.session_id_state)
         if selected_language in characters[selected_character]["languages"]:
             # 인터페이스 언어가 캐릭터의 지원 언어에 포함되면 해당 언어로 설정
             speech_manager.current_language = selected_language
@@ -458,7 +550,7 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
 
     @language_dropdown.change(
         inputs=[language_dropdown, character_dropdown],
-        outputs=[title, session_select_info, language_dropdown, system_message_accordion, system_message_box, model_type_dropdown, model_dropdown, character_dropdown, api_key_text, image_input, msg, multimodal_msg, advanced_setting, seed_input, temperature_slider, top_k_slider, top_p_slider, repetition_penalty_slider, reset_btn, reset_all_btn, diffusion_model_type_dropdown, diffusion_model_dropdown, diffusion_api_key_text]
+        outputs=[title, session_select_info, language_dropdown, system_message_accordion, system_message_box, text_model_type_dropdown, text_model_dropdown, character_dropdown, text_api_key_text, msg, multimodal_msg, text_advanced_settings, text_seed_input, text_temperature_slider, text_top_k_slider, text_top_p_slider, text_repetition_penalty_slider, reset_btn, reset_all_btn, diffusion_model_type_dropdown, diffusion_model_dropdown, diffusion_api_key_text]
     )
     def change_language(selected_lang, selected_character):
         """언어 변경 처리 함수"""
@@ -512,7 +604,6 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
                 gr.update(label=_("model_select_label")),
                 gr.update(label=_('character_select_label'), info=_('character_select_info')),
                 gr.update(label=_("api_key_label")),
-                gr.update(label=_("image_upload_label")),
                 gr.update(
                     label=_("message_input_label"),
                     placeholder=_("message_placeholder")
@@ -535,7 +626,7 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
             ]
         else:
             # 언어 변경 실패 시 아무 것도 하지 않음
-            return gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update()
+            return gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update()
 
         # 메시지 전송 시 함수 연결
     msg.submit(
@@ -559,18 +650,18 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
         inputs=[
             app_state.session_id_state,
             app_state.history_state,
-            model_dropdown,
-            lora_dropdown,
+            text_model_dropdown,
+            text_lora_dropdown,
             app_state.custom_model_path_state,
-            image_input,
-            api_key_text,
+            msg,
+            text_api_key_text,
             app_state.selected_device_state,
             app_state.seed_state,
             app_state.temperature_state,
             app_state.top_k_state,
             app_state.top_p_state,
             app_state.repetition_penalty_state,
-            app_state.selected_language_state
+            app_state.selected_language_state,
         ],
         outputs=[
             app_state.history_state,
@@ -580,7 +671,7 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
         ],
         queue=True  # 모델 추론이 들어가므로 True
     )
-    
+
     multimodal_msg.submit(
         fn=chat_bot.process_message_user,
         inputs=[
@@ -602,18 +693,18 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
         inputs=[
             app_state.session_id_state,
             app_state.history_state,
-            model_dropdown,
-            lora_dropdown,
+            text_model_dropdown,
+            text_lora_dropdown,
             app_state.custom_model_path_state,
             multimodal_msg,
-            api_key_text,
+            text_api_key_text,
             app_state.selected_device_state,
             app_state.seed_state,
             app_state.temperature_state,
             app_state.top_k_state,
             app_state.top_p_state,
             app_state.repetition_penalty_state,
-            app_state.selected_language_state
+            app_state.selected_language_state,
         ],
         outputs=[
             app_state.history_state,
@@ -630,7 +721,7 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
         outputs=[session_select_dropdown],
         queue=False
     )
-    
+
     reset_btn.click(
         fn=lambda: chat_bot.show_reset_modal("single"),
         outputs=[reset_modal, single_reset_content, all_reset_content]
@@ -655,27 +746,27 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
         outputs=[session_select_dropdown]
     )
     
-    @gr.on(triggers=[chatbot_sidetab.click, demo.load], inputs=[], outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container, diffusion_container, story_container, tts_container, translate_container, download_container])
+    @gr.on(triggers=[chatbot_sidetab.click, demo.load], inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
     def select_chat_tab():
         return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
     
-    @diffusion_sidetab.click(inputs=[], outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container, diffusion_container, story_container, tts_container, translate_container, download_container])
+    @diffusion_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
     def select_image_generation_tab():
         return gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
-    
-    @storyteller_sidetab.click(inputs=[], outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container, diffusion_container, story_container, tts_container, translate_container, download_container])
+
+    @storyteller_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
     def select_storyteller_tab():
         return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
-    
-    @tts_sidetab.click(inputs=[], outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container, diffusion_container, story_container, tts_container, translate_container, download_container])
+
+    @tts_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
     def select_tts_tab():
         return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
-    
-    @translate_sidetab.click(inputs=[], outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container, diffusion_container, story_container, tts_container, translate_container, download_container])
+
+    @translate_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
     def select_translate_tab():
         return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)
-    
-    @download_sidetab.click(inputs=[], outputs=[chatbot_side, diffusion_side, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container, diffusion_container, story_container, tts_container, translate_container, download_container])
+
+    @download_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
     def select_download_tab():
         return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
     
@@ -708,5 +799,5 @@ def create_main_container(demo, chat_bot=Chatbot(), client=ComfyUIClient()):
             status_text
         ]
     )
-    
-    return settings_button, model_type_dropdown, model_dropdown, system_message_box, preset_dropdown
+
+    return settings_button, text_model_type_dropdown, text_model_dropdown, system_message_box, preset_dropdown

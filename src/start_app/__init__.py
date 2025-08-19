@@ -32,8 +32,6 @@ from .ui_component_manager import ui_component
 def register_speech_manager_state():
     speech_manager_state = gr.State(initialize_speech_manager)
     app_state.speech_manager_state = speech_manager_state
-    
-    return speech_manager_state
 
 def shared_on_app_start():
     session_id, loaded_history, session_dropdown, last_character, last_preset, system_message, session_label=on_app_start()
@@ -44,8 +42,6 @@ def shared_on_app_start():
     app_state.last_preset = last_preset
     app_state.system_message = system_message
     app_state.session_label = session_label
-    
-    return session_id, loaded_history, session_dropdown, last_character, last_preset, system_message, session_label
 
 def register_app_state():
     last_sid_state=gr.State()
@@ -60,7 +56,7 @@ def register_app_state():
     app_state.session_list_state = session_list_state
     app_state.overwrite_state = overwrite_state
     
-    return last_sid_state, history_state, last_character_state, session_list_state, overwrite_state
+    # return last_sid_state, history_state, last_character_state, session_list_state, overwrite_state
 
 def register_app_state_2():
     custom_model_path_state = gr.State("")
@@ -75,7 +71,7 @@ def register_app_state_2():
     app_state.character_state = character_state
     app_state.system_message_state = system_message_state
     
-    return custom_model_path_state, session_id_state, selected_device_state, character_state, system_message_state
+    # return custom_model_path_state, session_id_state, selected_device_state, character_state, system_message_state
 
 def register_app_state_3():
     seed_state = gr.State(args.seed)  # 시드 상태 전역 정의
@@ -92,7 +88,7 @@ def register_app_state_3():
     app_state.repetition_penalty_state = repetition_penalty_state
     app_state.selected_language_state = selected_language_state
     
-    return seed_state, temperature_state, top_k_state, top_p_state, repetition_penalty_state, selected_language_state
+    # return seed_state, temperature_state, top_k_state, top_p_state, repetition_penalty_state, selected_language_state
 
 def register_app_state_4():
     reset_confirmation = gr.State(False)
@@ -101,7 +97,7 @@ def register_app_state_4():
     app_state.reset_confirmation = reset_confirmation
     app_state.reset_all_confirmation = reset_all_confirmation
     
-    return reset_confirmation, reset_all_confirmation
+    # return reset_confirmation, reset_all_confirmation
 
 def register_app_state_5():
     max_diffusion_lora_rows=10
@@ -112,31 +108,8 @@ def register_app_state_5():
     app_state.stored_image = stored_image
     app_state.stored_image_inpaint = stored_image_inpaint
     
-    return max_diffusion_lora_rows, stored_image, stored_image_inpaint
+    # return max_diffusion_lora_rows, stored_image, stored_image_inpaint
 
-def create_header_container():
-    with gr.Row(elem_classes="header-container"):
-        with gr.Column(scale=3):
-            title = gr.Markdown(f"## {_('main_title')}", elem_classes="title")
-            gr.Markdown("### Beta Release")
-        with gr.Column(scale=1):
-            settings_button = gr.Button("⚙️", elem_classes="settings-button")
-        with gr.Column(scale=1):
-            language_dropdown = gr.Dropdown(
-                label=_('language_select'),
-                choices=["한국어", "日本語", "中文(简体)", "中文(繁體)", "English"],
-                value=translation_manager.get_language_display_name(default_language),
-                interactive=True,
-                info=_('language_info'),
-                container=False,
-                elem_classes="custom-dropdown"
-            )
-            
-    ui_component.title = title
-    ui_component.settings_button = settings_button
-    ui_component.language_dropdown = language_dropdown
-    
-    return title, settings_button, language_dropdown
 
 def create_tab_side():
     with gr.Column() as tab_side:
@@ -167,7 +140,7 @@ def get_last_used_character(session_id):
         logger.error(f"Error fetching last used character: {e}")
         return list(characters.keys())[0]
     
-def initialize_speech_manager():
+def initialize_speech_manager() -> PersonaSpeechManager:
     return PersonaSpeechManager(translation_manager, characters)
     
 def load_presets_from_files(presets_dir: str) -> List[Dict[str, Any]]:
