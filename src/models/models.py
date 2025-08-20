@@ -25,24 +25,13 @@ from src.pipelines.llm.api import (
 from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models, convert_folder_to_modelid
 import gradio as gr
 from src.models import api_models
-
-from peft import PeftModel, PeftConfig
+from PIL.Image import Image
 
 import traceback
 import openai
 import anthropic
 from google import genai
 from google.genai import types
-
-from langchain.chains.llm import LLMChain
-from langchain.prompts import PromptTemplate
-from langchain_openai import OpenAI
-from langchain_community.llms.llamacpp import LlamaCpp
-from langchain_ollama import OllamaLLM as Ollama
-from langchain_huggingface import HuggingFacePipeline
-from langchain_huggingface import ChatHuggingFace
-
-import requests
 
 from src import logger
 
@@ -79,7 +68,7 @@ def refresh_model_list():
     return gr.update(choices=new_choices), "모델 목록을 새로고침했습니다."
 
 
-def load_model(selected_model, model_type, selected_lora=None, quantization_bit="Q8_0", local_model_path=None, api_key=None, device="cpu", lora_path=None, image_input=None, vision_model=False, **kwargs):
+def load_model(selected_model: str, model_type: str, selected_lora: str | None = None, quantization_bit: str = "Q8_0", local_model_path: str | None = None, api_key: str | None = None, device: str = "cpu", lora_path: str | None = None, image_input: str | Image | Any | None = None, vision_model: bool = False, **kwargs):
     """
     모델 로드 함수. 특정 모델에 대한 로드 로직을 외부 핸들러로 분리.
     """
@@ -158,7 +147,7 @@ def load_model(selected_model, model_type, selected_lora=None, quantization_bit=
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
 
-def generate_answer(history: list[dict[str, str | Any]], selected_model: str, model_type: str, selected_lora: str | None = None, local_model_path: str | None = None, lora_path: str | None = None, image_input: Any | None = None, api_key: str | None = None, device: str = "cpu", seed: int = 42, temperature: float = 1.0, top_k: int = 50, top_p: float = 1.0, repetition_penalty: float = 1.0, character_language: str = 'ko', vision_model: bool = False):
+def generate_answer(history: list[dict[str, str | Any]], selected_model: str, model_type: str, selected_lora: str | None = None, local_model_path: str | None = None, lora_path: str | None = None, image_input: str | Image | Any | None = None, api_key: str | None = None, device: str = "cpu", seed: int = 42, temperature: float = 1.0, top_k: int = 50, top_p: float = 1.0, repetition_penalty: float = 1.0, character_language: str = 'ko', vision_model: bool = False):
     """
     사용자 히스토리를 기반으로 답변 생성.
     """

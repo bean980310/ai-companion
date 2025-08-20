@@ -5,6 +5,8 @@ import warnings
 
 from typing import Any, Dict, List, Optional, Union, Iterator
 
+from PIL.Image import Image
+
 from .langchain_integrator import LangchainIntegrator
 
 try:
@@ -126,7 +128,7 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
             return {}
         
 class MlxVisionModelHandler(BaseVisionModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="mlx", use_langchain: bool = True, image_input=None, **kwargs):
+    def __init__(self, model_id, lora_model_id=None, model_type="mlx", use_langchain: bool = True, image_input: str | Image | Any | None = None, **kwargs):
         super().__init__(model_id, lora_model_id, use_langchain, image_input, **kwargs)
 
         self.sampler = None

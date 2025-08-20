@@ -1,7 +1,8 @@
 import gradio as gr
 import numpy as np
 import random
-from typing import List
+from typing import Any, List, Sequence
+from PIL.Image import Image
 
 from ..start_app import app_state, ui_component
 from .chatbot import Chatbot, ChatbotComponent, chat_bot, chat_main
@@ -15,6 +16,7 @@ from ..common.html import show_confetti
 from ..common.translations import translation_manager, _
 from ..api.comfy_api import ComfyUIClient
 from .header import HeaderUIComponent
+from ..characters import PersonaSpeechManager
 
 from .. import __version__
 
@@ -154,13 +156,13 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
         outputs=[chatbot]
     )
 
-    def init_session_dropdown(sessions):
+    def init_session_dropdown(sessions: list[str] | Sequence[str]) -> gr.update:
         if not sessions:
             return gr.update(choices=[], value=None)
         return gr.update(choices=sessions, value=sessions[0])
 
     @add_session_icon_btn.click(inputs=[character_dropdown, app_state.selected_language_state, app_state.speech_manager_state, app_state.history_state],outputs=[app_state.session_id_state, app_state.history_state, session_select_dropdown, session_select_info, chatbot])
-    def create_and_apply_session(chosen_character, chosen_language, speech_manager_state, history_state):
+    def create_and_apply_session(chosen_character: str, chosen_language: str, speech_manager_state: PersonaSpeechManager, history_state):
         """
         현재 캐릭터/언어에 맞춰 시스템 메시지를 가져온 뒤,
         새 세션을 생성합니다.
@@ -186,7 +188,7 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
     
     # 이벤트 핸들러
     @delete_session_icon_btn.click(inputs=[session_select_dropdown, app_state.session_id_state], outputs=[delete_modal, delete_message])
-    def show_delete_confirm(selected_sid, current_sid):
+    def show_delete_confirm(selected_sid: str, current_sid: str):
         """삭제 확인 모달 표시"""
         if not selected_sid:
             return gr.update(visible=True), "삭제할 세션을 선택하세요."
@@ -194,7 +196,7 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
             return gr.update(visible=True), f"현재 활성 세션 '{selected_sid}'은(는) 삭제할 수 없습니다."
         return gr.update(visible=True), f"세션 '{selected_sid}'을(를) 삭제하시겠습니까?"
             
-    def delete_selected_session(chosen_sid):
+    def delete_selected_session(chosen_sid: str):
         # 선택된 세션을 삭제 (주의: None 또는 ""인 경우 처리)
         result_msg, _, updated_dropdown = chat_bot.delete_session(chosen_sid, "demo_session")
         return result_msg, updated_dropdown
@@ -354,12 +356,12 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
         outputs=[diffusion_with_refiner_image_to_image_start]
     )
     
-    def process_uploaded_image(image):
+    def process_uploaded_image(image: str | Image | Any):
         print(image)
         image = client.upload_image(image, overwrite=True)
         return image
     
-    def process_uploaded_image_for_inpaint(image):
+    def process_uploaded_image_for_inpaint(image: str | Image | Any):
         print(image)
         im = {
             "background": image,
@@ -370,7 +372,7 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
         return image, gr.update(value=im)
     
     @image_inpaint_masking.apply(inputs=[image_inpaint_input, image_inpaint_masking], outputs=app_state.stored_image_inpaint)
-    def process_uploaded_image_inpaint(original_image, mask_image):
+    def process_uploaded_image_inpaint(original_image: str | Image | Any, mask_image: str | Image | Any):
         print(original_image)
         print(mask_image)
         mask = client.upload_mask(original_image, mask_image)
@@ -388,11 +390,11 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
         image_visible = mode == "Inpaint"
         return gr.update(visible=image_visible)
         
-    def toggle_image_inpaint_mask_interactive(image):
+    def toggle_image_inpaint_mask_interactive(image: str | Image | Any):
         image_interactive = image is not None
         return gr.update(interactive=image_interactive)
-    
-    def copy_image_for_inpaint(image_input, image):
+
+    def copy_image_for_inpaint(image_input: str | Image | Any, image: dict) -> gr.update:
         import cv2
         print(type(image_input))
         im = cv2.imread(image_input)
@@ -457,8 +459,8 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
         inputs=[text_model_dropdown],
         outputs=[text_api_key_text, text_lora_dropdown, multimodal_msg, msg]
     )
-        
-    def update_character_languages(selected_language, selected_character):
+
+    def update_character_languages(selected_language: str, selected_character: str):
         """
         인터페이스 언어에 따라 선택된 캐릭터의 언어를 업데이트합니다.
         """
@@ -552,7 +554,7 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
         inputs=[language_dropdown, character_dropdown],
         outputs=[title, session_select_info, language_dropdown, system_message_accordion, system_message_box, text_model_type_dropdown, text_model_dropdown, character_dropdown, text_api_key_text, msg, multimodal_msg, text_advanced_settings, text_seed_input, text_temperature_slider, text_top_k_slider, text_top_p_slider, text_repetition_penalty_slider, reset_btn, reset_all_btn, diffusion_model_type_dropdown, diffusion_model_dropdown, diffusion_api_key_text]
     )
-    def change_language(selected_lang, selected_character):
+    def change_language(selected_lang: str, selected_character: str):
         """언어 변경 처리 함수"""
         lang_map = {
             "한국어": "ko",

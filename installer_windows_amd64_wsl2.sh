@@ -20,10 +20,10 @@ uv pip install -r requirements/windows_amd64_wsl2_cu128/requirements_ai_models.t
 echo "Installing requirements..."
 uv pip install outetts
 uv pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124 --upgrade
-uv pip install protobuf==5.29.5 transformers --upgrade
+uv pip install protobuf transformers --upgrade
 uv pip install xai-sdk
 uv pip install "langchain-chroma>=0.1.2" "langchain-neo4j>=0.4.0"
-uv pip install fsspec==2025.3.0 numpy==2.1.3 psutil==7.0.0
+uv pip install fsspec numpy psutil pandas --upgrade
 
 echo "Checking python package"
 uv pip check

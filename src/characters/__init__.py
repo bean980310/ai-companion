@@ -10,7 +10,7 @@ __all__ = [
     "PRESET_IMAGES"
 ]
 
-def handle_character_change(selected_character, language, speech_manager: PersonaSpeechManager):
+def handle_character_change(selected_character: str, language: str, speech_manager: PersonaSpeechManager):
     try:
         speech_manager.set_character_and_language(selected_character, language)
         system_message = speech_manager.get_system_message()

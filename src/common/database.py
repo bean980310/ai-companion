@@ -10,7 +10,10 @@ from datetime import datetime
 import csv
 from pathlib import Path
 
+from PIL.Image import Image
+
 from src.common.character_info import characters
+from .translations import TranslationManager
 
 # logger = logging.getLogger(__name__)
 
@@ -30,7 +33,7 @@ class PresetResult:
 class ChatMessage:
     """채팅 메시지를 표현하는 데이터 클래스"""
     role: str
-    content: str | Any
+    content: str | Image | Any
     timestamp: Optional[datetime] = None
 
 @dataclass
@@ -218,7 +221,7 @@ def ensure_demo_session() -> None:
         logger.error(f"Error ensuring demo session: {e}")
         raise DatabaseInitError(f"Failed to ensure demo session: {e}")
 
-def initialize_app(translation_manager) -> None:
+def initialize_app(translation_manager: TranslationManager) -> None:
     """애플리케이션 시작 시 필요한 모든 초기화를 수행합니다."""
     try:
         initialize_database()
@@ -254,7 +257,7 @@ initialize_presets_db()
 
 # database.py
 
-def insert_default_presets(translation_manager, overwrite=True) -> None:
+def insert_default_presets(translation_manager: TranslationManager, overwrite: bool=True) -> None:
     """기본 프리셋을 데이터베이스에 삽입 또는 업데이트
     
     Args:
@@ -500,7 +503,7 @@ def get_preset_choices(language: str) -> List[str]:
         return []
 
 # 프리셋 추가 핸들러
-def handle_add_preset(name, language, content, confirm_overwrite=False):
+def handle_add_preset(name: str, language: str, content: str, confirm_overwrite: bool = False):
     if not name.strip() or not content.strip():
         return "❌ 프리셋 이름과 내용을 모두 입력해주세요.", gr.update(choices=get_preset_choices(language)), False
     
@@ -519,7 +522,7 @@ def handle_add_preset(name, language, content, confirm_overwrite=False):
 
 
 # 프리셋 삭제 핸들러
-def handle_delete_preset(name, language):
+def handle_delete_preset(name: str, language: str):
     if not name:
         return "❌ 삭제할 프리셋을 선택해주세요.", gr.update(choices=get_preset_choices(language))
     success, message = delete_system_preset(name, language)
@@ -609,7 +612,7 @@ def save_chat_history_db(history: list[dict[str, str | Any]], session_id: str="d
         logger.error(f"Error saving chat history to DB: {e}")
         return False
 
-def update_last_character_in_db(session_id, character):
+def update_last_character_in_db(session_id: str, character: str):
     try:
         with sqlite3.connect("chat_history.db") as conn:
             cursor = conn.cursor()
@@ -617,8 +620,8 @@ def update_last_character_in_db(session_id, character):
             conn.commit()
     except Exception as e:
         logger.error(f"Error updating last character: {e}")
-        
-def save_chat_history(history):
+
+def save_chat_history(history: List[Dict[str, str]]) -> Optional[str]:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     file_name = f"chat_history_{timestamp}.json"
     try:
@@ -630,7 +633,7 @@ def save_chat_history(history):
         logger.error(f"채팅 히스토리 저장 중 오류: {e}")
         return None
 
-def save_chat_history_csv(history):
+def save_chat_history_csv(history: List[Dict[str, str]]) -> Optional[str]:
     """
     채팅 히스토리를 CSV 형태로 저장
     """
@@ -650,8 +653,8 @@ def save_chat_history_csv(history):
     except Exception as e:
         logger.error(f"채팅 히스토리 CSV 저장 중 오류: {e}")
         return None
-    
-def save_chat_button_click(history):
+
+def save_chat_button_click(history: List[Dict[str, str]]) -> str:
     if not history:
         return "채팅 이력이 없습니다."
     saved_path = save_chat_history(history)

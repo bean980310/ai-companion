@@ -1,6 +1,15 @@
 from abc import ABC, abstractmethod
+from functools import partial
 from typing import Any
 import os
+
+import torch.nn
+import mlx.nn
+from PIL.Image import Image
+from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast, PreTrainedTokenizerBase, GenerationMixin, PreTrainedModel, TFGenerationMixin, FlaxGenerationMixin, AutoModelForImageTextToText, AutoModel, AutoProcessor, ProcessorMixin, AutoConfig, PretrainedConfig, GenerationConfig
+from transformers.models.auto.modeling_auto import _BaseModelWithGenerate
+from peft import PeftModel
+from mlx_lm.tokenizer_utils import TokenizerWrapper, SPMStreamingDetokenizer, BPEStreamingDetokenizer, NaiveStreamingDetokenizer
 
 class BaseModel(ABC):
     def __init__(self, use_langchain: bool = True, **kwargs):
@@ -23,18 +32,18 @@ class BaseModel(ABC):
         pass
 
 class BaseModelHandler(BaseModel):
-    def __init__(self, model_id: str, lora_model_id: str = None, use_langchain: bool = True, image_input = None, **kwargs):
+    def __init__(self, model_id: str, lora_model_id: str | None = None, use_langchain: bool = True, image_input: str | Image | Any | None = None, **kwargs):
         super().__init__(use_langchain, **kwargs)
-        self.model_id = model_id
-        self.lora_model_id = lora_model_id
-        self.config = None
-        self.local_model_path = os.path.join("./models/llm", model_id)
-        self.local_lora_model_path = os.path.join("./models/llm/loras", lora_model_id) if lora_model_id else None
+        self.model_id: str = model_id
+        self.lora_model_id: str | None = lora_model_id
+        self.config: AutoConfig | PretrainedConfig | GenerationConfig | Any | None = None
+        self.local_model_path: str = os.path.join("./models/llm", model_id)
+        self.local_lora_model_path: str | None = os.path.join("./models/llm/loras", lora_model_id) if lora_model_id else None
         self.image_input = image_input
 
-        self.processor = None
-        self.tokenizer = None
-        self.model = None
+        self.processor: AutoProcessor | ProcessorMixin | Any | None = None
+        self.tokenizer: AutoTokenizer | PreTrainedTokenizer | PreTrainedTokenizerFast | PreTrainedTokenizerBase | TokenizerWrapper | type[SPMStreamingDetokenizer] | partial[SPMStreamingDetokenizer] | type[BPEStreamingDetokenizer] | type[NaiveStreamingDetokenizer] | Any | None = None
+        self.model: torch.nn.Module | mlx.nn.Module | PreTrainedModel | GenerationMixin | TFGenerationMixin | FlaxGenerationMixin | AutoModelForCausalLM | AutoModelForImageTextToText | AutoModel | PeftModel | Any | None = None
 
     @abstractmethod
     def load_model(self):
@@ -53,7 +62,7 @@ class BaseModelHandler(BaseModel):
         pass
 
 class BaseCausalModelHandler(BaseModelHandler):
-    def __init__(self, model_id: str, lora_model_id: str = None, use_langchain: bool = True, **kwargs):
+    def __init__(self, model_id: str, lora_model_id: str | None = None, use_langchain: bool = True, **kwargs):
         super().__init__(model_id, lora_model_id, use_langchain, **kwargs)
         
     @abstractmethod
@@ -72,7 +81,7 @@ class BaseCausalModelHandler(BaseModelHandler):
     def load_template(self, messages):
         pass
 class BaseVisionModelHandler(BaseModelHandler):
-    def __init__(self, model_id: str, lora_model_id: str = None, use_langchain: bool = True, image_input = None, **kwargs):
+    def __init__(self, model_id: str, lora_model_id: str | None = None, use_langchain: bool = True, image_input: str | Image | Any | None = None, **kwargs):
         super().__init__(model_id, lora_model_id, use_langchain, image_input, **kwargs)
         
     @abstractmethod
@@ -91,7 +100,7 @@ class BaseVisionModelHandler(BaseModelHandler):
     def load_template(self, messages):
         pass
 class BaseAPIClientWrapper(BaseModel):
-    def __init__(self, selected_model: str, api_key: str = "None", use_langchain: bool = True, **kwargs):
+    def __init__(self, selected_model: str, api_key: str | None = None , use_langchain: bool = True, **kwargs):
         super().__init__(use_langchain, **kwargs)
         self.model = selected_model
         self.api_key = api_key

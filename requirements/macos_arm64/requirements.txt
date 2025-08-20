@@ -1,7 +1,7 @@
 setuptools
 wheel
 scikit-build-core
-numpy>=2.0.2,<2.2.0
+numpy>=2.0.2
 numba>=0.60.0
 pandas>=2.0.0
 matplotlib
@@ -9,7 +9,7 @@ scikit-learn
 beautifulsoup4==4.13.4
 sympy==1.14.0
 scipy==1.16.0
-protobuf==5.29.5
+protobuf
 packaging==25.0
 fsspec==2025.3.0
 pyyaml==6.0.2
@@ -36,7 +36,7 @@ neo4j
 tensorflow
 tensorboard
 keras
-tf-keras
+# tf-keras
 tensorflow-metal
 torch>=2.8.0
 torchvision

@@ -1,5 +1,7 @@
 from transformers import AutoTokenizer, AutoProcessor, AutoModel, AutoModelForImageTextToText, AutoModelForCausalLM, GenerationConfig, Llama4ForConditionalGeneration, TextStreamer, TextIteratorStreamer, Qwen3ForCausalLM, Qwen3MoeForCausalLM, Mistral3ForConditionalGeneration, MistralForCausalLM, Llama4Processor, LlamaTokenizer
 
+from transformers.models.auto.modeling_auto import _BaseModelWithGenerate
+
 from transformers.tokenization_mistral_common import MistralCommonTokenizer
 
 from .langchain_integrator import LangchainIntegrator
@@ -12,6 +14,8 @@ import threading
 from src import logger
 
 from typing import Any, List
+
+from PIL.Image import Image
 
 from .base_handlers import BaseCausalModelHandler, BaseVisionModelHandler, BaseModelHandler
 
@@ -126,7 +130,7 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
             )
         
 class TransformersVisionModelHandler(BaseVisionModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', use_langchain: bool = True, image_input = None, **kwargs):
+    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', use_langchain: bool = True, image_input: str | Image | Any | None = None, **kwargs):
         super().__init__(model_id, lora_model_id, use_langchain, image_input, **kwargs)
 
         self.image_input = image_input

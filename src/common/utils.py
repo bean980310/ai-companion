@@ -11,7 +11,8 @@ from huggingface_hub import (
     HfApi, 
     snapshot_download,
     model_info,
-    login
+    login,
+    hf_hub_download
 )
 from llama_cpp import Llama
 from model_converter import convert_model_to_float8, convert_model_to_int8, convert_model_to_int4
@@ -310,7 +311,7 @@ def get_model_list_from_hf_hub():
     api.token = login(new_session=False)
     api.list_models(sort="lastModified", direction=-1, limit=100)
 
-def download_model_from_hf(hf_repo_id: str, target_dir: str, model_type: str = "transformers", quantization_bit: str = None) -> str:
+def download_model_from_hf(hf_repo_id: str, target_dir: str, model_type: str = "transformers", quantization_bit: str | None = None) -> str:
     """
     동기식 모델 다운로드
     model_type: "transformers", "gguf", "mlx" 중 선택
@@ -330,18 +331,16 @@ def download_model_from_hf(hf_repo_id: str, target_dir: str, model_type: str = "
     logger.info(f"[*] 모델 '{hf_repo_id}'을(를) '{target_dir}'에 다운로드 중...")
     try:
         if model_type=="gguf":
-            Llama.from_pretrained(
+            hf_hub_download(
                 repo_id=hf_repo_id,
+                local_dir=target_dir,
                 filename=f"*{quantization_bit}.gguf",
-                local_dir=target_base_dir,
-                hf=True
             )
         else:
             snapshot_download(
                 repo_id=hf_repo_id,
                 local_dir=target_dir,
-                ignore_patterns=["*.md", ".gitattributes", "original/", "LICENSE.txt", "LICENSE"],
-                local_dir_use_symlinks=False
+                ignore_patterns=["*.md", ".gitattributes", "original/", "LICENSE.txt", "LICENSE"]
             )
         remove_hf_cache(hf_repo_id)
         msg = f"[+] 다운로드 & 저장 완료: {target_dir}"
@@ -576,8 +575,15 @@ def clear_all_model_cache():
     # 2) (선택) 로컬 폴더 .cache 삭제
     #    예: ./models/*/.cache 폴더 전부 삭제
     #    원치 않으면 주석처리
-    
-    
+
+    try:
+        import mlx.core as mx
+        mx.clear_cache()
+        mx.metal.clear_cache()
+
+    except Exception as e:
+        logger.error(f"MLX 캐시 삭제 중 오류 발생: {e}")
+
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
     elif torch.backends.mps.is_available():

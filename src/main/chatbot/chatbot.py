@@ -25,7 +25,7 @@ from ...start_app import ui_component
 import requests
 import base64
 from io import BytesIO
-from PIL import Image
+from PIL.Image import Image
 import pandas as pd
 
 from src import logger
@@ -130,7 +130,7 @@ class Chatbot:
         else:
             return history, gr.update(value=content), None
 
-    def process_message_user(self, user_input: str | dict[str, str | Any] | Any, session_id: str, history: list[dict[str, str | Any]], system_msg: str, selected_character: str, language: str):
+    def process_message_user(self, user_input: str | dict[str, str | Image | Any] | Any, session_id: str, history: list[dict[str, str | Image | Any]], system_msg: str, selected_character: str, language: str):
         """
         사용자 메시지를 처리하고 봇 응답을 생성하는 통합 함수.
 
@@ -197,7 +197,7 @@ class Chatbot:
         
         return "", history, self.filter_messages_for_chatbot(history)
 
-    def process_message_bot(self, session_id: str, history: list[dict[str, str | Any]], selected_model: str, selected_lora: str, custom_path: str, user_input: str | dict[str, str | Any] | Any, api_key: str, device: str, seed: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float, language: str):
+    def process_message_bot(self, session_id: str, history: list[dict[str, str | Image | Any]], selected_model: str | gr.Dropdown, selected_lora: str | gr.Dropdown, custom_path: str, user_input: str | dict[str, str | Image | Any] | Any, api_key: str, device: str, seed: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float, language: str):
         if isinstance(user_input, dict):
             files = user_input.get("files", [])
             if isinstance(files, (list, dict)):
@@ -565,14 +565,14 @@ class Chatbot:
             return history, None  # 오류 발생시에도 None 반환
     
     @staticmethod
-    def toggle_api_key_visibility(selected_model: str) -> bool:
+    def toggle_api_key_visibility(selected_model: str | gr.Dropdown) -> bool:
         """
         OpenAI API Key 입력 필드의 가시성을 제어합니다.
         """
         api_visible = selected_model in api_models
         return gr.update(visible=api_visible)
 
-    def toggle_standard_msg_input_visibility(self, selected_model: str) -> bool:
+    def toggle_standard_msg_input_visibility(self, selected_model: str | gr.Dropdown) -> bool:
         msg_visible = all(x not in selected_model.lower() for x in [
                 "vision",
                 "llava",
@@ -594,7 +594,7 @@ class Chatbot:
         self.vision_model = msg_visible
         return gr.update(visible=msg_visible)
 
-    def toggle_multimodal_msg_input_visibility(self, selected_model: str) -> bool:
+    def toggle_multimodal_msg_input_visibility(self, selected_model: str | gr.Dropdown) -> bool:
         msg_visible = any(x in selected_model.lower() for x in [
                 "vision",
                 "llava",
@@ -617,7 +617,7 @@ class Chatbot:
         return gr.update(visible=msg_visible)
 
     @staticmethod
-    def toggle_image_input_visibility(selected_model: str) -> bool:
+    def toggle_image_input_visibility(selected_model: str | gr.Dropdown) -> bool:
         """
         이미지 입력 필드의 가시성을 제어합니다.
         """
@@ -634,7 +634,7 @@ class Chatbot:
         return gr.update(visible=image_visible)
 
     @staticmethod
-    def toggle_lora_visibility(selected_model: str) -> bool:
+    def toggle_lora_visibility(selected_model: str | gr.Dropdown) -> bool:
         """
         LORA 파일 경로 입력 필드의 가시성을 제어합니다.
         """

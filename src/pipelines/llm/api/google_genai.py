@@ -8,7 +8,7 @@ from google.genai import types
 from ..langchain_integrator import LangchainIntegrator
 
 class GoogleAIClientWrapper(BaseAPIClientWrapper):
-    def __init__(self, selected_model, api_key="None", use_langchain: bool = True, **kwargs):
+    def __init__(self, selected_model: str, api_key: str | None = None, use_langchain: bool = True, **kwargs):
         super().__init__(selected_model, api_key, use_langchain, **kwargs)
 
         if self.use_langchain:

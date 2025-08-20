@@ -14,7 +14,7 @@ languages = {
 }
 
 
-def pdf_to_text(pdf_path: str, poppler_path: str=None, lang: str='eng') -> str:
+def pdf_to_text(pdf_path: str, poppler_path: str | None = None, lang: str='eng') -> str:
     """
     PDF 파일을 텍스트로 변환합니다.
     """
@@ -40,7 +40,7 @@ def image_to_text(image_path: str, lang: str='eng') -> str:
 
     return text
 
-def upload_handler(file_path, language):
+def upload_handler(file_path: str, language: str) -> str:
     """
     Args:
         file_path: 업로드된 파일 경로
