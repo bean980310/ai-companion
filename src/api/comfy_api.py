@@ -9,7 +9,7 @@ import urllib.parse
 import pandas as pd
 import os
 from requests_toolbelt import MultipartEncoder
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageFile
 import io
 import requests
 import datetime
@@ -83,10 +83,16 @@ class ComfyUIClient:
         if input_img is None:
             return None
         
-        with open(input_img, 'rb') as f:
-            file_data = f.read()
-        file_name = os.path.basename(input_img)
-        
+        if isinstance(input_img, Image.Image):
+            buffer = BytesIO()
+            input_img.save(buffer, format="PNG")
+            file_data = buffer.getvalue()
+            file_name = f"uploaded_image_{datetime.datetime.now().strftime('%y%m%d_%H%M%S')}.png"
+        else:
+            with open(input_img, 'rb') as f:
+                file_data = f.read()
+            file_name = os.path.basename(input_img)
+
         files = {"image": (file_name, file_data, "image/png")}
         data = {}
         # data["image"] = (file_name, file_data, "image/png")

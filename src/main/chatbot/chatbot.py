@@ -25,7 +25,7 @@ from ...start_app import ui_component
 import requests
 import base64
 from io import BytesIO
-from PIL.Image import Image
+from PIL import Image, ImageOps, ImageFile
 import pandas as pd
 
 from src import logger
@@ -130,7 +130,7 @@ class Chatbot:
         else:
             return history, gr.update(value=content), None
 
-    def process_message_user(self, user_input: str | dict[str, str | Image | Any] | Any, session_id: str, history: list[dict[str, str | Image | Any]], system_msg: str, selected_character: str, language: str):
+    def process_message_user(self, user_input: str | dict[str, str | Image.Image | Any] | Any, session_id: str, history: list[dict[str, str | Image.Image | Any]], system_msg: str, selected_character: str, language: str):
         """
         사용자 메시지를 처리하고 봇 응답을 생성하는 통합 함수.
 
@@ -197,7 +197,7 @@ class Chatbot:
         
         return "", history, self.filter_messages_for_chatbot(history)
 
-    def process_message_bot(self, session_id: str, history: list[dict[str, str | Image | Any]], selected_model: str | gr.Dropdown, selected_lora: str | gr.Dropdown, custom_path: str, user_input: str | dict[str, str | Image | Any] | Any, api_key: str, device: str, seed: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float, language: str):
+    def process_message_bot(self, session_id: str, history: list[dict[str, str | Image.Image | Any]], selected_model: str | gr.Dropdown, selected_lora: str | gr.Dropdown, custom_path: str, user_input: str | dict[str, str | Image.Image | Any] | Any, api_key: str, device: str, seed: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float, language: str):
         if isinstance(user_input, dict):
             files = user_input.get("files", [])
             if isinstance(files, (list, dict)):

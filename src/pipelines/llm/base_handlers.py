@@ -7,7 +7,6 @@ import torch.nn
 import mlx.nn
 from PIL.Image import Image
 from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast, PreTrainedTokenizerBase, GenerationMixin, PreTrainedModel, TFGenerationMixin, FlaxGenerationMixin, AutoModelForImageTextToText, AutoModel, AutoProcessor, ProcessorMixin, AutoConfig, PretrainedConfig, GenerationConfig
-from transformers.models.auto.modeling_auto import _BaseModelWithGenerate
 from peft import PeftModel
 from mlx_lm.tokenizer_utils import TokenizerWrapper, SPMStreamingDetokenizer, BPEStreamingDetokenizer, NaiveStreamingDetokenizer
 

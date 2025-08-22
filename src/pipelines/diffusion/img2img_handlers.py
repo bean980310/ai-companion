@@ -9,6 +9,8 @@ import random
 import traceback
 import os
 
+from PIL import Image, ImageOps, ImageFile, ImageMode
+
 from src.api.comfy_api import ComfyUIClient
 from workflows.load_workflow import load_img2img_workflow, load_img2img_sdxl_workflow, load_img2img_sdxl_with_refiner_workflow, load_img2img_workflow_clip_skip, load_img2img_sdxl_workflow_clip_skip, load_img2img_sdxl_with_refiner_workflow_clip_skip
 
@@ -34,7 +36,7 @@ def generate_images_to_images(
     cfg_scale: float,
     seed: int,
     random_seed: bool,
-    image_input: str,
+    image_input: str | Image.Image | ImageFile.ImageFile,
     denoise_strength: float,
     lora_text_weights_json: str,
     lora_unet_weights_json: str

@@ -6,12 +6,14 @@ import uuid
 import json
 import urllib.request
 import urllib.parse
-from typing import List
+from typing import List, Any
 import pandas as pd
 import random
 import traceback
 import os
 import gradio as gr
+
+from PIL import Image, ImageOps, ImageFile
 
 from src.pipelines.diffusion import generate_images, generate_images_with_refiner, generate_images_to_images, generate_images_to_images_with_refiner, generate_images_inpaint, generate_images_inpaint_with_refiner
 
@@ -19,9 +21,9 @@ from src.common.utils import get_all_diffusion_models
 from src.models import diffusion_api_models, diffusers_local, checkpoints_local
 from src import logger, os_name, arch
 
-def generate_images_wrapper(positive_prompt, negative_prompt, style, generation_step, img2img_step_start, diffusion_refiner_start, width, height,
-    diffusion_model, diffusion_refiner_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
-    batch_size, batch_count, cfg_scale, seed, random_seed, image_to_image_mode, image_input=None, image_inpaint_input=None, denoise_strength=1, blur_radius=5.0, blur_expansion_radius=1, api_key=None,
+def generate_images_wrapper(positive_prompt: str, negative_prompt: str, style: str, generation_step: int, img2img_step_start: int, diffusion_refiner_start: int, width: int, height: int,
+    diffusion_model: str, diffusion_refiner_model: str, diffusion_model_type: str, lora_multiselect: List[str], vae: str, clip_skip: int, enable_clip_skip: bool, clip_g: bool, sampler: str, scheduler: str,
+    batch_size: int, batch_count: int, cfg_scale: float, seed: int, random_seed: bool, image_to_image_mode: str, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, image_inpaint_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, denoise_strength: float = 1, blur_radius: float = 5.0, blur_expansion_radius: float = 1, api_key: str | None = None,
     # 이후 20개의 슬라이더 값 (max_diffusion_lora_rows * 2; 예를 들어 10행이면 20개)
     *lora_slider_values):
     n = len(lora_slider_values) // 2
