@@ -1,11 +1,6 @@
 import gradio as gr
 
-from .image_generation import (
-    generate_images_wrapper, 
-    update_diffusion_model_list,
-    toggle_diffusion_api_key_visibility,
-    get_allowed_diffusion_models,
-)
+from .image_generation import ImageGeneration
 
 from .component import DiffusionComponent
 from dataclasses import dataclass
@@ -15,6 +10,7 @@ from ...common.utils import get_diffusion_loras, get_diffusion_vae
 from ... import os_name, arch
 from ...start_app import app_state, ui_component
 
+image_gen = ImageGeneration()
 diff_component = DiffusionComponent()
 
 @dataclass
@@ -32,7 +28,7 @@ class DiffusionMain:
 
     @staticmethod
     def share_allowed_diffusion_models():
-        diffusion_choices, diffusion_type_choices = get_allowed_diffusion_models(os_name, arch)
+        diffusion_choices, diffusion_type_choices = image_gen.get_allowed_diffusion_models(os_name, arch)
         
         diffusion_lora_choices = get_diffusion_loras()
         diffusion_lora_choices = list(dict.fromkeys(diffusion_lora_choices))
@@ -40,7 +36,7 @@ class DiffusionMain:
         
         vae_choices = get_diffusion_vae()
         
-        diffusion_refiner_choices, diffusion_refiner_type_choices = get_allowed_diffusion_models(os_name, arch)
+        diffusion_refiner_choices, diffusion_refiner_type_choices = image_gen.get_allowed_diffusion_models(os_name, arch)
         
         if "None" not in diffusion_refiner_choices:
             diffusion_refiner_choices.insert(0, "None")
@@ -85,8 +81,4 @@ class DiffusionMain:
 
 diff_main = DiffusionMain()
 
-__all__ = [
-    'generate_images_wrapper', 
-    'update_diffusion_model_list', 
-    'toggle_diffusion_api_key_visibility',
-    'get_allowed_diffusion_models']
+__all__ = ['ImageGeneration']

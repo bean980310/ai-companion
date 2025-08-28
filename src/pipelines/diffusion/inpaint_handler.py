@@ -4,6 +4,7 @@ import json
 import urllib.request
 import urllib.parse
 from typing import List
+from PIL import Image, ImageOps, ImageFile
 import pandas as pd
 import random
 import traceback
@@ -34,7 +35,7 @@ def generate_images_inpaint(
     cfg_scale: float,
     seed: int,
     random_seed: bool,
-    image_input: str,
+    image_input: str | Image.Image | ImageFile.ImageFile,
     denoise_strength: float,
     blur_radius: float,
     blur_expansion_radius: int,

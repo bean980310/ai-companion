@@ -77,4 +77,4 @@ class ChatbotMain:
 
 chat_main = ChatbotMain()
 
-__all__ = ["Chatbot", "share_allowed_llm_models"]
+__all__ = ["Chatbot"]

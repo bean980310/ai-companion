@@ -2,7 +2,7 @@
 
 import random
 import platform
-from typing import Any
+from typing import Any, List
 import numpy as np
 import torch
 from src.common.cache import models_cache
@@ -25,7 +25,7 @@ from src.pipelines.llm.api import (
 from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models, convert_folder_to_modelid
 import gradio as gr
 from src.models import api_models
-from PIL.Image import Image
+from PIL import Image, ImageFile
 
 import traceback
 import openai
@@ -68,7 +68,7 @@ def refresh_model_list():
     return gr.update(choices=new_choices), "모델 목록을 새로고침했습니다."
 
 
-def load_model(selected_model: str, model_type: str, selected_lora: str | None = None, quantization_bit: str = "Q8_0", local_model_path: str | None = None, api_key: str | None = None, device: str = "cpu", lora_path: str | None = None, image_input: str | Image | Any | None = None, vision_model: bool = False, **kwargs):
+def load_model(selected_model: str, model_type: str, selected_lora: str | None = None, quantization_bit: str = "Q8_0", local_model_path: str | None = None, api_key: str | None = None, device: str = "cpu", lora_path: str | None = None, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, vision_model: bool = False, **kwargs):
     """
     모델 로드 함수. 특정 모델에 대한 로드 로직을 외부 핸들러로 분리.
     """
@@ -147,7 +147,7 @@ def load_model(selected_model: str, model_type: str, selected_lora: str | None =
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
 
-def generate_answer(history: list[dict[str, str | Any]], selected_model: str, model_type: str, selected_lora: str | None = None, local_model_path: str | None = None, lora_path: str | None = None, image_input: str | Image | Any | None = None, api_key: str | None = None, device: str = "cpu", seed: int = 42, temperature: float = 1.0, top_k: int = 50, top_p: float = 1.0, repetition_penalty: float = 1.0, character_language: str = 'ko', vision_model: bool = False):
+def generate_answer(history: list[dict[str, str | Any]], selected_model: str, model_type: str, selected_lora: str | None = None, local_model_path: str | None = None, lora_path: str | None = None, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, api_key: str | None = None, device: str = "cpu", seed: int = 42, temperature: float = 1.0, top_k: int = 50, top_p: float = 1.0, repetition_penalty: float = 1.0, character_language: str = 'ko', vision_model: bool = False):
     """
     사용자 히스토리를 기반으로 답변 생성.
     """
@@ -451,3 +451,33 @@ def generate_chat_title(first_message, selected_model, model_type, selected_lora
     except Exception as e:
         logger.error(f"채팅 제목 생성 오류: {str(e)}\n\n{traceback.format_exc()}")
         return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+    
+def generate_images(
+    positive_prompt: str,
+    negative_prompt: str,
+    style: str,
+    generation_step: int,
+    width: int,
+    height: int,
+    diffusion_model: str,
+    diffusion_model_type: str,
+    loras: List[str],
+    vae: str,
+    clip_skip: int,
+    enable_clip_skip: bool,
+    clip_g: bool,
+    sampler: str,
+    scheduler: str,
+    batch_size: int,
+    batch_count: int,
+    cfg_scale: float,
+    seed: int,
+    random_seed: bool,
+    image_input: str | Image.Image | ImageFile.ImageFile | Any,
+    denoise_strength: float,
+    blur_radius: float,
+    blur_expansion_radius: int,
+    lora_text_weights_json: str,
+    lora_unet_weights_json: str,
+):
+    use_comfyui = True if diffusion_model_type == "checkpoints" else False

@@ -14,6 +14,8 @@ from workflows.load_workflow import load_txt2img_workflow, load_txt2img_sdxl_wor
 
 from src import logger
 
+# class TextToImageHandler:
+
 def generate_images(
     positive_prompt: str,
     negative_prompt: str,

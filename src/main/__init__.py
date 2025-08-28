@@ -1,13 +1,12 @@
 import gradio as gr
 import numpy as np
 import random
-from typing import Any, List, Sequence
-from PIL.Image import Image
+from typing import Any, List, Sequence, Callable
+from PIL import Image
 
 from ..start_app import app_state, ui_component
-from .chatbot import Chatbot, ChatbotComponent, chat_bot, chat_main
-from .chatbot import ChatbotMain, chat_main
-from .image_generation import toggle_diffusion_api_key_visibility, update_diffusion_model_list, generate_images_wrapper, diff_main
+from .chatbot import Chatbot, ChatbotComponent, ChatbotMain, chat_bot, chat_main
+from .image_generation import diff_main, ImageGeneration, image_gen, DiffusionComponent, DiffusionMain
 from .sidebar import create_sidebar
 from .container import create_body_container
 from ..common.database import get_existing_sessions
@@ -267,7 +266,7 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
     
     diffusion_model_dropdown.change(
         fn=lambda selected_model: (
-            toggle_diffusion_api_key_visibility(selected_model)
+            image_gen.toggle_diffusion_api_key_visibility(selected_model)
         ),
         inputs=[diffusion_model_dropdown],
         outputs=[diffusion_api_key_text]
@@ -275,7 +274,7 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
     
     demo.load(
         fn=lambda selected_model: (
-            toggle_diffusion_api_key_visibility(selected_model)
+            image_gen.toggle_diffusion_api_key_visibility(selected_model)
         ),
         inputs=[diffusion_model_dropdown],
         outputs=[diffusion_api_key_text]
@@ -323,7 +322,7 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
     )
     
     diffusion_model_type_dropdown.change(
-        fn=update_diffusion_model_list,
+        fn=image_gen.update_diffusion_model_list,
         inputs=[diffusion_model_type_dropdown],
         outputs=[diffusion_model_dropdown]
     )
@@ -355,13 +354,13 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
         inputs=[diffusion_refiner_model_dropdown, image_to_image_mode],
         outputs=[diffusion_with_refiner_image_to_image_start]
     )
-    
-    def process_uploaded_image(image: str | Image | Any):
+
+    def process_uploaded_image(image: str | Image.Image | np.ndarray | Callable | Any):
         print(image)
         image = client.upload_image(image, overwrite=True)
         return image
     
-    def process_uploaded_image_for_inpaint(image: str | Image | Any):
+    def process_uploaded_image_for_inpaint(image: str | Image.Image | Any):
         print(image)
         im = {
             "background": image,
@@ -372,7 +371,7 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
         return image, gr.update(value=im)
     
     @image_inpaint_masking.apply(inputs=[image_inpaint_input, image_inpaint_masking], outputs=app_state.stored_image_inpaint)
-    def process_uploaded_image_inpaint(original_image: str | Image | Any, mask_image: str | Image | Any):
+    def process_uploaded_image_inpaint(original_image: str | Image.Image | Any, mask_image: list[str | Image.Image | Any]):
         print(original_image)
         print(mask_image)
         mask = client.upload_mask(original_image, mask_image)
@@ -390,18 +389,18 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
         image_visible = mode == "Inpaint"
         return gr.update(visible=image_visible)
         
-    def toggle_image_inpaint_mask_interactive(image: str | Image | Any):
+    def toggle_image_inpaint_mask_interactive(image: str | Image.Image | Any):
         image_interactive = image is not None
         return gr.update(interactive=image_interactive)
 
-    def copy_image_for_inpaint(image_input: str | Image | Any, image: dict) -> gr.update:
+    def copy_image_for_inpaint(image_input, image) -> gr.update:
         import cv2
         print(type(image_input))
         im = cv2.imread(image_input)
         height, width, channels = im.shape[:3]
-        image['background']=image_input
-        image['layers'][0]=np.zeros((height, width, 4), dtype=np.uint8)
-        
+        image['background'] = image_input
+        image['layers'][0] = np.zeros((height, width, 4), dtype=np.uint8)
+
         return gr.update(value=image)
         
     
@@ -509,7 +508,7 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
 
     # 이벤트 핸들러 연결
     generate_btn.click(
-        fn=generate_images_wrapper,
+        fn=image_gen.generate_images_wrapper,
         inputs=[
             positive_prompt_input,       # Positive Prompt
             negative_prompt_input,       # Negative Prompt

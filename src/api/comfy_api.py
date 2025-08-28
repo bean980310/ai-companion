@@ -89,9 +89,9 @@ class ComfyUIClient:
             file_data = buffer.getvalue()
             file_name = f"uploaded_image_{datetime.datetime.now().strftime('%y%m%d_%H%M%S')}.png"
         else:
-            with open(input_img, 'rb') as f:
-                file_data = f.read()
-            file_name = os.path.basename(input_img)
+            im = Image.open(input_img)
+            file_data = im.fp
+            file_name = im.filename
 
         files = {"image": (file_name, file_data, "image/png")}
         data = {}
