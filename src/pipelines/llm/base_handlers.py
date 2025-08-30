@@ -8,6 +8,7 @@ import mlx.nn
 from PIL.Image import Image
 from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast, PreTrainedTokenizerBase, GenerationMixin, PreTrainedModel, TFGenerationMixin, FlaxGenerationMixin, AutoModelForImageTextToText, AutoModel, AutoProcessor, ProcessorMixin, AutoConfig, PretrainedConfig, GenerationConfig
 from peft import PeftModel
+from llama_cpp import Llama
 from mlx_lm.tokenizer_utils import TokenizerWrapper, SPMStreamingDetokenizer, BPEStreamingDetokenizer, NaiveStreamingDetokenizer
 
 class BaseModel(ABC):
@@ -42,7 +43,7 @@ class BaseModelHandler(BaseModel):
 
         self.processor: AutoProcessor | ProcessorMixin | Any | None = None
         self.tokenizer: AutoTokenizer | PreTrainedTokenizer | PreTrainedTokenizerFast | PreTrainedTokenizerBase | TokenizerWrapper | type[SPMStreamingDetokenizer] | partial[SPMStreamingDetokenizer] | type[BPEStreamingDetokenizer] | type[NaiveStreamingDetokenizer] | Any | None = None
-        self.model: torch.nn.Module | mlx.nn.Module | PreTrainedModel | GenerationMixin | TFGenerationMixin | FlaxGenerationMixin | AutoModelForCausalLM | AutoModelForImageTextToText | AutoModel | PeftModel | Any | None = None
+        self.model: torch.nn.Module | mlx.nn.Module | PreTrainedModel | GenerationMixin | TFGenerationMixin | FlaxGenerationMixin | AutoModelForCausalLM | AutoModelForImageTextToText | AutoModel | PeftModel | Llama | Any | None = None
 
     @abstractmethod
     def load_model(self):

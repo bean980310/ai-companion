@@ -17,6 +17,12 @@ class GGUFCausalModelHandler(BaseCausalModelHandler):
         self.n_gpu_layers = -1 if device != 'cpu' else 0
         self.sampler = None
         self.logits_processors = None
+
+        if "qwen3" in self.model_id.lower():
+            if "instruct" in self.model_id.lower():
+                self.max_tokens = 16384
+            else:
+                self.max_tokens = 32768
         
         self.load_model()
         
@@ -32,7 +38,7 @@ class GGUFCausalModelHandler(BaseCausalModelHandler):
                 top_p=self.top_p,
                 repetition_penalty=self.repetition_penalty,
                 n_gpu_layers=self.n_gpu_layers,
-                verbose=True
+                verbose=True,
             )
         else:
             self.model = Llama(
@@ -40,7 +46,7 @@ class GGUFCausalModelHandler(BaseCausalModelHandler):
                 lora_path=self.local_lora_model_path,
                 n_gpu_layers=self.n_gpu_layers,
                 split_mode=llama_cpp.LLAMA_SPLIT_MODE_NONE,
-                logits_all=True
+                logits_all=True,
             )
         
     def generate_answer(self, history, **kwargs):
@@ -53,7 +59,8 @@ class GGUFCausalModelHandler(BaseCausalModelHandler):
                 temperature=self.temperature,
                 top_k=self.top_k,
                 top_p=self.top_p,
-                repeat_penalty=self.repetition_penalty
+                repeat_penalty=self.repetition_penalty,
+                max_tokens=2048,
             )
             return response["choices"][0]["message"]["content"]
 

@@ -120,7 +120,8 @@ class LangchainIntegrator:
                 top_p=self.top_p,
                 top_k=self.top_k,
                 repeat_penalty=self.repetition_penalty,
-                verbose=self.verbose
+                verbose=self.verbose,
+                n_ctx=2048,  # Ensure context length is set
             )
         elif backend_type == "mlx":
             # apple/mlx backend via llama.cpp; requires backend='mlx'

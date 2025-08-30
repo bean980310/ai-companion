@@ -6,7 +6,7 @@ numba>=0.60.0
 pandas>=2.0.0
 matplotlib
 scikit-learn
-beautifulsoup4==4.13.4
+beautifulsoup4==4.13.5
 sympy==1.14.0
 scipy==1.16.0
 protobuf
@@ -54,7 +54,7 @@ flax
 optimum
 optimum-quanto
 torchao
-# xformers>=0.0.30 --index-url https://download.pytorch.org/whl/cu128
+xformers>=0.0.32 --index-url https://download.pytorch.org/whl/cu128
 bitsandbytes
 onnxruntime-gpu
 faiss-gpu

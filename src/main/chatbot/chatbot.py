@@ -198,6 +198,7 @@ class Chatbot:
         return "", history, self.filter_messages_for_chatbot(history)
 
     def process_message_bot(self, session_id: str, history: list[dict[str, str | Image.Image | Any]], selected_model: str | gr.Dropdown, selected_lora: str | gr.Dropdown, custom_path: str, user_input: str | dict[str, str | Image.Image | Any] | Any, api_key: str, device: str, seed: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float, language: str):
+        image = None
         if isinstance(user_input, dict):
             files = user_input.get("files", [])
             if isinstance(files, (list, dict)):

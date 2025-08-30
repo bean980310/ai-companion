@@ -2,6 +2,8 @@ from io import BytesIO
 import numpy as np
 import torch
 from PIL import Image, ImageOps, ImageFilter, ImageFile
+import datetime
+import os
 
 class ImageProcessor:
     def __init__(self):
@@ -21,7 +23,10 @@ class ImageProcessor:
     @staticmethod
     def read_image_from_pil(img: Image.Image):
         fp = BytesIO()
-        return Image.open(img.save(fp, format="PNG"))
+        img.save(fp, format="PNG")
+        filename = f"uploaded_image_{datetime.datetime.now().strftime('%y%m%d_%H%M%S')}.png"
+
+        return filename.strip(), fp.getvalue()
 
     @staticmethod
     def read_image_from_bytes(img_bytes: bytes | bytearray):
@@ -29,7 +34,10 @@ class ImageProcessor:
     
     @staticmethod
     def read_image_from_str(img_path: str):
-        return Image.open(img_path)
+        im = Image.open(img_path)
+        im.filename = os.path.basename(img_path)
+
+        return im.filename.strip(), im.fp.read()
 
     @staticmethod
     def read_image_from_array(img_array: np.ndarray | torch.Tensor):
