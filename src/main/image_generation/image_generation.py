@@ -23,7 +23,7 @@ from src.common.utils import get_all_diffusion_models, detect_platform
 from src.models import diffusion_api_models, diffusers_local, checkpoints_local
 from src import logger, os_name, arch
 
-from ...api.comfy_api import ComfyUIClient
+from .upload import ComfyUIImageUpload
 
 class ImageGeneration:
     def __init__(self):
@@ -140,11 +140,68 @@ class ImageGeneration:
         return sorted(allowed), allowed_type
 
     @staticmethod
-    def process_uploaded_image(image: str | Image.Image | np.ndarray | Callable | Any):
-        client = ComfyUIClient()
+    def process_uploaded_image(image: str | ImageFile.ImageFile | Image.Image | np.ndarray | Callable | Any):
+        client = ComfyUIImageUpload()
         print(image)
         image = client.upload_image(image, overwrite=True)
         return image
+    
+    @staticmethod
+    def toggle_refiner_start_step(model):
+        slider_visible = model != "None"
+        return gr.update(visible=slider_visible)
+    
+    @staticmethod
+    def toggle_denoise_strength_dropdown(mode):
+        slider_visible = mode != "None"
+        return gr.update(visible=slider_visible)
+    
+    @staticmethod
+    def toggle_blur_radius_slider(mode):
+        slider_visible = mode == "Inpaint" or mode == "Inpaint Upload"
+        return gr.update(visible=slider_visible), gr.update(visible=slider_visible)
+    
+    @staticmethod
+    def toggle_diffusion_with_refiner_image_to_image_start(model, mode):
+        slider_visible = model != "None" and mode != "None"
+        return gr.update(visible=slider_visible)
+
+    @staticmethod
+    def toggle_image_to_image_input(mode):
+        image_visible = mode == "Image to Image"
+        return gr.update(visible=image_visible)
+
+    @staticmethod
+    def toggle_image_inpaint_input(mode):
+        image_visible = mode == "Inpaint"
+        return gr.update(visible=image_visible)
+
+    @staticmethod
+    def toggle_image_inpaint_mask(mode):
+        image_visible = mode == "Inpaint"
+        return gr.update(visible=image_visible)
+
+    @staticmethod
+    def toggle_image_inpaint_mask_interactive(image: str | Image.Image | Any):
+        image_interactive = image is not None
+        return gr.update(interactive=image_interactive)
+    
+    @staticmethod
+    def copy_image_for_inpaint(image_input, image) -> gr.update:
+        import cv2
+        print(type(image_input))
+        if isinstance(image_input, Image.Image):
+            temp = np.array(image_input)
+            temp_cv2 = cv2.cvtColor(temp, cv2.COLOR_RGB2BGR).copy()
+            im = temp_cv2
+        else:
+            im = cv2.imread(image_input)
+
+        height, width, channels = im.shape[:3]
+        image['background'] = image_input
+        image['layers'][0] = np.zeros((height, width, 4), dtype=np.uint8)
+
+        return gr.update(value=image)
 
     @staticmethod
     def api_image_generation(prompt, width, height, model, api_key=None):

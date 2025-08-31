@@ -327,38 +327,38 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
         outputs=[diffusion_model_dropdown]
     )
     
-    def toggle_refiner_start_step(model):
-        slider_visible = model != "None"
-        return gr.update(visible=slider_visible)
+    # def toggle_refiner_start_step(model):
+    #     slider_visible = model != "None"
+    #     return gr.update(visible=slider_visible)
     
-    def toggle_denoise_strength_dropdown(mode):
-        slider_visible = mode != "None"
-        return gr.update(visible=slider_visible)
+    # def toggle_denoise_strength_dropdown(mode):
+    #     slider_visible = mode != "None"
+    #     return gr.update(visible=slider_visible)
     
-    def toggle_blur_radius_slider(mode):
-        slider_visible = mode == "Inpaint" or mode == "Inpaint Upload"
-        return gr.update(visible=slider_visible), gr.update(visible=slider_visible)
+    # def toggle_blur_radius_slider(mode):
+    #     slider_visible = mode == "Inpaint" or mode == "Inpaint Upload"
+    #     return gr.update(visible=slider_visible), gr.update(visible=slider_visible)
     
-    def toggle_diffusion_with_refiner_image_to_image_start(model, mode):
-        slider_visible = model != "None" and mode != "None"
-        return gr.update(visible=slider_visible)
+    # def toggle_diffusion_with_refiner_image_to_image_start(model, mode):
+    #     slider_visible = model != "None" and mode != "None"
+    #     return gr.update(visible=slider_visible)
     
     diffusion_refiner_model_dropdown.change(
         fn=lambda model: (
-            toggle_refiner_start_step(model)
+            image_gen.toggle_refiner_start_step(model)
             ),
         inputs=[diffusion_refiner_model_dropdown],
         outputs=[diffusion_refiner_start]
     ).then(
-        fn=toggle_diffusion_with_refiner_image_to_image_start,
+        fn=image_gen.toggle_diffusion_with_refiner_image_to_image_start,
         inputs=[diffusion_refiner_model_dropdown, image_to_image_mode],
         outputs=[diffusion_with_refiner_image_to_image_start]
     )
 
-    def process_uploaded_image(image: str | Image.Image | np.ndarray | Callable | Any):
-        print(image)
-        image = client.upload_image(image, overwrite=True)
-        return image
+    # def process_uploaded_image(image: str | Image.Image | np.ndarray | Callable | Any):
+    #     print(image)
+    #     image = client.upload_image(image, overwrite=True)
+    #     return image
     
     def process_uploaded_image_for_inpaint(image: str | Image.Image | Any):
         print(image)
@@ -377,21 +377,21 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
         mask = client.upload_mask(original_image, mask_image)
         return mask
         
-    def toggle_image_to_image_input(mode):
-        image_visible = mode == "Image to Image"
-        return gr.update(visible=image_visible)
+    # def toggle_image_to_image_input(mode):
+    #     image_visible = mode == "Image to Image"
+    #     return gr.update(visible=image_visible)
     
-    def toggle_image_inpaint_input(mode):
-        image_visible = mode == "Inpaint"
-        return gr.update(visible=image_visible)
+    # def toggle_image_inpaint_input(mode):
+    #     image_visible = mode == "Inpaint"
+    #     return gr.update(visible=image_visible)
     
-    def toggle_image_inpaint_mask(mode):
-        image_visible = mode == "Inpaint"
-        return gr.update(visible=image_visible)
+    # def toggle_image_inpaint_mask(mode):
+    #     image_visible = mode == "Inpaint"
+    #     return gr.update(visible=image_visible)
         
-    def toggle_image_inpaint_mask_interactive(image: str | Image.Image | Any):
-        image_interactive = image is not None
-        return gr.update(interactive=image_interactive)
+    # def toggle_image_inpaint_mask_interactive(image: str | Image.Image | Any):
+    #     image_interactive = image is not None
+    #     return gr.update(interactive=image_interactive)
 
     def copy_image_for_inpaint(image_input, image) -> gr.update:
         import cv2
@@ -405,13 +405,13 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
         
     
     image_to_image_input.change(
-        fn=process_uploaded_image,
+        fn=image_gen.process_uploaded_image,
         inputs=image_to_image_input,
         outputs=app_state.stored_image
     )
     
     image_inpaint_input.upload(
-        fn=process_uploaded_image,
+        fn=image_gen.process_uploaded_image,
         inputs=[image_inpaint_input],
         outputs=app_state.stored_image
     ).then(
@@ -419,17 +419,17 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
         inputs=[image_inpaint_input, image_inpaint_masking],
         outputs=image_inpaint_masking
     ).then(
-        fn=toggle_image_inpaint_mask_interactive,
+        fn=image_gen.toggle_image_inpaint_mask_interactive,
         inputs=image_inpaint_input,
         outputs=image_inpaint_masking
     )
     
     image_to_image_mode.change(
         fn=lambda mode: (
-            toggle_image_to_image_input(mode),
-            toggle_image_inpaint_input(mode),
-            toggle_image_inpaint_mask(mode),
-            toggle_denoise_strength_dropdown(mode)
+            image_gen.toggle_image_to_image_input(mode),
+            image_gen.toggle_image_inpaint_input(mode),
+            image_gen.toggle_image_inpaint_mask(mode),
+            image_gen.toggle_denoise_strength_dropdown(mode)
             ),
         inputs=[image_to_image_mode],
         outputs=[image_to_image_input,
@@ -437,11 +437,11 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
                  image_inpaint_masking, 
                  denoise_strength_slider]
     ).then(
-        fn=toggle_diffusion_with_refiner_image_to_image_start,
+        fn=image_gen.toggle_diffusion_with_refiner_image_to_image_start,
         inputs=[diffusion_refiner_model_dropdown, image_to_image_mode],
         outputs=[diffusion_with_refiner_image_to_image_start]
     ).then(
-        fn=toggle_blur_radius_slider,
+        fn=image_gen.toggle_blur_radius_slider,
         inputs=[image_to_image_mode],
         outputs=[blur_radius_slider, blur_expansion_radius_slider]
     )
