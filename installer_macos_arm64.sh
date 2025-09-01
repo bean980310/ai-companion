@@ -9,7 +9,7 @@ echo "Installing pytorch..."
 uv pip install torch torchvision torchaudio
 
 echo "Installing tensorflow..."
-uv pip install tensorflow tensorboard keras tf-keras tensorflow-metal
+uv pip install tensorflow tensorboard keras tensorflow-metal
 
 echo "Installing requirements..."
 uv pip install -r requirements/macos_arm64/requirements.txt --no-build-isolation

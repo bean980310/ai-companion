@@ -60,7 +60,7 @@ Faster_whisper
 wavmark
 whisper-timestamped
 gguf
-llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/metal
+# llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/metal
 stable-diffusion-cpp-python
 tipo-kgen
 nexaai
