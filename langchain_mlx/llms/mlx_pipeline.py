@@ -186,6 +186,7 @@ class MLXPipeline(LLM):
             formatter=formatter,
             sampler=sampler,
             logits_processors=logits_processors,
+            max_kv_size=2048
         )
 
     def _stream(
@@ -441,6 +442,7 @@ class MLXVisionPipeline(LLM):
             formatter=formatter,
             sampler=sampler,
             logits_processors=logits_processors,
+            max_kv_size=2048
         )
 
     def _stream(

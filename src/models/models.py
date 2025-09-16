@@ -68,13 +68,13 @@ def refresh_model_list():
     return gr.update(choices=new_choices), "모델 목록을 새로고침했습니다."
 
 
-def load_model(selected_model: str, model_type: str, selected_lora: str | None = None, quantization_bit: str = "Q8_0", local_model_path: str | None = None, api_key: str | None = None, device: str = "cpu", lora_path: str | None = None, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, vision_model: bool = False, **kwargs):
+def load_model(selected_model: str, model_type: str, selected_lora: str | None = None, quantization_bit: str = "Q8_0", local_model_path: str | None = None, api_key: str | None = None, device: str = "cpu", lora_path: str | None = None, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, **kwargs):
     """
     모델 로드 함수. 특정 모델에 대한 로드 로직을 외부 핸들러로 분리.
     """
     model_id = selected_model
     lora_model_id = selected_lora if selected_lora else None
-    # vision_model: bool = kwargs.get("vision_model", False)
+    vision_model = True if image_input else False
     if model_type != "transformers" and model_type != "gguf" and model_type != "mlx" and model_type != "api":
         logger.error(f"지원되지 않는 모델 유형: {model_type}")
         return None
@@ -147,7 +147,7 @@ def load_model(selected_model: str, model_type: str, selected_lora: str | None =
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
 
-def generate_answer(history: list[dict[str, str | Any]], selected_model: str, model_type: str, selected_lora: str | None = None, local_model_path: str | None = None, lora_path: str | None = None, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, api_key: str | None = None, device: str = "cpu", seed: int = 42, temperature: float = 1.0, top_k: int = 50, top_p: float = 1.0, repetition_penalty: float = 1.0, character_language: str = 'ko', vision_model: bool = False):
+def generate_answer(history: list[dict[str, str | Any]], selected_model: str, model_type: str, selected_lora: str | None = None, local_model_path: str | None = None, lora_path: str | None = None, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, api_key: str | None = None, device: str = "cpu", seed: int = 42, temperature: float = 1.0, top_k: int = 50, top_p: float = 1.0, repetition_penalty: float = 1.0, character_language: str = 'ko'):
     """
     사용자 히스토리를 기반으로 답변 생성.
     """
@@ -262,7 +262,7 @@ def generate_answer(history: list[dict[str, str | Any]], selected_model: str, mo
     else:
         if not handler:
             logger.info(f"[*] 모델 로드 중: {selected_model}")
-            handler = load_model(selected_model, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path, image_input=image_input, temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty, vision_model=vision_model)
+            handler = load_model(selected_model, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path, image_input=image_input, seed=seed, temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty)
         
         if not handler:
             logger.error("모델 핸들러가 로드되지 않았습니다.")
@@ -270,10 +270,7 @@ def generate_answer(history: list[dict[str, str | Any]], selected_model: str, mo
         
         logger.info(f"[*] Generating answer using {handler.__class__.__name__}")
         try:
-            if isinstance(handler, TransformersVisionModelHandler) or isinstance(handler, MlxVisionModelHandler):
-                answer = handler.generate_answer(history, image_input, temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty)
-            else:
-                answer = handler.generate_answer(history, temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty)
+            answer = handler.generate_answer(history)
             return answer
         except Exception as e:
             logger.error(f"모델 추론 오류: {str(e)}\n\n{traceback.format_exc()}")

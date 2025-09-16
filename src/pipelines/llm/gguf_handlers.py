@@ -1,3 +1,4 @@
+from typing import Any, Generator
 import llama_cpp
 from llama_cpp import Llama # gguf 모델을 로드하기 위한 라이브러리
 from llama_cpp.llama_tokenizer import LlamaHFTokenizer
@@ -33,6 +34,7 @@ class GGUFCausalModelHandler(BaseCausalModelHandler):
                 model_name=self.local_model_path,
                 lora_model_name=self.local_lora_model_path,
                 max_tokens=self.max_tokens,
+                seed=self.seed,
                 temperature=self.temperature,
                 top_k=self.top_k,
                 top_p=self.top_p,
@@ -46,7 +48,7 @@ class GGUFCausalModelHandler(BaseCausalModelHandler):
                 lora_path=self.local_lora_model_path,
                 n_gpu_layers=self.n_gpu_layers,
                 split_mode=llama_cpp.LLAMA_SPLIT_MODE_NONE,
-                logits_all=True,
+                n_ctx=2048
             )
         
     def generate_answer(self, history, **kwargs):
@@ -56,6 +58,7 @@ class GGUFCausalModelHandler(BaseCausalModelHandler):
             prompt = [{"role": msg['role'], "content": msg['content']} for msg in history]
             response = self.model.create_chat_completion(
                 messages=prompt,
+                seed=self.seed,
                 temperature=self.temperature,
                 top_k=self.top_k,
                 top_p=self.top_p,
@@ -70,7 +73,7 @@ class GGUFCausalModelHandler(BaseCausalModelHandler):
     def load_template(self, messages):
         pass
         
-    def generate_chat_title(self, first_message: str)->str:
+    def generate_chat_title(self, first_message: str) -> str:
         prompt=(
             "Summarize the following message in one sentence and create an appropriate chat title:\n\n"
             f"{first_message}\n\n"

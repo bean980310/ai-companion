@@ -2,26 +2,51 @@ from abc import ABC, abstractmethod
 from functools import partial
 from typing import Any
 import os
+import platform
+import warnings
 
+import random
 import torch.nn
-import mlx.nn
-from PIL.Image import Image
+
+try:
+    import mlx.nn
+except ImportError:
+    if platform.system() == "Darwin" and platform.machine() == "arm64":
+        warnings.warn("langchain_mlx is not installed. Please install it to use MLX features.", UserWarning)
+    else:
+        pass
+
+from PIL import Image, ImageFile
 from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast, PreTrainedTokenizerBase, GenerationMixin, PreTrainedModel, TFGenerationMixin, FlaxGenerationMixin, AutoModelForImageTextToText, AutoModel, AutoProcessor, ProcessorMixin, AutoConfig, PretrainedConfig, GenerationConfig
 from peft import PeftModel
 from llama_cpp import Llama
-from mlx_lm.tokenizer_utils import TokenizerWrapper, SPMStreamingDetokenizer, BPEStreamingDetokenizer, NaiveStreamingDetokenizer
+
+try:
+    from mlx_lm.tokenizer_utils import TokenizerWrapper, SPMStreamingDetokenizer, BPEStreamingDetokenizer, NaiveStreamingDetokenizer
+except ImportError:
+    if platform.system() == "Darwin" and platform.machine() == "arm64":
+        warnings.warn("langchain_mlx is not installed. Please install it to use MLX features.", UserWarning)
+    else:
+        pass
 
 class BaseModel(ABC):
     def __init__(self, use_langchain: bool = True, **kwargs):
         self.use_langchain = use_langchain
 
-        self.max_tokens: int = kwargs.get("max_tokens", 2048)
-        self.temperature: float = kwargs.get("temperature", 1.0)
-        self.top_k: int = kwargs.get("top_k", 50)
-        self.top_p: float = kwargs.get("top_p", 1.0)
-        self.repetition_penalty: float = kwargs.get("repetition_penalty", 1.0)
+        self.max_tokens = int(kwargs.get("max_tokens", 2048))
+        self.seed = int(kwargs.get("seed", 42))
+        self.temperature = float(kwargs.get("temperature", 1.0))
+        self.top_k = int(kwargs.get("top_k", 50))
+        self.top_p = float(kwargs.get("top_p", 1.0))
+        self.repetition_penalty = float(kwargs.get("repetition_penalty", 1.0))
 
         self.langchain_integrator = None
+
+        self.use_chunking = bool(kwargs.get("use_chunking", False))
+        self.chunk_size = int(kwargs.get("chunk_size", 1024))
+
+        if self.seed == -1:
+            self.seed = random.randint(0, 4294967295)
 
     @abstractmethod
     def load_model(self):
@@ -32,7 +57,7 @@ class BaseModel(ABC):
         pass
 
 class BaseModelHandler(BaseModel):
-    def __init__(self, model_id: str, lora_model_id: str | None = None, use_langchain: bool = True, image_input: str | Image | Any | None = None, **kwargs):
+    def __init__(self, model_id: str, lora_model_id: str | None = None, use_langchain: bool = True, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, **kwargs):
         super().__init__(use_langchain, **kwargs)
         self.model_id: str = model_id
         self.lora_model_id: str | None = lora_model_id
@@ -81,7 +106,7 @@ class BaseCausalModelHandler(BaseModelHandler):
     def load_template(self, messages):
         pass
 class BaseVisionModelHandler(BaseModelHandler):
-    def __init__(self, model_id: str, lora_model_id: str | None = None, use_langchain: bool = True, image_input: str | Image | Any | None = None, **kwargs):
+    def __init__(self, model_id: str, lora_model_id: str | None = None, use_langchain: bool = True, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, **kwargs):
         super().__init__(model_id, lora_model_id, use_langchain, image_input, **kwargs)
         
     @abstractmethod

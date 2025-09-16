@@ -57,6 +57,44 @@ xai_api_models = [
     "grok-4",
 ]
 
+openrouter_api_models = [
+    "meta-llama/llama-3.3-70b-instruct",
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "meta-llama/llama-4-scout",
+    "meta-llama/llama-4-scout:free",
+    "meta-llama/llama-4-maverick",
+    "meta-llama/llama-4-maverick:free",
+    "qwen/qwen3-235b-a22b",
+    "qwen/qwen3-235b-a22b:free",
+    "qwen/qwen3-235b-a22b-2507",
+    "qwen/qwen3-235b-a22b-thinking-2507",
+    "qwen/qwen3-max",
+    "qwen/qwen2.5-vl-72b-instruct",
+    "qwen/qwen2.5-vl-72b-instruct:free",
+    "mistralai/mistral-small-24b-instruct-2501",
+    "mistralai/mistral-small-24b-instruct-2501:free",
+    "mistralai/mistral-small-3.2-24b-instruct",
+    "mistralai/mistral-small-3.2-24b-instruct:free",
+    "mistralai/magistral-small-2506",
+    "moonshotai/kimi-k2",
+    "moonshotai/kimi-k2:free",
+    "moonshotai/kimi-k2-0905",
+    "z-ai/glm-4.5-air",
+    "z-ai/glm-4.5-air:free",
+    "z-ai/glm-4.5",
+    "z-ai/glm-4.5v",
+    "deepseek/deepseek-chat-v3-0324",
+    "deepseek/deepseek-chat-v3-0324:free",
+    "deepseek/deepseek-r1",
+    "deepseek/deepseek-r1:free",
+    "deepseek/deepseek-r1-0528",
+    "deepseek/deepseek-r1-0528:free",
+    "deepseek/deepseek-chat-v3.1",
+    "deepseek/deepseek-chat-v3.1:free",
+    "minimax/minimax-01",
+    "minimax/minimax-m1",
+]
+
 api_models.extend(openai_api_models)
 api_models.extend(anthropic_api_models)
 api_models.extend(google_ai_api_models)

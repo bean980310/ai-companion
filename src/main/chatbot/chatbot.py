@@ -1,5 +1,5 @@
 # import logging
-from typing import Any
+from typing import Any, Generator
 import gradio as gr
 import os
 import secrets
@@ -130,7 +130,7 @@ class Chatbot:
         else:
             return history, gr.update(value=content), None
 
-    def process_message_user(self, user_input: str | dict[str, str | Image.Image | Any] | Any, session_id: str, history: list[dict[str, str | Image.Image | Any]], system_msg: str, selected_character: str, language: str):
+    def process_message_user(self, user_input: gr.Component |  str | dict[str, str | Image.Image | Any] | Any, session_id: str, history: list[dict[str, str | Image.Image | Any]] | list[gr.MessageDict | gr.ChatMessage], system_msg: str, selected_character: str, language: str):
         """
         사용자 메시지를 처리하고 봇 응답을 생성하는 통합 함수.
 
@@ -226,8 +226,7 @@ class Chatbot:
                 top_k=top_k,
                 top_p=top_p,
                 repetition_penalty=repetition_penalty,
-                character_language=language,
-                vision_model=self.vision_model
+                character_language=language
             )
             
             speech_manager = self.get_speech_manager(session_id)

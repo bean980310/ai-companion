@@ -1,15 +1,53 @@
+import os
+import warnings
+import platform
+from pathlib import Path
+from functools import partial
+
+import torch
+
+try:
+    import mlx.nn
+
+except ImportError:
+    if platform.system() == "Darwin" and platform.machine() == "arm64":
+        warnings.warn("langchain_mlx is not installed. Please install it to use MLX features.", UserWarning)
+    else:
+        pass
+
+try:
+    from mlx_lm.tokenizer_utils import TokenizerWrapper, SPMStreamingDetokenizer, BPEStreamingDetokenizer, NaiveStreamingDetokenizer
+except ImportError:
+    if platform.system() == "Darwin" and platform.machine() == "arm64":
+        warnings.warn("langchain_mlx is not installed. Please install it to use MLX features.", UserWarning)
+    else:
+        pass
+
+from transformers import pipeline, PreTrainedModel, GenerationMixin, TFGenerationMixin, FlaxGenerationMixin, AutoModel, AutoModelForCausalLM, AutoModelForImageTextToText
+from transformers import AutoProcessor, ProcessorMixin
+from transformers import AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast, PreTrainedTokenizerBase
+from peft import PeftModel
+from llama_cpp import Llama
+
+# import langchain.globals
+
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.language_models import BaseLLM, BaseChatModel
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.output_parsers import StrOutputParser, BaseOutputParser, JsonOutputParser, XMLOutputParser, PydanticOutputParser
+from langchain_core.output_parsers import StrOutputParser, BaseOutputParser, JsonOutputParser, XMLOutputParser, PydanticOutputParser, MarkdownListOutputParser
 from langchain.output_parsers import RetryOutputParser, RetryWithErrorOutputParser
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
-from langchain_core.runnables import RunnableConfig, RunnablePassthrough, RunnableWithMessageHistory
+from langchain_core.runnables import RunnableConfig, RunnablePassthrough, RunnableWithMessageHistory, RunnableSerializable, Runnable
 from langchain_community.chat_message_histories import ChatMessageHistory, SQLChatMessageHistory
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_chroma.vectorstores import Chroma
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import WebBaseLoader
+from langchain_community.document_loaders import RecursiveUrlLoader
+from langchain_community.document_loaders import PyPDFLoader, PyMuPDFLoader, PDFPlumberLoader
+from langchain_community.document_loaders import CSVLoader, UnstructuredCSVLoader
+from langchain_community.document_loaders import DirectoryLoader, TextLoader
+from langchain_unstructured import UnstructuredLoader
 # Back‑end specific chat/LLM wrappers
 from langchain_community.llms.llamacpp import LlamaCpp
 from langchain_community.chat_models.llamacpp import ChatLlamaCpp
@@ -21,12 +59,17 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_perplexity import ChatPerplexity        # Perplexity AI
 from langchain_xai import ChatXAI                      # xAI Grok
 
-import warnings
-import platform
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import START, MessagesState, StateGraph
 
 from transformers import pipeline, AutoTokenizer, AutoProcessor, AutoModelForCausalLM, AutoModelForImageTextToText, Qwen3ForCausalLM, Qwen3MoeForCausalLM, Llama4ForCausalLM, Llama4ForConditionalGeneration, Mistral3ForConditionalGeneration, Qwen2VLForConditionalGeneration, Qwen2_5_VLForConditionalGeneration
 
-from typing import Any
+from typing import Any, Generator, List, LiteralString, Literal
+
+from .state import State
+
+# langchain.globals.get_verbose()
+# langchain.globals.set_verbose(True)
 
 try:
     from langchain_mlx.llms import MLXPipeline
@@ -38,7 +81,7 @@ except ImportError:
         pass
 
 class LangchainIntegrator:
-    def __init__(self, backend_type: str, model_name: str = None, lora_model_name: str = None, model: AutoModelForCausalLM | AutoModelForImageTextToText | Qwen3ForCausalLM | Qwen3MoeForCausalLM | Llama4ForCausalLM | Llama4ForConditionalGeneration | Mistral3ForConditionalGeneration | Qwen2VLForConditionalGeneration | Qwen2_5_VLForConditionalGeneration = None, tokenizer: AutoTokenizer = None, processor: AutoProcessor = None, max_tokens: int = 512, temperature: float = 1.0, top_k: int = 50, top_p: float = 1.0, repetition_penalty: float = 1.0, api_key: str = None, **kwargs):
+    def __init__(self, backend_type: str, model_name: str = None, lora_model_name: str = None, model: torch.nn.Module | mlx.nn.Module | PreTrainedModel | GenerationMixin | TFGenerationMixin | FlaxGenerationMixin | AutoModelForCausalLM | AutoModelForImageTextToText | AutoModel | PeftModel | Llama | Any | None = None, tokenizer: AutoTokenizer | PreTrainedTokenizer | PreTrainedTokenizerFast | PreTrainedTokenizerBase | TokenizerWrapper | type[SPMStreamingDetokenizer] | partial[SPMStreamingDetokenizer] | type[BPEStreamingDetokenizer] | type[NaiveStreamingDetokenizer] | Any | None = None, processor: AutoProcessor | ProcessorMixin | Any | None = None, **kwargs):
         """
         Parameters
         ----------
@@ -74,28 +117,33 @@ class LangchainIntegrator:
         self.model_name = model_name
         self.model = model
         self.lora_model_name = lora_model_name
-        self.max_tokens = max_tokens
-        self.temperature = temperature
-        self.top_k = top_k
-        self.top_p = top_p
-        self.repetition_penalty = repetition_penalty
+        self.max_tokens = int(kwargs.get("max_tokens", 1024))
+        self.seed = int(kwargs.get("seed", 42))
+        self.temperature = float(kwargs.get("temperature", 1.0))
+        self.top_k = int(kwargs.get("top_k", 50))
+        self.top_p = float(kwargs.get("top_p", 1.0))
+        self.repetition_penalty = float(kwargs.get("repetition_penalty", 1.0))
+
+        self.chunk_size = int(kwargs.get("chunk_size", 2048))
 
         self.tokenizer = tokenizer
         self.processor = processor
 
-        self.api_key = api_key
+        self.api_key = str(kwargs.get("api_key", None))
 
-        self.n_gpu_layers = kwargs.get("n_gpu_layers", 1)
-        self.verbose: bool = kwargs.get("verbose", True)
+        self.n_gpu_layers = int(kwargs.get("n_gpu_layers", 1))
+        self.verbose = bool(kwargs.get("verbose", True))
 
         # Lazily initialise attributes
-        self.prompt = None
+        self.prompt: ChatPromptTemplate = None
         self.user_message = None
-        self.chat_history = None
+        self.chat_history: ChatMessageHistory = None
         self.chain = None
 
         # Build the chat/LLM instance based on backend_type
         self.chat: BaseChatModel = self._init_llm(backend_type.lower())
+
+        self.workflow = StateGraph(state_schema=State)
 
         # Kick off the first generation pass
         # self.generate_answer(history)
@@ -116,12 +164,14 @@ class LangchainIntegrator:
                 lora_path=self.lora_model_name,
                 n_gpu_layers=self.n_gpu_layers,
                 max_tokens=self.max_tokens,
+                seed=self.seed,
                 temperature=self.temperature,
                 top_p=self.top_p,
                 top_k=self.top_k,
                 repeat_penalty=self.repetition_penalty,
                 verbose=self.verbose,
                 n_ctx=2048,  # Ensure context length is set
+                n_batch=512,
             )
         elif backend_type == "mlx":
             # apple/mlx backend via llama.cpp; requires backend='mlx'
@@ -224,14 +274,32 @@ class LangchainIntegrator:
         self.load_template_with_langchain(history)
         self.chain = self.prompt | self.chat | StrOutputParser()
         if not self.chat_history.messages:
+            # if self.max_tokens > 2048:
+            #     chunks = []
+            #     response = ""
+            #     for chunk in self.chain.stream({"input": self.user_message.content}):
+            #         chunks.append(chunk)
+            #         print(chunk, end="", flush=True)
+            #     for i in range(len(chunks)):
+            #         response += "".join(chunks[i])
+            # else:
             response = self.chain.invoke({"input": self.user_message.content})
         else:
             chain_with_history = RunnableWithMessageHistory(
-                self.chain,
-                lambda session_id: self.chat_history,
-                input_messages_key="input",
-                history_messages_key="chat_history"
-            )
+                    self.chain,
+                    lambda session_id: self.chat_history,
+                    input_messages_key="input",
+                    history_messages_key="chat_history"
+                )
+            # if self.max_tokens > 2048:
+            #     chunks = []
+            #     response = ""
+            #     for chunk in chain_with_history.stream({"input": self.user_message.content}, {"configurable": {"session_id": "unused"}}):
+            #         chunks.append(chunk)
+            #         print(chunk, end="", flush=True)
+            #     for i in range(len(chunks)):
+            #         response += "".join(chunks[i])
+            # else:
             response = chain_with_history.invoke({"input": self.user_message.content}, {"configurable": {"session_id": "unused"}})
 
         return response
@@ -262,3 +330,20 @@ class LangchainIntegrator:
                     ("user", "{input}")
                 ]
             )
+
+    @staticmethod
+    def process_doc(src: str | Path | List[str] | List[Path]):
+        loader = UnstructuredLoader(src)
+
+        docs = loader.load()
+        splitter = RecursiveCharacterTextSplitter(chunk_size=2048, chunk_overlap=200)
+
+        chunks = []
+        doc_splitted = []
+        for doc in docs:
+            chunk = splitter.split_documents([doc])
+            chunks.extend(chunk)
+            doc_splitted.append(chunks)
+            chunks = []
+
+        return doc_splitted

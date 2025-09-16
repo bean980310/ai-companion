@@ -36,13 +36,16 @@ mistralai
 xai-sdk
 ollama>=0.5.3
 lmstudio>=1.4.1
-unstructured[pdf]>=0.18.13
+unstructured[all-docs]>=0.18.11
 langchain[community, anthropic, openai, google-genai, ollama, huggingface, perplexity, xai, mistralai]>=0.3.27
 langchain-chroma>=0.1.2
 langchain-neo4j>=0.4.0
+langchain-unstructured
+langchain-mcp-adapters
+langgraph
 qwen-vl-utils
 qwen-omni-utils
-gptqmodel==4.0.0
+gptqmodel>=4.0.0
 # gptqmodel @ git+https://github.com/ModelCloud/GPTQModel.git@29402342228414b81020a28a4c5b5828c1e76d59
 jiwer
 gtts>=2.5.4
@@ -60,7 +63,7 @@ Faster_whisper
 wavmark
 whisper-timestamped
 gguf
-# llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/metal
+llama-cpp-python --index-url https://abetlen.github.io/llama-cpp-python/whl/metal
 stable-diffusion-cpp-python
 tipo-kgen
 nexaai
@@ -92,7 +95,7 @@ scikit-learn
 beautifulsoup4==4.13.5
 sympy==1.14.0
 scipy==1.16.0
-protobuf
+protobuf==5.29.5
 packaging==25.0
 fsspec==2025.3.0
 pyyaml==6.0.2
@@ -116,10 +119,10 @@ easyocr
 pdf2image
 neo4j
 
-tensorflow
+tensorflow<2.20.0
 tensorboard
 keras
-# tf-keras
+tf-keras
 tensorflow-metal
 torch>=2.8.0
 torchvision
@@ -132,6 +135,8 @@ flax
 # optimum
 # optimum-quanto
 # torchao
+iopath
+layoutparser
 # xformers
 # bitsandbytes
 onnxruntime

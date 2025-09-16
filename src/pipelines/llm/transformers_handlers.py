@@ -1,4 +1,8 @@
-from transformers import AutoTokenizer, AutoProcessor, AutoModel, AutoModelForImageTextToText, AutoModelForCausalLM, GenerationConfig, Llama4ForConditionalGeneration, TextStreamer, TextIteratorStreamer, Qwen3ForCausalLM, Qwen3MoeForCausalLM, Mistral3ForConditionalGeneration, MistralForCausalLM, Llama4Processor, LlamaTokenizer
+import random
+import numpy as np
+import torch
+
+from transformers import AutoTokenizer, AutoProcessor, AutoModel, AutoModelForImageTextToText, AutoModelForCausalLM, GenerationConfig, Llama4ForConditionalGeneration, TextStreamer, TextIteratorStreamer, Qwen3ForCausalLM, Qwen3MoeForCausalLM, Mistral3ForConditionalGeneration, MistralForCausalLM, Llama4Processor, LlamaTokenizer, set_seed, BatchEncoding
 
 from transformers.tokenization_mistral_common import MistralCommonTokenizer
 
@@ -11,9 +15,9 @@ import threading
 
 from src import logger
 
-from typing import Any, List
+from typing import Any, Generator, List
 
-from PIL.Image import Image
+from PIL import Image, ImageFile
 
 from .base_handlers import BaseCausalModelHandler, BaseVisionModelHandler, BaseModelHandler
 
@@ -27,11 +31,14 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
             else:
                 self.max_tokens = 32768
 
+        
         self.max_new_tokens = self.max_tokens
-        self.enable_thinking = kwargs.get("enable_thinking", True)
-
+        self.enable_thinking = bool(kwargs.get("enable_thinking", True))
         self.device = device
 
+        set_seed(self.seed)
+        if torch.backends.mps.is_available():
+            torch.mps.manual_seed(self.seed)
         self.load_model()
         
     def load_model(self):
@@ -108,8 +115,6 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
             repetition_penalty=self.repetition_penalty
         )
 
-
-
     def load_template(self, messages):
         if self.enable_thinking:
             return self.tokenizer.apply_chat_template(
@@ -127,8 +132,41 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
                 tokenize=False
             )
         
+    def _generate_streaming(self, input_ids: Any | str | list[int] | list[str] | list[list[int]] | BatchEncoding) -> str | Generator[str, Any, None]:
+        """
+        Generate text in chunks to avoid very long single-pass generations.
+        Calls mlx_lm_generate repeatedly, appending the continuation each time.
+        Stops if EOS or no progress is made.
+        """
+
+        streamer = TextStreamer(self.tokenizer, skip_prompt=True)
+
+        _ = self.model.generate(
+            input_ids,
+            generation_config=self.config,
+            streamer=streamer,
+        )
+
+        generated_thinking = ""
+        generated_text = ""
+        temp = ""
+        for response in streamer:
+            print(response, end='', flush=True)
+            if "<think>" in response:
+                while "</think>" not in response:
+                    temp.join(response)
+                else:
+                    temp.join(response)
+                    _, generated_text = temp.split("</think>", 1)
+                    yield generated_text.strip()
+                
+            else:
+                generated_text.join(response)
+                yield generated_text.strip()
+
+
 class TransformersVisionModelHandler(BaseVisionModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', use_langchain: bool = True, image_input: str | Image | Any | None = None, **kwargs):
+    def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', use_langchain: bool = True, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, **kwargs):
         super().__init__(model_id, lora_model_id, use_langchain, image_input, **kwargs)
 
         self.image_input = image_input
@@ -136,6 +174,10 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
         self.max_new_tokens = self.max_tokens
 
         self.device = device
+
+        set_seed(self.seed)
+        if torch.backends.mps.is_available():
+            torch.mps.manual_seed(self.seed)
         self.load_model()
 
     def load_model(self):
@@ -182,6 +224,7 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
                 generated_text += text
 
             return generated_text.strip()
+        
         except Exception as e:
             logger.error(f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}")
             return f"Error generating answer: {str(e)}\n\n{traceback.format_exc()}"
@@ -211,7 +254,34 @@ class TransformersVisionModelHandler(BaseVisionModelHandler):
                 return_tensors="pt",
                 tokenize=False
             )
-            
+        
+    def _generate_streaming(self, inputs:  Any | str | list[int] | list[str] | list[list[int]] | BatchEncoding):
+        streamer = TextStreamer(self.processor, skip_prompt=True)
+
+        _ = self.model.generate(
+            **inputs,
+            generation_config=self.config,
+            streamer=streamer
+        )
+
+        generated_thinking = ""
+        generated_text = ""
+        temp = ""
+
+        for response in streamer:
+            print(response, end='', flush=True)
+            if "<think>" in response:
+                while "</think>" not in response:
+                    temp += ''.join(response)
+                else:
+                    temp += ''.join(response)
+                    _, generated_text = temp.split("</think>", 1)
+                    yield generated_text.strip()
+            else:
+                generated_text += ''.join(response)
+                yield generated_text.strip()
+
+
 # class TransformersLlama4ModelHandler(BaseModelHandler):
 #     def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', use_langchain: bool = True, **kwargs):
 #         super().__init__(model_id, lora_model_id, use_langchain, **kwargs)

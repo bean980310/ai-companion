@@ -137,7 +137,8 @@ class ChatbotComponent:
                     scale=9,
                     show_label=False,
                     elem_classes="message-input",
-                    submit_btn=True
+                    submit_btn=True,
+                    # stop_btn=True
                 )
                 multimodal_msg = gr.MultimodalTextbox(
                     label=_("message_input_label"),
@@ -146,7 +147,8 @@ class ChatbotComponent:
                     scale=9,
                     show_label=False,
                     elem_classes="message-input",
-                    submit_btn=True
+                    submit_btn=True,
+                    # stop_btn=True
                 )
         #         image_input = gr.Image(label=_("image_upload_label"), type="pil", visible=False)
         

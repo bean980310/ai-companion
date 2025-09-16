@@ -9,7 +9,7 @@ scikit-learn
 beautifulsoup4==4.13.5
 sympy==1.14.0
 scipy==1.16.0
-protobuf
+protobuf==5.29.5
 packaging==25.0
 fsspec==2025.3.0
 pyyaml==6.0.2
@@ -33,10 +33,10 @@ easyocr
 pdf2image
 neo4j
 
-tensorflow
+tensorflow<2.20.0
 tensorboard
 keras
-# tf-keras
+tf-keras
 torch>=2.8.0 --index-url https://download.pytorch.org/whl/cu126
 torchvision
 torchaudio
@@ -48,6 +48,8 @@ flax
 optimum
 optimum-quanto
 torchao
+iopath
+layoutparser
 xformers>=0.0.32 --index-url https://download.pytorch.org/whl/cu128
 bitsandbytes
 onnxruntime-gpu

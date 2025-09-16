@@ -1,18 +1,31 @@
+import random
+import numpy as np
+
 import traceback
 import os
 import platform
 import warnings
 
-from typing import Any, Dict, List, Optional, Union, Iterator
+from typing import Any, Dict, List, Optional, Union, Iterator, Generator
 
-from PIL.Image import Image
+from PIL import Image, ImageFile
 
 from .langchain_integrator import LangchainIntegrator
 
 try:
+    import mlx.core as mx
+except ImportError:
+    if platform.system() == "Darwin" and platform.machine() == "arm64":
+        warnings.warn("mlx is not installed. Please install it to use this library.", UserWarning)
+    else:
+        pass
+
+try:
     from mlx_lm import load as mlx_lm_load
     from mlx_lm import generate as mlx_lm_generate
+    from mlx_lm import stream_generate as mlx_lm_stream_generate
     from mlx_lm.sample_utils import make_sampler, make_logits_processors
+    from mlx_lm.generate import GenerationResponse
 except ImportError:
     if platform.system() == "Darwin" and platform.machine() == "arm64":
         warnings.warn("mlx_lm is not installed. Please install it to use MLX Chat.", UserWarning)
@@ -23,6 +36,7 @@ try:
     from mlx_vlm import load as mlx_vlm_load
     from mlx_vlm.utils import load_config
     from mlx_vlm import generate as mlx_vlm_generate
+    from mlx_vlm import stream_generate as mlx_vlm_stream_generate
     from mlx_vlm.prompt_utils import apply_chat_template
 except ImportError:
     if platform.system() == "Darwin" and platform.machine() == "arm64":
@@ -41,7 +55,7 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
         self.sampler = None
         self.logits_processors = None
         self.tokenizer_config = self.get_eos_token()
-        self.enable_thinking = kwargs.get("enable_thinking", True)
+        self.enable_thinking = bool(kwargs.get("enable_thinking", True))
 
         if "qwen3" in self.model_id.lower():
             if "instruct" in self.model_id.lower():
@@ -49,6 +63,7 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
             else:
                 self.max_tokens = 32768
 
+        self.set_seed(self.seed)
         self.load_model()
         
     def load_model(self):
@@ -73,7 +88,7 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
         else:
             text = self.load_template(history)
             self.get_settings()
-            response = mlx_lm_generate(self.model, self.tokenizer, prompt=text, verbose=True, sampler=self.sampler, logits_processors=self.logits_processors, max_tokens=self.max_tokens)
+            response = mlx_lm_generate(self.model, self.tokenizer, prompt=text, verbose=True, sampler=self.sampler, logits_processors=self.logits_processors, max_tokens=self.max_tokens, max_kv_size=2048)
 
             if "</think>" in response:
                 _, response = response.split("</think>", 1)
@@ -103,7 +118,7 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
                 add_generation_prompt=True
             )
         
-    def generate_chat_title(self, first_message: str)->str:
+    def generate_chat_title(self, first_message: str) -> str:
         prompt=(
             "Summarize the following message in one sentence and create an appropriate chat title:\n\n"
             f"{first_message}\n\n"
@@ -120,21 +135,54 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
     def get_eos_token(self):
         if "llama-3" in self.local_model_path.lower():
             return {"eos_token": "<|eot_id|>", "trust_remote_code": True}
-        elif any(k in self.local_lora_model_path.lower() for k in ["qwen2", "qwen3"]):
+        elif any(k in self.local_model_path.lower() for k in ["qwen2", "qwen3"]):
             return {"eos_token": "<|im_end|>", "trust_remote_code": True}
         elif any(k in self.local_model_path.lower() for k in ["mistral", "ministral", "mixtral", "magistral", "devstral"]):
             return {"eos_token": "</s>", "trust_remote_code": True}
         else:
             return {}
+
+    def _generate_streaming(self, prompt_text: str) -> str | Generator[GenerationResponse, None, None]:
+        """
+        Generate text in chunks to avoid very long single-pass generations.
+        Calls mlx_lm_generate repeatedly, appending the continuation each time.
+        Stops if EOS or no progress is made.
+        """
+
+        generated_text = ""
+        temp = ""
+        for response in mlx_lm_stream_generate(self.model, self.tokenizer, prompt=prompt_text, sampler=self.sampler, logits_processors=self.logits_processors, max_tokens=self.max_tokens):
+            print(response.text, end='', flush=True)
+            if "<think>" in response.text:
+                while "</think>" not in response.text:
+                    temp += ''.join(response.text)
+                else:
+                    temp += ''.join(response.text)
+                    _, generated_text = temp.split("</think>", 1)
+                    yield generated_text.strip()
+            else:
+                generated_text += ''.join(response.text)
+                yield generated_text.strip()
+
+
+        # return generated_text.strip()
+    
+    @staticmethod
+    def set_seed(seed):
+        random.seed(seed)
+        np.random.seed(seed)
+        mx.random.seed(seed)
         
+
 class MlxVisionModelHandler(BaseVisionModelHandler):
-    def __init__(self, model_id, lora_model_id=None, model_type="mlx", use_langchain: bool = True, image_input: str | Image | Any | None = None, **kwargs):
+    def __init__(self, model_id, lora_model_id=None, model_type="mlx", use_langchain: bool = True, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, **kwargs):
         super().__init__(model_id, lora_model_id, use_langchain, image_input, **kwargs)
 
         self.sampler = None
         self.logits_processors = None
         self.tokenizer_config = kwargs.get("tokenizer_config", {})
 
+        self.set_seed(self.seed)
         self.load_model()
 
     def load_model(self):
@@ -161,7 +209,7 @@ class MlxVisionModelHandler(BaseVisionModelHandler):
     def generate_answer(self, history, **kwargs):
         if self.image_input:
             formatted_prompt = self.load_template(history)
-            response = mlx_vlm_generate(self.model, self.processor, formatted_prompt, self.image_input, verbose=True, temperature=self.temperature, top_p=self.top_p, top_k=self.top_k, repetition_penalty=self.repetition_penalty, max_tokens=self.max_tokens)
+            response = mlx_vlm_generate(self.model, self.processor, formatted_prompt, self.image_input, verbose=True, temperature=self.temperature, top_p=self.top_p, top_k=self.top_k, repetition_penalty=self.repetition_penalty, max_tokens=self.max_tokens, max_kv_size=2048)
 
             return response.text.strip()
         else:
@@ -170,7 +218,7 @@ class MlxVisionModelHandler(BaseVisionModelHandler):
             else:
                 text = self.load_template(history)
                 self.get_settings()
-                response = mlx_lm_generate(self.model, self.tokenizer, prompt=text, verbose=True, sampler=self.sampler, logits_processors=self.logits_processors, max_tokens=self.max_tokens)
+                response = mlx_lm_generate(self.model, self.tokenizer, prompt=text, verbose=True, sampler=self.sampler, logits_processors=self.logits_processors, max_tokens=self.max_tokens, max_kv_size=2048)
 
                 return response.strip()
 
@@ -199,7 +247,7 @@ class MlxVisionModelHandler(BaseVisionModelHandler):
                 add_generation_prompt=True
             )
 
-    def generate_chat_title(self, first_message: str, image_input=None)->str:
+    def generate_chat_title(self, first_message: str, image_input=None) -> str:
         prompt=(
             "Summarize the following message in one sentence and create an appropriate chat title:\n\n"
             f"{first_message}\n\n"
@@ -215,6 +263,51 @@ class MlxVisionModelHandler(BaseVisionModelHandler):
 
         logger.info(f"생성된 채팅 제목: {title}")
         return title
+    
+    def _generate_streaming_vision(self, prompt_text: str) -> str | Generator[str, None, None]:
+        generated_text = ""
+        temp = ""
+
+        for response in mlx_vlm_stream_generate(self.model, self.processor, prompt_text, self.image_input, verbose=True, temperature=self.temperature, top_p=self.top_p, top_k=self.top_k, repetition_penalty=self.repetition_penalty, max_tokens=self.max_tokens):
+            print(response, end='', flush=True)
+            if "<think>" in response:
+                while "</think>" not in response:
+                    temp += ''.join(response)
+                else:
+                    temp += ''.join(response)
+                    _, generated_text = temp.split("</think>", 1)
+                    yield generated_text.strip()
+            else:
+                generated_text += ''.join(response)
+                yield generated_text.strip()
+
+    def _generate_streaming(self, prompt_text: str) -> str | Generator[GenerationResponse, None, None]:
+        """
+        Generate text in chunks to avoid very long single-pass generations.
+        Calls mlx_lm_generate repeatedly, appending the continuation each time.
+        Stops if EOS or no progress is made.
+        """
+
+        generated_text = ""
+        temp = ""
+        for response in mlx_lm_stream_generate(self.model, self.tokenizer, prompt=prompt_text, verbose=True, sampler=self.sampler, logits_processors=self.logits_processors, max_tokens=self.max_tokens):
+            print(response.text, end='', flush=True)
+            if "<think>" in response.text:
+                while "</think>" not in response.text:
+                    temp += ''.join(response.text)
+                else:
+                    temp += ''.join(response.text)
+                    _, generated_text = temp.split("</think>", 1)
+                    yield generated_text.strip()
+            else:
+                generated_text += ''.join(response.text)
+                yield generated_text.strip()
+
+    @staticmethod
+    def set_seed(seed):
+        random.seed(seed)
+        np.random.seed(seed)
+        mx.random.seed(seed)
     
 # class MlxLlama4ModelHandler(BaseModelHandler):
 #     def __init__(self, model_id, lora_model_id=None, model_type="mlx", image_input=None, use_langchain: bool = True, **kwargs):

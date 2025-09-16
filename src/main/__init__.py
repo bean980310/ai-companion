@@ -260,7 +260,7 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
 
     character_dropdown.change(
         fn=chat_bot.update_system_message_and_profile,
-        inputs=[character_dropdown, language_dropdown, app_state.speech_manager_state, app_state.session_id_state],
+        inputs=[character_dropdown, language_dropdown, app_state.session_id_state],
         outputs=[system_message_box, profile_image, preset_dropdown]
     )
     
