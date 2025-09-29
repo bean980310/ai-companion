@@ -56,7 +56,8 @@ from langchain_unstructured import UnstructuredLoader
 # Back‑end specific chat/LLM wrappers
 from langchain_community.llms.llamacpp import LlamaCpp
 from langchain_community.chat_models.llamacpp import ChatLlamaCpp
-from langchain_huggingface import HuggingFacePipeline, ChatHuggingFace, HuggingFaceEndpoint
+from langchain_huggingface import HuggingFacePipeline, HuggingFaceEndpoint
+from langchain_huggingface_hijack.chat_models import ChatHuggingface
 from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -117,6 +118,7 @@ class LangchainIntegrator:
             Extra args forwarded to the underlying LangChain chat/LLM class.
         """
 
+        self.backend_type = backend_type.lower()
         self.model_name = model_name
         self.model = model
         self.lora_model_name = lora_model_name
@@ -146,7 +148,7 @@ class LangchainIntegrator:
         self.chain = None
 
         # Build the chat/LLM instance based on backend_type
-        self.chat: BaseChatModel = self._init_llm(backend_type.lower())
+        self.chat: BaseChatModel | ChatHuggingFace | ChatLlamaCpp | ChatMLX | ChatOpenAI | ChatAnthropic | ChatGoogleGenerativeAI | ChatPerplexity | ChatXAI = self._init_llm(backend_type.lower())
 
         self.workflow = StateGraph(state_schema=State)
 
@@ -294,6 +296,11 @@ class LangchainIntegrator:
         #             response += block["text"]
 
         self.load_template_with_langchain(history)
+        if any(n in ["transformers", "mlx"] for n in self.backend_type):
+            if "qwen3" in self.model_name.lower() and "instruct" not in self.model_name.lower() and "thinking" not in self.model_name.lower():
+                self.chat._to_chat_prompt(messages=[history, self.user_message], enable_thinking=self.enable_thinking)
+            else:
+                self.chat._to_chat_prompt(messages=[history, self.user_message])
         self.chain = self.prompt | self.chat | StrOutputParser()
         if not self.chat_history.messages:
             # if self.max_tokens > 2048:

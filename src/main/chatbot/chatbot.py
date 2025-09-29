@@ -88,10 +88,10 @@ class Chatbot:
                 update_system_message_in_db(session_id, system_message)
                 update_last_character_in_db(session_id, character_name)
 
-            return system_message, selected_profile_image, gr.update(value=character_name)
+            return system_message, selected_profile_image, gr.update(value=character_name), gr.update(avatar_images=[None, selected_profile_image])
         except ValueError as ve:
             logger.error(f"Character setting error: {ve}")
-            return "시스템 메시지 로딩 중 오류가 발생했습니다.", None, gr.update()
+            return "시스템 메시지 로딩 중 오류가 발생했습니다.", None, gr.update(), gr.update()
         
     def handle_change_preset(self, new_preset_name: str, history: list[dict[str, str | Any]], language: str):
         """
@@ -126,9 +126,9 @@ class Chatbot:
         image_path = self.preset_images.get(new_preset_name)
         
         if image_path and os.path.isfile(image_path):
-            return history, gr.update(value=content), image_path
+            return history, gr.update(value=content), image_path, gr.update(avatar_images=[None, image_path])
         else:
-            return history, gr.update(value=content), None
+            return history, gr.update(value=content), None, gr.update()
 
     def process_message_user(self, user_input: gr.Component |  str | dict[str, str | Image.Image | Any] | Any, session_id: str, history: list[dict[str, str | Image.Image | Any]] | list[gr.MessageDict | gr.ChatMessage], system_msg: str, selected_character: str, language: str):
         """

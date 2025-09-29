@@ -100,6 +100,7 @@ class ChatMLX(BaseChatModel):
         messages: List[BaseMessage],
         tokenize: bool = False,
         return_tensors: Optional[str] = None,
+        **kwargs
     ) -> str:
         """Convert a list of messages into a prompt format expected by wrapped LLM."""
         if not messages:
@@ -114,6 +115,7 @@ class ChatMLX(BaseChatModel):
             tokenize=tokenize,
             add_generation_prompt=True,
             return_tensors=return_tensors,
+            **kwargs
         )
 
     def _to_chatml_format(self, message: BaseMessage) -> dict:

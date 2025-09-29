@@ -129,7 +129,8 @@ class ChatbotComponent:
                 height=400, 
                 label="Chatbot", 
                 type="messages", 
-                elem_classes=["chat-messages"]
+                elem_classes=["chat-messages"],
+                avatar_images=[None, characters[app_state.last_character]["profile_image"]]
             )
                             
             with gr.Row(elem_classes="input-area"):

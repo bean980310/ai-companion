@@ -54,7 +54,7 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
         
         self.sampler = None
         self.logits_processors = None
-        self.tokenizer_config = self.get_eos_token()
+        # self.tokenizer_config = self.get_eos_token()
 
         if self.max_length > 0:
             self.max_tokens = self.max_length
@@ -80,7 +80,7 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
                 top_p=self.top_p,
                 repetition_penalty=self.repetition_penalty,
                 verbose=True,
-                tokenizer_config=self.tokenizer_config
+                # tokenizer_config=self.tokenizer_config
             )
         else:
             self.model, self.tokenizer = mlx_lm_load(self.local_model_path, adapter_path=self.local_lora_model_path, lazy=True)
