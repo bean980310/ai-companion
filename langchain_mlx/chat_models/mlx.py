@@ -100,7 +100,6 @@ class ChatMLX(BaseChatModel):
         messages: List[BaseMessage],
         tokenize: bool = False,
         return_tensors: Optional[str] = None,
-        **kwargs
     ) -> str:
         """Convert a list of messages into a prompt format expected by wrapped LLM."""
         if not messages:
@@ -115,7 +114,6 @@ class ChatMLX(BaseChatModel):
             tokenize=tokenize,
             add_generation_prompt=True,
             return_tensors=return_tensors,
-            **kwargs
         )
 
     def _to_chatml_format(self, message: BaseMessage) -> dict:
@@ -278,3 +276,27 @@ class ChatMLX(BaseChatModel):
                 )
             kwargs["tool_choice"] = tool_choice
         return super().bind(tools=formatted_tools, **kwargs)
+    
+    def _to_chat_prompt_thinking(
+        self,
+        messages: List[BaseMessage],
+        tokenize: bool = False,
+        return_tensors: Optional[str] = None,
+        enable_thinking: bool = False,
+    ) -> str:
+        """Convert a list of messages into a prompt format expected by wrapped LLM."""
+        if not messages:
+            raise ValueError("At least one HumanMessage must be provided!")
+
+        if not isinstance(messages[-1], HumanMessage):
+            raise ValueError("Last message must be a HumanMessage!")
+
+        messages_dicts = [self._to_chatml_format(m) for m in messages]
+        
+        return self.tokenizer.apply_chat_template(
+            messages_dicts,
+            tokenize=tokenize,
+            add_generation_prompt=True,
+            return_tensors=return_tensors,
+            enable_thinking=enable_thinking,
+        )

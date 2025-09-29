@@ -147,7 +147,7 @@ def load_model(selected_model: str, model_type: str, selected_lora: str | None =
             models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
             return handler
 
-def generate_answer(history: list[dict[str, str | Any]], selected_model: str, model_type: str, selected_lora: str | None = None, local_model_path: str | None = None, lora_path: str | None = None, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, api_key: str | None = None, device: str = "cpu", seed: int = 42, max_length: int = -1, temperature: float = 1.0, top_k: int = 50, top_p: float = 1.0, repetition_penalty: float = 1.0, enable_thinking: bool = None, character_language: str = 'ko'):
+def generate_answer(history: list[dict[str, str | Any]], selected_model: str, model_type: str, selected_lora: str | None = None, local_model_path: str | None = None, lora_path: str | None = None, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, api_key: str | None = None, device: str = "cpu", seed: int = 42, max_length: int = -1, temperature: float = 1.0, top_k: int = 50, top_p: float = 1.0, repetition_penalty: float = 1.0, enable_thinking: bool = False, character_language: str = 'ko'):
     """
     사용자 히스토리를 기반으로 답변 생성.
     """

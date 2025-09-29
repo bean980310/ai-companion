@@ -32,6 +32,7 @@ class AppState:
     top_k_state: gr.State | None = None
     top_p_state: gr.State | None = None
     repetition_penalty_state: gr.State | None = None
+    enable_thinking_state: gr.State | None = None
     selected_language_state: gr.State | None = None
 
     reset_confirmation: gr.State | None = None

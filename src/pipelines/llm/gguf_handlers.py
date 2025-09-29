@@ -69,6 +69,8 @@ class GGUFCausalModelHandler(BaseCausalModelHandler):
                 max_tokens=self.max_tokens,
                 stream=True
             )
+            # answer = response["choices"][0]["message"]["content"]
+            # Streaming response handling (if needed)
             answer = ""
             for chunk in response:
                 delta = chunk["choices"][0]["delta"]

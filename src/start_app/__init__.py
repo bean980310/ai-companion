@@ -81,6 +81,7 @@ def register_app_state_3():
     top_p_state = gr.State(0.9)
     repetition_penalty_state = gr.State(1.1)
     selected_language_state = gr.State(default_language)
+    enable_thinking_state = gr.State(False)
     
     app_state.seed_state = seed_state
     app_state.max_length_state = max_length_state
@@ -89,7 +90,8 @@ def register_app_state_3():
     app_state.top_p_state = top_p_state
     app_state.repetition_penalty_state = repetition_penalty_state
     app_state.selected_language_state = selected_language_state
-    
+    app_state.enable_thinking_state = enable_thinking_state
+
     # return seed_state, temperature_state, top_k_state, top_p_state, repetition_penalty_state, selected_language_state
 
 def register_app_state_4():

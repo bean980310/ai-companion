@@ -256,7 +256,12 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
         inputs=[text_repetition_penalty_slider],
         outputs=[app_state.repetition_penalty_state]
     )
-            
+    text_enable_thinking_checkbox.change(
+        fn=lambda enable: enable if enable is True else False,
+        inputs=[text_enable_thinking_checkbox],
+        outputs=[app_state.enable_thinking_state]
+    )
+
     # 프리셋 변경 버튼 클릭 시 호출될 함수 연결
     gr.on(
         triggers=[character_dropdown.change, change_preset_button.click],
@@ -672,7 +677,7 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
             app_state.top_k_state,
             app_state.top_p_state,
             app_state.repetition_penalty_state,
-            text_enable_thinking_checkbox,
+            app_state.enable_thinking_state,
             app_state.selected_language_state,
         ],
         outputs=[

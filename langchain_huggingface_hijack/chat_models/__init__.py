@@ -1,1 +1,1 @@
-from .huggingface import ChatHuggingface
+from .huggingface import ChatHuggingFaceEnhanced

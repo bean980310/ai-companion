@@ -20,7 +20,7 @@ from langchain_core.messages import (
     ToolMessageChunk,
 )
 
-class ChatHuggingface(ChatHuggingFace):
+class ChatHuggingFaceEnhanced(ChatHuggingFace):
     r"""Hugging Face LLM's as ChatModels.
 
     Works with `HuggingFaceTextGenInference`, `HuggingFaceEndpoint`,
@@ -183,10 +183,10 @@ class ChatHuggingface(ChatHuggingFace):
         super().__init__(**kwargs)
         self._resolve_model_id()
 
-    def _to_chat_prompt(
+    def _to_chat_prompt_thinking(
         self,
         messages: list[BaseMessage],
-        **kwargs: Any,
+        enable_thinking: bool = False,
     ) -> str:
         """Convert a list of messages into a prompt format expected by wrapped LLM."""
         if not messages:
@@ -200,5 +200,5 @@ class ChatHuggingface(ChatHuggingFace):
         messages_dicts = [self._to_chatml_format(m) for m in messages]
 
         return self.tokenizer.apply_chat_template(
-            messages_dicts, tokenize=False, add_generation_prompt=True, **kwargs
+            messages_dicts, tokenize=False, add_generation_prompt=True, enable_thinking=enable_thinking,
         )

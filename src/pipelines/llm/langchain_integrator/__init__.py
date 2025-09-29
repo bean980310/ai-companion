@@ -56,8 +56,8 @@ from langchain_unstructured import UnstructuredLoader
 # Back‑end specific chat/LLM wrappers
 from langchain_community.llms.llamacpp import LlamaCpp
 from langchain_community.chat_models.llamacpp import ChatLlamaCpp
-from langchain_huggingface import HuggingFacePipeline, HuggingFaceEndpoint
-from langchain_huggingface_hijack.chat_models import ChatHuggingface
+from langchain_huggingface import HuggingFacePipeline, HuggingFaceEndpoint, ChatHuggingFace
+from langchain_huggingface_hijack.chat_models import ChatHuggingFaceEnhanced
 from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -162,7 +162,7 @@ class LangchainIntegrator:
             pipeline_kwargs={"max_new_tokens": self.max_tokens, "temperature": self.temperature, "top_p": self.top_p, "top_k": self.top_k, "repetition_penalty": self.repetition_penalty}
             pipe = pipeline(model=self.model, tokenizer=self.tokenizer, task="text-generation")
             llm = HuggingFacePipeline(pipeline=pipe, pipeline_kwargs=pipeline_kwargs, verbose=self.verbose)
-            return ChatHuggingFace(llm=llm, verbose=self.verbose, max_tokens=self.max_tokens, model_kwargs={})
+            return ChatHuggingFaceEnhanced(llm=llm, verbose=self.verbose, max_tokens=self.max_tokens, model_kwargs={})
         
         elif backend_type == "gguf":
             # Local GGUF (llama.cpp) model
@@ -183,7 +183,7 @@ class LangchainIntegrator:
         elif backend_type == "mlx":
             # apple/mlx backend via llama.cpp; requires backend='mlx'
             pipeline_kwargs = {"max_tokens": self.max_tokens, "temp": self.temperature, "top_p": self.top_p, "top_k": self.top_k, "repetition_penalty": self.repetition_penalty}
-            llm = MLXPipeline.from_model_id(model_id=self.model_name, adapter_file=self.lora_model_name, pipeline_kwargs=pipeline_kwargs, lazy=True)
+            llm = MLXPipeline.from_model_id(model_id=self.model_name, adapter_file=self.lora_model_name, pipeline_kwargs=pipeline_kwargs, tokenizer_config=self.tokenizer_config)
             return ChatMLX(llm=llm, verbose=self.verbose)
         
         elif backend_type == "openai":
@@ -296,24 +296,21 @@ class LangchainIntegrator:
         #             response += block["text"]
 
         self.load_template_with_langchain(history)
-        if any(n in ["transformers", "mlx"] for n in self.backend_type):
+        if any(n in ["transformers", "mlx"] for n in self.backend_type.lower()):
             if "qwen3" in self.model_name.lower() and "instruct" not in self.model_name.lower() and "thinking" not in self.model_name.lower():
-                self.chat._to_chat_prompt(messages=[history, self.user_message], enable_thinking=self.enable_thinking)
+                self.chat._to_chat_prompt_thinking(messages=[history, self.user_message], enable_thinking=self.enable_thinking)
             else:
                 self.chat._to_chat_prompt(messages=[history, self.user_message])
         self.chain = self.prompt | self.chat | StrOutputParser()
         if not self.chat_history.messages:
-            # if self.max_tokens > 2048:
-            chunks = []
-            response = ""
-            for chunk in self.chain.stream({"input": self.user_message.content}):
-                chunks.append(chunk)
-                print(chunk, end="", flush=True)
-            for i in range(len(chunks)):
-                response += "".join(chunks[i])
-
-            # else:
-            # response = self.chain.invoke({"input": self.user_message.content})
+            # chunks = []
+            # response = ""
+            # for chunk in self.chain.stream({"input": self.user_message.content}):
+            #     chunks.append(chunk)
+            #     print(chunk, end="", flush=True)
+            # for i in range(len(chunks)):
+            #     response += "".join(chunks[i])
+            response = self.chain.invoke({"input": self.user_message.content})
         else:
             chain_with_history = RunnableWithMessageHistory(
                 self.chain,
@@ -321,14 +318,14 @@ class LangchainIntegrator:
                 input_messages_key="input",
                 history_messages_key="chat_history"
             )
-            # if self.max_tokens > 2048:
-            chunks = []
-            response = ""
-            for chunk in chain_with_history.stream({"input": self.user_message.content}, {"configurable": {"session_id": "unused"}}):
-                chunks.append(chunk)
-                print(chunk, end="", flush=True)
-            for i in range(len(chunks)):
-                response += "".join(chunks[i])
+            # chunks = []
+            # response = ""
+            # for chunk in chain_with_history.stream({"input": self.user_message.content}, {"configurable": {"session_id": "unused"}}):
+            #     chunks.append(chunk)
+            #     print(chunk, end="", flush=True)
+            # for i in range(len(chunks)):
+            #     response += "".join(chunks[i])
+            response = chain_with_history.invoke({"input": self.user_message.content}, {"configurable": {"session_id": "unused"}})
 
         if "</think>" in response:
             _, response = response.split("</think>", 1)
