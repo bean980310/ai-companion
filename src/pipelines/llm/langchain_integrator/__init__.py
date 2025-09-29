@@ -35,9 +35,6 @@ from langchain_core.globals import set_llm_cache, set_verbose, set_debug
 from langchain_core.caches import InMemoryCache
 from langchain_community.cache import RedisCache, SQLAlchemyCache, SQLiteCache, SQLAlchemyMd5Cache, GPTCache
 
-set_debug(True)
-set_verbose(True)
-
 from langchain.chat_models import init_chat_model
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.language_models import BaseLLM, BaseChatModel
@@ -70,14 +67,12 @@ from langchain_xai import ChatXAI                      # xAI Grok
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, MessagesState, StateGraph
 
-from transformers import pipeline, AutoTokenizer, AutoProcessor, AutoModelForCausalLM, AutoModelForImageTextToText, Qwen3ForCausalLM, Qwen3MoeForCausalLM, Llama4ForCausalLM, Llama4ForConditionalGeneration, Mistral3ForConditionalGeneration, Qwen2VLForConditionalGeneration, Qwen2_5_VLForConditionalGeneration
-
 from typing import Any, Generator, List, LiteralString, Literal
 
 from .state import State
 
-# langchain.globals.get_verbose()
-# langchain.globals.set_verbose(True)
+set_debug(True)
+set_verbose(True)
 
 try:
     from langchain_mlx.llms import MLXPipeline
@@ -89,7 +84,7 @@ except ImportError:
         pass
 
 class LangchainIntegrator:
-    def __init__(self, backend_type: str, model_name: str = None, lora_model_name: str = None, model: torch.nn.Module | mlx.nn.Module | PreTrainedModel | GenerationMixin | TFGenerationMixin | FlaxGenerationMixin | AutoModelForCausalLM | AutoModelForImageTextToText | AutoModel | PeftModel | Llama | Any | None = None, tokenizer: AutoTokenizer | PreTrainedTokenizer | PreTrainedTokenizerFast | PreTrainedTokenizerBase | TokenizerWrapper | type[SPMStreamingDetokenizer] | partial[SPMStreamingDetokenizer] | type[BPEStreamingDetokenizer] | type[NaiveStreamingDetokenizer] | Any | None = None, processor: AutoProcessor | ProcessorMixin | Any | None = None, **kwargs):
+    def __init__(self, backend_type: str, model_name: str = None, lora_model_name: str = None, model: torch.nn.Module | mlx.nn.Module | PreTrainedModel | GenerationMixin | AutoModelForCausalLM | AutoModelForImageTextToText | AutoModel | PeftModel | Llama | Any | None = None, tokenizer: AutoTokenizer | PreTrainedTokenizer | PreTrainedTokenizerFast | PreTrainedTokenizerBase | TokenizerWrapper | type[SPMStreamingDetokenizer] | partial[SPMStreamingDetokenizer] | type[BPEStreamingDetokenizer] | type[NaiveStreamingDetokenizer] | Any | None = None, processor: AutoProcessor | ProcessorMixin | Any | None = None, **kwargs):
         """
         Parameters
         ----------
