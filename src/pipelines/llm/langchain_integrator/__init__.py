@@ -23,7 +23,7 @@ except ImportError:
     else:
         pass
 
-from transformers import pipeline, PreTrainedModel, GenerationMixin, TFGenerationMixin, FlaxGenerationMixin, AutoModel, AutoModelForCausalLM, AutoModelForImageTextToText
+from transformers import pipeline, PreTrainedModel, GenerationMixin, AutoModel, AutoModelForCausalLM, AutoModelForImageTextToText
 from transformers import AutoProcessor, ProcessorMixin
 from transformers import AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast, PreTrainedTokenizerBase
 from peft import PeftModel
@@ -31,13 +31,21 @@ from llama_cpp import Llama
 
 # import langchain.globals
 
+from langchain_core.globals import set_llm_cache, set_verbose, set_debug
+from langchain_core.caches import InMemoryCache
+from langchain_community.cache import RedisCache, SQLAlchemyCache, SQLiteCache, SQLAlchemyMd5Cache, GPTCache
+
+set_debug(True)
+set_verbose(True)
+
+from langchain.chat_models import init_chat_model
 from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.language_models import BaseLLM, BaseChatModel
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser, BaseOutputParser, JsonOutputParser, XMLOutputParser, PydanticOutputParser, MarkdownListOutputParser
 from langchain.output_parsers import RetryOutputParser, RetryWithErrorOutputParser
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
-from langchain_core.runnables import RunnableConfig, RunnablePassthrough, RunnableWithMessageHistory, RunnableSerializable, Runnable
+from langchain_core.runnables import RunnableConfig, RunnablePassthrough, RunnableWithMessageHistory, RunnableSerializable, Runnable, RunnableSequence
 from langchain_community.chat_message_histories import ChatMessageHistory, SQLChatMessageHistory
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_chroma.vectorstores import Chroma
@@ -123,6 +131,8 @@ class LangchainIntegrator:
         self.top_k = int(kwargs.get("top_k", 50))
         self.top_p = float(kwargs.get("top_p", 1.0))
         self.repetition_penalty = float(kwargs.get("repetition_penalty", 1.0))
+        self.tokenizer_config = kwargs.get("tokenizer_config", {})
+        self.enable_thinking = bool(kwargs.get("enable_thinking", False))
 
         self.chunk_size = int(kwargs.get("chunk_size", 2048))
 
@@ -176,7 +186,7 @@ class LangchainIntegrator:
         elif backend_type == "mlx":
             # apple/mlx backend via llama.cpp; requires backend='mlx'
             pipeline_kwargs = {"max_tokens": self.max_tokens, "temp": self.temperature, "top_p": self.top_p, "top_k": self.top_k, "repetition_penalty": self.repetition_penalty}
-            llm = MLXPipeline.from_model_id(model_id=self.model_name, adapter_file=self.lora_model_name, pipeline_kwargs=pipeline_kwargs)
+            llm = MLXPipeline.from_model_id(model_id=self.model_name, adapter_file=self.lora_model_name, pipeline_kwargs=pipeline_kwargs, lazy=True)
             return ChatMLX(llm=llm, verbose=self.verbose)
         
         elif backend_type == "openai":
@@ -271,38 +281,59 @@ class LangchainIntegrator:
             raise ValueError(f"Unsupported backend type: {backend_type}")
 
     def generate_answer(self, history):
+        # chunks = []
+        # response = ""
+        # for chunk in self.chat.stream(history):
+        #     for block in chunk.content_blocks:
+        #         if block["type"] == "reasoning" and (reasoning := block.get("reasoning")):
+        #             print(f"<think>{reasoning}</think>", end="", flush=True)
+        #         elif block["type"] == "tool_call_chunk":
+        #             tool_name = block.get("tool_name", "unknown_tool")
+        #             tool_input = block.get("tool_input", "")
+        #             print(f"<tool>{tool_name}({tool_input})</tool>", end="", flush=True)
+        #             # chunks.append(f"<tool>{tool_name}({tool_input})</tool>")
+        #             # response += f"<tool>{tool_name}({tool_input})</tool>"
+        #         elif block["type"] == "text":
+        #             print(block["text"], end="", flush=True)
+        #             chunks.append(block["text"])
+        #             response += block["text"]
+
         self.load_template_with_langchain(history)
         self.chain = self.prompt | self.chat | StrOutputParser()
         if not self.chat_history.messages:
             # if self.max_tokens > 2048:
-            #     chunks = []
-            #     response = ""
-            #     for chunk in self.chain.stream({"input": self.user_message.content}):
-            #         chunks.append(chunk)
-            #         print(chunk, end="", flush=True)
-            #     for i in range(len(chunks)):
-            #         response += "".join(chunks[i])
+            chunks = []
+            response = ""
+            for chunk in self.chain.stream({"input": self.user_message.content}):
+                chunks.append(chunk)
+                print(chunk, end="", flush=True)
+            for i in range(len(chunks)):
+                response += "".join(chunks[i])
+
             # else:
-            response = self.chain.invoke({"input": self.user_message.content})
+            # response = self.chain.invoke({"input": self.user_message.content})
         else:
             chain_with_history = RunnableWithMessageHistory(
-                    self.chain,
-                    lambda session_id: self.chat_history,
-                    input_messages_key="input",
-                    history_messages_key="chat_history"
-                )
+                self.chain,
+                lambda session_id: self.chat_history,
+                input_messages_key="input",
+                history_messages_key="chat_history"
+            )
             # if self.max_tokens > 2048:
-            #     chunks = []
-            #     response = ""
-            #     for chunk in chain_with_history.stream({"input": self.user_message.content}, {"configurable": {"session_id": "unused"}}):
-            #         chunks.append(chunk)
-            #         print(chunk, end="", flush=True)
-            #     for i in range(len(chunks)):
-            #         response += "".join(chunks[i])
-            # else:
-            response = chain_with_history.invoke({"input": self.user_message.content}, {"configurable": {"session_id": "unused"}})
+            chunks = []
+            response = ""
+            for chunk in chain_with_history.stream({"input": self.user_message.content}, {"configurable": {"session_id": "unused"}}):
+                chunks.append(chunk)
+                print(chunk, end="", flush=True)
+            for i in range(len(chunks)):
+                response += "".join(chunks[i])
 
-        return response
+        if "</think>" in response:
+            _, response = response.split("</think>", 1)
+            # else:
+            # response = chain_with_history.invoke({"input": self.user_message.content}, {"configurable": {"session_id": "unused"}})
+
+        return response.strip()
     
     def load_template_with_langchain(self, messages):
         self.chat_history = ChatMessageHistory()

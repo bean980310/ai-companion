@@ -75,6 +75,7 @@ def register_app_state_2():
 
 def register_app_state_3():
     seed_state = gr.State(args.seed)  # 시드 상태 전역 정의
+    max_length_state = gr.State(-1)  # max_length 상태 전역 정의
     temperature_state = gr.State(0.6)
     top_k_state = gr.State(20)
     top_p_state = gr.State(0.9)
@@ -82,6 +83,7 @@ def register_app_state_3():
     selected_language_state = gr.State(default_language)
     
     app_state.seed_state = seed_state
+    app_state.max_length_state = max_length_state
     app_state.temperature_state = temperature_state
     app_state.top_k_state = top_k_state
     app_state.top_p_state = top_p_state

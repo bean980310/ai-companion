@@ -39,17 +39,17 @@ neo4j
 # fast_langdetect
 # langid
 
-tensorflow<2.20.0
+# tensorflow<2.20.0
 tensorboard
-keras
-tf-keras
+# keras
+# tf-keras
 torch>=2.8.0 --index-url https://download.pytorch.org/whl/cu128
 torchvision
 torchaudio
-jax
-jaxlib
-jaxtyping
-flax
+# jax
+# jaxlib
+# jaxtyping
+# flax
 optimum
 optimum-quanto
 torchao

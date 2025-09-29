@@ -34,6 +34,7 @@ anthropic>=0.64.0
 google-genai>=1.31.0
 mistralai
 xai-sdk
+perplexityai
 ollama>=0.5.3
 lmstudio>=1.4.1
 unstructured[all-docs]>=0.18.11
@@ -105,18 +106,18 @@ easyocr
 pdf2image
 neo4j
 
-tensorflow<2.20.0
+# tensorflow<2.20.0
 tensorboard
-keras
-tf-keras
+# keras
+# tf-keras
 torch>=2.8.0 --index-url https://download.pytorch.org/whl/cu126
 torchvision
 torchaudio
-jax
-jaxlib
-jaxtyping
-jax[cuda12]
-flax
+# jax
+# jaxlib
+# jaxtyping
+# jax[cuda12]
+# flax
 optimum
 optimum-quanto
 torchao

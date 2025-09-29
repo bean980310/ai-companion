@@ -55,13 +55,15 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
         self.sampler = None
         self.logits_processors = None
         self.tokenizer_config = self.get_eos_token()
-        self.enable_thinking = bool(kwargs.get("enable_thinking", True))
 
-        if "qwen3" in self.model_id.lower():
-            if "instruct" in self.model_id.lower():
-                self.max_tokens = 16384
-            else:
-                self.max_tokens = 32768
+        if self.max_length > 0:
+            self.max_tokens = self.max_length
+        else:
+            if "qwen3" in self.model_id.lower():
+                if "instruct" in self.model_id.lower():
+                    self.max_tokens = 16384
+                else:
+                    self.max_tokens = 32768
 
         self.set_seed(self.seed)
         self.load_model()
@@ -77,10 +79,11 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
                 top_k=self.top_k,
                 top_p=self.top_p,
                 repetition_penalty=self.repetition_penalty,
-                verbose=True
+                verbose=True,
+                tokenizer_config=self.tokenizer_config
             )
         else:
-            self.model, self.tokenizer = mlx_lm_load(self.local_model_path, adapter_path=self.local_lora_model_path)
+            self.model, self.tokenizer = mlx_lm_load(self.local_model_path, adapter_path=self.local_lora_model_path, lazy=True)
 
     def generate_answer(self, history, **kwargs):
         if self.use_langchain:
@@ -187,7 +190,7 @@ class MlxVisionModelHandler(BaseVisionModelHandler):
 
     def load_model(self):
         if self.image_input:
-            self.model, self.processor = mlx_vlm_load(self.local_model_path, adapter_path=self.local_lora_model_path)
+            self.model, self.processor = mlx_vlm_load(self.local_model_path, adapter_path=self.local_lora_model_path, lazy=True)
             self.config = load_config(self.local_model_path)
         else:
             if self.use_langchain:

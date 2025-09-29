@@ -25,15 +25,17 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
     def __init__(self, model_id, lora_model_id=None, model_type="transformers", device='cpu', use_langchain: bool = True, **kwargs):
         super().__init__(self, model_id, lora_model_id, use_langchain, **kwargs)
 
-        if "qwen3" in self.model_id.lower():
-            if "instruct" in self.model_id.lower():
-                self.max_tokens = 16384
-            else:
-                self.max_tokens = 32768
+        if self.max_length > 0:
+            self.max_tokens = self.max_length
+        else:
+            if "qwen3" in self.model_id.lower():
+                if "instruct" in self.model_id.lower():
+                    self.max_tokens = 16384
+                else:
+                    self.max_tokens = 32768
 
         
         self.max_new_tokens = self.max_tokens
-        self.enable_thinking = bool(kwargs.get("enable_thinking", True))
         self.device = device
 
         set_seed(self.seed)
@@ -116,13 +118,13 @@ class TransformersCausalModelHandler(BaseCausalModelHandler):
         )
 
     def load_template(self, messages):
-        if self.enable_thinking:
+        if "qwen3" in self.model_id.lower() and "instruct" not in self.model_id.lower() and "thinking" not in self.model_id.lower():
             return self.tokenizer.apply_chat_template(
                 messages,
                 add_generation_prompt=True,
                 return_tensors="pt",
                 tokenize=False,
-                enable_thinking=True
+                enable_thinking=self.enable_thinking
             )
         else:
             return self.tokenizer.apply_chat_template(

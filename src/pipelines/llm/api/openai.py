@@ -40,9 +40,9 @@ class OpenAIClientWrapper(BaseAPIClientWrapper):
                 messages=messages,
                 temperature=self.temperature,
                 max_tokens=self.max_tokens,
-                top_logprobs=self.top_k,
+                # top_logprobs=self.top_k,
                 frequency_penalty=self.repetition_penalty,
-                presence_penalty=self.repetition_penalty,
+                # presence_penalty=self.repetition_penalty,
                 top_p=self.top_p,
             )
             answer = response.choices[0].message["content"]

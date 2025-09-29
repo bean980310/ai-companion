@@ -43,7 +43,7 @@ class XAIClientWrapper(BaseAPIClientWrapper):
                 top_p=self.top_p,
                 top_logprobs=self.top_k,
                 frequency_penalty=self.repetition_penalty,
-                presence_penalty=self.repetition_penalty
+                # presence_penalty=self.repetition_penalty
             ).sample().content
             return answer
     

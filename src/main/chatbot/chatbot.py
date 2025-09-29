@@ -197,7 +197,7 @@ class Chatbot:
         
         return "", history, self.filter_messages_for_chatbot(history)
 
-    def process_message_bot(self, session_id: str, history: list[dict[str, str | Image.Image | Any]], selected_model: str | gr.Dropdown, selected_lora: str | gr.Dropdown, custom_path: str, user_input: str | dict[str, str | Image.Image | Any] | Any, api_key: str, device: str, seed: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float, language: str):
+    def process_message_bot(self, session_id: str, history: list[dict[str, str | Image.Image | Any]], selected_model: str | gr.Dropdown, selected_lora: str | gr.Dropdown, custom_path: str, user_input: str | dict[str, str | Image.Image | Any] | Any, api_key: str, device: str, seed: int, max_length: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float, enable_thinking: bool, language: str):
         image = None
         if isinstance(user_input, dict):
             files = user_input.get("files", [])
@@ -222,10 +222,12 @@ class Chatbot:
                 api_key=api_key,
                 device=device,
                 seed=seed,
+                max_length=max_length,
                 temperature=temperature,
                 top_k=top_k,
                 top_p=top_p,
                 repetition_penalty=repetition_penalty,
+                enable_thinking=enable_thinking,
                 character_language=language
             )
             
@@ -640,6 +642,14 @@ class Chatbot:
         """
         lora_visible = selected_model in transformers_local or selected_model in mlx_local
         return gr.update(visible=lora_visible)
+    
+    @staticmethod
+    def toggle_enable_thinking_visibility(selected_model: str | gr.Dropdown) -> bool:
+        """
+        Thinking 애니메이션의 가시성을 제어합니다.
+        """
+        thinking_visible = "qwen3" in selected_model.lower() and "thinking" not in selected_model.lower() and "instruct" not in selected_model.lower()
+        return gr.update(visible=thinking_visible)
 
     def update_model_list(self, selected_type: str):
         local_models_data = get_all_local_models()

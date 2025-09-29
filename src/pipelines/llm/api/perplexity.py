@@ -2,7 +2,7 @@ from .... import logger
 import traceback
 from ..base_handlers import BaseAPIClientWrapper
 
-import requests
+from perplexity import Perplexity
 
 from ..langchain_integrator import LangchainIntegrator
 
@@ -30,24 +30,20 @@ class PerplexityClientWrapper(BaseAPIClientWrapper):
         if self.use_langchain:
             return self.langchain_integrator.generate_answer(history)
         else:
+            client = Perplexity(api_key=self.api_key)
+
             messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
             logger.info(f"[*] Perplexity API 요청: {messages}")
                 
-            url = "https://api.perplexity.ai/chat/completions"
-            payload = { 
-                "model": self.model,
-                "messages": messages,
-                "max_tokens": self.max_tokens,
-                "temperature": self.temperature,
-                "top_p": self.top_p,
-                "top_k": self.top_k,
-                "frequency_penalty": self.repetition_penalty,
-                "presence_penalty": self.repetition_penalty,
-            }
-            headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
-            }
-            response = requests.request("POST", url, json=payload, headers=headers)
-            answer = response.text
+            completion = client.chat.completions.create(
+                messages=messages,
+                model=self.model,
+                top_p=self.top_p,
+                top_k=self.top_k,
+                max_tokens=self.max_tokens,
+                frequency_penalty=self.repetition_penalty,
+                # presence_penalty=self.repetition_penalty,
+                temperature=self.temperature,
+            )
+            answer = completion.choices[0].message.content
             return answer

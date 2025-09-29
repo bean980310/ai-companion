@@ -31,10 +31,12 @@ class ChatbotComponent:
 
     advanced_setting: gr.Accordion = None
     seed_input: gr.Number = None
+    max_length_input: gr.Slider = None
     temperature_slider: gr.Slider = None
     top_k_slider: gr.Slider = None
     top_p_slider: gr.Slider = None
     repetition_penalty_slider: gr.Slider = None
+    enable_thinking_checkbox: gr.Checkbox = None
     preset_dropdown: gr.Dropdown = None
     change_preset_button: gr.Button = None
     reset_btn: gr.Button = None
@@ -191,6 +193,16 @@ class ChatbotComponent:
                     info=_("seed_info"),
                     elem_classes="seed-input"
                 )
+                max_length_input = gr.Slider(
+                    label="Max Length",
+                    minimum=-1,
+                    maximum=4096,
+                    value=-1,
+                    step=1,
+                    interactive=True,
+                    info="Set the maximum length of the generated response.",
+                    elem_classes="max-length-input"
+                )
                 temperature_slider=gr.Slider(
                     label=_("temperature_label"),
                     minimum=0.0,
@@ -223,6 +235,12 @@ class ChatbotComponent:
                     step=0.1,
                     interactive=True
                 )
+                enable_thinking_checkbox = gr.Checkbox(
+                    label="Enable Thinking",
+                    value=False,
+                    info="Enable thinking for Qwen models.",
+                    elem_classes="enable-thinking-checkbox"
+                )
                 preset_dropdown = gr.Dropdown(
                     label="프리셋 선택",
                     choices=get_preset_choices(default_language),
@@ -246,16 +264,18 @@ class ChatbotComponent:
         ui_component.character_dropdown = character_dropdown
         ui_component.text_advanced_settings = advanced_setting
         ui_component.seed_input = seed_input
+        ui_component.max_length_input = max_length_input
         ui_component.temperature_slider = temperature_slider
         ui_component.top_k_slider = top_k_slider
         ui_component.top_p_slider = top_p_slider
         ui_component.repetition_penalty_slider = repetition_penalty_slider
+        ui_component.enable_thinking_checkbox = enable_thinking_checkbox
         ui_component.preset_dropdown = preset_dropdown
         ui_component.change_preset_button = change_preset_button
         ui_component.reset_btn = reset_btn
         ui_component.reset_all_btn = reset_all_btn
 
-        return cls(profile_image=profile_image, character_dropdown=character_dropdown, advanced_setting=advanced_setting, seed_input=seed_input, temperature_slider=temperature_slider, top_k_slider=top_k_slider, top_p_slider=top_p_slider, repetition_penalty_slider=repetition_penalty_slider, preset_dropdown=preset_dropdown, change_preset_button=change_preset_button, reset_btn=reset_btn, reset_all_btn=reset_all_btn)
+        return cls(profile_image=profile_image, character_dropdown=character_dropdown, advanced_setting=advanced_setting, seed_input=seed_input, max_length_input=max_length_input, temperature_slider=temperature_slider, top_k_slider=top_k_slider, top_p_slider=top_p_slider, repetition_penalty_slider=repetition_penalty_slider, enable_thinking_checkbox=enable_thinking_checkbox, preset_dropdown=preset_dropdown, change_preset_button=change_preset_button, reset_btn=reset_btn, reset_all_btn=reset_all_btn)
     
     @classmethod
     def create_chat_container_status_bar(cls):

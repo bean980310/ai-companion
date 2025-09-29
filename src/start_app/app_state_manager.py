@@ -27,6 +27,7 @@ class AppState:
     system_message_state: gr.State | None = None
 
     seed_state: gr.State | None = None
+    max_length_state: gr.State | None = None
     temperature_state: gr.State | None = None
     top_k_state: gr.State | None = None
     top_p_state: gr.State | None = None

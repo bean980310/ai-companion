@@ -183,7 +183,7 @@ class MLXPipeline(LLM):
             prompt=prompt,
             max_tokens=max_tokens,
             verbose=verbose,
-            formatter=formatter,
+            # formatter=formatter,
             sampler=sampler,
             logits_processors=logits_processors,
             max_kv_size=2048
@@ -291,6 +291,8 @@ class MLXVisionPipeline(LLM):
     """Model."""
     tokenizer: Any = None  #: :meta private:
     """Tokenizer."""
+    processor: Any = None  #: :meta private:
+    """Processor."""
     tokenizer_config: Optional[dict] = None
     """
         Configuration parameters specifically for the tokenizer.
@@ -435,6 +437,7 @@ class MLXVisionPipeline(LLM):
 
         return generate(
             model=self.model,
+            processor=self.processor,
             tokenizer=self.tokenizer,
             prompt=prompt,
             max_tokens=max_tokens,

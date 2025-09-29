@@ -48,10 +48,12 @@ class UIComponent:
 
     text_advanced_settings: gr.Accordion = None
     seed_input: gr.Number = None
+    max_length_input: gr.Slider = None
     temperature_slider: gr.Slider = None
     top_k_slider: gr.Slider = None
     top_p_slider: gr.Slider = None
     repetition_penalty_slider: gr.Slider = None
+    enable_thinking_checkbox: gr.Checkbox = None
     preset_dropdown: gr.Dropdown = None
     change_preset_button: gr.Button = None
     reset_btn: gr.Button = None

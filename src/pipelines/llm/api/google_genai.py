@@ -40,7 +40,7 @@ class GoogleAIClientWrapper(BaseAPIClientWrapper):
                 top_p=self.top_p,
                 top_k=self.top_k,
                 frequency_penalty=self.repetition_penalty,
-                presence_penalty=self.repetition_penalty,
+                # presence_penalty=self.repetition_penalty,
             )
             logger.info(f"[*] Google API 요청: {messages}")
             response = client.models.generate_content(

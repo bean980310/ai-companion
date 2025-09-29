@@ -19,11 +19,14 @@ class GGUFCausalModelHandler(BaseCausalModelHandler):
         self.sampler = None
         self.logits_processors = None
 
-        if "qwen3" in self.model_id.lower():
-            if "instruct" in self.model_id.lower():
-                self.max_tokens = 16384
-            else:
-                self.max_tokens = 32768
+        if self.max_length > 0:
+            self.max_tokens = self.max_length
+        else:
+            if "qwen3" in self.model_id.lower():
+                if "instruct" in self.model_id.lower():
+                    self.max_tokens = 16384
+                else:
+                    self.max_tokens = 32768
         
         self.load_model()
         
@@ -63,9 +66,19 @@ class GGUFCausalModelHandler(BaseCausalModelHandler):
                 top_k=self.top_k,
                 top_p=self.top_p,
                 repeat_penalty=self.repetition_penalty,
-                max_tokens=2048,
+                max_tokens=self.max_tokens,
+                stream=True
             )
-            return response["choices"][0]["message"]["content"]
+            answer = ""
+            for chunk in response:
+                delta = chunk["choices"][0]["delta"]
+                if 'role' in delta:
+                    print(delta['role'], end=": ")
+                elif 'content' in delta:
+                    print(delta['content'], end="", flush=True)
+                    answer += "".join(delta['content'])
+                    
+            return answer
 
     def get_settings(self):
         pass

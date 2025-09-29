@@ -33,19 +33,19 @@ easyocr
 pdf2image
 neo4j
 
-tensorflow<2.20.0
+# tensorflow<2.20.0
 tensorboard
-keras
-tf-keras
-tensorflow-metal
+# keras
+# tf-keras
+# tensorflow-metal
 torch>=2.8.0
 torchvision
 torchaudio
-jax
-jaxlib
-jaxtyping
-jax-metal
-flax
+# jax
+# jaxlib
+# jaxtyping
+# jax-metal
+# flax
 # optimum
 # optimum-quanto
 # torchao

@@ -17,7 +17,7 @@ except ImportError:
         pass
 
 from PIL import Image, ImageFile
-from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast, PreTrainedTokenizerBase, GenerationMixin, PreTrainedModel, TFGenerationMixin, FlaxGenerationMixin, AutoModelForImageTextToText, AutoModel, AutoProcessor, ProcessorMixin, AutoConfig, PretrainedConfig, GenerationConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast, PreTrainedTokenizerBase, GenerationMixin, PreTrainedModel, AutoModelForImageTextToText, AutoModel, AutoProcessor, ProcessorMixin, AutoConfig, PretrainedConfig, GenerationConfig
 from peft import PeftModel
 from llama_cpp import Llama
 
@@ -34,11 +34,13 @@ class BaseModel(ABC):
         self.use_langchain = use_langchain
 
         self.max_tokens = int(kwargs.get("max_tokens", 2048))
+        self.max_length = int(kwargs.get("max_length", -1))
         self.seed = int(kwargs.get("seed", 42))
         self.temperature = float(kwargs.get("temperature", 1.0))
         self.top_k = int(kwargs.get("top_k", 50))
         self.top_p = float(kwargs.get("top_p", 1.0))
         self.repetition_penalty = float(kwargs.get("repetition_penalty", 1.0))
+        self.enable_thinking = bool(kwargs.get("enable_thinking", False))
 
         self.langchain_integrator = None
 
@@ -68,7 +70,7 @@ class BaseModelHandler(BaseModel):
 
         self.processor: AutoProcessor | ProcessorMixin | Any | None = None
         self.tokenizer: AutoTokenizer | PreTrainedTokenizer | PreTrainedTokenizerFast | PreTrainedTokenizerBase | TokenizerWrapper | type[SPMStreamingDetokenizer] | partial[SPMStreamingDetokenizer] | type[BPEStreamingDetokenizer] | type[NaiveStreamingDetokenizer] | Any | None = None
-        self.model: torch.nn.Module | mlx.nn.Module | PreTrainedModel | GenerationMixin | TFGenerationMixin | FlaxGenerationMixin | AutoModelForCausalLM | AutoModelForImageTextToText | AutoModel | PeftModel | Llama | Any | None = None
+        self.model: torch.nn.Module | mlx.nn.Module | PreTrainedModel | GenerationMixin | AutoModelForCausalLM | AutoModelForImageTextToText | AutoModel | PeftModel | Llama | Any | None = None
 
     @abstractmethod
     def load_model(self):

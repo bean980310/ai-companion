@@ -74,10 +74,12 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
     text_advanced_settings = chat_container.side_panel.advanced_setting
 
     text_seed_input = chat_container.side_panel.seed_input
+    text_max_length_input = chat_container.side_panel.max_length_input
     text_temperature_slider = chat_container.side_panel.temperature_slider
     text_top_k_slider = chat_container.side_panel.top_k_slider
     text_top_p_slider = chat_container.side_panel.top_p_slider
     text_repetition_penalty_slider = chat_container.side_panel.repetition_penalty_slider
+    text_enable_thinking_checkbox = chat_container.side_panel.enable_thinking_checkbox
     preset_dropdown = chat_container.side_panel.preset_dropdown
     change_preset_button = chat_container.side_panel.change_preset_button
     reset_btn = chat_container.side_panel.reset_btn
@@ -229,6 +231,11 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
         inputs=[text_seed_input],
         outputs=[app_state.seed_state]
     )
+    text_max_length_input.change(
+        fn=lambda max_length: max_length if max_length is not None else -1,
+        inputs=[text_max_length_input],
+        outputs=[app_state.max_length_state]
+    )
     text_temperature_slider.change(
         fn=lambda temp: temp if temp is not None else 0.6,
         inputs=[text_temperature_slider],
@@ -286,10 +293,11 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
             chat_bot.toggle_api_key_visibility(selected_model),
             chat_bot.toggle_lora_visibility(selected_model),
             chat_bot.toggle_multimodal_msg_input_visibility(selected_model),
-            chat_bot.toggle_standard_msg_input_visibility(selected_model)
+            chat_bot.toggle_standard_msg_input_visibility(selected_model),
+            chat_bot.toggle_enable_thinking_visibility(selected_model)
         ),
         inputs=[text_model_dropdown],
-        outputs=[text_api_key_text, text_lora_dropdown, multimodal_msg, msg]
+        outputs=[text_api_key_text, text_lora_dropdown, multimodal_msg, msg, text_enable_thinking_checkbox]
     )
     
     storytelling_model_dropdown.change(
@@ -453,10 +461,11 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
             chat_bot.toggle_api_key_visibility(selected_model),
             chat_bot.toggle_lora_visibility(selected_model),
             chat_bot.toggle_multimodal_msg_input_visibility(selected_model),
-            chat_bot.toggle_standard_msg_input_visibility(selected_model)
+            chat_bot.toggle_standard_msg_input_visibility(selected_model),
+            chat_bot.toggle_enable_thinking_visibility(selected_model)
         ),
         inputs=[text_model_dropdown],
-        outputs=[text_api_key_text, text_lora_dropdown, multimodal_msg, msg]
+        outputs=[text_api_key_text, text_lora_dropdown, multimodal_msg, msg, text_enable_thinking_checkbox]
     )
 
     def update_character_languages(selected_language: str, selected_character: str):
@@ -658,10 +667,12 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
             text_api_key_text,
             app_state.selected_device_state,
             app_state.seed_state,
+            app_state.max_length_state,
             app_state.temperature_state,
             app_state.top_k_state,
             app_state.top_p_state,
             app_state.repetition_penalty_state,
+            text_enable_thinking_checkbox,
             app_state.selected_language_state,
         ],
         outputs=[
@@ -701,10 +712,12 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
             text_api_key_text,
             app_state.selected_device_state,
             app_state.seed_state,
+            app_state.max_length_state,
             app_state.temperature_state,
             app_state.top_k_state,
             app_state.top_p_state,
             app_state.repetition_penalty_state,
+            text_enable_thinking_checkbox,
             app_state.selected_language_state,
         ],
         outputs=[
