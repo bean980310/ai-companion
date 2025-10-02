@@ -33,12 +33,6 @@ easyocr
 pdf2image
 neo4j
 
-# fasttext
-# txtsplit
-# split-lang
-# fast_langdetect
-# langid
-
 # tensorflow<2.20.0
 tensorboard
 # keras

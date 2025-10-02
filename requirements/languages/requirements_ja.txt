@@ -1,0 +1,13 @@
+fugashi
+mecab
+mecab-python3
+ipadic
+unidic_lite
+unidic
+sudachipy
+sudachidict_core
+rhoknp
+pyopenjtalk
+jaconv
+mojimoji
+pykakasi

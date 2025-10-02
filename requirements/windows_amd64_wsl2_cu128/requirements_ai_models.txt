@@ -57,7 +57,7 @@ samplerate
 pyworld
 ffmpeg-python
 funasr
-pyopenjtalk-plus
+pyopenjtalk
 openai-whisper
 openai-harmony
 Faster_whisper

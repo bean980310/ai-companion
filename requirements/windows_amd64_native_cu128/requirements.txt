@@ -33,6 +33,13 @@ easyocr
 pdf2image
 neo4j
 
+num2words
+spacy
+spacy-curated-transformers
+phonemizer-fork
+espeakng-loader
+g2p_en
+
 # fasttext
 # txtsplit
 # split-lang

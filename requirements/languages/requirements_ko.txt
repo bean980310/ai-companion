@@ -1,0 +1,7 @@
+jamo
+nltk
+python_mecab_ko
+konlpy
+g2pk2
+g2pkk
+ko_pron

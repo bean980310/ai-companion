@@ -57,7 +57,7 @@ samplerate
 pyworld
 ffmpeg-python
 funasr
-pyopenjtalk-plus
+# pyopenjtalk
 openai-whisper
 openai-harmony
 Faster_whisper
@@ -119,6 +119,13 @@ pytesseract
 easyocr
 pdf2image
 neo4j
+
+num2words
+spacy
+spacy-curated-transformers
+phonemizer-fork
+espeakng-loader
+g2p_en
 
 # tensorflow<2.20.0
 tensorboard

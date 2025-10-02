@@ -1,0 +1,7 @@
+jieba
+jieba_fast
+ordered-set
+pypinyin
+cn2an
+pypinyin-dict
+ToJyutping

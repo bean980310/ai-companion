@@ -1,0 +1,6 @@
+jupyter
+jupyterlab
+jupyterlab_widgets
+ipython
+ipykernel
+ipywidgets

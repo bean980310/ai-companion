@@ -1,0 +1,13 @@
+num2words
+spacy
+spacy-curated-transformers
+phonemizer-fork
+espeakng-loader
+g2p_en
+
+fasttext
+txtsplit
+split-lang
+fast_langdetect
+langid
+eng_to_ipa
