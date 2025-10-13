@@ -44,8 +44,8 @@ from langchain.output_parsers import RetryOutputParser, RetryWithErrorOutputPars
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig, RunnablePassthrough, RunnableWithMessageHistory, RunnableSerializable, Runnable, RunnableSequence
 from langchain_community.chat_message_histories import ChatMessageHistory, SQLChatMessageHistory
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_chroma.vectorstores import Chroma
+from langchain_classic.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores import Chroma
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.document_loaders import RecursiveUrlLoader

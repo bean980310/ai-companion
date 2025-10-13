@@ -2,7 +2,8 @@ from .... import logger
 import traceback
 from ..base_handlers import BaseAPIClientWrapper
 
-from huggingface_hub import InferenceClient
+from huggingface_hub import InferenceClient, InferenceEndpoint
+from openai import OpenAI
 
 import requests
 
@@ -32,7 +33,7 @@ class OpenRouterClientWrapper(BaseAPIClientWrapper):
         if self.use_langchain:
             return self.langchain_integrator.generate_answer(history)
         else:
-            client = InferenceClient(
+            client = OpenAI(
                 base_url="https://openrouter.ai/api/v1",
                 api_key=self.api_key
             )

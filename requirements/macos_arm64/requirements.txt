@@ -48,10 +48,10 @@ tensorboard
 torch>=2.8.0
 torchvision
 torchaudio
-# jax
-# jaxlib
-# jaxtyping
-# jax-metal
+jax
+jaxlib
+jaxtyping
+jax-metal
 # flax
 # optimum
 # optimum-quanto

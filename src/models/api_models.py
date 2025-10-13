@@ -1,6 +1,9 @@
 api_models = []
 diffusion_api_models = []
+diffusion_video_api_models = []
 tts_api_models = []
+stt_api_models = []
+stream_api_models = []
 
 openai_api_models = [
     "gpt-4o",
@@ -19,28 +22,29 @@ openai_api_models = [
     "gpt-5",
     "gpt-5-mini",
     "gpt-5-nano",
+    "gpt-5-pro",
     "gpt-5-chat-latest",
 ]
 
 anthropic_api_models = [
     "claude-3-5-haiku-latest",
-    "claude-3-5-sonnet-latest",
     "claude-3-7-sonnet-latest",
     "claude-sonnet-4-0",
     "claude-opus-4-0",
     "claude-opus-4-1",
+    "claude-sonnet-4-5",
 ]
 
 google_ai_api_models = [
-    "gemini-2.0-flash-lite",
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-preview-image-generation",
     "gemma-3-27b-it",
     "gemma-3n-e2b-it",
     "gemma-3n-e4b-it",
     "gemini-2.5-flash-lite",
     "gemini-2.5-flash",
+    "gemini-2.5-flash-image",
     "gemini-2.5-pro",
+    "gemini-flash-latest",
+    "gemini-flash-lite-latest",
 ]
 
 perplexity_api_models = [
@@ -55,6 +59,8 @@ xai_api_models = [
     "grok-3-mini",
     "grok-3",
     "grok-4",
+    "grok-4-fast-non-reasoning",
+    "grok-4-fast"
 ]
 
 openrouter_api_models = [
@@ -64,13 +70,15 @@ openrouter_api_models = [
     "meta-llama/llama-4-scout:free",
     "meta-llama/llama-4-maverick",
     "meta-llama/llama-4-maverick:free",
+    "qwen/qwen2.5-vl-72b-instruct",
+    "qwen/qwen2.5-vl-72b-instruct:free",
     "qwen/qwen3-235b-a22b",
     "qwen/qwen3-235b-a22b:free",
     "qwen/qwen3-235b-a22b-2507",
     "qwen/qwen3-235b-a22b-thinking-2507",
+    "qwen/qwen3-vl-235b-a22b-instruct",
+    "qwen/qwen3-vl-235b-a22b-thinking",
     "qwen/qwen3-max",
-    "qwen/qwen2.5-vl-72b-instruct",
-    "qwen/qwen2.5-vl-72b-instruct:free",
     "mistralai/mistral-small-24b-instruct-2501",
     "mistralai/mistral-small-24b-instruct-2501:free",
     "mistralai/mistral-small-3.2-24b-instruct",
@@ -104,6 +112,7 @@ api_models.extend(xai_api_models)
 openai_image_api_models = [
     "dall-e-3",
     "gpt-image-1",
+    "gpt-image-1-mini"
 ]
 
 google_image_api_models = [
@@ -115,14 +124,23 @@ google_image_api_models = [
 xai_image_api_models = [
     "grok-2-image"
 ]
+
 diffusion_api_models.extend(openai_image_api_models)
 diffusion_api_models.extend(google_image_api_models)
 diffusion_api_models.extend(xai_image_api_models)
 
-diffusion_video_api_models=[
+openai_video_api_models = [
+    "sora-2",
+    "sora-2-pro"
+]
+
+google_video_api_models=[
     "veo-2.0-generate-001",
     "veo-3.0-generate-preview"
 ]
+
+diffusion_video_api_models.extend(openai_video_api_models)
+diffusion_video_api_models.extend(google_video_api_models)
 
 openai_tts_api_models = [
     "tts-1",
@@ -138,8 +156,29 @@ google_tts_api_models = [
 tts_api_models.extend(openai_tts_api_models)
 tts_api_models.extend(google_tts_api_models)
 
+openai_stt_api_models = [
+    "whisper-1",
+    "gpt-4o-transcribe",
+    "gpt-4o-mini-transcribe"
+]
+
+stt_api_models.extend(openai_stt_api_models)
+
 embedding_api_models = [
     "text-embedding-3-large",
     "text-embedding-3-small",
     "gemini-embedding-001"
 ]
+
+openai_realtime_api_models = [
+    "gpt-realtime",
+    "gpt-realtime-mini"
+]
+
+openai_audio_api_models = [
+    "gpt-audio",
+    "gpt-audio-mini"
+]
+
+stream_api_models.extend(openai_realtime_api_models)
+stream_api_models.extend(openai_audio_api_models)
