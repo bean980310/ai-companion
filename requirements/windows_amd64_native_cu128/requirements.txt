@@ -9,9 +9,9 @@ scikit-learn
 beautifulsoup4==4.13.5
 sympy==1.14.0
 scipy==1.16.0
-protobuf==5.29.5
+protobuf
 packaging==25.0
-fsspec==2025.3.0
+fsspec
 pyyaml==6.0.2
 jinja2==3.1.6
 python-json-logger
@@ -33,12 +33,12 @@ easyocr
 pdf2image
 neo4j
 
-num2words
-spacy
-spacy-curated-transformers
-phonemizer-fork
-espeakng-loader
-g2p_en
+# num2words
+# spacy
+# spacy-curated-transformers
+# phonemizer-fork
+# espeakng-loader
+# g2p_en
 
 # fasttext
 # txtsplit

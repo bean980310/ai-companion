@@ -71,7 +71,7 @@ nexaai
 
 # mlx[dev]
 mlx_lm[test, evaluate, train]
-mlx_vlm @ git+https://github.com/bean980310/mlx-vlm.git@a86347fbdc5442e5658a4c8839367f814b7d5826
+mlx_vlm @ git+https://github.com/bean980310/mlx-vlm.git@10d79fcb58ddead833e39802fad61d09769991fe
 mlx_lm_omni
 mlx_embeddings
 mlx_whisper
@@ -96,9 +96,9 @@ scikit-learn
 beautifulsoup4==4.13.5
 sympy==1.14.0
 scipy==1.16.0
-protobuf==5.29.5
+protobuf
 packaging==25.0
-fsspec==2025.3.0
+fsspec
 pyyaml==6.0.2
 jinja2==3.1.6
 python-json-logger
