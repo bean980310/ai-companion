@@ -91,7 +91,7 @@ class LangchainIntegrator:
         ----------
         backend_type : str
             One of: ``transformers`` | ``gguf`` | ``mlx`` | ``openai`` |
-            ``anthropic`` | ``google_genai`` | ``perplexity`` | ``xai`` | ``openrouter`` | ``hf_endpoint``.
+            ``anthropic`` | ``google_genai`` | ``perplexity`` | ``xai`` | ``openrouter`` | ``hf_endpoint`` | ``lmstudio``.
         model_name : str
             HF repo id, local model file, or provider‑specific model id.
         lora_model_name : str
