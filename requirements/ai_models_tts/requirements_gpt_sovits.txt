@@ -1,0 +1,12 @@
+scipy
+tensorboard
+librosa
+numba
+pytorch-lightning
+gradio
+ffmpeg-python
+tqdm
+funasr
+rotary_embedding_torch
+torchmetrics
+ctranslate2

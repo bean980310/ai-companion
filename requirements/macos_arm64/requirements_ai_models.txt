@@ -7,7 +7,7 @@ tokenizers>=0.21.4
 diffusers[docs]>=0.35.1
 peft>=0.17.1
 trl>=0.21.0
-huggingface_hub[cli, hf_transfer, hf_xet, mcp]>=0.34.4
+huggingface_hub[cli, hf_transfer, hf_xet, mcp]>=0.34.4,<1.0.0
 k_diffusion==0.0.12
 hf_transfer>=0.1.9
 hf_xet<2.0.0
@@ -71,7 +71,7 @@ nexaai
 
 # mlx[dev]
 mlx_lm[test, evaluate, train]
-mlx_vlm @ git+https://github.com/bean980310/mlx-vlm.git@10d79fcb58ddead833e39802fad61d09769991fe
+mlx_vlm @ git+https://github.com/bean980310/mlx-vlm.git@e1700ad8e2c6da7b9c8c435afc70076e85f13526
 mlx_lm_omni
 mlx_embeddings
 mlx_whisper

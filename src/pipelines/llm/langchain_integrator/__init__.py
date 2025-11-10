@@ -40,12 +40,12 @@ from langchain_core.callbacks import CallbackManagerForLLMRun
 from langchain_core.language_models import BaseLLM, BaseChatModel
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser, BaseOutputParser, JsonOutputParser, XMLOutputParser, PydanticOutputParser, MarkdownListOutputParser
-from langchain.output_parsers import RetryOutputParser, RetryWithErrorOutputParser
+from langchain_classic.output_parsers import RetryOutputParser, RetryWithErrorOutputParser
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig, RunnablePassthrough, RunnableWithMessageHistory, RunnableSerializable, Runnable, RunnableSequence
 from langchain_community.chat_message_histories import ChatMessageHistory, SQLChatMessageHistory
 from langchain_classic.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Chroma
+from langchain_classic.vectorstores import Chroma
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.document_loaders import RecursiveUrlLoader

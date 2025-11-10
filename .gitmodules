@@ -4,3 +4,6 @@
 [submodule "backend/Wan2.1"]
 	path = backend/Wan2.1
 	url = https://github.com/Wan-Video/Wan2.1.git
+[submodule "vllm"]
+	path = vllm
+	url = https://github.com/vllm-project/vllm.git
