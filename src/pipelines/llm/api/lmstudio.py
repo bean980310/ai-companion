@@ -1,3 +1,5 @@
+# WIP: src/pipelines/llm/api/lmstudio.py
+
 import lmstudio as lms
 from PIL import Image, ImageFile
 from typing import Any
