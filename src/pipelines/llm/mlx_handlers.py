@@ -71,7 +71,7 @@ class MlxCausalModelHandler(BaseCausalModelHandler):
     def load_model(self):
         if self.use_langchain:
             self.langchain_integrator = LangchainIntegrator(
-                backend_type="mlx",
+                provider="mlx",
                 model_name=self.local_model_path,
                 lora_model_name=self.local_lora_model_path,
                 max_tokens=self.max_tokens,
@@ -195,7 +195,7 @@ class MlxVisionModelHandler(BaseVisionModelHandler):
         else:
             if self.use_langchain:
                 self.langchain_integrator = LangchainIntegrator(
-                    backend_type="mlx",
+                    provider="mlx",
                     model_name=self.local_model_path,
                     lora_model_name=self.local_lora_model_path,
                     max_tokens=self.max_tokens,

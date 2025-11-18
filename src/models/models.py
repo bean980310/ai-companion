@@ -14,7 +14,7 @@ from src.pipelines.llm import (
     MlxVisionModelHandler,
 )
 
-from src.pipelines.llm.api import (
+from src.pipelines.llm.provider import (
     AnthropicClientWrapper,
     GoogleAIClientWrapper,
     OpenAIClientWrapper,

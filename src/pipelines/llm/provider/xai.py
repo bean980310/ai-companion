@@ -2,14 +2,11 @@ from .... import logger
 import traceback
 from ..base_handlers import BaseAPIClientWrapper
 
-from huggingface_hub import InferenceClient, InferenceEndpoint
-from openai import OpenAI
-
-import requests
+import xai_sdk
 
 from ..langchain_integrator import LangchainIntegrator
 
-class OpenRouterClientWrapper(BaseAPIClientWrapper):
+class XAIClientWrapper(BaseAPIClientWrapper):
     def __init__(self, selected_model: str, api_key: str | None = None, use_langchain: bool = True, **kwargs):
         super().__init__(selected_model, api_key, use_langchain, **kwargs)
 
@@ -18,7 +15,7 @@ class OpenRouterClientWrapper(BaseAPIClientWrapper):
 
     def load_model(self):
         self.langchain_integrator = LangchainIntegrator(
-            backend_type="openrouter",
+            provider="xai",
             model_name=self.model,
             api_key=self.api_key,
             max_tokens=self.max_tokens,
@@ -33,25 +30,20 @@ class OpenRouterClientWrapper(BaseAPIClientWrapper):
         if self.use_langchain:
             return self.langchain_integrator.generate_answer(history)
         else:
-            client = OpenAI(
-                base_url="https://openrouter.ai/api/v1",
-                api_key=self.api_key
-            )
+            client = xai_sdk.Client(api_key=self.api_key)
 
             messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
-            logger.info(f"[*] OpenRouter API 요청: {messages}")
-
-            chat_completion = client.chat.completions.create(
-                model=self.model,
+            logger.info(f"[*] XAI API 요청: {messages}")
+                
+            answer = client.chat.create(
+                model=self.model, 
+                temperature=self.temperature, 
+                max_tokens=self.max_tokens, 
                 messages=messages,
-                max_tokens=self.max_tokens,
-                temperature=self.temperature,
                 top_p=self.top_p,
-                extra_body={
-                    "top_k": self.top_k,
-                    "repetition_penalty": self.repetition_penalty
-                }
-            )
-
-            answer = chat_completion.choices[0].message.content
+                top_logprobs=self.top_k,
+                frequency_penalty=self.repetition_penalty,
+                # presence_penalty=self.repetition_penalty
+            ).sample().content
             return answer
+    

@@ -35,7 +35,7 @@ class GGUFCausalModelHandler(BaseCausalModelHandler):
     def load_model(self):
         if self.use_langchain:
             self.langchain_integrator = LangchainIntegrator(
-                backend_type="gguf",
+                provider="gguf",
                 model_name=self.local_model_path,
                 lora_model_name=self.local_lora_model_path,
                 max_tokens=self.max_tokens,
@@ -134,7 +134,7 @@ class GGUFVisionModelHandler(BaseVisionModelHandler):
     def load_model(self):
         if self.use_langchain:
             self.langchain_integrator = LangchainIntegrator(
-                backend_type="lmstudio",
+                provider="lmstudio",
                 model_name=self.model,
                 api_key="not-needed",
                 max_tokens=self.max_tokens,

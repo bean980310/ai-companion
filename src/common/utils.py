@@ -19,6 +19,7 @@ from model_converter import convert_model_to_float8, convert_model_to_int8, conv
 import platform
 import gc
 from src.common.cache import models_cache
+from src.api.comfy_api import client
 
 from src import logger
 
@@ -229,8 +230,8 @@ def get_diffusion_vae(vae_root="./models/diffusion/vae"):
     diffusion/vae 폴더 내에서 필요한 파일들이 있는 폴더를 재귀적으로 스캔하여 VAE 모델 목록 반환.
     """
     models = scan_diffusion_models()
-    comfyui_models = scan_diffusion_models(root=comfyui_path)
-    all_models = models+comfyui_models
+    # comfyui_models = client.get_models_list('vae')
+    all_models = models
     vae_models = [m['model_id'] for m in all_models if m['model_type'] == "vae"]
     return vae_models
 
@@ -240,8 +241,8 @@ def get_diffusion_loras(lora_root="./models/diffusion/loras"):
     diffusion/loras 폴더 내에서 필요한 파일들이 있는 폴더를 재귀적으로 스캔하여 LoRA 모델 목록 반환.
     """
     models = scan_diffusion_models()
-    comfyui_models = scan_diffusion_models(root=comfyui_path)
-    all_models = models+comfyui_models
+    # comfyui_models = client.get_models_list('loras')
+    all_models = models
     lora_models = [m['model_id'] for m in all_models if m['model_type'] == "loras"]
     return lora_models
 
@@ -259,8 +260,8 @@ def get_all_local_models():
 
 def get_all_diffusion_models():
     models = scan_diffusion_models()
-    comfyui_models = scan_diffusion_models(root=comfyui_path)
-    all_models=models+comfyui_models
+    # comfyui_models = client.get_models_list('checkpoints')
+    all_models=models
     diffusers=[m['model_id'] for m in all_models if m['model_type'] == "diffusers"]
     checkpoints=[m['model_id'] for m in all_models if m['model_type'] == 'checkpoints']
     return {

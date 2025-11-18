@@ -2,20 +2,20 @@ from .... import logger
 import traceback
 from ..base_handlers import BaseAPIClientWrapper
 
-import anthropic
+from perplexity import Perplexity
 
 from ..langchain_integrator import LangchainIntegrator
 
-class AnthropicClientWrapper(BaseAPIClientWrapper):
+class PerplexityClientWrapper(BaseAPIClientWrapper):
     def __init__(self, selected_model: str, api_key: str | None = None, use_langchain: bool = True, **kwargs):
         super().__init__(selected_model, api_key, use_langchain, **kwargs)
-        
+
         if self.use_langchain:
             self.load_model()
 
     def load_model(self):
         self.langchain_integrator = LangchainIntegrator(
-            backend_type="anthropic",
+            provider="perplexity",
             model_name=self.model,
             api_key=self.api_key,
             max_tokens=self.max_tokens,
@@ -30,30 +30,20 @@ class AnthropicClientWrapper(BaseAPIClientWrapper):
         if self.use_langchain:
             return self.langchain_integrator.generate_answer(history)
         else:
-            client = anthropic.Client(api_key=self.api_key)
+            client = Perplexity(api_key=self.api_key)
 
-            # Anthropic 메시지 형식으로 변환
-            messages = []
-            for msg in history:
-                if msg["role"] == "system":
-                    system = msg["content"]
-                    continue  # Claude API는 시스템 메시지를 별도로 처리하지 않음
-                messages.append({
-                    "role": msg["role"],
-                    "content": msg["content"]
-                })
-                    
-            logger.info(f"[*] Anthropic API 요청: {messages}")
-                    
-            response = client.messages.create(
-                model=self.model,
-                system=system,
+            messages = [{"role": msg['role'], "content": msg['content']} for msg in history]
+            logger.info(f"[*] Perplexity API 요청: {messages}")
+                
+            completion = client.chat.completions.create(
                 messages=messages,
-                temperature=self.temperature,
-                top_k=self.top_k,
+                model=self.model,
                 top_p=self.top_p,
-                # frequency_penalty=repetition_penalty,
+                top_k=self.top_k,
                 max_tokens=self.max_tokens,
+                frequency_penalty=self.repetition_penalty,
+                # presence_penalty=self.repetition_penalty,
+                temperature=self.temperature,
             )
-            answer = response.content[0].text
+            answer = completion.choices[0].message.content
             return answer

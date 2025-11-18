@@ -24,6 +24,12 @@ fastmcp
 accelerate>=1.10.0
 basicsr>=1.4.2
 groq>=0.31.0
+together
+replicate
+tavily-python
+fireworks-ai
+novita-sandbox
+cohere
 spaces
 facexlib>=0.3.0
 gfpgan>=1.3.8

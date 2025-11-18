@@ -16,6 +16,7 @@ openai_api_models = [
     "gpt-5-nano-2025-08-07",
     "gpt-5-pro-2025-10-06",
     "gpt-5-chat-latest",
+    "gpt-5.1-2025-11-13",
 ]
 
 anthropic_api_models = [
@@ -108,7 +109,6 @@ openai_image_api_models = [
 ]
 
 google_image_api_models = [
-    "imagen-3.0-generate-002",
     "imagen-4.0-generate-001",
     "imagen-4.0-ultra-generate-001",
     "imagen-4.0-fast-generate-001"
@@ -176,5 +176,10 @@ openai_audio_api_models = [
     "gpt-audio-mini"
 ]
 
+google_audio_api_models = [
+    "gemini-2.5-flash-native-audio-preview-09-2025",
+]
+
 stream_api_models.extend(openai_realtime_api_models)
 stream_api_models.extend(openai_audio_api_models)
+stream_api_models.extend(google_audio_api_models)

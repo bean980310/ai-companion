@@ -194,6 +194,13 @@ class ComfyUIClient:
         ws.close()
         
         return images
+    
+    def get_models_list(self, folder: str):
+        models_folder_url = f"http://{self.server_address}/models/{folder}"
+        response = requests.get(models_folder_url)
+        responsed_content = [x for x in response.content[1:-1].decode().replace("\"", "").strip().split(', ') if x]
+        return responsed_content
         
+Client=ComfyUIClient
 
-client=ComfyUIClient()
+client=Client()

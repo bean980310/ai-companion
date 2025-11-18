@@ -7,7 +7,7 @@ from .storyteller import create_story_side
 from .tts import create_tts_side
 
 def create_sidebar():
-    with gr.Sidebar(elem_classes="sidebar-container") as sidebar:
+    with gr.Sidebar() as sidebar:
         tab_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab = create_tab_side()
 
         chatbot_sidebar = chat_main.create_chatbot_side()

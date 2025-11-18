@@ -4,6 +4,7 @@ from typing import Any
 import os
 import platform
 import warnings
+import base64
 
 import random
 import torch.nn
@@ -32,6 +33,7 @@ except ImportError:
 class BaseModel(ABC):
     def __init__(self, use_langchain: bool = True, **kwargs):
         self.use_langchain = use_langchain
+        self.enable_streaming = bool(kwargs.get("enable_streaming", False))
 
         self.max_tokens = int(kwargs.get("max_tokens", 2048))
         self.max_length = int(kwargs.get("max_length", -1))
@@ -127,10 +129,12 @@ class BaseVisionModelHandler(BaseModelHandler):
     def load_template(self, messages):
         pass
 class BaseAPIClientWrapper(BaseModel):
-    def __init__(self, selected_model: str, api_key: str | None = None , use_langchain: bool = True, **kwargs):
+    def __init__(self, selected_model: str, api_key: str | None = None , use_langchain: bool = True, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, **kwargs):
         super().__init__(use_langchain, **kwargs)
         self.model = selected_model
         self.api_key = api_key
+        self.image_input = image_input
+
 
     @abstractmethod
     def load_model(self):
@@ -139,3 +143,8 @@ class BaseAPIClientWrapper(BaseModel):
     @abstractmethod
     def generate_answer(self, history, **kwargs):
         pass
+
+    @staticmethod
+    def encode_image(image_path):
+        with open(image_path, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode("utf-8")
