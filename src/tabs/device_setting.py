@@ -3,9 +3,10 @@ import platform
 import gradio as gr
 from typing import Tuple
 
-from src.models.models import get_default_device, default_device
+from .. import logger
+from ..models.models import get_default_device, default_device
 
-from src import logger
+
 
 def set_device(selection):
     """

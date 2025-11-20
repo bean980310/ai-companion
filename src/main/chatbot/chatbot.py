@@ -576,11 +576,17 @@ class Chatbot:
 
     def toggle_standard_msg_input_visibility(self, selected_model: str | gr.Dropdown) -> bool:
         msg_visible = all(x not in selected_model.lower() for x in [
+                "claude",
+                "gpt-4o",
+                "gpt-4.1",
+                "gpt-5",
                 "vision",
                 "llava",
                 "qwen2-vl",
                 "qwen2.5-vl",
                 "qwen2.5-omni",
+                "qwen3-vl",
+                "qwen3-onmi",
                 "llama-4",
                 "pixtral",
                 "mistral-small-3",
@@ -598,11 +604,17 @@ class Chatbot:
 
     def toggle_multimodal_msg_input_visibility(self, selected_model: str | gr.Dropdown) -> bool:
         msg_visible = any(x in selected_model.lower() for x in [
+                "claude",
+                "gpt-4o",
+                "gpt-4.1",
+                "gpt-5",
                 "vision",
                 "llava",
                 "qwen2-vl",
                 "qwen2.5-vl",
                 "qwen2.5-omni",
+                "qwen3-vl",
+                "qwen3-onmi",
                 "llama-4",
                 "pixtral",
                 "mistral-small-3",

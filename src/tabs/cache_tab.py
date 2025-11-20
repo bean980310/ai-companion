@@ -1,14 +1,19 @@
 import gradio as gr
-from src.common.translations import _, translation_manager
-from src.models.models import get_all_local_models
-from src.common.utils import clear_all_model_cache
-from src.main.chatbot.chatbot import Chatbot
-from src.models import api_models
+
+from ..start_app import ui_component
+
+from ..common.translations import _, translation_manager
+from ..models import api_models
+from ..models.models import get_all_local_models
+
+from ..common.utils import clear_all_model_cache
+from ..main.chatbot.chatbot import Chatbot
+
 
 chat_bot=Chatbot()
 
 from .. import logger
-from ..start_app import ui_component
+
 from ..main import ChatbotMain
 
 def create_cache_tab():    

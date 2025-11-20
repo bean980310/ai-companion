@@ -13,7 +13,8 @@ from ..common.database import get_existing_sessions
 from ..common.character_info import characters
 from ..common.html import show_confetti
 from ..common.translations import translation_manager, _
-from ..api.comfy_api import ComfyUIClient
+from ..api.comfy_api import client
+from . import header
 from .header import HeaderUIComponent
 from ..characters import PersonaSpeechManager
 
@@ -34,10 +35,13 @@ from presets import (
     CHOI_YURI_PRESET
     )
 
-def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient()):
+def init_system_message_accordion():
+    return gr.update(open=False)
+
+def create_main_container(demo: gr.Blocks):
     with gr.Column(elem_classes="main-container"):    
         header_ui_component = HeaderUIComponent.create_header_container()
-
+        
         sidebar, tab_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_side, diff_side, storyteller_side, storytelling_model_type_dropdown, storytelling_model_dropdown, storytelling_api_key_text, storytelling_lora_dropdown, tts_side, tts_model_type_dropdown, tts_model_dropdown, translate_side = create_sidebar()
 
         chat_container, diff_container, story_container, storytelling_input, storytelling_btn, storytelling_output, story_adv_setting, storyteller_seed_input, storyteller_temperature_slider, storyteller_top_k_slider, storyteller_top_p_slider, storyteller_repetition_penalty_slider, tts_container, translate_container, download_container = create_body_container()
@@ -819,4 +823,10 @@ def create_main_container(demo: gr.Blocks, client: ComfyUIClient = ComfyUIClient
         ]
     )
 
+    demo.load(
+        fn=init_system_message_accordion,
+        inputs=[],
+        outputs=[system_message_accordion]
+    )
+    
     return settings_button, text_model_type_dropdown, text_model_dropdown, system_message_box, preset_dropdown

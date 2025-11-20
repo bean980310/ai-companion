@@ -1,4 +1,7 @@
 import gradio as gr
+
+from ..start_app import ui_component
+
 from .cache_tab import create_cache_tab
 from .util_tab import create_util_tab
 from .setting_tab_custom_model import create_custom_model_tab
@@ -9,7 +12,7 @@ from .setting_tab_session_manager import create_session_management_tab
 from .device_setting import create_device_setting_tab
 
 from ..main.chatbot import Chatbot
-from ..start_app import ui_component
+
 
 chat_bot = Chatbot()
 

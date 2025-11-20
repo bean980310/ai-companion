@@ -3,16 +3,19 @@ import traceback
 
 import gradio as gr
 from huggingface_hub import HfApi
+from gradio_huggingfacehub_search import HuggingfaceHubSearch
 
+from .. import logger
+
+from ..hub import TASKS, LIBRARIES, LANGUAGES_HUB
+
+from ..models.api_models import api_models
+from ..models.known_hf_models import known_hf_models
+
+from ..common.utils import download_model_from_hf, make_local_dir_name, get_all_local_models
 from src.main.chatbot.chatbot import Chatbot
-from src.models.api_models import api_models
-from src.models.known_hf_models import known_hf_models
-
-from src.common.utils import download_model_from_hf, make_local_dir_name, get_all_local_models
-from src.hub import TASKS, LIBRARIES, LANGUAGES_HUB
 
 # 로깅 설정
-from src import logger
 
 chat_bot=Chatbot()
 
@@ -20,9 +23,9 @@ def create_download_tab():
     with gr.Column(elem_classes="tab-container") as download_container:
         with gr.Row(elem_classes="model-container"):
             gr.Markdown("### Download Center")
-        with gr.Tabs():
+        with gr.Tabs(elem_classes="chat-interface"):
             # Predefined 탭
-            with gr.Tab("Predefined"):
+            with gr.Tab("Predefined", elem_classes='tab-container'):
                 gr.Markdown("""### Predefined Models
                 Select from a list of predefined models available for download.""")
 
@@ -30,7 +33,8 @@ def create_download_tab():
                     label="Model Selection",
                     choices=sorted(known_hf_models),
                     value=known_hf_models[0] if known_hf_models else None,
-                    info="Select a predefined model from the list."
+                    info="Select a predefined model from the list.",
+                    elem_classes="model-dropdown"
                 )
 
                 # 다운로드 설정
@@ -139,10 +143,11 @@ def create_download_tab():
                 gr.Markdown("""### Custom Repository ID
                 Enter a custom HuggingFace repository ID to download the model.""")
 
-                custom_repo_id_box = gr.Textbox(
+                custom_repo_id_box = HuggingfaceHubSearch(
                     label="Custom Model ID",
                     placeholder="e.g., facebook/opt-350m",
-                    info="Enter the HuggingFace model repository ID (e.g., organization/model-name)."
+                    # info="Enter the HuggingFace model repository ID (e.g., organization/model-name).",
+                    search_type="model"
                 )
 
                 # 다운로드 설정
@@ -255,7 +260,7 @@ def create_download_tab():
                     search_box_hub = gr.Textbox(
                         label="Search",
                         placeholder="Enter model name, tag, or keyword...",
-                        scale=4
+                        scale=4,
                     )
                     search_btn_hub = gr.Button("Search", scale=1)
 
@@ -351,7 +356,7 @@ def create_download_tab():
                     """
                     return gr.update(visible=use_auth_val)
                 
-                @search_btn_hub.click(inputs=[search_box_hub, model_type_filter_hub, language_filter_hub, library_filter_hub], outputs=model_list_hub)
+                @gr.on(triggers=[search_btn_hub.click, search_box_hub.submit], inputs=[search_box_hub, model_type_filter_hub, language_filter_hub, library_filter_hub], outputs=model_list_hub)
                 def search_models_hub(query, model_type, language, library):
                     """
                     Search models on HuggingFace Hub
@@ -377,9 +382,8 @@ def create_download_tab():
                             lang_filter.append(language[i])
 
                         models = api.list_models(
-                            task=task_filter,
-                            library=lib_filter,
-                            language=lang_filter,
+                            filter=[task_filter, lib_filter, lang_filter],
+                            search=search_box_hub.value,
                             limit=100,
                             sort="lastModified",
                             direction=-1

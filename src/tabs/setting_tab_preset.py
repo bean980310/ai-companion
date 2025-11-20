@@ -1,14 +1,17 @@
 import gradio as gr
-from src.common.database import preset_exists, handle_add_preset, load_system_presets, save_chat_history_db, get_preset_choices, handle_delete_preset
-from src.main.chatbot.chatbot import Chatbot
 
-from src.characters.preset_images import PRESET_IMAGES
-from ..common.default_language import default_language
 from ..start_app import app_state, ui_component
+
+from ..common.default_language import default_language
+from ..common.database import preset_exists, handle_add_preset, load_system_presets, save_chat_history_db, get_preset_choices, handle_delete_preset
+from ..characters.preset_images import PRESET_IMAGES
+
+from ..main.chatbot.chatbot import Chatbot
+
 
 chat_bot=Chatbot()
 
-from src import logger
+from .. import logger
 
 def confirm_overwrite(name, content):
     success, message = handle_add_preset(name.strip(), content.strip(), overwrite=True)

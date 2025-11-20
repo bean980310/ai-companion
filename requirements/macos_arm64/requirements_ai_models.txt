@@ -74,6 +74,7 @@ llama-cpp-python --index-url https://abetlen.github.io/llama-cpp-python/whl/meta
 stable-diffusion-cpp-python
 tipo-kgen
 nexaai
+a2a-sdk[http-server]>=0.3.0
 
 # mlx[dev]
 mlx_lm[test, evaluate, train]

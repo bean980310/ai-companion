@@ -1,8 +1,9 @@
-import gradio as gr
 from typing import Tuple
+import gradio as gr
 
-from ..main.chatbot.chatbot import Chatbot
 from ..start_app import app_state, ui_component
+from ..main.chatbot.chatbot import Chatbot
+
 
 chat_bot=Chatbot()
 

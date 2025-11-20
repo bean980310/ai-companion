@@ -5,6 +5,12 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Easy-LLM Application Setting")
     
     parser.add_argument(
+        "--listen",
+        action="store_true",
+        help="Gradio 서버가 실행될 호스트 주소를 지정합니다. (default: %(default)s)"
+    )
+
+    parser.add_argument(
         "--port",
         type=int,
         default=7861,
@@ -58,5 +64,5 @@ def parse_args():
         default=True,
         help="PWA를 활성화합니다."
     )
-    
+
     return parser.parse_args()

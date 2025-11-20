@@ -1,7 +1,7 @@
 /* Updated style.css */
 
 :root {
-    --sidebar-width: 400px;
+    --sidebar-width: 90%;
     
     --color-background-primary: #f8fafc;
     --color-background-secondary: white;
@@ -38,8 +38,8 @@
 
 .sidebar-container {
     width: var(--sidebar-width); /* 원하는 너비 */
+    margin: auto;
     padding: 10px;
-    overflow-y: auto;
     box-sizing: border-box;
     transition: transform 0.3s ease;
 }
@@ -49,15 +49,17 @@
 }
 
 .main-container {
-    max-width: 1400px;
-    margin: 0 auto;
+    width: 90%;
+    margin: auto;
     padding: 1.5rem;
     background-color: #f8fafc;
     min-height: 100vh;
 }
 
 .header-container {
-    height: 100px;
+    width: 90%;
+    height: 90%;
+    margin: auto;
     background-color: var(--color-background-secondary);
     padding: 1rem 1.5rem;
     border-radius: 12px;
@@ -121,6 +123,8 @@
 
 .tabs {
     display: flex;
+    width: 90%;
+    margin: auto;
     border-bottom: 2px solid #e5e7eb;
     margin-bottom: 1rem;
 }
@@ -143,6 +147,8 @@
 
 /* 활성 탭 스타일 */
 .tab-container {
+    width: 90%;
+    margin: auto;
     background-color: var(--color-background-primary);
     color: #1a1a1a;
     border-bottom: 2px solid var(--color-background-primary);
@@ -171,6 +177,8 @@
     padding: 1rem;
     border-radius: 12px;
     margin-bottom: 1rem;
+    width: 100%;
+    margin: auto;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -202,6 +210,8 @@
     background-color: var(--color-background-secondary);
     padding: 1.5rem;
     border-radius: 12px;
+    width: 100%;
+    margin: auto;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     min-height: 600px;
 }
@@ -219,8 +229,9 @@
     border-radius: 8px;
     background-color: #ffffff;
     padding: 1rem;
-    height: 500px;
-    overflow-y: auto;
+    width: 100%;
+    height: 100%;
+    margin: auto;
 }
 
 .chat-window .user-message {
@@ -305,6 +316,8 @@
 }
 
 .side-panel {
+    width: 90%;
+    margin: 0 auto;
     padding-left: 1rem;
 }
 
@@ -318,19 +331,31 @@
 }
 
 .profile-image img {
-    object-fit: contain !important;
+    object-fit: cover !important;
     width: auto !important;
     height: auto !important;
     max-width: 100% !important;
     max-height: 100% !important;
 }
 
-.character-dropdown, .preset-dropdown {
+.character-dropdown, .preset-dropdown, .model-dropdown {
+    width: 100%;
+    margin: auto;
+    height: 100%;
     border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
 }
+/* 
+.model-dropdown {
+    width: 100%;
+    margin: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+} */
 
 .status-bar {
     margin-top: 1rem;
@@ -347,7 +372,7 @@
         background-color: var(--color-background-primary-dark);
     }
     
-    .header-container, .warning-container, .session-container, .model-container, .chat-interface, .history-container {
+    .header-container, .warning-container, .session-container, .model-container, .chat-interface, .history-container, .language-selector {
         background-color: var(--color-background-secondary-dark);
         border-color: #404040;
     }

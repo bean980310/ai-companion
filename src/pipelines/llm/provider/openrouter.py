@@ -1,12 +1,11 @@
-from .... import logger
 import traceback
-from ..base_handlers import BaseAPIClientWrapper
+import requests
 
 from huggingface_hub import InferenceClient, InferenceEndpoint
 from openai import OpenAI
+from ..base_handlers import BaseAPIClientWrapper
 
-import requests
-
+from .... import logger
 from ..langchain_integrator import LangchainIntegrator
 
 class OpenRouterClientWrapper(BaseAPIClientWrapper):

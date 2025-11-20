@@ -1,4 +1,3 @@
-api_models = []
 diffusion_api_models = []
 diffusion_video_api_models = []
 tts_api_models = []
@@ -96,11 +95,7 @@ openrouter_api_models = [
     "minimax/minimax-m1",
 ]
 
-api_models.extend(openai_api_models)
-api_models.extend(anthropic_api_models)
-api_models.extend(google_ai_api_models)
-api_models.extend(perplexity_api_models)
-api_models.extend(xai_api_models)
+api_models = openai_api_models + anthropic_api_models + google_ai_api_models + perplexity_api_models + xai_api_models
 
 openai_image_api_models = [
     "dall-e-3",

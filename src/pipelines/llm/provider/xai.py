@@ -1,9 +1,10 @@
-from .... import logger
-import traceback
-from ..base_handlers import BaseAPIClientWrapper
 
+import traceback
 import xai_sdk
 
+from .... import logger
+
+from ..base_handlers import BaseAPIClientWrapper
 from ..langchain_integrator import LangchainIntegrator
 
 class XAIClientWrapper(BaseAPIClientWrapper):

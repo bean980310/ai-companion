@@ -1,8 +1,8 @@
 # WIP: src/pipelines/llm/api/lmstudio.py
 
+from typing import Any
 import lmstudio as lms
 from PIL import Image, ImageFile
-from typing import Any
 
 SERVER_API_HOST = "localhost:1234"
 

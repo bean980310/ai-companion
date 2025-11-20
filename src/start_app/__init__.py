@@ -309,7 +309,7 @@ def on_app_start(language=None):  # language 매개변수에 기본값 설정
         }
         loaded_history = [default_system]
         last_preset = last_character
-            
+
     return (
         sid, 
         loaded_history,

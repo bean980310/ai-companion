@@ -1,3 +1,4 @@
+import os
 from typing import Any, Generator
 import llama_cpp
 from llama_cpp import Llama # gguf 모델을 로드하기 위한 라이브러리
@@ -5,13 +6,11 @@ from llama_cpp.llama_tokenizer import LlamaHFTokenizer
 
 import lmstudio as lms
 
+from ... import logger
 from .langchain_integrator import LangchainIntegrator
-
-import os
-
 from .base_handlers import BaseCausalModelHandler, BaseVisionModelHandler
 
-from src import logger
+
 
 class GGUFCausalModelHandler(BaseCausalModelHandler):
     def __init__(self, model_id, lora_model_id=None, model_type="gguf", device='cpu', use_langchain: bool = True, **kwargs):

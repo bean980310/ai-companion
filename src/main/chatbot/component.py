@@ -122,14 +122,16 @@ class ChatbotComponent:
                     label=_("system_message"),
                     value=app_state.system_message,
                     placeholder=_("system_message_placeholder"),
-                    elem_classes="system-message"
+                    elem_classes="system-message",
+                    autofocus=True
                 )
                             
             chatbot = gr.Chatbot(
-                height=400, 
+                height=600,
                 label="Chatbot", 
                 type="messages", 
-                elem_classes=["chat-messages"],
+                elem_classes="chat-window",
+                resizable=True,
                 avatar_images=[None, characters[app_state.last_character]["profile_image"]]
             )
                             
@@ -182,7 +184,7 @@ class ChatbotComponent:
                 value=app_state.last_character,
                 interactive=True,
                 info=_('character_select_info'),
-                elem_classes='profile-image'
+                elem_classes='character-dropdown'
             )
             with gr.Accordion(_("advanced_setting"), open=False, elem_classes="accordion-container") as advanced_setting:                        
                 seed_input = gr.Number(

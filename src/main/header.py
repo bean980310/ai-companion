@@ -26,7 +26,7 @@ class HeaderUIComponent:
                     interactive=True,
                     info=_('language_info'),
                     container=False,
-                    elem_classes="custom-dropdown"
+                    elem_classes="language-selector"
                 )
         
         ui_component.title = title
@@ -34,5 +34,3 @@ class HeaderUIComponent:
         ui_component.language_dropdown = language_dropdown
         
         return cls(title, settings_button, language_dropdown)
-    
-

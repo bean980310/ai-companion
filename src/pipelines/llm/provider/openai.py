@@ -1,9 +1,7 @@
-from .... import logger
+import base64
 import traceback
-from ..base_handlers import BaseAPIClientWrapper
 from typing import Any
 
-import base64
 import openai
 from openai import OpenAI
 from PIL import Image
@@ -11,6 +9,8 @@ from PIL import ImageFile
 from openai.types.responses.response import Response
 from openai.types.responses.response_stream_event import ResponseStreamEvent
 
+from .... import logger
+from ..base_handlers import BaseAPIClientWrapper
 from ..langchain_integrator import LangchainIntegrator
 
 class OpenAIClientWrapper(BaseAPIClientWrapper):

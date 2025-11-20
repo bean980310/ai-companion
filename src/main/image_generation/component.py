@@ -92,7 +92,7 @@ class DiffusionComponent:
                 diffusion_refiner_model_dropdown = gr.Dropdown(
                     label=_("refiner_model_select_label"),
                     choices=app_state.diffusion_refiner_choices,
-                    value=app_state.diffusion_refiner_choices[0] if len(app_state.diffusion_refiner_choices) > 0 else None,
+                    value=app_state.diffusion_refiner_choices[0],
                     elem_classes="model-dropdown"
                 )
                 diffusion_refiner_start = gr.Slider(

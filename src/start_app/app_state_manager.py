@@ -1,7 +1,9 @@
-import gradio as gr
 from dataclasses import dataclass
-from ..characters.persona_speech_manager import PersonaSpeechManager
 from typing import Any
+
+import gradio as gr
+
+from ..characters.persona_speech_manager import PersonaSpeechManager
 @dataclass
 class AppState:
     speech_manager_state: gr.State | PersonaSpeechManager | None = None
