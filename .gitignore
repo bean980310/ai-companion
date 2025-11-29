@@ -16,3 +16,14 @@ persona_state.db
 *.mp3
 *.wav
 *.patch
+
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv

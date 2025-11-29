@@ -58,7 +58,6 @@ from langchain_unstructured import UnstructuredLoader
 from langchain_community.llms.llamacpp import LlamaCpp
 from langchain_community.chat_models.llamacpp import ChatLlamaCpp
 from langchain_huggingface import HuggingFacePipeline, HuggingFaceEndpoint, ChatHuggingFace
-from langchain_huggingface_hijack.chat_models import ChatHuggingFaceEnhanced
 from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -163,7 +162,7 @@ class LangchainIntegrator:
             pipeline_kwargs={"max_new_tokens": self.max_tokens, "temperature": self.temperature, "top_p": self.top_p, "top_k": self.top_k, "repetition_penalty": self.repetition_penalty}
             pipe = pipeline(model=self.model, tokenizer=self.tokenizer, task="text-generation")
             llm = HuggingFacePipeline(pipeline=pipe, pipeline_kwargs=pipeline_kwargs, verbose=self.verbose)
-            return ChatHuggingFaceEnhanced(llm=llm, verbose=self.verbose, max_tokens=self.max_tokens, model_kwargs={})
+            return ChatHuggingFace(llm=llm, verbose=self.verbose, max_tokens=self.max_tokens, model_kwargs={})
         
         elif provider == "gguf":
             # Local GGUF (llama.cpp) model

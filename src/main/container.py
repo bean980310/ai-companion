@@ -26,6 +26,6 @@ def create_body_container():
                 gr.Markdown("# Coming Soon!")
                 
         translate_container = create_translate_container()
-        download_container = create_download_tab()
+        # download_container = create_download_tab()
 
-    return chat_container, diff_container, story_container, storytelling_input, storytelling_btn, storytelling_output, story_adv_setting, storyteller_seed_input, storyteller_temperature_slider, storyteller_top_k_slider, storyteller_top_p_slider, storyteller_repetition_penalty_slider, tts_container, translate_container, download_container
+    return chat_container, diff_container, story_container, storytelling_input, storytelling_btn, storytelling_output, story_adv_setting, storyteller_seed_input, storyteller_temperature_slider, storyteller_top_k_slider, storyteller_top_p_slider, storyteller_repetition_penalty_slider, tts_container, translate_container

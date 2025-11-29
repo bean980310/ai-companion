@@ -3,7 +3,7 @@
 import random
 import platform
 import traceback
-from typing import Any, List
+from typing import Any, List, Literal
 
 import numpy as np
 import torch
@@ -16,7 +16,8 @@ from google import genai
 from google.genai import types
 
 from src.common.cache import models_cache
-from src.pipelines.llm import (
+
+from ai_companion_llm_backend import (
     TransformersCausalModelHandler, 
     TransformersVisionModelHandler, 
     GGUFCausalModelHandler, 
@@ -24,22 +25,21 @@ from src.pipelines.llm import (
     MlxVisionModelHandler,
 )
 
-from src.pipelines.llm.provider import (
+from ai_companion_llm_backend.provider import (
     AnthropicClientWrapper,
     GoogleAIClientWrapper,
     OpenAIClientWrapper,
     PerplexityClientWrapper,
     XAIClientWrapper,
-    OpenRouterClientWrapper
+    OpenRouterClientWrapper,
+    HuggingfaceInferenceClientWrapper,
+    LMStudioIntegrator
 )
 from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models, convert_folder_to_modelid
-
-from src.models import api_models
 
 from src import logger
 
 LOCAL_MODELS_ROOT = "./models"
-
 
 def get_default_device():
     """
@@ -58,99 +58,151 @@ def get_default_device():
 # Set default device
 default_device = get_default_device()
 logger.info(f"Default device set to: {default_device}")
-def refresh_model_list():
-    new_local_models = get_all_local_models()
-    global api_models
-    local_models = (
-        new_local_models["transformers"] + 
-        new_local_models["gguf"] + 
-        new_local_models["mlx"]
-    )
-    new_choices = api_models + local_models
-    new_choices = sorted(list(dict.fromkeys(new_choices)))
-    return gr.update(choices=new_choices), "모델 목록을 새로고침했습니다."
 
-
-def load_model(selected_model: str, model_type: str, selected_lora: str | None = None, quantization_bit: str = "Q8_0", local_model_path: str | None = None, api_key: str | None = None, device: str = "cpu", lora_path: str | None = None, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, **kwargs):
+def load_model(selected_model: str, provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", 'mistralai', "openrouter", "hf-inference", "ollama", "lmstudio", "self-provided"], model_type: str | None = None, selected_lora: str | None = None, quantization_bit: str = "Q8_0", local_model_path: str | None = None, api_key: str | None = None, device: str = "cpu", lora_path: str | None = None, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, **kwargs):
     """
     모델 로드 함수. 특정 모델에 대한 로드 로직을 외부 핸들러로 분리.
     """
     model_id = selected_model
     lora_model_id = selected_lora if selected_lora else None
     vision_model = True if image_input else False
-    if model_type != "transformers" and model_type != "gguf" and model_type != "mlx" and model_type != "api":
+    
+    # Pass the device to the handler
+    if provider == "self-provided" and model_type != "transformers" and model_type != "gguf" and model_type != "mlx":
         logger.error(f"지원되지 않는 모델 유형: {model_type}")
         return None
     
-    # Pass the device to the handler
-    handler = None
-    if model_type not in ["transformers", "gguf", "mlx", "api"]:
-        logger.error(f"지원되지 않는 모델 유형: {model_type}")
+    if provider not in ["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "self-provided"]:
+        logger.error(f"지원되지 않는 공급자: {provider}")
         return None
-    if model_type == "api":
+    
+    # 각자 공급자에 따라 클라이언트 생성.
+    if provider == "openai":
+        if not api_key:
+            logger.error("OpenAI API Key가 missing.")
+            return "OpenAI API Key가 필요합니다."
+            
+        wrapper = OpenAIClientWrapper(selected_model, api_key=api_key)
+        return wrapper
+    
+    elif provider == "anthropic":
+        if not api_key:
+            logger.error("Anthropic API Key가 missing.")
+            return "Anthropic API Key가 필요합니다."
+            
+        wrapper = AnthropicClientWrapper(selected_model, api_key=api_key)
+        return wrapper
+    
+    elif provider == "google-genai":
+        if not api_key:
+            logger.error("Google AI API Key가 missing.")
+            return "Google AI API Key가 필요합니다."
+
+        wrapper = GoogleAIClientWrapper(selected_model, api_key=api_key)
+        return wrapper
+    
+    elif provider == "perplexity":
+        if not api_key:
+            logger.error("Perplexity API Key가 missing.")
+            return "Perplexity API Key가 필요합니다."
+            
+        wrapper = PerplexityClientWrapper(selected_model, api_key=api_key)
+        return wrapper
+
+    elif provider == "xai":
+        if not api_key:
+            logger.error("XAI API Key가 missing.")
+            return "XAI API Key가 필요합니다."
+            
+        wrapper = XAIClientWrapper(selected_model, api_key=api_key)
+        return wrapper
+    
+    elif provider == "openrouter":
+        if not api_key:
+            logger.error("OpenRouter API Key가 missing.")
+            return "OpenRouter API Key가 필요합니다."
+            
+        wrapper = OpenRouterClientWrapper(selected_model, api_key=api_key)
+        return wrapper
+
+    elif provider == "hf-inference":
+        if not api_key:
+            logger.error("Huggingface Token Key가 missing.")
+            return "Huggingface Token Key가 필요합니다."
+            
+        wrapper = HuggingfaceInferenceClientWrapper(selected_model, api_key=api_key)
+        return wrapper
+    elif provider == "ollama":
         # API 모델은 별도의 로드가 필요 없으므로 핸들러 생성 안함
         return None
-    if model_type == "gguf":
-        # GGUF 모델 로딩 로직
-        # handler = GGUFModelHandler(
-        #     model_id=model_id,
-        #     local_model_path=local_model_path,
-        #     model_type=model_type
-        # )
-        handler = GGUFCausalModelHandler(
-            model_id=model_id,
-            lora_model_id=lora_model_id,
-            model_type=model_type,
-            device=device, 
-            **kwargs
-        )
-        cache_key = build_model_cache_key(model_id, model_type)
-        models_cache[cache_key] = handler
-        return handler
-    elif model_type == "mlx":
-        if vision_model:
-            handler = MlxVisionModelHandler(
-                model_id=model_id,
-                lora_model_id=lora_model_id,
-                model_type=model_type,
-                image_input=image_input,
-                **kwargs
-            )
-            models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
-            return handler
-        else:
-            handler = MlxCausalModelHandler(
-                model_id=model_id,
-                lora_model_id=lora_model_id,
-                model_type=model_type, 
-                **kwargs
-            )
-            models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
-            return handler
+    elif provider == "lmstudio":
+        # API 모델은 별도의 로드가 필요 없으므로 핸들러 생성 안함
+        wrapper = LMStudioIntegrator(selected_model)
+        return wrapper
     else:
-        if vision_model:
-            handler = TransformersVisionModelHandler(
+        # 자체 공급은 클라이언트 대신 핸들러를 생성.
+        handler = None
+        if model_type == "gguf":
+            # GGUF 모델 로딩 로직
+            # handler = GGUFModelHandler(
+            #     model_id=model_id,
+            #     local_model_path=local_model_path,
+            #     model_type=model_type
+            # )
+            handler = GGUFCausalModelHandler(
                 model_id=model_id,
                 lora_model_id=lora_model_id,
-                model_type=model_type,
-                device=device,
-                image_input=image_input, 
-                **kwargs
-            )
-            models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
-            return handler
-        else:
-            handler = TransformersCausalModelHandler(
-                model_id=model_id, 
-                lora_model_id=lora_model_id, 
                 model_type=model_type,
                 device=device, 
                 **kwargs
             )
-            models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+            cache_key = build_model_cache_key(model_id, model_type)
+            models_cache[cache_key] = handler
             return handler
+        elif model_type == "mlx":
+            if vision_model:
+                handler = MlxVisionModelHandler(
+                    model_id=model_id,
+                    lora_model_id=lora_model_id,
+                    model_type=model_type,
+                    image_input=image_input,
+                    **kwargs
+                )
+                models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+                return handler
+            else:
+                handler = MlxCausalModelHandler(
+                    model_id=model_id,
+                    lora_model_id=lora_model_id,
+                    model_type=model_type, 
+                    **kwargs
+                )
+                models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+                return handler
+        else:
+            if vision_model:
+                handler = TransformersVisionModelHandler(
+                    model_id=model_id,
+                    lora_model_id=lora_model_id,
+                    model_type=model_type,
+                    device=device,
+                    image_input=image_input, 
+                    **kwargs
+                )
+                models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+                return handler
+            else:
+                handler = TransformersCausalModelHandler(
+                    model_id=model_id, 
+                    lora_model_id=lora_model_id, 
+                    model_type=model_type,
+                    device=device, 
+                    **kwargs
+                )
+                models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+                return handler
 
-def generate_answer(history: list[dict[str, str | Any]], selected_model: str, model_type: str, selected_lora: str | None = None, local_model_path: str | None = None, lora_path: str | None = None, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, api_key: str | None = None, device: str = "cpu", seed: int = 42, max_length: int = -1, temperature: float = 1.0, top_k: int = 50, top_p: float = 1.0, repetition_penalty: float = 1.0, enable_thinking: bool = False, character_language: str = 'ko'):
+def generate_answer(history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]], selected_model: str, provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", 'mistralai', "openrouter", "hf-inference", "ollama", "lmstudio", "self-provided"], model_type: str | None = None, selected_lora: str | None = None, local_model_path: str | None = None, lora_path: str | None = None, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, api_key: str | None = None, device: str = "cpu", seed: int = 42, max_length: int = -1, temperature: float = 1.0, top_k: int = 50, top_p: float = 1.0, repetition_penalty: float = 1.0, enable_thinking: bool = False, enable_streaming: bool = False, character_language: str = 'ko'):
     """
     사용자 히스토리를 기반으로 답변 생성.
     """
@@ -178,106 +230,23 @@ def generate_answer(history: list[dict[str, str | Any]], selected_model: str, mo
     last_message = history[-1]
     if last_message["role"] == "assistant":
         last_message = history[-2]
-    
-    if model_type == "api":
-        if "claude" in selected_model:
-            if not api_key:
-                logger.error("Anthropic API Key가 missing.")
-                return "Anthropic API Key가 필요합니다."
-            
-            wrapper = AnthropicClientWrapper(selected_model, api_key=api_key)
-            try:
-                answer = wrapper.generate_answer(history=history)
-                logger.info(f"[*] Anthropic 응답: {answer}")
-                return answer
-            except Exception as e:
-                logger.error(f"Anthropic API 오류: {str(e)}\n\n{traceback.format_exc()}")
-                return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
-            
-        elif "gemini" in selected_model or "gemma" in selected_model:
-            if not api_key:
-                logger.error("Google API Key가 missing.")
-                return "Google API Key가 필요합니다."
 
-            wrapper = GoogleAIClientWrapper(selected_model, api_key=api_key)
-            try: 
-                answer = wrapper.generate_answer(history=history)
-                logger.info(f"[*] Google 응답: {answer}")
-                return answer
-            except Exception as e:
-                logger.error(f"Google API 오류: {str(e)}\n\n{traceback.format_exc()}")
-                return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
-            
-        elif "gpt" in selected_model or "o1" in selected_model or "o3" in selected_model or "o4" in selected_model:
-            if not api_key:
-                logger.error("OpenAI API Key가 missing.")
-                return "OpenAI API Key가 필요합니다."
-            
-            wrapper = OpenAIClientWrapper(selected_model, api_key=api_key)
-            try:
-                answer = wrapper.generate_answer(history=history)
-                logger.info(f"[*] OpenAI 응답: {answer}")
-                return answer
-            except Exception as e:
-                logger.error(f"OpenAI API 오류: {str(e)}\n\n{traceback.format_exc()}")
-                return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
-            
-        elif "sonar" in selected_model:
-            if not api_key:
-                logger.error("Perplexity API Key가 missing.")
-                return "Perplexity API Key가 필요합니다."
-            
-            wrapper = PerplexityClientWrapper(selected_model, api_key=api_key)
-            try:
-                answer = wrapper.generate_answer(history=history)
-                logger.info(f"[*] Perplexity 응답: {answer}")
-                return answer
-            except Exception as e:
-                logger.error(f"Perplexity API 오류: {str(e)}\n\n{traceback.format_exc()}")
-                return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
-        elif "grok" in selected_model:
-            if not api_key:
-                logger.error("XAI API Key가 missing.")
-                return "XAI API Key가 필요합니다."
-            
-            wrapper = XAIClientWrapper(selected_model, api_key=api_key)
-            try:
-                answer = wrapper.generate_answer(history=history)
-                logger.info(f"[*] XAI 응답: {answer}")
-                return answer
-            except Exception as e:
-                logger.error(f"XAI API 오류: {str(e)}\n\n{traceback.format_exc()}")
-                return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
-        else:
-            if not api_key:
-                logger.error("OpenRouter API Key가 missing.")
-                return "OpenRouter API Key가 필요합니다."
-            
-            wrapper = OpenRouterClientWrapper(selected_model, api_key=api_key)
-            try:
-                answer = wrapper.generate_answer(history=history)
-                logger.info(f"[*] OpenRouter 응답: {answer}")
-                return answer
-            except Exception as e:
-                logger.error(f"OpenRouter API 오류: {str(e)}\n\n{traceback.format_exc()}")
-                return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
-
-    else:
-        if not handler:
-            logger.info(f"[*] 모델 로드 중: {selected_model}")
-            handler = load_model(selected_model, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path, image_input=image_input, seed=seed, max_length=max_length, temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty, enable_thinking=enable_thinking)
+    if not handler:
+        logger.info(f"[*] 모델 공급자: {provider}")
+        logger.info(f"[*] 모델 로드 중: {selected_model}")
+        handler = load_model(selected_model, provider, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path, image_input=image_input, seed=seed, max_length=max_length, temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty, enable_thinking=enable_thinking)
         
-        if not handler:
-            logger.error("모델 핸들러가 로드되지 않았습니다.")
-            return "모델 핸들러가 로드되지 않았습니다."
+    if not handler:
+        logger.error("모델 핸들러가 로드되지 않았습니다.")
+        return "모델 핸들러가 로드되지 않았습니다."
         
-        logger.info(f"[*] Generating answer using {handler.__class__.__name__}")
-        try:
-            answer = handler.generate_answer(history)
-            return answer
-        except Exception as e:
-            logger.error(f"모델 추론 오류: {str(e)}\n\n{traceback.format_exc()}")
-            return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
+    logger.info(f"[*] Generating answer using {handler.__class__.__name__}")
+    try:
+        answer = handler.generate_answer(history)
+        return answer
+    except Exception as e:
+        logger.error(f"모델 추론 오류: {str(e)}\n\n{traceback.format_exc()}")
+        return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
         
 def generate_text(history, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, image_input=None, api_key=None, device="cpu", seed=42, temperature=1.0, top_k=50, top_p=1.0, repetition_penalty=1.0, character_language='ko'):
     """

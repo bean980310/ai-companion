@@ -13,12 +13,12 @@ echo "Installing requirements..."
 echo "Installing requirements..."
 %HomePath%\.local\bin\uv.exe pip install "transformers[audio]"
 
-echo "Installing requirements..."
-%HomePath%\.local\bin\uv.exe pip install -r requirements/windows_amd64_native_cu128/requirements_ai_models.txt --no-build-isolation
+echo "Installing LLM Backend for AI Companion..."
+%HomePath%\.local\bin\uv.exe pip install ai-companion-llm-backend
 
 echo "Installing requirements..."
 %HomePath%\.local\bin\uv.exe pip install outetts
-%HomePath%\.local\bin\uv.exe pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu124 --upgrade
+%HomePath%\.local\bin\uv.exe pip install https://github.com/JamePeng/llama-cpp-python/releases/download/v0.3.17-cu128-AVX2-win-20251121/llama_cpp_python-0.3.17-cp312-cp312-win_amd64.whl
 %HomePath%\.local\bin\uv.exe pip install protobuf transformers --upgrade
 %HomePath%\.local\bin\uv.exe pip install xai-sdk
 %HomePath%\.local\bin\uv.exe pip install "langchain-chroma>=0.1.2" "langchain-neo4j>=0.4.0"

@@ -1,15 +1,21 @@
 import os
-from dotenv import load_dotenv
+from typing import Union
 
-def load_env_variables():
-    load_dotenv()
+StrPath = Union[str, "os.PathLike[str]"]
 
-def save_env_variables(key, value):
-    if os.path.exists('.env'):
-        with open('.env', 'a') as f:
-            f.write(f"{key}={value}\n")
-    else:
-        with open('.env', 'w') as f:
+def load_env_variables(key: str, path: StrPath="config/environment.env"):
+    from dotenv import get_key
+
+    return get_key(dotenv_path=path, key_to_get=key)
+
+def save_env_variables(key: str, value: str, path: StrPath="config/environment.env"):
+    import os
+    from dotenv import set_key
+
+    if not os.path.exists(path):
+        with open(path, 'w') as f:
             f.write('')
 
-    load_env_variables()
+    set_key(dotenv_path=path, key_to_set=key, value_to_set=value)
+
+    return load_env_variables(key=key)

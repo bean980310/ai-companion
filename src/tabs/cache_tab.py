@@ -3,7 +3,7 @@ import gradio as gr
 from ..start_app import ui_component
 
 from ..common.translations import _, translation_manager
-from ..models import api_models
+from ..models import llm_api_models
 from ..models.models import get_all_local_models
 
 from ..common.utils import clear_all_model_cache
@@ -16,7 +16,7 @@ from .. import logger
 
 from ..main import ChatbotMain
 
-def create_cache_tab():    
+def create_cache_tab():
     with gr.Tab(_("cache_tab_title")):
         with gr.Row():
             with gr.Column():
@@ -35,9 +35,9 @@ def create_cache_tab():
             # 새로 스캔
             new_local_models = get_all_local_models()
             # 새 choices: API 모델 + 로컬 모델 + 사용자 지정 모델 경로 변경
-            global api_models
+            global llm_api_models
             local_models = new_local_models["transformers"] + new_local_models["gguf"] + new_local_models["mlx"]
-            new_choices = api_models + local_models
+            new_choices = llm_api_models + local_models
             new_choices = list(dict.fromkeys(new_choices))
             new_choices = sorted(new_choices)  # 정렬 추가
             # 반환값:

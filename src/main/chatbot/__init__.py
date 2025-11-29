@@ -24,7 +24,7 @@ class ChatbotMain:
 
     @staticmethod
     def share_allowed_llm_models():
-        initial_choices, llm_type_choices = chat_bot.get_allowed_llm_models(os_name, arch)
+        initial_choices, llm_type_choices = chat_bot.get_allowed_llm_models()
         
         app_state.initial_choices = initial_choices
         app_state.llm_type_choices = llm_type_choices

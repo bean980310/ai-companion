@@ -9,7 +9,7 @@ from .. import logger
 
 from ..hub import TASKS, LIBRARIES, LANGUAGES_HUB
 
-from ..models.api_models import api_models
+from ..models.provider_llm_models import llm_api_models
 from ..models.known_hf_models import known_hf_models
 
 from ..common.utils import download_model_from_hf, make_local_dir_name, get_all_local_models
@@ -130,7 +130,7 @@ def create_download_tab():
                         download_info_predefined.update(result)
 
                         # 다운로드 완료 후 모델 목록 업데이트
-                        new_choices = sorted(api_models + get_all_local_models()["transformers"] + get_all_local_models()["gguf"] + get_all_local_models()["mlx"])
+                        new_choices = sorted(llm_api_models + get_all_local_models()["transformers"] + get_all_local_models()["gguf"] + get_all_local_models()["mlx"])
                         return gr.Dropdown.update(choices=new_choices)
 
                     except Exception as e:
@@ -243,7 +243,7 @@ def create_download_tab():
                         download_info_custom.update(result)
 
                         # 다운로드 완료 후 모델 목록 업데이트
-                        new_choices = sorted(api_models + get_all_local_models()["transformers"] + get_all_local_models()["gguf"] + get_all_local_models()["mlx"])
+                        new_choices = sorted(llm_api_models + get_all_local_models()["transformers"] + get_all_local_models()["gguf"] + get_all_local_models()["mlx"])
                         return gr.Dropdown.update(choices=new_choices)
 
                     except Exception as e:
@@ -449,7 +449,7 @@ def create_download_tab():
                         download_info_hub.update(result)
 
                         # 다운로드 완료 후 모델 목록 업데이트
-                        new_choices = sorted(api_models + get_all_local_models()["transformers"] + get_all_local_models()["gguf"] + get_all_local_models()["mlx"])
+                        new_choices = sorted(llm_api_models + get_all_local_models()["transformers"] + get_all_local_models()["gguf"] + get_all_local_models()["mlx"])
                         return gr.Dropdown.update(choices=new_choices)
 
                     except Exception as e:

@@ -16,7 +16,7 @@ aiortc>=1.13.0
 modelscope>=1.29.0
 civitai-model-downloader
 evaluate>=0.4.4
-gradio[mcp]>=5.43.1
+gradio[mcp]>=5.43.1,<6.0
 gradio_webrtc
 twilio
 mcp[cli]
@@ -70,9 +70,6 @@ Faster_whisper
 wavmark
 whisper-timestamped
 gguf
-# llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
-llama-cpp-python --index-url https://abetlen.github.io/llama-cpp-python/whl/cu124
-# llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/metal
 stable-diffusion-cpp-python
 tipo-kgen
 nexaai

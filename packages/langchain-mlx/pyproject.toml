@@ -1,0 +1,26 @@
+[build-system]
+requires=[
+    "setuptools>=42",
+    "wheel",
+    "build"
+]
+build-backend="setuptools.build_meta"
+
+[project]
+name = "langchain-mlx"
+dynamic=["dependencies", "version"]
+
+requires-python = ">=3.10, <3.14"
+authors=[
+    {name="Hyunbeen Chang", email="bean980310@gmail.com"}
+]
+maintainers=[
+    {name="Hyunbeen Chang", email="bean980310@gmail.com"}
+]
+
+description = "Add your description here"
+readme = "README.md"
+
+[tool.setuptools.dynamic]
+dependencies={file=["requirements.txt"]}
+version={attr="langchain_mlx.__init__.__version__"}

@@ -12,7 +12,7 @@ from transformers import AutoTokenizer, AutoProcessor, AutoModel, AutoModelForIm
 
 from transformers.tokenization_mistral_common import MistralCommonTokenizer
 
-from ... import logger
+from .logging import logger
 
 from .langchain_integrator import LangchainIntegrator
 from .base_handlers import BaseCausalModelHandler, BaseVisionModelHandler, BaseModelHandler

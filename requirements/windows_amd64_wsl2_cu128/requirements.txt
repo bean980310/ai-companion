@@ -32,6 +32,7 @@ pytesseract
 easyocr
 pdf2image
 neo4j
+markitdown[all]
 
 # tensorflow<2.20.0
 tensorboard

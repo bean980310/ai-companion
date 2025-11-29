@@ -24,7 +24,7 @@ from src.api.comfy_api import client
 from src import logger
 
 LOCAL_MODELS_ROOT = "./models"
-COMFYUI_PATH=os.environ.get('COMFYUI_PATH')
+COMFYUI_PATH=os.getenv('COMFYUI_PATH')
 
 if COMFYUI_PATH is None:
     COMFYUI_PATH=os.path.join(os.path.expanduser('~'), 'ComfyUI')

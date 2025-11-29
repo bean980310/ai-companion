@@ -12,10 +12,13 @@ class UIComponent:
     add_session_icon_btn: gr.Button = None
     delete_session_icon_btn: gr.Button = None
     
+    model_provider_dropdown: gr.Dropdown = None
     model_type_dropdown: gr.Radio = None
     model_dropdown: gr.Dropdown = None
     api_key_text: gr.Textbox = None
     lora_dropdown: gr.Dropdown = None
+    refresh_button: gr.Button = None
+    clear_all_btn: gr.Button = None
     
     diffusion_model_type_dropdown: gr.Radio = None
     diffusion_model_dropdown: gr.Dropdown = None

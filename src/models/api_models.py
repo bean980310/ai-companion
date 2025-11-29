@@ -98,7 +98,6 @@ openrouter_api_models = [
 api_models = openai_api_models + anthropic_api_models + google_ai_api_models + perplexity_api_models + xai_api_models
 
 openai_image_api_models = [
-    "dall-e-3",
     "gpt-image-1",
     "gpt-image-1-mini"
 ]

@@ -28,7 +28,7 @@ from src.tabs import create_settings_popup
 # 3) Gradio UI
 ##########################################
 
-with gr.Blocks(css_paths="html/css/style.css", title="AI Companion", fill_height=True) as demo:
+with gr.Blocks() as demo:
     register_speech_manager_state()
             
     shared_on_app_start()

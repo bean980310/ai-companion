@@ -6,7 +6,7 @@ from llama_cpp.llama_tokenizer import LlamaHFTokenizer
 
 import lmstudio as lms
 
-from ... import logger
+from .logging import logger
 from .langchain_integrator import LangchainIntegrator
 from .base_handlers import BaseCausalModelHandler, BaseVisionModelHandler
 

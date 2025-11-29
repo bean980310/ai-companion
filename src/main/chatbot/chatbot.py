@@ -1,5 +1,5 @@
 # import logging
-from typing import Any, Generator
+from typing import Any, Generator, Literal
 import gradio as gr
 import os
 import secrets
@@ -10,7 +10,7 @@ from src.common.database import save_chat_history_db, delete_session_history, de
 from src.common.translations import TranslationManager, translation_manager
 
 from src.characters.preset_images import PRESET_IMAGES
-from src.models.api_models import api_models
+from src.models import llm_api_models, openai_llm_api_models, anthropic_llm_api_models, google_genai_llm_api_models, perplexity_llm_api_models, xai_llm_api_models, mistralai_llm_api_models, openrouter_llm_api_models, huggingface_inference_llm_api_models, ollama_llm_models, lmstudio_llm_models, REASONING_CONTROLABLE, REASONING_KWD, REASONING_BAN
 from src.models.local_llm_models import transformers_local, gguf_local, mlx_local
 from src.common.default_language import default_language
 from src.common.utils import detect_platform
@@ -38,7 +38,7 @@ from src import logger
 
 DEFAULT_PROFILE_IMAGE = None
 
-os_name, arch = detect_platform()
+# os_name, arch = detect_platform()
 
 # speech_manager = PersonaSpeechManager(translation_manager=translation_manager, characters=characters)
 
@@ -130,7 +130,7 @@ class Chatbot:
         else:
             return history, gr.update(value=content), None, gr.update()
 
-    def process_message_user(self, user_input: gr.Component |  str | dict[str, str | Image.Image | Any] | Any, session_id: str, history: list[dict[str, str | Image.Image | Any]] | list[gr.MessageDict | gr.ChatMessage], system_msg: str, selected_character: str, language: str):
+    def process_message_user(self, user_input: gr.Component |  str | dict[str, str | Image.Image | Any] | Any, session_id: str, history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]] | list[gr.MessageDict | gr.ChatMessage], system_msg: str, selected_character: str, language: str):
         """
         사용자 메시지를 처리하고 봇 응답을 생성하는 통합 함수.
 
@@ -150,8 +150,8 @@ class Chatbot:
             tuple: 업데이트된 입력 필드, 히스토리, Chatbot 컴포넌트, 상태 메시지.
         """
         if isinstance(user_input, dict):
-            text = user_input.get("text", "")
-            files = user_input.get("files", [])
+            text = str(user_input.get("text", ""))
+            files = str(user_input.get("files", ""))
             if not text.strip() and not files:
                 # 빈 입력일 경우 아무 것도 하지 않음
                 return "", history, self.filter_messages_for_chatbot(history), ""
@@ -183,12 +183,26 @@ class Chatbot:
     
         
         if isinstance(user_input, dict):
-            if isinstance(files, (list, dict)):
-                for f in files:
-                    history.append({"role": "user", "content": files[f]})
-            else:
-                history.append({"role": "user", "content": files})
-            history.append({"role": "user", "content": text})
+            text = str(user_input.get("text", ""))
+            files = str(user_input.get("files", ""))
+            with open(files, "rb") as f:
+                if files.rsplit('.')[-1] == "jpg" or "jpeg":
+                    mime_type="image/jpeg"
+                elif files.rsplit('.')[-1] == "png":
+                    mime_type="image/png"
+                elif files.rsplit('.')[-1] == "webp":
+                    mime_type="image/webp"
+                elif files.rsplit('.')[-1] == "gif":
+                    mime_type="image/gif"
+                image = base64.b64encode(f.read()).decode('utf-8')
+            new_message = {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": text},
+                    {"type": "image", "image_url": f"data:{mime_type};base64,{image}"}
+                ],
+            }
+            history.append(new_message)
             speech_manager.update_tone(text)
         else:
         # 사용자 메시지 추가
@@ -197,7 +211,7 @@ class Chatbot:
         
         return "", history, self.filter_messages_for_chatbot(history)
 
-    def process_message_bot(self, session_id: str, history: list[dict[str, str | Image.Image | Any]], selected_model: str | gr.Dropdown, selected_lora: str | gr.Dropdown, custom_path: str, user_input: str | dict[str, str | Image.Image | Any] | Any, api_key: str, device: str, seed: int, max_length: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float, enable_thinking: bool, language: str):
+    def process_message_bot(self, session_id: str, history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]], selected_model: str | gr.Dropdown, provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "self-provided"] | gr.Dropdown, selected_lora: str | gr.Dropdown, custom_path: str, user_input: str | dict[str, str | Image.Image | Any] | Any, api_key: str, device: str, seed: int, max_length: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float, enable_thinking: bool, language: str):
         image = None
         if isinstance(user_input, dict):
             files = user_input.get("files", [])
@@ -209,12 +223,18 @@ class Chatbot:
                 image = files
             
         chat_title=self.chat_titles.get(session_id)
+
+        if provider == "self-provided":
+            model_type=self.determine_model_type(selected_model)
+        else:
+            model_type=None
         try:
             # 봇 응답 생성
             answer = generate_answer(
                 history=history,
                 selected_model=selected_model,
-                model_type=self.determine_model_type(selected_model),
+                provider=provider,
+                model_type=model_type,
                 selected_lora=selected_lora if selected_lora != "None" else None,
                 local_model_path=custom_path if selected_model == "사용자 지정 모델 경로 변경" else None,
                 lora_path=None,
@@ -268,9 +288,7 @@ class Chatbot:
 
     @staticmethod
     def determine_model_type(selected_model: str) -> str:
-        if selected_model in api_models:
-            return "api"
-        elif selected_model in transformers_local:
+        if selected_model in transformers_local:
             return "transformers"
         elif selected_model in gguf_local:
             return "gguf"
@@ -567,11 +585,11 @@ class Chatbot:
             return history, None  # 오류 발생시에도 None 반환
     
     @staticmethod
-    def toggle_api_key_visibility(selected_model: str | gr.Dropdown) -> bool:
+    def toggle_api_key_visibility(provider: str | gr.Dropdown) -> bool:
         """
         OpenAI API Key 입력 필드의 가시성을 제어합니다.
         """
-        api_visible = selected_model in api_models
+        api_visible = any(x in provider.lower() for x in ["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference"])
         return gr.update(visible=api_visible)
 
     def toggle_standard_msg_input_visibility(self, selected_model: str | gr.Dropdown) -> bool:
@@ -630,29 +648,29 @@ class Chatbot:
         self.vision_model = msg_visible
         return gr.update(visible=msg_visible)
 
-    @staticmethod
-    def toggle_image_input_visibility(selected_model: str | gr.Dropdown) -> bool:
-        """
-        이미지 입력 필드의 가시성을 제어합니다.
-        """
-        image_visible = (
-            "vision" in selected_model.lower() or
-            "qwen2-vl" in selected_model.lower() or
-            "qwen2.5-vl" in selected_model.lower() or
-            selected_model in [
-                "Bllossom/llama-3.2-Korean-Bllossom-AICA-5B",
-                "THUDM/glm-4v-9b",
-                "openbmb/MiniCPM-Llama3-V-2_5"
-            ]
-        )
-        return gr.update(visible=image_visible)
+    # @staticmethod
+    # def toggle_image_input_visibility(selected_model: str | gr.Dropdown) -> bool:
+    #     """
+    #     이미지 입력 필드의 가시성을 제어합니다.
+    #     """
+    #     image_visible = (
+    #         "vision" in selected_model.lower() or
+    #         "qwen2-vl" in selected_model.lower() or
+    #         "qwen2.5-vl" in selected_model.lower() or
+    #         selected_model in [
+    #             "Bllossom/llama-3.2-Korean-Bllossom-AICA-5B",
+    #             "THUDM/glm-4v-9b",
+    #             "openbmb/MiniCPM-Llama3-V-2_5"
+    #         ]
+    #     )
+    #     return gr.update(visible=image_visible)
 
     @staticmethod
-    def toggle_lora_visibility(selected_model: str | gr.Dropdown) -> bool:
+    def toggle_lora_visibility(provider: str | gr.Dropdown) -> bool:
         """
         LORA 파일 경로 입력 필드의 가시성을 제어합니다.
         """
-        lora_visible = selected_model in transformers_local or selected_model in mlx_local
+        lora_visible = "self-provided" in provider.lower()
         return gr.update(visible=lora_visible)
     
     @staticmethod
@@ -660,50 +678,69 @@ class Chatbot:
         """
         Thinking 애니메이션의 가시성을 제어합니다.
         """
-        thinking_visible = "qwen3" in selected_model.lower() and "thinking" not in selected_model.lower() and "instruct" not in selected_model.lower()
-        return gr.update(visible=thinking_visible)
 
-    def update_model_list(self, selected_type: str):
+        enable_thinking = REASONING_KWD in selected_model.lower() and REASONING_BAN not in selected_model.lower()
+        thinking_visible = REASONING_CONTROLABLE in selected_model.lower()
+
+        return gr.update(value=enable_thinking, visible=thinking_visible, interactive=thinking_visible)
+
+    def update_model_list(self, provider: str, selected_type: str | None = None):
         local_models_data = get_all_local_models()
         transformers_local = local_models_data["transformers"]
         gguf_local = local_models_data["gguf"]
         mlx_local = local_models_data["mlx"]
-                
-        # "전체 목록"이면 => API 모델 + 모든 로컬 모델 + "사용자 지정 모델 경로 변경"
-        if selected_type == "all":
-            all_models = self.update_allowed_models()
-            all_models = sorted(list(dict.fromkeys(all_models)))
-            # 중복 제거 후 정렬
-            return gr.update(choices=all_models, value=all_models[0] if all_models else None)
         
-        # API 모델만 선택한 경우
-        if selected_type == "api":
-            updated_list = api_models
-        # 개별 로컬 모델 유형 선택
-        elif selected_type == "transformers":
-            updated_list = transformers_local
-        elif selected_type == "gguf":
-            updated_list = gguf_local
-        elif selected_type == "mlx":
-            updated_list = mlx_local
-        else:
-            # 혹시 예상치 못한 값이면 transformers로 처리(또는 None)
-            if os_name == "Darwin" and arch == "x86_64":
-                updated_list = api_models
+        if provider != "self-provided":
+            if provider == "openai":
+                updated_list = openai_llm_api_models
+            elif provider == "anthropic":
+                updated_list = anthropic_llm_api_models
+            elif provider == "google-genai":
+                updated_list = google_genai_llm_api_models
+            elif provider == "perplexity":
+                updated_list = perplexity_llm_api_models
+            elif provider == "xai":
+                updated_list = xai_llm_api_models
+            elif provider == "mistralai":
+                updated_list = mistralai_llm_api_models
+            elif provider == "openrouter":
+                updated_list = openrouter_llm_api_models
+            elif provider == "hf-inference":
+                updated_list = huggingface_inference_llm_api_models
+            elif provider == "ollama":
+                updated_list = ollama_llm_models
+            elif provider == "lmstudio":
+                updated_list = lmstudio_llm_models
+
+            updated_list = sorted(list(dict.fromkeys(updated_list)))
+            return gr.update(visible='hidden'), gr.update(choices=updated_list, value=updated_list[0] if updated_list else None)
+        
+        else: # elif provider == "self-provided"
+            # "전체 목록"이면 => API 모델 + 모든 로컬 모델 + "사용자 지정 모델 경로 변경"
+            if selected_type == "all":
+                all_models = self.update_allowed_models()
+                all_models = sorted(list(dict.fromkeys(all_models)))
+                # 중복 제거 후 정렬
+                return gr.update(visible=True), gr.update(choices=all_models, value=all_models[0] if all_models else None)
+            
+            # 개별 로컬 모델 유형 선택
+            elif selected_type == "transformers":
+                updated_list = transformers_local
+            elif selected_type == "gguf":
+                updated_list = gguf_local
+            elif selected_type == "mlx":
+                updated_list = mlx_local
             else:
                 updated_list = transformers_local
-        
-        updated_list = sorted(list(dict.fromkeys(updated_list)))
-        return gr.update(choices=updated_list, value=updated_list[0] if updated_list else None)
+            
+            updated_list = sorted(list(dict.fromkeys(updated_list)))
+            return gr.update(visible=True), gr.update(choices=updated_list, value=updated_list[0] if updated_list else None)
     
     def update_allowed_models(self):
         if self.os_name == "Darwin":
-            if self.arch == "arm64":
-                return api_models + transformers_local + gguf_local + mlx_local
-            else:
-                return api_models + gguf_local
+            return transformers_local + gguf_local + mlx_local
         else:
-            return api_models + transformers_local + gguf_local
+            return transformers_local + gguf_local
 
     def show_reset_modal(self, reset_type: bool):
         """초기화 확인 모달 표시"""
@@ -788,18 +825,14 @@ class Chatbot:
                     
         return delete_modal, message, cancel_btn, confirm_btn
     
-    @staticmethod
-    def get_allowed_llm_models(os_name: str, arch: str) -> tuple[list[str], list[str]]:
-        if os_name == "Darwin":
-            if arch == "arm64":
-                allowed = api_models + transformers_local + gguf_local + mlx_local
-                allowed_type = ["all", "api", "transformers", "gguf", "mlx"]
-            else:
-                allowed = api_models + gguf_local
-                allowed_type = ["all", "api", "gguf"]
+    def get_allowed_llm_models(self) -> tuple[list[str], list[str]]:
+        if self.os_name == "Darwin":
+            allowed = transformers_local + gguf_local + mlx_local
+            allowed_type = ["all", "transformers", "gguf", "mlx"]
+
         else:
-            allowed = api_models + transformers_local + gguf_local
-            allowed_type = ["all", "api", "transformers", "gguf"]
+            allowed = transformers_local + gguf_local
+            allowed_type = ["all", "transformers", "gguf"]
             
         allowed = list(dict.fromkeys(allowed))
         

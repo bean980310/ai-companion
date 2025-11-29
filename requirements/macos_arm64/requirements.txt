@@ -32,6 +32,7 @@ pytesseract
 easyocr
 pdf2image
 neo4j
+markitdown[all]
 
 # num2words
 # spacy

@@ -17,6 +17,7 @@ from ..api.comfy_api import client
 from . import header
 from .header import HeaderUIComponent
 from ..characters import PersonaSpeechManager
+from ..common.utils import clear_all_model_cache
 
 from .. import __version__
 
@@ -44,7 +45,7 @@ def create_main_container(demo: gr.Blocks):
         
         sidebar, tab_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_side, diff_side, storyteller_side, storytelling_model_type_dropdown, storytelling_model_dropdown, storytelling_api_key_text, storytelling_lora_dropdown, tts_side, tts_model_type_dropdown, tts_model_dropdown, translate_side = create_sidebar()
 
-        chat_container, diff_container, story_container, storytelling_input, storytelling_btn, storytelling_output, story_adv_setting, storyteller_seed_input, storyteller_temperature_slider, storyteller_top_k_slider, storyteller_top_p_slider, storyteller_repetition_penalty_slider, tts_container, translate_container, download_container = create_body_container()
+        chat_container, diff_container, story_container, storytelling_input, storytelling_btn, storytelling_output, story_adv_setting, storyteller_seed_input, storyteller_temperature_slider, storyteller_top_k_slider, storyteller_top_p_slider, storyteller_repetition_penalty_slider, tts_container, translate_container = create_body_container()
 
         with gr.Row():
             gr.Markdown(f"Version: {__version__}")
@@ -61,10 +62,13 @@ def create_main_container(demo: gr.Blocks):
     add_session_icon_btn = chat_side.session.add_session_icon_btn
     delete_session_icon_btn = chat_side.session.delete_session_icon_btn
 
+    text_model_provider_dropdown = chat_side.model.model_provider_dropdown
     text_model_type_dropdown = chat_side.model.model_type_dropdown
     text_model_dropdown = chat_side.model.model_dropdown
     text_api_key_text = chat_side.model.api_key_text
     text_lora_dropdown = chat_side.model.lora_dropdown
+    text_model_refresh_button = chat_side.model.refresh_button
+    text_model_clear_all_btn = chat_side.model.clear_all_btn
 
     system_message_accordion = chat_container.main_panel.system_message_accordion
     system_message_box = chat_container.main_panel.system_message_box
@@ -299,14 +303,12 @@ def create_main_container(demo: gr.Blocks):
     # 모델 선택 변경 시 가시성 토글
     text_model_dropdown.change(
         fn=lambda selected_model: (
-            chat_bot.toggle_api_key_visibility(selected_model),
-            chat_bot.toggle_lora_visibility(selected_model),
             chat_bot.toggle_multimodal_msg_input_visibility(selected_model),
             chat_bot.toggle_standard_msg_input_visibility(selected_model),
             chat_bot.toggle_enable_thinking_visibility(selected_model)
         ),
         inputs=[text_model_dropdown],
-        outputs=[text_api_key_text, text_lora_dropdown, multimodal_msg, msg, text_enable_thinking_checkbox]
+        outputs=[multimodal_msg, msg, text_enable_thinking_checkbox]
     )
     
     storytelling_model_dropdown.change(
@@ -332,12 +334,22 @@ def create_main_container(demo: gr.Blocks):
         outputs=[storytelling_model_dropdown]
     )
 
-    text_model_type_dropdown.change(
+    gr.on(
+        triggers=[text_model_provider_dropdown.change, text_model_type_dropdown.change],
         fn=chat_bot.update_model_list,
-        inputs=[text_model_type_dropdown],
-        outputs=[text_model_dropdown]
+        inputs=[text_model_provider_dropdown, text_model_type_dropdown],
+        outputs=[text_model_type_dropdown, text_model_dropdown]
     )
-    
+
+    text_model_provider_dropdown.change(
+        fn=lambda provider: (
+            chat_bot.toggle_api_key_visibility(provider),
+            chat_bot.toggle_lora_visibility(provider),
+        ),
+        inputs=[text_model_provider_dropdown],
+        outputs=[text_api_key_text, text_lora_dropdown]
+    )
+
     diffusion_model_type_dropdown.change(
         fn=image_gen.update_diffusion_model_list,
         inputs=[diffusion_model_type_dropdown],
@@ -590,7 +602,7 @@ def create_main_container(demo: gr.Blocks):
                 app_state.speech_manager_state.current_language = characters[selected_character]["languages"][0]
                 
             
-            system_presets = {
+            system_presets: dict[str, dict[str, str]] = {
                 "AI 비서 (AI Assistant)": AI_ASSISTANT_PRESET,
                 "Image Generator": SD_IMAGE_GENERATOR_PRESET,
                 "미나미 아스카 (南飛鳥, みなみあすか, Minami Asuka)": MINAMI_ASUKA_PRESET,
@@ -670,6 +682,7 @@ def create_main_container(demo: gr.Blocks):
             app_state.session_id_state,
             app_state.history_state,
             text_model_dropdown,
+            text_model_provider_dropdown,
             text_lora_dropdown,
             app_state.custom_model_path_state,
             msg,
@@ -715,6 +728,7 @@ def create_main_container(demo: gr.Blocks):
             app_state.session_id_state,
             app_state.history_state,
             text_model_dropdown,
+            text_model_provider_dropdown,
             text_lora_dropdown,
             app_state.custom_model_path_state,
             multimodal_msg,
@@ -769,29 +783,49 @@ def create_main_container(demo: gr.Blocks):
         outputs=[session_select_dropdown]
     )
     
-    @gr.on(triggers=[chatbot_sidetab.click, demo.load], inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
-    def select_chat_tab():
-        return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+    # @gr.on(triggers=[chatbot_sidetab.click, demo.load], inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
+    # def select_chat_tab():
+    #     return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
     
-    @diffusion_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
+    @gr.on(triggers=[chatbot_sidetab.click, demo.load], inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container])
+    def select_chat_tab():
+        return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+    
+    # @diffusion_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
+    # def select_image_generation_tab():
+    #     return gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+    
+    @diffusion_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container])
     def select_image_generation_tab():
-        return gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+        return gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
 
-    @storyteller_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
+    # @storyteller_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
+    # def select_storyteller_tab():
+    #     return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+    
+    @storyteller_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container])
     def select_storyteller_tab():
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
+        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
 
-    @tts_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
+    # @tts_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
+    # def select_tts_tab():
+    #     return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
+    
+    @tts_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container])
     def select_tts_tab():
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
+        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)
 
-    @translate_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
+    # @translate_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
+    # def select_translate_tab():
+    #     return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)
+    
+    @translate_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container])
     def select_translate_tab():
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)
+        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(elem_classes="tab"), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
 
-    @download_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
-    def select_download_tab():
-        return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
+    # @download_sidetab.click(inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
+    # def select_download_tab():
+    #     return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab"), gr.update(elem_classes="tab-active"), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
     
     demo.load(None, None, None).then(
         fn=lambda evt: (

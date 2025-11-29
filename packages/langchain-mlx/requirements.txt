@@ -1,0 +1,6 @@
+langchain[community]
+
+mlx
+mlx-lm
+mlx-vlm @ git+https://github.com/bean980310/mlx-vlm.git@d05ad8f3c9d3d1157d73b7e10da4fafd5694fa03
+mlx_embeddings

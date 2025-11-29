@@ -11,7 +11,7 @@ from src import os_name, arch, args, __version__
 from src.start_app import initialize_app
 from src import gradio_ui
 
-with gr.Blocks(css_paths="html/css/style.css", title="AI Companion", fill_height=True) as demo:
+with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True, css_paths="html/css/style.css") as demo:
     gradio_ui.demo.render()
 
 if __name__=="__main__":
@@ -25,4 +25,4 @@ if __name__=="__main__":
     else:
         host="127.0.0.1"
     
-    demo.queue().launch(debug=args.debug, share=args.share, inbrowser=args.inbrowser, server_name=host, server_port=args.port, width="100%", mcp_server=args.mcp_server, pwa=args.pwa)
+    demo.queue().launch(debug=args.debug, share=args.share, inbrowser=args.inbrowser, server_name=host, server_port=args.port, mcp_server=args.mcp_server, pwa=args.pwa)

@@ -33,7 +33,7 @@ class PresetResult:
 class ChatMessage:
     """채팅 메시지를 표현하는 데이터 클래스"""
     role: str
-    content: str | Image | Any
+    content: str | List[Dict[str, str]] | Any
     timestamp: Optional[datetime] = None
 
 @dataclass
@@ -544,7 +544,7 @@ def get_existing_sessions() -> List[str]:
         logger.error(f"Error retrieving sessions: {e}")
         return []
     
-def save_chat_history_db(history: list[dict[str, str | Any]], session_id: str="demo_session", selected_character: str=None) -> bool:
+def save_chat_history_db(history: list[dict[str, str | list[dict[str, str]] | Any]], session_id: str="demo_session", selected_character: str=None) -> bool:
     """Save chat history to SQLite database"""
     if selected_character is None:
         selected_character = list(characters.keys())[0]

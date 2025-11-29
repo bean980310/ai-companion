@@ -2,6 +2,7 @@ import gradio as gr
 from dataclasses import dataclass
 
 from ...start_app import app_state, ui_component
+from ...models import PROVIDER_LIST
 from ...common.translations import _
 from ...common.utils import get_all_loras
 from ...common.default_language import default_language
@@ -15,10 +16,13 @@ class ChatbotComponent:
     add_session_icon_btn: gr.Button = None
     delete_session_icon_btn: gr.Button = None
 
+    model_provider_dropdown: gr.Dropdown = None
     model_type_dropdown: gr.Radio = None
     model_dropdown: gr.Dropdown = None
     api_key_text: gr.Textbox = None
     lora_dropdown: gr.Dropdown = None
+    refresh_button: gr.Button = None
+    clear_all_btn: gr.Button = None
 
     system_message_accordion: gr.Accordion = None
     system_message_box: gr.Textbox = None
@@ -80,6 +84,13 @@ class ChatbotComponent:
         with gr.Row(elem_classes="model-container"):
             with gr.Column():
                 gr.Markdown("### Model Selection")
+                model_provider_dropdown = gr.Dropdown(
+                    label=_("model_provider_label"),
+                    choices=PROVIDER_LIST,
+                    value=PROVIDER_LIST[0],
+                    interactive=True,
+                    elem_classes="model-dropdown"
+                )
                 model_type_dropdown = gr.Radio(
                     label=_("model_type_label"),
                     choices=app_state.llm_type_choices,
@@ -99,20 +110,25 @@ class ChatbotComponent:
                     elem_classes="api-key-input"
                 )
                 lora_dropdown = gr.Dropdown(
-                    label="LoRA 모델 선택",
+                    label=_("lora_select_label"),
                     choices=get_all_loras(),
                     value="None",
                     interactive=True,
                     visible=False,
                     elem_classes="model-dropdown"
                 )
+                refresh_button = gr.Button(_("refresh_model_list_button"))
+                clear_all_btn = gr.Button(_("cache_clear_all_button"))
                 
+        ui_component.model_provider_dropdown = model_provider_dropdown
         ui_component.model_type_dropdown = model_type_dropdown
         ui_component.model_dropdown = model_dropdown
         ui_component.api_key_text = api_key_text
         ui_component.lora_dropdown = lora_dropdown
+        ui_component.refresh_button = refresh_button
+        ui_component.clear_all_btn = clear_all_btn
 
-        return cls(model_type_dropdown=model_type_dropdown, model_dropdown=model_dropdown, api_key_text=api_key_text, lora_dropdown=lora_dropdown)
+        return cls(model_provider_dropdown = model_provider_dropdown, model_type_dropdown=model_type_dropdown, model_dropdown=model_dropdown, api_key_text=api_key_text, lora_dropdown=lora_dropdown, refresh_button = refresh_button, clear_all_btn=clear_all_btn)
 
     @classmethod
     def create_chat_container_main_panel(cls):
@@ -129,10 +145,10 @@ class ChatbotComponent:
             chatbot = gr.Chatbot(
                 height=600,
                 label="Chatbot", 
-                type="messages", 
                 elem_classes="chat-window",
                 resizable=True,
-                avatar_images=[None, characters[app_state.last_character]["profile_image"]]
+                avatar_images=[None, characters[app_state.last_character]["profile_image"]],
+                reasoning_tags=[("<think>","</think>")]
             )
                             
             with gr.Row(elem_classes="input-area"):

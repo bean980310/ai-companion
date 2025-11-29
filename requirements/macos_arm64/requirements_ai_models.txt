@@ -16,7 +16,7 @@ aiortc>=1.13.0
 modelscope>=1.29.0
 civitai-model-downloader
 evaluate>=0.4.4
-gradio[mcp]>=5.44.1
+gradio[mcp]>=5.44.1,<6.0
 gradio_webrtc
 twilio
 mcp[cli]
@@ -70,7 +70,6 @@ Faster_whisper
 wavmark
 whisper-timestamped
 gguf
-llama-cpp-python --index-url https://abetlen.github.io/llama-cpp-python/whl/metal
 stable-diffusion-cpp-python
 tipo-kgen
 nexaai
@@ -78,7 +77,7 @@ a2a-sdk[http-server]>=0.3.0
 
 # mlx[dev]
 mlx_lm[test, evaluate, train]
-mlx_vlm @ git+https://github.com/bean980310/mlx-vlm.git@e1700ad8e2c6da7b9c8c435afc70076e85f13526
+mlx_vlm @ git+https://github.com/bean980310/mlx-vlm.git@d18699db6e58f4c21e989d141be5daa98ba05ae8
 mlx_lm_omni
 mlx_embeddings
 mlx_whisper
