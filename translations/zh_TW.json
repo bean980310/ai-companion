@@ -1,5 +1,11 @@
 {
   "main_title": "面向本地環境的AI伴侶",
+  "image_gen_title": "圖像生成",
+  "storyteller_title": "故事講述者",
+  "tts_title": "文字轉語音",
+  "translator_title": "翻譯器",
+  "download_title": "模型下載",
+  "settings_title": "設定",
   "select_session_info": "此時將顯示選定的會話。",
   "language_select": "選擇語言",
   "language_info": "選擇界面語言",

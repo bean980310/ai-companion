@@ -1,5 +1,11 @@
 {
   "main_title": "ローカル環境向けAIコンパニオン",
+  "image_gen_title": "画像生成",
+  "storyteller_title": "ストーリーテラー",
+  "tts_title": "テキスト読み上げ",
+  "translator_title": "翻訳",
+  "download_title": "モデルダウンロード",
+  "settings_title": "設定",
   "select_session_info": "選択されたセッションが表示されます。",
   "language_select": "言語選択",
   "language_info": "インターフェース言語を選択してください",

@@ -2,10 +2,12 @@ import gradio as gr
 from src.main.image_generation import diff_main, image_gen, diff_component
 from src.start_app import app_state, ui_component
 from src.api.comfy_api import client
+from src.common.translations import translation_manager, _
+from src.common_blocks import create_page_header, get_language_code
 from typing import Any, List, Sequence, Callable
 from PIL import Image
 import numpy as np
-import random 
+import random
 
 with gr.Blocks() as demo:
     # 0. Page-Specific State Registration
@@ -13,14 +15,17 @@ with gr.Blocks() as demo:
         app_state.max_diffusion_lora_rows = 10
         app_state.stored_image = gr.State()
         app_state.stored_image_inpaint = gr.State()
-        
+
         # Load Model Lists
         diff_main.share_allowed_diffusion_models()
-        
+
     register_image_gen_state()
 
-    # 1. UI Construction
-    
+    # 1. Page Header with Language Selector
+    page_header = create_page_header(page_title_key="image_gen_title")
+    language_dropdown = page_header.language_dropdown
+
+    # 2. UI Construction
     with gr.Sidebar():
         # Replicating create_diffusion_side logic within Sidebar
         diff_side_model = diff_component.create_diffusion_side_model_container()
@@ -255,6 +260,21 @@ with gr.Blocks() as demo:
             *diffusion_lora_unet_sliders
         ],
         outputs=[gallery, image_history]
+    )
+
+    # Language Change Event
+    def on_image_gen_language_change(selected_lang: str):
+        lang_code = get_language_code(selected_lang)
+        translation_manager.set_language(lang_code)
+        return [
+            gr.update(value=f"## {_('image_gen_title')}"),
+            gr.update(label=_('language_select'), info=_('language_info'))
+        ]
+
+    language_dropdown.change(
+        fn=on_image_gen_language_change,
+        inputs=[language_dropdown],
+        outputs=[page_header.title, language_dropdown]
     )
 
 if __name__ == "__main__":

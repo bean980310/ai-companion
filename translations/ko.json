@@ -1,5 +1,11 @@
 {
   "main_title": "로컬 머신을 위한 AI 컴패니언",
+  "image_gen_title": "이미지 생성",
+  "storyteller_title": "스토리텔러",
+  "tts_title": "텍스트 음성 변환",
+  "translator_title": "번역기",
+  "download_title": "모델 다운로드",
+  "settings_title": "설정",
   "select_session_info": "선택된 세션이 표시됩니다.",
   "language_select": "언어 선택",
   "language_info": "인터페이스 언어를 선택하세요",

@@ -1,5 +1,11 @@
 {
   "main_title": "AI Companion for Local Machines",
+  "image_gen_title": "Image Generation",
+  "storyteller_title": "Storyteller",
+  "tts_title": "Text-to-Speech",
+  "translator_title": "Translator",
+  "download_title": "Model Download",
+  "settings_title": "Settings",
   "select_session_info": "The selected session is displayed.",
   "language_select": "Select Language",
   "language_info": "Choose interface language",

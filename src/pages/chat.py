@@ -1,19 +1,18 @@
 import gradio as gr
 from src.main.chatbot import chat_main, chat_bot, chat_component
 from src.start_app import app_state, ui_component, initialize_speech_manager
-# from src.main import header
 from src.common.character_info import characters
-from src.common.translations import translation_manager
-# from src.main.header import HeaderUIComponent
+from src.common.translations import translation_manager, _
+from src.common_blocks import create_page_header, get_language_code
 from src.characters import PersonaSpeechManager
 from src.common.database import get_existing_sessions
 from presets import (
-    AI_ASSISTANT_PRESET, 
-    SD_IMAGE_GENERATOR_PRESET, 
-    MINAMI_ASUKA_PRESET, 
-    MAKOTONO_AOI_PRESET, 
-    AINO_KOITO_PRESET, 
-    ARIA_PRINCESS_FATE_PRESET, 
+    AI_ASSISTANT_PRESET,
+    SD_IMAGE_GENERATOR_PRESET,
+    MINAMI_ASUKA_PRESET,
+    MAKOTONO_AOI_PRESET,
+    AINO_KOITO_PRESET,
+    ARIA_PRINCESS_FATE_PRESET,
     ARIA_PRINCE_FATE_PRESET,
     WANG_MEI_LING_PRESET,
     MISTY_LANE_PRESET,
@@ -72,17 +71,11 @@ with gr.Blocks() as demo:
         
     register_chat_state()
 
-    # 1. UI Construction
-    # header = HeaderUIComponent.create_header_container()
-    # pass
-    
-    # Re-using ChatbotMain logic but adapting for independent page structure
-    
-    # We can't reuse create_chatbot_side directly if it returns a ChatbotMain object 
-    # that expects to be part of the global composition, but we can verify.
-    # chat_main.create_chatbot_side() returns a new ChatbotMain instance with sidebar populated.
-    
-    # However, to put it in a gr.Sidebar(), we should do:
+    # 1. Page Header with Language Selector
+    page_header = create_page_header(page_title_key="main_title")
+    language_dropdown = page_header.language_dropdown
+
+    # 2. UI Construction
     with gr.Sidebar():
         # Manually calling the component creators from chat_component 
         # because create_chatbot_side wraps them in a gr.Column, not Sidebar 
@@ -291,6 +284,44 @@ with gr.Blocks() as demo:
         fn=init_system_message_accordion,
         inputs=[],
         outputs=[system_message_accordion]
+    )
+
+    # Language Change Event
+    def on_chat_language_change(selected_lang: str):
+        lang_code = get_language_code(selected_lang)
+        translation_manager.set_language(lang_code)
+        return [
+            gr.update(value=f"## {_('main_title')}"),
+            gr.update(label=_('language_select'), info=_('language_info')),
+            gr.update(label=_('system_message')),
+            gr.update(label=_('advanced_setting')),
+            gr.update(label=_('seed_label'), info=_('seed_info')),
+            gr.update(label=_('temperature_label')),
+            gr.update(label=_('top_k_label')),
+            gr.update(label=_('top_p_label')),
+            gr.update(label=_('repetition_penalty_label')),
+            gr.update(value=_('reset_session_button')),
+            gr.update(value=_('reset_all_sessions_button')),
+            lang_code
+        ]
+
+    language_dropdown.change(
+        fn=on_chat_language_change,
+        inputs=[language_dropdown],
+        outputs=[
+            page_header.title,
+            language_dropdown,
+            system_message_accordion,
+            text_advanced_settings,
+            text_seed_input,
+            text_temperature_slider,
+            text_top_k_slider,
+            text_top_p_slider,
+            text_repetition_penalty_slider,
+            reset_btn,
+            reset_all_btn,
+            app_state.selected_language_state
+        ]
     )
 
 
