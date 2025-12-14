@@ -74,13 +74,14 @@ def create_cache_tab():
                 gr.update(label=_("clear_all_result_label"))
             ]
 
-        ui_component.language_dropdown.change(
-            fn=change_language,
-            inputs=[ui_component.language_dropdown],
-            outputs=[
-                refresh_button,
-                refresh_info,
-                clear_all_btn,
-                clear_all_result
-            ]
-        )
+        if ui_component.language_dropdown:
+            ui_component.language_dropdown.change(
+                fn=change_language,
+                inputs=[ui_component.language_dropdown],
+                outputs=[
+                    refresh_button,
+                    refresh_info,
+                    clear_all_btn,
+                    clear_all_result
+                ]
+            )

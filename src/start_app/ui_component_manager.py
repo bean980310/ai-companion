@@ -3,9 +3,11 @@ from dataclasses import dataclass
 
 @dataclass
 class UIComponent:
+    head: gr.Row = None
     title: gr.Markdown = None
     settings_button: gr.Button = None
     language_dropdown: gr.Dropdown = None
+    navbar: gr.Navbar = None
     
     session_select_dropdown: gr.Dropdown = None
     chat_title_box: gr.Textbox = None
@@ -50,17 +52,17 @@ class UIComponent:
     character_dropdown: gr.Dropdown = None
 
     text_advanced_settings: gr.Accordion = None
-    seed_input: gr.Number = None
-    max_length_input: gr.Slider = None
-    temperature_slider: gr.Slider = None
-    top_k_slider: gr.Slider = None
-    top_p_slider: gr.Slider = None
-    repetition_penalty_slider: gr.Slider = None
-    enable_thinking_checkbox: gr.Checkbox = None
-    preset_dropdown: gr.Dropdown = None
-    change_preset_button: gr.Button = None
-    reset_btn: gr.Button = None
-    reset_all_btn: gr.Button = None
+    text_seed_input: gr.Number = None
+    text_max_length_input: gr.Slider = None
+    text_temperature_slider: gr.Slider = None
+    text_top_k_slider: gr.Slider = None
+    text_top_p_slider: gr.Slider = None
+    text_repetition_penalty_slider: gr.Slider = None
+    text_enable_thinking_checkbox: gr.Checkbox = None
+    text_preset_dropdown: gr.Dropdown = None
+    text_change_preset_button: gr.Button = None
+    text_reset_btn: gr.Button = None
+    text_reset_all_btn: gr.Button = None
     
     status_text: gr.Markdown = None
     image_info: gr.Markdown = None

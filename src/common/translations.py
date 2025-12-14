@@ -114,6 +114,7 @@ class TranslationManager:
                 'system_message_default': '당신은 유용한 AI 비서입니다.',
                 'system_message_placeholder': '대화의 성격, 말투 등을 정의하세요.',
                 'tab_main': '메인',
+                "model_provider_label": "모델 제공자 선택",
                 'model_type_label': '모델 유형 선택',
                 'model_select_label': '모델 선택',
                 'character_select_label': "캐릭터 선택",
@@ -192,6 +193,11 @@ class TranslationManager:
                 "cache_clear_all_button": "모든 모델 캐시 삭제",
                 "clear_all_result_label": "결과",
                 "handle_character_change_invalid_error": "❌ 선택한 캐릭터가 유효하지 않습니다.",
+                "reset_confirm_title": "⚠️ 확인",
+                "reset_confirm_current_message": "현재 세션의 모든 대화 내용이 삭제됩니다. 계속하시겠습니까?",
+                "reset_confirm_all_message": "모든 세션의 대화 내용이 삭제됩니다. 계속하시겠습니까?",
+                "cancel": "취소",
+                "ok": "확인"
                 # 추가 번역키들...
             },
             'ja': {
@@ -203,6 +209,7 @@ class TranslationManager:
                 'system_message_default': 'あなたは役に立つAIアシスタントです。',
                 'system_message_placeholder': '会話の性格、話し方などを定義してください。',
                 'tab_main': 'メイン',
+                "model_provider_label": "モデル提供元の選択",
                 'model_type_label': 'モデルタイプの選択',
                 'model_select_label': 'モデルの選択',
                 'character_select_label': "キャラクター選択",
@@ -280,7 +287,12 @@ class TranslationManager:
                 "refresh_info_label": "更新結果",
                 "cache_clear_all_button": "すべてのモデルキャッシュを削除",
                 "clear_all_result_label": "結果",
-                "handle_character_change_invalid_error": "❌ 選択したキャラクターが無効です。"
+                "handle_character_change_invalid_error": "❌ 選択したキャラクターが無効です。",
+                "reset_confirm_title": "⚠️ 確認",
+                "reset_confirm_current_message": "現在のセッションのすべての会話内容が削除されます。続行しますか？",
+                "reset_confirm_all_message": "すべてのセッションの会話内容が削除されます。続行しますか？",
+                "cancel": "キャンセル",
+                "ok": "確認"
                 # 追加の翻訳キー...
             },
             'zh_CN': {
@@ -292,6 +304,7 @@ class TranslationManager:
                 'system_message_default': '你是一个乐于助人的AI助手。',
                 'system_message_placeholder': '定义对话特征、语气等。',
                 'tab_main': '主干',
+                "model_provider_label": "选择模型提供商",
                 'model_type_label': '选择模型类型',
                 'model_select_label': '选择模型',
                 'character_select_label': "角色选择",
@@ -369,7 +382,12 @@ class TranslationManager:
                 "refresh_info_label": "刷新结果",
                 "cache_clear_all_button": "删除所有模型缓存",
                 "clear_all_result_label": "结果",
-                "handle_character_change_invalid_error": "❌ 选中的角色无效。"
+                "handle_character_change_invalid_error": "❌ 选中的角色无效。",
+                "reset_confirm_title": "⚠️ 确认",
+                "reset_confirm_current_message": "当前会话中的所有对话都将被删除。是否继续？",
+                "reset_confirm_all_message": "所有会话中的所有对话都将被删除。是否继续？",
+                "cancel": "消除",
+                "ok": "查看"
                 # 其他翻译键...
             },
             'zh_TW': {
@@ -458,7 +476,12 @@ class TranslationManager:
                 "refresh_info_label": "刷新結果",
                 "cache_clear_all_button": "刪除所有模型緩存",
                 "clear_all_result_label": "結果",
-                "handle_character_change_invalid_error": "❌ 選中的角色無效。"
+                "handle_character_change_invalid_error": "❌ 選中的角色無效。",
+                "reset_confirm_title": "⚠️ 確認",
+                "reset_confirm_current_message": "目前會話中的所有對話都將被刪除。是否繼續？",
+                "reset_confirm_all_message": "所有會話中的所有對話都將被刪除。是否繼續？",
+                "cancel": "消除",
+                "ok": "查看"
             },
             'en': {
                 'main_title': 'AI Companion for Local Machines',
@@ -469,6 +492,7 @@ class TranslationManager:
                 'system_message_default': 'You are a helpful AI assistant.',
                 'system_message_placeholder': 'Define conversation characteristics, tone, etc.',
                 'tab_main': 'Main',
+                'model_provider_label': 'Model Provider',
                 'model_type_label': 'Select Model Type',
                 'model_select_label': 'Select Model',
                 'character_select_label': "Character selection",
@@ -546,7 +570,12 @@ class TranslationManager:
                 "refresh_info_label": "Refresh Results",
                 "cache_clear_all_button": "Delete all model caches",
                 "clear_all_result_label": "Results",
-                "handle_character_change_invalid_error": "❌ The selected character is invalid."
+                "handle_character_change_invalid_error": "❌ The selected character is invalid.",
+                "reset_confirm_title": "⚠️ Confirm",
+                "reset_confirm_current_message": "All conversations in the current session will be deleted. Do you want to continue?",
+                "reset_confirm_all_message": "All conversations in all sessions will be deleted. Do you want to continue?",
+                "cancel": "Cancel",
+                "ok": "OK"
                 # Additional translation keys...
             }
         }
@@ -656,21 +685,21 @@ def get_character_message(character: str = 'minami_asuka', lang: Optional[str]=N
     """캐릭터 설정 메시지 반환"""
     return translation_manager.get_character_setting(character, lang=lang)
 
-from translations.load_i18n import i18n_en, i18n_ja, i18n_ko, i18n_zh_CN, i18n_zh_TW
-import gradio as gr
+# from translations.load_i18n import i18n_en, i18n_ja, i18n_ko, i18n_zh_CN, i18n_zh_TW
+# import gradio as gr
 
-I18N_EN = i18n_en()
-I18N_JA = i18n_ja()
-I18N_KO = i18n_ko()
-I18N_ZH_CN = i18n_zh_CN()
-I18N_ZH_TW = i18n_zh_TW()
+# I18N_EN = i18n_en()
+# I18N_JA = i18n_ja()
+# I18N_KO = i18n_ko()
+# I18N_ZH_CN = i18n_zh_CN()
+# I18N_ZH_TW = i18n_zh_TW()
 
 
-def load_i18n_translations():
-    return gr.I18n(
-        en=I18N_EN,
-        ja=I18N_JA,
-        ko=I18N_KO,
-        zh_CN=I18N_ZH_CN,
-        zh_TW=I18N_ZH_TW
-    )
+# def load_i18n_translations():
+#     return gr.I18n(
+#         en=I18N_EN,
+#         ja=I18N_JA,
+#         ko=I18N_KO,
+#         zh_CN=I18N_ZH_CN,
+#         zh_TW=I18N_ZH_TW
+#     )

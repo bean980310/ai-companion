@@ -1,4 +1,8 @@
 import gradio as gr
+# from gradio_i18n import translate_blocks, gettext as _
+
+# from translations import i18n as _
+
 from ...start_app import app_state, ui_component
 from ...common.translations import _
 

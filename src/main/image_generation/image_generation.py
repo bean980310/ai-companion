@@ -17,7 +17,9 @@ import numpy as np
 
 from PIL import Image, ImageOps, ImageFile
 
-from src.pipelines.diffusion import generate_images, generate_images_with_refiner, generate_images_to_images, generate_images_to_images_with_refiner, generate_images_inpaint, generate_images_inpaint_with_refiner
+from ...pipelines.diffusion.provider.comfyui_tasks.comfyui_txt2img_pipeline import Txt2ImgPipeline
+from src.pipelines.diffusion import generate_images_to_images, generate_images_to_images_with_refiner, generate_images_inpaint, generate_images_inpaint_with_refiner
+
 
 from src.common.utils import get_all_diffusion_models, detect_platform
 from src.models import diffusion_api_models, diffusers_local, checkpoints_local
@@ -30,7 +32,7 @@ class ImageGeneration:
         self.os_name, self.arch = detect_platform()
 
     def generate_images_wrapper(self, positive_prompt: str, negative_prompt: str, style: str, generation_step: int, img2img_step_start: int, diffusion_refiner_start: int, width: int, height: int,
-        diffusion_model: str, diffusion_refiner_model: str, diffusion_model_type: str, lora_multiselect: List[str], vae: str, clip_skip: int, enable_clip_skip: bool, clip_g: bool, sampler: str, scheduler: str,
+        model: str, refiner_model: str, model_type: str, lora_multiselect: List[str], vae: str, clip_skip: int, enable_clip_skip: bool, clip_g: bool, sampler: str, scheduler: str,
         batch_size: int, batch_count: int, cfg_scale: float, seed: int, random_seed: bool, image_to_image_mode: str, image_input: str | Image.Image | ImageFile.ImageFile | np.ndarray | Callable | Any | None = None, image_inpaint_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, denoise_strength: float = 1, blur_radius: float = 5.0, blur_expansion_radius: float = 1, api_key: str | None = None,
         # 이후 20개의 슬라이더 값 (max_diffusion_lora_rows * 2; 예를 들어 10행이면 20개)
         *lora_slider_values):
@@ -40,30 +42,36 @@ class ImageGeneration:
         # JSON 문자열로 변환
         text_weights_json = json.dumps(text_weights)
         unet_weights_json = json.dumps(unet_weights)
-        if diffusion_model_type == "api":
-            return self.api_image_generation(positive_prompt, width, height, diffusion_model, api_key)
+        if model_type == "api":
+            return self.api_image_generation(positive_prompt, width, height, model, api_key)
         else:
             if image_to_image_mode == "None":
-                if diffusion_refiner_model == "None":
-                    return generate_images(
+                pipeline = Txt2ImgPipeline(
+                    model=model,
+                    refiner=refiner_model,
+                    loras=lora_multiselect,
+                    vae=vae
+                )
+                if refiner_model == "None":
+                    return pipeline.generate_images(
                         positive_prompt, negative_prompt, style, generation_step, width, height,
-                        diffusion_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
+                        clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
                         batch_size, batch_count, cfg_scale, seed, random_seed,
                         text_weights_json, unet_weights_json
                     )
                 else:
                     clip_g=True
-                    return generate_images_with_refiner(
+                    return pipeline.generate_images_with_refiner(
                         positive_prompt, negative_prompt, style, generation_step, diffusion_refiner_start, width, height,
-                        diffusion_model, diffusion_refiner_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
+                        clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
                         batch_size, batch_count, cfg_scale, seed, random_seed,
                         text_weights_json, unet_weights_json
                     )
             elif image_to_image_mode == "Image to Image":
-                if diffusion_refiner_model == "None":
+                if refiner_model == "None":
                     return generate_images_to_images(
                         positive_prompt, negative_prompt, style, generation_step,
-                        diffusion_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
+                        model, model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
                         batch_count, cfg_scale, seed, random_seed, image_input, denoise_strength,
                         text_weights_json, unet_weights_json
                     )
@@ -71,15 +79,15 @@ class ImageGeneration:
                     clip_g=True
                     return generate_images_to_images_with_refiner(
                         positive_prompt, negative_prompt, style, generation_step, img2img_step_start, diffusion_refiner_start,
-                        diffusion_model, diffusion_refiner_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
+                        model, refiner_model, model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
                         batch_count, cfg_scale, seed, random_seed, image_input, denoise_strength,
                         text_weights_json, unet_weights_json
                     )
             elif image_to_image_mode == "Inpaint":
-                if diffusion_refiner_model == "None":
+                if refiner_model == "None":
                     return generate_images_inpaint(
                         positive_prompt, negative_prompt, style, generation_step,
-                        diffusion_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
+                        model, model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
                         batch_count, cfg_scale, seed, random_seed, image_inpaint_input, denoise_strength, blur_radius, blur_expansion_radius,
                         text_weights_json, unet_weights_json
                     )
@@ -87,7 +95,7 @@ class ImageGeneration:
                     clip_g=True
                     return generate_images_inpaint_with_refiner(
                         positive_prompt, negative_prompt, style, generation_step, img2img_step_start, diffusion_refiner_start,
-                        diffusion_model, diffusion_refiner_model, diffusion_model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
+                        model, refiner_model, model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
                         batch_count, cfg_scale, seed, random_seed, image_inpaint_input, denoise_strength, blur_radius, blur_expansion_radius,
                         text_weights_json, unet_weights_json
                     )

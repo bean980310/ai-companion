@@ -7,6 +7,7 @@
   "system_message_default": "You are a helpful AI assistant.",
   "system_message_placeholder": "Define conversation characteristics, tone, etc.",
   "tab_main": "Main",
+  "model_provider_label": "Model Provider",
   "model_type_label": "Select Model Type",
   "model_select_label": "Model Select",
   "character_select_label": "Character selection",
@@ -83,5 +84,10 @@
   "refresh_info_label": "Refresh Results",
   "cache_clear_all_button": "Delete all model caches",
   "clear_all_result_label": "Results",
-  "handle_character_change_invalid_error": "❌ The selected character is invalid."
+  "handle_character_change_invalid_error": "❌ The selected character is invalid.",
+  "reset_confirm_title": "⚠️ Confirm",
+  "reset_confirm_current_message": "All conversations in the current session will be deleted. Do you want to continue?",
+  "reset_confirm_all_message": "All conversations in all sessions will be deleted. Do you want to continue?",
+  "cancel": "Cancel",
+  "ok": "OK"
 }

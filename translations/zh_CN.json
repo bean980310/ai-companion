@@ -7,6 +7,7 @@
   "system_message_default": "你是一个乐于助人的AI助手。",
   "system_message_placeholder": "定义对话特征、语气等。",
   "tab_main": "主干",
+  "model_provider_label": "选择模型提供商",
   "model_type_label": "选择模型类型",
   "model_select_label": "选择型号",
   "character_select_label": "角色选择",
@@ -83,5 +84,10 @@
   "refresh_info_label": "刷新结果",
   "cache_clear_all_button": "删除所有模型缓存",
   "clear_all_result_label": "结果",
-  "handle_character_change_invalid_error": "❌ 选中的角色无效。"
+  "handle_character_change_invalid_error": "❌ 选中的角色无效。",
+  "reset_confirm_title": "⚠️ 确认",
+  "reset_confirm_current_message": "当前会话中的所有对话都将被删除。是否继续？",
+  "reset_confirm_all_message": "所有会话中的所有对话都将被删除。是否继续？",
+  "cancel": "消除",
+  "ok": "查看"
 }

@@ -1,5 +1,9 @@
-import gradio as gr
 from dataclasses import dataclass
+
+import gradio as gr
+# from gradio_i18n import gettext as _, translate_blocks
+
+# from translations import i18n as _
 
 from ...start_app import app_state, ui_component
 from ...models import PROVIDER_LIST
@@ -131,47 +135,65 @@ class ChatbotComponent:
         return cls(model_provider_dropdown = model_provider_dropdown, model_type_dropdown=model_type_dropdown, model_dropdown=model_dropdown, api_key_text=api_key_text, lora_dropdown=lora_dropdown, refresh_button = refresh_button, clear_all_btn=clear_all_btn)
 
     @classmethod
-    def create_chat_container_main_panel(cls):
+    def create_chat_container_main_panel(cls, chat_wrapper_fn, additional_inputs):
         with gr.Column(scale=7):
             with gr.Accordion(_("system_message"), elem_classes="accordion-container") as system_message_accordion:
                 system_message_box = gr.Textbox(
                     label=_("system_message"),
-                    value=app_state.system_message,
+                    value=app_state.initial_system_message,
                     placeholder=_("system_message_placeholder"),
                     elem_classes="system-message",
                     autofocus=True
                 )
-                            
+            
+            # system_message_box is the 4th argument in chat_wrapper (after message, history, session_id)
+            # We need to prepend session_id_state and append system_message_box to the inputs list?
+            # chat_wrapper args: message, history, session_id, system_msg, ...
+            # ChatInterface passes message, history automatically.
+            # additional_inputs should start with session_id.
+            
+            # additional_inputs passed from __init__.py will contain:
+            # [session_id_state, (system_msg will be inserted here), selected_character, ...]
+            
+            # Actually, let's construct the full list here.
+            # The caller will pass [session_id_state, selected_character, ...]
+            # We insert system_message_box at index 1.
+            
+            real_additional_inputs = list(additional_inputs)
+            real_additional_inputs.insert(1, system_message_box)
+            
             chatbot = gr.Chatbot(
-                height=600,
-                label="Chatbot", 
-                elem_classes="chat-window",
-                resizable=True,
-                avatar_images=[None, characters[app_state.last_character]["profile_image"]],
-                reasoning_tags=[("<think>","</think>")]
+                elem_classes=["chat-window"],
+                avatar_images = [None, characters[app_state.initial_last_character]["profile_image"]],
+                height = 600,
+                label = "Chatbot",
+                show_label = True,
+                # type = "messages"
+                reasoning_tags = [("<think>","</think>"), ("<thinking>","</thinking>")]
             )
-                            
-            with gr.Row(elem_classes="input-area"):
-                msg = gr.Textbox(
-                    label=_("message_input_label"),
-                    placeholder=_("message_placeholder"),
-                    scale=9,
-                    show_label=False,
-                    elem_classes="message-input",
-                    submit_btn=True,
-                    # stop_btn=True
-                )
-                multimodal_msg = gr.MultimodalTextbox(
-                    label=_("message_input_label"),
-                    placeholder=_("message_placeholder"),
-                    file_types=["image"],
-                    scale=9,
-                    show_label=False,
-                    elem_classes="message-input",
-                    submit_btn=True,
-                    # stop_btn=True
-                )
-        #         image_input = gr.Image(label=_("image_upload_label"), type="pil", visible=False)
+
+            chat_interface = gr.ChatInterface(
+                fn=chat_wrapper_fn,
+                # type='messages',
+                chatbot=chatbot,
+                multimodal=True,
+                additional_inputs=real_additional_inputs,
+                additional_outputs=[app_state.history_state, ui_component.status_text, ui_component.chat_title_box],
+                autofocus=True,
+                fill_height=True,
+                save_history=False # We handle history manually
+            )
+
+
+            # Access the textbox. In multimodal mode, it's a MultimodalTextbox.
+            msg = chat_interface.textbox
+            msg.elem_classes = ["message-input"]
+            msg.show_label = False
+            msg.container = False
+            msg.scale = 9
+            
+            # For compatibility with existing code that expects multimodal_msg
+            multimodal_msg = msg 
         
         ui_component.system_message_accordion = system_message_accordion
         ui_component.system_message_box = system_message_box
@@ -191,13 +213,13 @@ class ChatbotComponent:
                 show_label=True,
                 width="auto",
                 height="auto",
-                value=characters[app_state.last_character]["profile_image"],
+                value=characters[app_state.initial_last_character]["profile_image"],
                 elem_classes="profile-image"
             )
             character_dropdown = gr.Dropdown(
                 label=_('character_select_label'),
                 choices=list(characters.keys()),
-                value=app_state.last_character,
+                value=app_state.initial_last_character,
                 interactive=True,
                 info=_('character_select_info'),
                 elem_classes='character-dropdown'
@@ -282,25 +304,25 @@ class ChatbotComponent:
         ui_component.profile_image = profile_image
         ui_component.character_dropdown = character_dropdown
         ui_component.text_advanced_settings = advanced_setting
-        ui_component.seed_input = seed_input
-        ui_component.max_length_input = max_length_input
-        ui_component.temperature_slider = temperature_slider
-        ui_component.top_k_slider = top_k_slider
-        ui_component.top_p_slider = top_p_slider
-        ui_component.repetition_penalty_slider = repetition_penalty_slider
-        ui_component.enable_thinking_checkbox = enable_thinking_checkbox
-        ui_component.preset_dropdown = preset_dropdown
-        ui_component.change_preset_button = change_preset_button
-        ui_component.reset_btn = reset_btn
-        ui_component.reset_all_btn = reset_all_btn
+        ui_component.text_seed_input = seed_input
+        ui_component.text_max_length_input = max_length_input
+        ui_component.text_temperature_slider = temperature_slider
+        ui_component.text_top_k_slider = top_k_slider
+        ui_component.text_top_p_slider = top_p_slider
+        ui_component.text_repetition_penalty_slider = repetition_penalty_slider
+        ui_component.text_enable_thinking_checkbox = enable_thinking_checkbox
+        ui_component.text_preset_dropdown = preset_dropdown
+        ui_component.text_change_preset_button = change_preset_button
+        ui_component.text_reset_btn = reset_btn
+        ui_component.text_reset_all_btn = reset_all_btn
 
         return cls(profile_image=profile_image, character_dropdown=character_dropdown, advanced_setting=advanced_setting, seed_input=seed_input, max_length_input=max_length_input, temperature_slider=temperature_slider, top_k_slider=top_k_slider, top_p_slider=top_p_slider, repetition_penalty_slider=repetition_penalty_slider, enable_thinking_checkbox=enable_thinking_checkbox, preset_dropdown=preset_dropdown, change_preset_button=change_preset_button, reset_btn=reset_btn, reset_all_btn=reset_all_btn)
     
     @classmethod
-    def create_chat_container_status_bar(cls):
-        status_text = gr.Markdown("Ready", elem_id="status_text")
-        image_info = gr.Markdown("", visible=False)
-        session_select_info = gr.Markdown(_('select_session_info'))
+    def create_chat_container_status_bar(cls, render=True):
+        status_text = gr.Markdown("Ready", elem_id="status_text", render=render)
+        image_info = gr.Markdown("", visible=False, render=render)
+        session_select_info = gr.Markdown(_('select_session_info'), render=render)
 
         ui_component.status_text = status_text
         ui_component.image_info = image_info

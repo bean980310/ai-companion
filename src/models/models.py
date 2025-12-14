@@ -59,7 +59,7 @@ def get_default_device():
 default_device = get_default_device()
 logger.info(f"Default device set to: {default_device}")
 
-def load_model(selected_model: str, provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", 'mistralai', "openrouter", "hf-inference", "ollama", "lmstudio", "self-provided"], model_type: str | None = None, selected_lora: str | None = None, quantization_bit: str = "Q8_0", local_model_path: str | None = None, api_key: str | None = None, device: str = "cpu", lora_path: str | None = None, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, **kwargs):
+def load_model(selected_model: str, provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", 'mistralai', "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"], model_type: str | None = None, selected_lora: str | None = None, quantization_bit: str = "Q8_0", local_model_path: str | None = None, api_key: str | None = None, device: str = "cpu", lora_path: str | None = None, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, **kwargs):
     """
     모델 로드 함수. 특정 모델에 대한 로드 로직을 외부 핸들러로 분리.
     """
@@ -72,7 +72,7 @@ def load_model(selected_model: str, provider: Literal["openai", "anthropic", "go
         logger.error(f"지원되지 않는 모델 유형: {model_type}")
         return None
     
-    if provider not in ["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "self-provided"]:
+    if provider not in ["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"]:
         logger.error(f"지원되지 않는 공급자: {provider}")
         return None
     
@@ -139,6 +139,9 @@ def load_model(selected_model: str, provider: Literal["openai", "anthropic", "go
         # API 모델은 별도의 로드가 필요 없으므로 핸들러 생성 안함
         wrapper = LMStudioIntegrator(selected_model)
         return wrapper
+    elif provider == "oobabooga":
+        # API 모델은 별도의 로드가 필요 없으므로 핸들러 생성 안함
+        return None
     else:
         # 자체 공급은 클라이언트 대신 핸들러를 생성.
         handler = None
@@ -202,7 +205,7 @@ def load_model(selected_model: str, provider: Literal["openai", "anthropic", "go
                 models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
                 return handler
 
-def generate_answer(history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]], selected_model: str, provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", 'mistralai', "openrouter", "hf-inference", "ollama", "lmstudio", "self-provided"], model_type: str | None = None, selected_lora: str | None = None, local_model_path: str | None = None, lora_path: str | None = None, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, api_key: str | None = None, device: str = "cpu", seed: int = 42, max_length: int = -1, temperature: float = 1.0, top_k: int = 50, top_p: float = 1.0, repetition_penalty: float = 1.0, enable_thinking: bool = False, enable_streaming: bool = False, character_language: str = 'ko'):
+def generate_answer(history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]], selected_model: str, provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", 'mistralai', "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"], model_type: str | None = None, selected_lora: str | None = None, local_model_path: str | None = None, lora_path: str | None = None, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, api_key: str | None = None, device: str = "cpu", seed: int = 42, max_length: int = -1, temperature: float = 1.0, top_k: int = 50, top_p: float = 1.0, repetition_penalty: float = 1.0, enable_thinking: bool = False, enable_streaming: bool = False, character_language: str = 'ko'):
     """
     사용자 히스토리를 기반으로 답변 생성.
     """
@@ -428,8 +431,8 @@ def generate_images(
     generation_step: int,
     width: int,
     height: int,
-    diffusion_model: str,
-    diffusion_model_type: str,
+    model: str,
+    model_type: str,
     loras: List[str],
     vae: str,
     clip_skip: int,
@@ -441,12 +444,22 @@ def generate_images(
     batch_count: int,
     cfg_scale: float,
     seed: int,
-    random_seed: bool,
-    image_input: str | Image.Image | ImageFile.ImageFile | Any,
-    denoise_strength: float,
-    blur_radius: float,
-    blur_expansion_radius: int,
-    lora_text_weights_json: str,
-    lora_unet_weights_json: str,
+    random_seed: bool = False,
+    refiner_model: str | None = None,
+    image_input: str | Image.Image | ImageFile.ImageFile | Any = None,
+    denoise_strength: float = 1.0,
+    blur_radius: float = 5.0,
+    blur_expansion_radius: int = 1,
+    lora_text_weights_json: str = None,
+    lora_unet_weights_json: str = None,
+    image_to_image_mode: str = "None"
 ):
-    use_comfyui = True if diffusion_model_type == "checkpoints" else False
+    use_comfyui = True if model_type == "checkpoints" else False
+    if refiner_model:
+        if image_to_image_mode == "None":
+            return generate_images(
+                positive_prompt, negative_prompt, style, generation_step, width, height,
+                model, model_type, loras, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
+                batch_size, batch_count, cfg_scale, seed, random_seed,
+                lora_text_weights_json, lora_unet_weights_json
+            )

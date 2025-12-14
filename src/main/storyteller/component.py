@@ -1,4 +1,8 @@
 import gradio as gr
+# from gradio_i18n import gettext as _
+
+# from translations import i18n as _
+
 from ...common.translations import _
 from ...common.utils import get_all_loras
 from ...start_app import app_state, ui_component
@@ -27,7 +31,7 @@ def create_story_side():
                     elem_classes="api-key-input"
                 )
                 storytelling_lora_dropdown = gr.Dropdown(
-                    label="LoRA 모델 선택",
+                    label=_("lora_select_label"),
                     choices=get_all_loras(),
                     value="None",
                     interactive=True,

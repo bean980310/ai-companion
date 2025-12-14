@@ -3,7 +3,7 @@ import traceback
 
 import gradio as gr
 from huggingface_hub import HfApi
-from gradio_huggingfacehub_search import HuggingfaceHubSearch
+# from gradio_huggingfacehub_search import HuggingfaceHubSearch
 
 from .. import logger
 
@@ -139,117 +139,117 @@ def create_download_tab():
                         download_info_predefined.update(f"Error: {str(e)}\n{traceback.format_exc()}")
 
             # Custom Repo ID 탭
-            with gr.Tab("Custom Repo ID"):
-                gr.Markdown("""### Custom Repository ID
-                Enter a custom HuggingFace repository ID to download the model.""")
+            # with gr.Tab("Custom Repo ID"):
+            #     gr.Markdown("""### Custom Repository ID
+            #     Enter a custom HuggingFace repository ID to download the model.""")
 
-                custom_repo_id_box = HuggingfaceHubSearch(
-                    label="Custom Model ID",
-                    placeholder="e.g., facebook/opt-350m",
-                    # info="Enter the HuggingFace model repository ID (e.g., organization/model-name).",
-                    search_type="model"
-                )
+            #     custom_repo_id_box = HuggingfaceHubSearch(
+            #         label="Custom Model ID",
+            #         placeholder="e.g., facebook/opt-350m",
+            #         # info="Enter the HuggingFace model repository ID (e.g., organization/model-name).",
+            #         search_type="model"
+            #     )
 
-                # 다운로드 설정
-                with gr.Row():
-                    target_path_custom = gr.Textbox(
-                        label="Save Path",
-                        placeholder="./models/custom-model",
-                        value="",
-                        interactive=True,
-                        info="Leave empty to use the default path."
-                    )
-                    use_auth_custom = gr.Checkbox(
-                        label="Authentication Required",
-                        value=False,
-                        info="Check if the model requires authentication."
-                    )
+            #     # 다운로드 설정
+            #     with gr.Row():
+            #         target_path_custom = gr.Textbox(
+            #             label="Save Path",
+            #             placeholder="./models/custom-model",
+            #             value="",
+            #             interactive=True,
+            #             info="Leave empty to use the default path."
+            #         )
+            #         use_auth_custom = gr.Checkbox(
+            #             label="Authentication Required",
+            #             value=False,
+            #             info="Check if the model requires authentication."
+            #         )
 
-                with gr.Column(visible=False) as auth_column_custom:
-                    hf_token_custom = gr.Textbox(
-                        label="HuggingFace Token",
-                        placeholder="hf_...",
-                        type="password",
-                        info="Enter your HuggingFace token if authentication is required."
-                    )
+            #     with gr.Column(visible=False) as auth_column_custom:
+            #         hf_token_custom = gr.Textbox(
+            #             label="HuggingFace Token",
+            #             placeholder="hf_...",
+            #             type="password",
+            #             info="Enter your HuggingFace token if authentication is required."
+            #         )
 
-                # 다운로드 버튼과 진행 상태
-                with gr.Row():
-                    download_btn_custom = gr.Button(
-                        value="Start Download",
-                        variant="primary",
-                        scale=2
-                    )
-                    cancel_btn_custom = gr.Button(
-                        value="Cancel",
-                        variant="stop",
-                        scale=1,
-                        interactive=False
-                    )
+            #     # 다운로드 버튼과 진행 상태
+            #     with gr.Row():
+            #         download_btn_custom = gr.Button(
+            #             value="Start Download",
+            #             variant="primary",
+            #             scale=2
+            #         )
+            #         cancel_btn_custom = gr.Button(
+            #             value="Cancel",
+            #             variant="stop",
+            #             scale=1,
+            #             interactive=False
+            #         )
 
-                # 상태 표시
-                download_status_custom = gr.Markdown("")
-                progress_bar_custom = gr.Progress(track_tqdm=True)
+            #     # 상태 표시
+            #     download_status_custom = gr.Markdown("")
+            #     progress_bar_custom = gr.Progress(track_tqdm=True)
 
-                # 다운로드 결과와 로그
-                with gr.Accordion("Download Details", open=False, elem_classes="accordion-container"):
-                    download_info_custom = gr.TextArea(
-                        label="Download Log",
-                        interactive=False,
-                        max_lines=10,
-                        autoscroll=True
-                    )
+            #     # 다운로드 결과와 로그
+            #     with gr.Accordion("Download Details", open=False, elem_classes="accordion-container"):
+            #         download_info_custom = gr.TextArea(
+            #             label="Download Log",
+            #             interactive=False,
+            #             max_lines=10,
+            #             autoscroll=True
+            #         )
 
-                # 이벤트 핸들러
-                @use_auth_custom.change(inputs=[use_auth_custom], outputs=[auth_column_custom])
-                def toggle_auth_custom(use_auth_val):
-                    """
-                    Toggle authentication visibility based on the checkbox value.
-                    Args:
-                        use_auth_val (bool): Value of the checkbox.
-                    """
-                    return gr.update(visible=use_auth_val)
+            #     # 이벤트 핸들러
+            #     @use_auth_custom.change(inputs=[use_auth_custom], outputs=[auth_column_custom])
+            #     def toggle_auth_custom(use_auth_val):
+            #         """
+            #         Toggle authentication visibility based on the checkbox value.
+            #         Args:
+            #             use_auth_val (bool): Value of the checkbox.
+            #         """
+            #         return gr.update(visible=use_auth_val)
                 
-                @download_btn_custom.click(inputs=[custom_repo_id_box, target_path_custom, use_auth_custom, hf_token_custom], outputs=[download_status_custom, download_info_custom])
-                def download_custom_model(custom_repo, target_dir, use_auth_val, token):
-                    """
-                    Download a custom model.
-                    Args:
-                        custom_repo (str): Custom model repository ID.
-                        target_dir (str): Target directory for saving the model.
-                        use_auth_val (bool): Value of the authentication checkbox.
-                        token (str): HuggingFace token for authentication.
-                    """
-                    try:
-                        repo_id = custom_repo.strip()
-                        if not repo_id:
-                            download_status_custom.update("❌ No repository ID entered.")
-                            return
+            #     @download_btn_custom.click(inputs=[custom_repo_id_box, target_path_custom, use_auth_custom, hf_token_custom], outputs=[download_status_custom, download_info_custom])
+            #     def download_custom_model(custom_repo, target_dir, use_auth_val, token):
+            #         """
+            #         Download a custom model.
+            #         Args:
+            #             custom_repo (str): Custom model repository ID.
+            #             target_dir (str): Target directory for saving the model.
+            #             use_auth_val (bool): Value of the authentication checkbox.
+            #             token (str): HuggingFace token for authentication.
+            #         """
+            #         try:
+            #             repo_id = custom_repo.strip()
+            #             if not repo_id:
+            #                 download_status_custom.update("❌ No repository ID entered.")
+            #                 return
 
-                        model_type = chat_bot.determine_model_type(repo_id)
+            #             model_type = chat_bot.determine_model_type(repo_id)
 
-                        download_status_custom.update("🔄 Preparing to download...")
-                        logger.info(f"Starting download for {repo_id}")
+            #             download_status_custom.update("🔄 Preparing to download...")
+            #             logger.info(f"Starting download for {repo_id}")
 
-                        # 실제 다운로드 함수 호출 (비동기 처리를 원한다면 async 함수로 구현 필요)
-                        result = download_model_from_hf(
-                            repo_id,
-                            target_dir or os.path.join("./models", model_type, make_local_dir_name(repo_id)),
-                            model_type=model_type,
-                            token=token if use_auth_val else None
-                        )
+            #             # 실제 다운로드 함수 호출 (비동기 처리를 원한다면 async 함수로 구현 필요)
+            #             result = download_model_from_hf(
+            #                 repo_id,
+            #                 target_dir or os.path.join("./models", model_type, make_local_dir_name(repo_id)),
+            #                 model_type=model_type,
+            #                 token=token if use_auth_val else None
+            #             )
 
-                        download_status_custom.update("✅ Download completed!" if "실패" not in result else "❌ Download failed.")
-                        download_info_custom.update(result)
+            #             download_status_custom.update("✅ Download completed!" if "실패" not in result else "❌ Download failed.")
+            #             download_info_custom.update(result)
 
-                        # 다운로드 완료 후 모델 목록 업데이트
-                        new_choices = sorted(llm_api_models + get_all_local_models()["transformers"] + get_all_local_models()["gguf"] + get_all_local_models()["mlx"])
-                        return gr.Dropdown.update(choices=new_choices)
+            #             # 다운로드 완료 후 모델 목록 업데이트
+            #             new_choices = sorted(llm_api_models + get_all_local_models()["transformers"] + get_all_local_models()["gguf"] + get_all_local_models()["mlx"])
+            #             return gr.Dropdown.update(choices=new_choices)
 
-                    except Exception as e:
-                        logger.error(f"Error downloading model: {str(e)}")
-                        download_status_custom.update("❌ An error occurred during download.")
-                        download_info_custom.update(f"Error: {str(e)}\n{traceback.format_exc()}")
+            #         except Exception as e:
+            #             logger.error(f"Error downloading model: {str(e)}")
+            #             download_status_custom.update("❌ An error occurred during download.")
+            #             download_info_custom.update(f"Error: {str(e)}\n{traceback.format_exc()}")
 
             # Hub 탭
             with gr.Tab("Hub"):

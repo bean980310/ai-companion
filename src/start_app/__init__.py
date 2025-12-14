@@ -1,5 +1,6 @@
 import sqlite3
 import gradio as gr
+# from gradio_i18n import gettext as _
 import importlib
 from typing import Optional, Dict, List, Any, Literal
 from pathlib import Path
@@ -29,90 +30,58 @@ from ..characters.persona_speech_manager import PersonaSpeechManager
 from .app_state_manager import app_state
 from .ui_component_manager import ui_component
 
-def register_speech_manager_state():
+# from translations import i18n
+
+def load_initial_data():
+    """
+    Loads initial data from DB and populates app_state with primitive values.
+    Must be called BEFORE any page construction that relies on app_state defaults.
+    """
+    # Initialize DB and Session
+    initialize_database()
+    ensure_demo_session()
+    insert_default_presets(translation_manager, overwrite=True)
+    
+    # Load initial values
+    session_id, loaded_history, session_dropdown, last_character, last_preset, system_message, session_label = on_app_start()
+    
+    # Store primitives in app_state
+    app_state.initial_session_id = session_id
+    app_state.loaded_history = loaded_history
+    app_state.initial_last_character = last_character
+    app_state.initial_system_message = system_message
+    
+    # We populate these so that register_global_state can use them later
+    app_state._temp_session_id = session_id
+    app_state._temp_loaded_history = loaded_history
+    
+def register_global_state():
+    """
+    Registers truly global state variables used across multiple pages.
+    Must be called INSIDE a gr.Blocks context.
+    """
+    # 1. Speech Manager (Global Service)
     speech_manager_state = gr.State(initialize_speech_manager)
     app_state.speech_manager_state = speech_manager_state
 
-def shared_on_app_start():
-    session_id, loaded_history, session_dropdown, last_character, last_preset, system_message, session_label=on_app_start()
-    app_state.session_id = session_id
-    app_state.loaded_history = loaded_history
-    app_state.session_dropdown = session_dropdown
-    app_state.last_character = last_character
-    app_state.last_preset = last_preset
-    app_state.system_message = system_message
-    app_state.session_label = session_label
-
-def register_app_state():
-    last_sid_state=gr.State()
-    history_state = gr.State(app_state.loaded_history)
-    last_character_state = gr.State()
-    session_list_state = gr.State()
-    overwrite_state = gr.State(False)
+    # 2. Session ID & Shared Context
+    # We use the values loaded by load_initial_data if available, or fetch again if safe.
+    # Since load_initial_data sets primitives, we wrap them in State here.
     
-    app_state.last_sid_state = last_sid_state
-    app_state.history_state = history_state
-    app_state.last_character_state = last_character_state
-    app_state.session_list_state = session_list_state
-    app_state.overwrite_state = overwrite_state
+    session_id = getattr(app_state, "initial_session_id", "demo_session")
     
-    # return last_sid_state, history_state, last_character_state, session_list_state, overwrite_state
-
-def register_app_state_2():
-    custom_model_path_state = gr.State("")
-    session_id_state = gr.State(app_state.session_id)
-    selected_device_state = gr.State(default_device)
-    character_state = gr.State(app_state.last_character)
-    system_message_state = gr.State(app_state.system_message)
-    
-    app_state.custom_model_path_state = custom_model_path_state
-    app_state.session_id_state = session_id_state
-    app_state.selected_device_state = selected_device_state
-    app_state.character_state = character_state
-    app_state.system_message_state = system_message_state
-    
-    # return custom_model_path_state, session_id_state, selected_device_state, character_state, system_message_state
-
-def register_app_state_3():
-    seed_state = gr.State(args.seed)  # 시드 상태 전역 정의
-    max_length_state = gr.State(-1)  # max_length 상태 전역 정의
-    temperature_state = gr.State(0.6)
-    top_k_state = gr.State(20)
-    top_p_state = gr.State(0.9)
-    repetition_penalty_state = gr.State(1.1)
+    # These are initial values, but we need gr.State to hold them for the session
+    session_id_state = gr.State(session_id)
     selected_language_state = gr.State(default_language)
-    enable_thinking_state = gr.State(False)
+    selected_device_state = gr.State(default_device)
     
-    app_state.seed_state = seed_state
-    app_state.max_length_state = max_length_state
-    app_state.temperature_state = temperature_state
-    app_state.top_k_state = top_k_state
-    app_state.top_p_state = top_p_state
-    app_state.repetition_penalty_state = repetition_penalty_state
+    # Store in app_state singleton for access
+    app_state.session_id_state = session_id_state
     app_state.selected_language_state = selected_language_state
-    app_state.enable_thinking_state = enable_thinking_state
+    app_state.selected_device_state = selected_device_state
+    
+    # History state is usually managed by Chat Page, but we made app_state.loaded_history available.
 
-    # return seed_state, temperature_state, top_k_state, top_p_state, repetition_penalty_state, selected_language_state
-
-def register_app_state_4():
-    reset_confirmation = gr.State(False)
-    reset_all_confirmation = gr.State(False)
-    
-    app_state.reset_confirmation = reset_confirmation
-    app_state.reset_all_confirmation = reset_all_confirmation
-    
-    # return reset_confirmation, reset_all_confirmation
-
-def register_app_state_5():
-    max_diffusion_lora_rows=10
-    stored_image = gr.State()
-    stored_image_inpaint = gr.State()
-    
-    app_state.max_diffusion_lora_rows = max_diffusion_lora_rows
-    app_state.stored_image = stored_image
-    app_state.stored_image_inpaint = stored_image_inpaint
-    
-    # return max_diffusion_lora_rows, stored_image, stored_image_inpaint
 
 
 def create_tab_side():
@@ -287,7 +256,7 @@ def on_app_start(language=None):  # language 매개변수에 기본값 설정
     else:
         preset_name = None
         display_system = _("system_message_default")
-    logger.info(f"로드된 프리셋: {presets}")
+    # logger.info(f"로드된 프리셋: {presets()}")
     
     preset_list = get_preset_choices(default_language)
     for i in range(len(preset_list)):

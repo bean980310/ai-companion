@@ -1,10 +1,15 @@
 import gradio as gr
+# from gradio_i18n import translate_blocks, gettext as _
+
+# from translations import i18n as _
+
 from ...common.translations import _
 from ...start_app import app_state, ui_component
 from dataclasses import dataclass
 
 @dataclass
 class DiffusionComponent:
+    model_provider_dropdown: gr.Dropdown = None
     model_type_dropdown: gr.Radio = None
     model_dropdown: gr.Dropdown = None
     api_key_text: gr.Textbox = None
@@ -59,43 +64,43 @@ class DiffusionComponent:
         with gr.Row(elem_classes="model-container"):
             with gr.Column():
                 gr.Markdown("### Model Selection")
-                diffusion_model_type_dropdown = gr.Radio(
+                model_type_dropdown = gr.Radio(
                     label=_("model_type_label"),
                     choices=app_state.diffusion_type_choices,
                     value=app_state.diffusion_type_choices[0],
                     elem_classes="model-dropdown"
                 )
-                diffusion_model_dropdown = gr.Dropdown(
+                model_dropdown = gr.Dropdown(
                     label=_("model_select_label"),
                     choices=app_state.diffusion_choices,
                     value=app_state.diffusion_choices[0] if len(app_state.diffusion_choices) > 0 else None,
                     elem_classes="model-dropdown"
                 )
-                diffusion_api_key_text = gr.Textbox(
+                api_key_text = gr.Textbox(
                     label=_("api_key_label"),
                     placeholder="sk-...",
                     visible=False,
                     elem_classes="api-key-input"
                 )
                 
-        ui_component.diffusion_model_type_dropdown = diffusion_model_type_dropdown
-        ui_component.diffusion_model_dropdown = diffusion_model_dropdown
-        ui_component.diffusion_api_key_text = diffusion_api_key_text
+        ui_component.diffusion_model_type_dropdown = model_type_dropdown
+        ui_component.diffusion_model_dropdown = model_dropdown
+        ui_component.diffusion_api_key_text = api_key_text
         
-        return cls(model_type_dropdown=diffusion_model_type_dropdown, model_dropdown=diffusion_model_dropdown, api_key_text=diffusion_api_key_text)
+        return cls(model_type_dropdown=model_type_dropdown, model_dropdown=model_dropdown, api_key_text=api_key_text)
 
     @classmethod
     def create_diffusion_side_refiner_model_container(cls):
         with gr.Row(elem_classes="model-container"):
             with gr.Column():
                 gr.Markdown("### Refiner Model Selection")
-                diffusion_refiner_model_dropdown = gr.Dropdown(
+                refiner_model_dropdown = gr.Dropdown(
                     label=_("refiner_model_select_label"),
                     choices=app_state.diffusion_refiner_choices,
                     value=app_state.diffusion_refiner_choices[0],
                     elem_classes="model-dropdown"
                 )
-                diffusion_refiner_start = gr.Slider(
+                refiner_start = gr.Slider(
                     label="Refiner Start Step",
                     minimum=1,
                     maximum=50,
@@ -103,7 +108,7 @@ class DiffusionComponent:
                     value=20,
                     visible=False
                 )
-                diffusion_with_refiner_image_to_image_start = gr.Slider(
+                with_refiner_image_to_image_start = gr.Slider(
                     label="Image to Image Start Step",
                     minimum=1,
                     maximum=50,
@@ -112,19 +117,19 @@ class DiffusionComponent:
                     visible=False
                 )
                 
-        ui_component.diffusion_refiner_model_dropdown = diffusion_refiner_model_dropdown
-        ui_component.diffusion_refiner_start = diffusion_refiner_start
-        ui_component.diffusion_with_refiner_image_to_image_start = diffusion_with_refiner_image_to_image_start
+        ui_component.diffusion_refiner_model_dropdown = refiner_model_dropdown
+        ui_component.diffusion_refiner_start = refiner_start
+        ui_component.diffusion_with_refiner_image_to_image_start = with_refiner_image_to_image_start
         
-        return cls(refiner_model_dropdown=diffusion_refiner_model_dropdown, refiner_start=diffusion_refiner_start, with_refiner_image_to_image_start=diffusion_with_refiner_image_to_image_start)
+        return cls(refiner_model_dropdown=refiner_model_dropdown, refiner_start=refiner_start, with_refiner_image_to_image_start=with_refiner_image_to_image_start)
 
 
     @classmethod
     def create_diffusion_side_lora_container(cls):
         with gr.Row(elem_classes="model-container"):
             with gr.Accordion("LoRA Settings", open=False, elem_classes="accordion-container"):
-                diffusion_lora_multiselect=gr.Dropdown(
-                    label="Select LoRA Models",
+                lora_multiselect=gr.Dropdown(
+                    label=_("lora_select_label"),
                     choices=app_state.diffusion_lora_choices,
                     value=[],
                     interactive=True,
@@ -132,8 +137,8 @@ class DiffusionComponent:
                     info="Select LoRA models to apply to the diffusion model.",
                     elem_classes="model-dropdown"
                 )
-                diffusion_lora_text_encoder_sliders=[]
-                diffusion_lora_unet_sliders=[]
+                lora_text_encoder_sliders=[]
+                lora_unet_sliders=[]
                 for i in range(app_state.max_diffusion_lora_rows):
                     text_encoder_slider=gr.Slider(
                         label=f"LoRA {i+1} - Text Encoder Weight",
@@ -153,19 +158,19 @@ class DiffusionComponent:
                         visible=False,
                         interactive=True
                     )
-                    diffusion_lora_text_encoder_sliders.append(text_encoder_slider)
-                    diffusion_lora_unet_sliders.append(unet_slider)
+                    lora_text_encoder_sliders.append(text_encoder_slider)
+                    lora_unet_sliders.append(unet_slider)
                 diffusion_lora_slider_rows=[]
-                for te, unet in zip(diffusion_lora_text_encoder_sliders, diffusion_lora_unet_sliders):
+                for te, unet in zip(lora_text_encoder_sliders, lora_unet_sliders):
                     diffusion_lora_slider_rows.append(gr.Row([te, unet]))
                 for row in diffusion_lora_slider_rows:
                     row
                     
-        ui_component.diffusion_lora_multiselect = diffusion_lora_multiselect
-        ui_component.diffusion_lora_text_encoder_sliders = diffusion_lora_text_encoder_sliders
-        ui_component.diffusion_lora_unet_sliders = diffusion_lora_unet_sliders
+        ui_component.diffusion_lora_multiselect = lora_multiselect
+        ui_component.diffusion_lora_text_encoder_sliders = lora_text_encoder_sliders
+        ui_component.diffusion_lora_unet_sliders = lora_unet_sliders
 
-        return cls(lora_multiselect=diffusion_lora_multiselect, lora_text_encoder_sliders=diffusion_lora_text_encoder_sliders, lora_unet_sliders=diffusion_lora_unet_sliders)
+        return cls(lora_multiselect=lora_multiselect, lora_text_encoder_sliders=lora_text_encoder_sliders, lora_unet_sliders=lora_unet_sliders)
 
     @classmethod
     def create_diffusion_container_image_to_image_panel(cls):
@@ -308,7 +313,7 @@ class DiffusionComponent:
     @classmethod
     def create_diffusion_container_side_panel(cls):
         with gr.Column(scale=3, elem_classes="side-panel"):
-            with gr.Accordion("Advanced Settings", open=False, elem_classes="accordion-container") as diff_adv_setting:
+            with gr.Accordion(_("advanced_setting"), open=False, elem_classes="accordion-container") as advanced_setting:
                 sampler_dropdown = gr.Dropdown(
                     label="Sampler",
                     choices=["euler", "euler_cfg_pp", "euler_ancestral", "euler_ancestral_cfg_pp", "heun", "heunpp2", "dpm_2", "dpm_2_ancestral", "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_2s_ancestral_cfg_pp", "dpmpp_sde", "dpmpp_sde_gpu", "dpmpp_2m", "dpmpp_2m_cfg_pp", "dpmpp_2m_sde", "dpmpp_2m_sde_gpu", "dpmpp_3m_sde", "dpmpp_3m_sde_gpu", "ddpm", "lcm", "ddim"],
@@ -327,7 +332,7 @@ class DiffusionComponent:
                     value=7.5
                 )
                 with gr.Row():
-                    diffusion_seed_input = gr.Number(
+                    seed_input = gr.Number(
                         label="Seed",
                         value=42,
                         precision=0
@@ -376,7 +381,7 @@ class DiffusionComponent:
         ui_component.sampler_dropdown = sampler_dropdown
         ui_component.scheduler_dropdown = scheduler_dropdown
         ui_component.cfg_scale_slider = cfg_scale_slider
-        ui_component.diffusion_seed_input = diffusion_seed_input
+        ui_component.diffusion_seed_input = seed_input
         ui_component.random_seed_checkbox = random_seed_checkbox
         ui_component.vae_dropdown = vae_dropdown
         ui_component.clip_skip_slider = clip_skip_slider
@@ -385,7 +390,7 @@ class DiffusionComponent:
         ui_component.batch_size_input = batch_size_input
         ui_component.batch_count_input = batch_count_input
 
-        return cls(advanced_setting=diff_adv_setting, sampler_dropdown=sampler_dropdown, scheduler_dropdown=scheduler_dropdown, cfg_scale_slider=cfg_scale_slider, seed_input=diffusion_seed_input, random_seed_checkbox=random_seed_checkbox, vae_dropdown=vae_dropdown, clip_skip_slider=clip_skip_slider, enable_clip_skip_checkbox=enable_clip_skip_checkbox, clip_g_checkbox=clip_g_checkbox, batch_size_input=batch_size_input, batch_count_input=batch_count_input)
+        return cls(advanced_setting=advanced_setting, sampler_dropdown=sampler_dropdown, scheduler_dropdown=scheduler_dropdown, cfg_scale_slider=cfg_scale_slider, seed_input=seed_input, random_seed_checkbox=random_seed_checkbox, vae_dropdown=vae_dropdown, clip_skip_slider=clip_skip_slider, enable_clip_skip_checkbox=enable_clip_skip_checkbox, clip_g_checkbox=clip_g_checkbox, batch_size_input=batch_size_input, batch_count_input=batch_count_input)
 
     @classmethod
     def create_diffusion_container_history_panel(cls):

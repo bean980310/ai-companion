@@ -21,9 +21,12 @@ from .common.default_language import default_language
 from .common.translations import translation_manager, _
 from .common.utils import detect_platform
 from .characters.persona_speech_manager import PersonaSpeechManager
+from ._version import __version__
 
 args = parse_args()
 os_name, arch = detect_platform()
 
 __all__ = ['logger']
-__version__ = "0.2.0"
+# __version__ = "0.2.0"
+
+# from . import chat, image_gen, storyteller, tts, translator, download, settings

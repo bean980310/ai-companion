@@ -3,13 +3,16 @@ from typing import List
 import re
 from ..common.environ_manager import load_env_variables
 
-def get_lmstudio_models(base_url: str = "http://localhost:1234"):
+def get_lmstudio_models(api_host: str = "localhost:1234"):
     import lmstudio as lms
 
     llm = []
+    client = lms.Client(api_host=api_host)
     try:
-        client = lms.Client(base_url)
         downloaded_llm = client.list_downloaded_models("llm")
+
+        if len(downloaded_llm) == 0:
+            return ["모델이 존재하지 않습니다."]
         
         for m in downloaded_llm:
             llm.append(m.model_key)
@@ -18,13 +21,17 @@ def get_lmstudio_models(base_url: str = "http://localhost:1234"):
     except:
         return ["LM Studio를 설치하고 서버를 실행해주세요."]
 
-def get_lmstudio_embedding_models(base_url: str = "http://localhost:1234"):
+def get_lmstudio_embedding_models(api_host: str = "localhost:1234"):
     import lmstudio as lms
 
     embedding = []
+    client = lms.Client(api_host=api_host)
     try:
-        client = lms.Client(base_url)
         downloaded_embedding = client.list_downloaded_models("embedding")
+
+        if len(downloaded_embedding) == 0:
+            return ["모델이 존재하지 않습니다."]
+        
         for m in downloaded_embedding:
             embedding.append(m.model_key)
 
@@ -38,12 +45,37 @@ def get_ollama_models(host: str = "http://localhost:11434"):
     llm = []
     try:
         client = ollama.Client(host=host)
-        for m in client.list().models:
+        models = client.list().models
+
+        if len(models) == 0:
+            return ["모델이 존재하지 않습니다."]
+
+        for m in models:
             llm.append(m.model)
 
         return llm
     except:
         return ["Ollama를 설치하고 서버를 실행해주세요."]
+
+def get_oobabooga_models(host: str = "http://localhost:5000/v1"):
+    import openai
+    from openai import OpenAI
+
+    llm = []
+    client = OpenAI(api_key="not-needed", base_url=host)
+
+    try:
+        model = client.models.list()
+
+        if len(model.data) == 0:
+            return ["모델이 존재하지 않습니다."]
+
+        for m in model.data:
+            llm.append(m.id)
+
+        return llm
+    except:
+        return ["Oobabooga를 설치하고 서버를 실행해주세요."]
 
 def get_openai_llm_models(api_key: str = None):
     import openai
@@ -55,7 +87,7 @@ def get_openai_llm_models(api_key: str = None):
         model_list.append("OpenAI API Key가 필요합니다.")
         return model_list
 
-    client = OpenAI(api_key)
+    client = OpenAI(api_key=api_key)
 
     try:
         model = client.models.list()
@@ -67,7 +99,7 @@ def get_openai_llm_models(api_key: str = None):
 
             date_pattern = re.compile(r"\d{4}-\d{2}-\d{2}")
 
-            include = any(k in model_id.lower() for k in ["gpt-4o", "gpt-4.1", "gpt-5", "gpt-oss"])
+            include = any(k in model_id.lower() for k in gpt_pattern)
             exclude_type = all(k not in model_id.lower() for k in ["image", "realtime", "tts", "audio", "transcribe", "codex", "search", "preview"])
             exclude_mini = all(k not in model_id.lower() for k in ["gpt-4.1-mini", "gpt-4.1-nano", 'gpt-4o-mini'])
             latest_or_date = ("latest" in model_id) or bool(date_pattern.search(model_id.lower()))
@@ -90,7 +122,7 @@ def get_anthropic_llm_models(api_key: str = None):
         model_list.append("Anthropic API Key가 필요합니다.")
         return model_list
 
-    client = Anthropic(api_key)
+    client = Anthropic(api_key=api_key)
 
     try:
         model = client.models.list()
@@ -118,7 +150,7 @@ def get_google_genai_llm_models(api_key: str = None):
         model_list.append("Google AI API Key가 필요합니다.")
         return model_list
 
-    client = genai.Client(api_key)
+    client = genai.Client(api_key=api_key)
 
     try:
         model = client.models.list()
@@ -131,7 +163,7 @@ def get_google_genai_llm_models(api_key: str = None):
             preview_check = ("preview" not in m.name.lower()) or any(k in m.name.lower() for k in ["gemini-3-pro-preview", "gemini-3-pro-image-preview"])
 
             if "generateContent" in m.supported_actions and include and exclude_type and exclude_model and preview_check:
-                model_list.append(m.name.split('/')[-1])
+                model_list.append(m.name)
 
         return model_list
 
@@ -139,11 +171,9 @@ def get_google_genai_llm_models(api_key: str = None):
         model_list.append(f"Google AI API 오류 발생: {e}")
         return model_list
 
-def get_perplexity_llm_models(api_key: str):
+def get_perplexity_llm_models(api_key: str = None):
     import perplexity
     from perplexity import Perplexity
-
-    api_key = load_env_variables("PERPLEXITY_API_KEY")
 
     model_list = []
 
@@ -159,51 +189,78 @@ def get_perplexity_llm_models(api_key: str):
         model_list.append("Perplexity API Key가 필요합니다.")
         return model_list
 
-    client = Perplexity(api_key)
+    client = Perplexity(api_key=api_key)
 
     try:
         test = client.search.create(query="test")
+
         for m in api_models:
             model_list.append(m)
-            return model_list
+            
+        return model_list
 
     except perplexity.AuthenticationError as e:
         model_list.append(f"Perplexity API 오류 발생: {e}")
         return model_list
-        
+
+def get_xai_llm_models(api_key: str = None):
+    import xai_sdk
+
+    model_list = []
+
+    if not api_key:
+        model_list.append("XAI API Key가 필요합니다.")
+        return model_list
+
+    client = xai_sdk.Client(api_key=api_key)
+
+    try:
+        model = client.models.list_language_models()
+        for m in model:
+            model_list.append(m.name)
+
+        return model_list
+
+    except Exception as e:
+        model_list.append(f"XAI API 오류 발생: {e}")
+        return model_list
+
+def get_mistralai_llm_models(api_key: str = None):
+    import mistralai
+    from mistralai import Mistral
+
+    model_list = []
+
+    LLM_ALIASES = ["mistral-large-pixtral-2411", "mistral-medium", "mistral-tiny", "mistral-tiny-2312", 'mistral-tiny-2407', 'open-mistral-7b', 'open-mistral-nemo', 'voxtral-mini-transcribe', 'latest']
+
+    if not api_key:
+        model_list.append("Mistral AI API Key가 필요합니다.")
+        return model_list
+
+    client = Mistral(api_key=api_key)
+    
+    try:
+        model = client.models.list()
+        for m in model.data:
+            if m.capabilities.completion_chat and not m.deprecation and all(x not in m.id for x in LLM_ALIASES):
+                model_list.append(m.id)
+
+        return model_list
+    
+    except Exception as e:
+        model_list.append(f"Mistral AI API 오류 발생: {e}")
+        return model_list
+
 llm_api_models = []
 lmstudio_models = get_lmstudio_models()
 ollama_models = get_ollama_models()
-openai_api_models = get_openai_llm_models()
-anthropic_api_models = get_anthropic_llm_models()
-google_genai_api_models = get_google_genai_llm_models()
-
-perplexity_api_models = [
-    "sonar",
-    "sonar-pro",
-    "sonar-reasoning",
-    "sonar-reasoning-pro",
-    "sonar-deep-research",
-]
-
-xai_api_models = [
-    "grok-4-0709",
-    "grok-4-fast-non-reasoning",
-    "grok-4-fast-reasoning",
-    "grok-4-1-fast-non-reasoning",
-    "grok-4-1-fast-reasoning"
-]
-
-mistralai_api_models = [
-    "mistral-large-2411",
-    "open-mistral-nemo-2407",
-    "pixtral-12b-2409",
-    "pixtral-large-2411",
-    "mistral-small-2506",
-    "magistral-small-2509",
-    "mistral-medium-2508",
-    "magistral-medium-2509",
-]
+oobabooga_models = get_oobabooga_models()
+openai_api_models = get_openai_llm_models(load_env_variables('OPENAI_API_KEY'))
+anthropic_api_models = get_anthropic_llm_models(load_env_variables('ANTHROPIC_API_KEY'))
+google_genai_api_models = get_google_genai_llm_models(load_env_variables('GEMINI_API_KEY'))
+perplexity_api_models = get_perplexity_llm_models(load_env_variables('PERPLEXITY_API_KEY'))
+xai_api_models = get_xai_llm_models(load_env_variables('XAI_API_KEY'))
+mistralai_api_models = get_mistralai_llm_models(load_env_variables('MISTRAL_API_KEY'))
 
 openrouter_api_models = [
     "meta-llama/llama-3.3-70b-instruct",
@@ -289,5 +346,6 @@ llm_api_models.extend(anthropic_api_models)
 llm_api_models.extend(google_genai_api_models)
 llm_api_models.extend(perplexity_api_models)
 llm_api_models.extend(xai_api_models)
+llm_api_models.extend(mistralai_api_models)
 llm_api_models.extend(openrouter_api_models)
 llm_api_models.extend(mistralai_api_models)

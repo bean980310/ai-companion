@@ -7,6 +7,7 @@
   "system_message_default": "당신은 유용한 AI 비서입니다.",
   "system_message_placeholder": "대화의 성격, 말투 등을 정의하세요.",
   "tab_main": "메인",
+  "model_provider_label": "모델 제공자 선택",
   "model_type_label": "모델 유형 선택",
   "model_select_label": "모델 선택",
   "character_select_label": "캐릭터 선택",
@@ -83,5 +84,10 @@
   "refresh_info_label": "새로고침 결과",
   "cache_clear_all_button": "모든 모델 캐시 삭제",
   "clear_all_result_label": "결과",
-  "handle_character_change_invalid_error": "❌ 선택한 캐릭터가 유효하지 않습니다."
+  "handle_character_change_invalid_error": "❌ 선택한 캐릭터가 유효하지 않습니다.",
+  "reset_confirm_title": "⚠️ 확인",
+  "reset_confirm_current_message": "현재 세션의 모든 대화 내용이 삭제됩니다. 계속하시겠습니까?",
+  "reset_confirm_all_message": "모든 세션의 대화 내용이 삭제됩니다. 계속하시겠습니까?",
+  "cancel": "취소",
+  "ok": "확인"
 }

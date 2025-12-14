@@ -1,16 +1,17 @@
 # import logging
 from typing import Any, Generator, Literal
 import gradio as gr
+# from gradio_i18n import gettext as _, translate_blocks
 import os
 import secrets
 import sqlite3
 
 from src.models.models import get_all_local_models, generate_answer, generate_chat_title
 from src.common.database import save_chat_history_db, delete_session_history, delete_all_sessions, get_preset_choices, load_system_presets, get_existing_sessions, load_chat_from_db, update_system_message_in_db, update_last_character_in_db
-from src.common.translations import TranslationManager, translation_manager
+from src.common.translations import TranslationManager, translation_manager, _
 
 from src.characters.preset_images import PRESET_IMAGES
-from src.models import llm_api_models, openai_llm_api_models, anthropic_llm_api_models, google_genai_llm_api_models, perplexity_llm_api_models, xai_llm_api_models, mistralai_llm_api_models, openrouter_llm_api_models, huggingface_inference_llm_api_models, ollama_llm_models, lmstudio_llm_models, REASONING_CONTROLABLE, REASONING_KWD, REASONING_BAN
+from src.models import llm_api_models, openai_llm_api_models, anthropic_llm_api_models, google_genai_llm_api_models, perplexity_llm_api_models, xai_llm_api_models, mistralai_llm_api_models, openrouter_llm_api_models, huggingface_inference_llm_api_models, ollama_llm_models, lmstudio_llm_models, oobabooga_llm_models, REASONING_CONTROLABLE, REASONING_KWD, REASONING_BAN
 from src.models.local_llm_models import transformers_local, gguf_local, mlx_local
 from src.common.default_language import default_language
 from src.common.utils import detect_platform
@@ -19,8 +20,9 @@ import traceback
 from src.characters.persona_speech_manager import PersonaSpeechManager
 from src.common.character_info import characters
 from src.common.args import parse_args
-from src.common.translations import _
+# from src.common.translations import _
 from ...start_app import ui_component
+# from translations import i18n as _
 
 import requests
 import base64
@@ -211,7 +213,7 @@ class Chatbot:
         
         return "", history, self.filter_messages_for_chatbot(history)
 
-    def process_message_bot(self, session_id: str, history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]], selected_model: str | gr.Dropdown, provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "self-provided"] | gr.Dropdown, selected_lora: str | gr.Dropdown, custom_path: str, user_input: str | dict[str, str | Image.Image | Any] | Any, api_key: str, device: str, seed: int, max_length: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float, enable_thinking: bool, language: str):
+    def process_message_bot(self, session_id: str, history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]], selected_model: str | gr.Dropdown, provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"] | gr.Dropdown, selected_lora: str | gr.Dropdown, custom_path: str, user_input: str | dict[str, str | Image.Image | Any] | Any, api_key: str, device: str, seed: int, max_length: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float, enable_thinking: bool, language: str):
         image = None
         if isinstance(user_input, dict):
             files = user_input.get("files", [])
@@ -285,6 +287,144 @@ class Chatbot:
             )
 
         return history, chatbot_history, status, chat_title
+
+    def chat_wrapper(self, message, history, session_id, system_msg, selected_character, language, 
+                     selected_model, provider, selected_lora, custom_path, api_key, device, seed, 
+                     max_length, temperature, top_k, top_p, repetition_penalty, enable_thinking):
+        """
+        gr.ChatInterface를 위한 래퍼 함수
+        """
+        # 1. 사용자 메시지 처리
+        # history는 gr.ChatInterface에서 관리하는 list[dict] (type="messages"일 경우)
+        # 하지만 우리는 내부 DB와 app_state.history_state를 동기화해야 함.
+        
+        # 기존 history에 사용자 메시지 추가
+        # message는 str 또는 dict(text=..., files=...)
+        
+        current_history = history.copy() if history else []
+        
+        # 시스템 메시지가 없으면 추가 (새 세션인 경우)
+        if not current_history:
+             current_history.append({"role": "system", "content": system_msg})
+        
+        # 사용자 메시지 구성
+        user_content = message
+        user_files = []
+        if isinstance(message, dict):
+            user_content = message.get("text", "")
+            user_files = message.get("files", [])
+            
+            if user_files:
+                # 멀티모달 메시지 처리
+                content_list = [{"type": "text", "text": user_content}]
+                for file_path in user_files:
+                    with open(file_path, "rb") as f:
+                        if file_path.rsplit('.')[-1] == "jpg" or "jpeg":
+                            mime_type="image/jpeg"
+                        elif file_path.rsplit('.')[-1] == "png":
+                            mime_type="image/png"
+                        elif file_path.rsplit('.')[-1] == "webp":
+                            mime_type="image/webp"
+                        elif file_path.rsplit('.')[-1] == "gif":
+                            mime_type="image/gif"
+                        image = base64.b64encode(f.read()).decode('utf-8')
+
+                        image_url = f"data:{mime_type};base64,{image}"
+                    # 이미지 파일을 base64로 변환하거나 경로를 사용
+                    # 여기서는 기존 process_message_user 로직을 참고하여 처리
+                    # 다만 ChatInterface는 로컬 경로를 넘겨줌
+                    content_list.append({"type": "image", "image_url": image_url}) 
+                
+                current_history.append({"role": "user", "content": content_list})
+            else:
+                current_history.append({"role": "user", "content": user_content})
+        else:
+            current_history.append({"role": "user", "content": user_content})
+
+        # 2. 봇 응답 생성
+        # process_message_bot 로직 활용
+        
+        # process_message_bot은 history를 인자로 받아 봇 응답을 추가하고 반환함
+        # user_input은 이미 history에 추가했으므로 process_message_bot 호출 시 user_input 인자는 
+        # generate_answer 내부에서 이미지 처리를 위해 필요할 수 있음.
+        
+        # generate_answer를 직접 호출하는 것이 더 깔끔할 수 있음.
+        
+        # 이미지 입력 준비
+        image_input = None
+        if user_files:
+             image_input = user_files # 리스트 전달
+        
+        chat_title = self.chat_titles.get(session_id)
+        
+        if provider == "self-provided":
+            model_type = self.determine_model_type(selected_model)
+        else:
+            model_type = None
+            
+        try:
+            answer = generate_answer(
+                history=current_history,
+                selected_model=selected_model,
+                provider=provider,
+                model_type=model_type,
+                selected_lora=selected_lora if selected_lora != "None" else None,
+                local_model_path=custom_path if selected_model == "사용자 지정 모델 경로 변경" else None,
+                lora_path=None,
+                image_input=image_input,
+                api_key=api_key,
+                device=device,
+                seed=seed,
+                max_length=max_length,
+                temperature=temperature,
+                top_k=top_k,
+                top_p=top_p,
+                repetition_penalty=repetition_penalty,
+                enable_thinking=enable_thinking,
+                character_language=language
+            )
+            
+            speech_manager = self.get_speech_manager(session_id)
+            styled_answer = speech_manager.generate_response(answer)
+            
+            # 응답을 히스토리에 추가
+            # gr.ChatInterface는 리턴된 문자열을 봇의 응답으로 처리하여 히스토리에 추가함
+            # 하지만 우리는 DB 저장을 위해 전체 히스토리를 업데이트해야 함
+            current_history.append({"role": "assistant", "content": styled_answer})
+            
+            # 데이터베이스에 히스토리 저장
+            save_chat_history_db(current_history, session_id=session_id)
+            
+            status = ""
+            
+        except Exception as e:
+            logger.error(f"Error generating response: {str(e)}", exc_info=True)
+            styled_answer = f"❌ 오류 발생: {str(e)}"
+            current_history.append({"role": "assistant", "content": styled_answer})
+            status = "❌ 오류가 발생했습니다."
+
+        # 채팅 제목 생성 (필요 시)
+        if chat_title is None and len(current_history) >= 2: # 시스템 메시지 포함 최소 2개 이상일 때
+             # 첫 번째 사용자 메시지 찾기
+            first_user_msg = next((msg for msg in current_history if msg["role"] == "user"), None)
+            if first_user_msg:
+                chat_title = generate_chat_title(
+                    first_message=first_user_msg["content"],
+                    selected_model=selected_model,
+                    model_type=self.determine_model_type(selected_model),
+                    selected_lora=selected_lora if selected_lora != "None" else None,
+                    local_model_path=custom_path if selected_model == "사용자 지정 모델 경로 변경" else None,
+                    lora_path=None,
+                    device=device,
+                    image_input=image_input,
+                )
+                self.chat_titles[session_id] = chat_title
+
+        # Return values for ChatInterface
+        # 1. response (str)
+        # 2. Additional outputs: app_state.history_state, status_text, chat_title_box
+        
+        return styled_answer, current_history, status, gr.update(value=chat_title) if chat_title else gr.update()
 
     @staticmethod
     def determine_model_type(selected_model: str) -> str:
@@ -679,8 +819,8 @@ class Chatbot:
         Thinking 애니메이션의 가시성을 제어합니다.
         """
 
-        enable_thinking = REASONING_KWD in selected_model.lower() and REASONING_BAN not in selected_model.lower()
-        thinking_visible = REASONING_CONTROLABLE in selected_model.lower()
+        enable_thinking = any(x in selected_model.lower() for x in REASONING_KWD) and all(x not in selected_model.lower() for x in REASONING_BAN)
+        thinking_visible = any(x in selected_model.lower() for x in REASONING_CONTROLABLE)
 
         return gr.update(value=enable_thinking, visible=thinking_visible, interactive=thinking_visible)
 
@@ -711,6 +851,8 @@ class Chatbot:
                 updated_list = ollama_llm_models
             elif provider == "lmstudio":
                 updated_list = lmstudio_llm_models
+            # elif provider == "oobabooga":
+            #     updated_list = oobabooga_llm_models
 
             updated_list = sorted(list(dict.fromkeys(updated_list)))
             return gr.update(visible='hidden'), gr.update(choices=updated_list, value=updated_list[0] if updated_list else None)
@@ -799,16 +941,16 @@ class Chatbot:
     def create_reset_confirm_modal():
         """초기화 확인 모달 생성"""
         with gr.Column(visible=False, elem_classes="reset-confirm-modal") as reset_modal:
-            gr.Markdown("# ⚠️ 확인", elem_classes="reset-confirm-title")
+            gr.Markdown(f"# {_("reset_confirm_title")}", elem_classes="reset-confirm-title")
             with gr.Column() as single_reset_content:
-                gr.Markdown("현재 세션의 모든 대화 내용이 삭제됩니다. 계속하시겠습니까?", 
+                gr.Markdown(_("reset_confirm_current_message"), 
                         elem_classes="reset-confirm-message")
             with gr.Column(visible=False) as all_reset_content:
-                gr.Markdown("모든 세션의 대화 내용이 삭제됩니다. 계속하시겠습니까?", 
+                gr.Markdown(_("reset_confirm_all_message"), 
                         elem_classes="reset-confirm-message")
             with gr.Row(elem_classes="reset-confirm-buttons"):
-                cancel_btn = gr.Button("취소", variant="secondary")
-                confirm_btn = gr.Button("확인", variant="primary")
+                cancel_btn = gr.Button(_("cancel"), variant="secondary")
+                confirm_btn = gr.Button(_("ok"), variant="primary")
                 
         return (reset_modal, single_reset_content, all_reset_content, 
                 cancel_btn, confirm_btn)

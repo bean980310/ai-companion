@@ -14,7 +14,7 @@ echo "Installing requirements..."
 %HomePath%\.local\bin\uv.exe pip install "transformers[audio]"
 
 echo "Installing LLM Backend for AI Companion..."
-%HomePath%\.local\bin\uv.exe pip install ai-companion-llm-backend
+%HomePath%\.local\bin\uv.exe pip install "ai-companion-llm-backend @ https://github.com/bean980310/ai-companion-llm-backend/releases/download/v0.1.0/ai_companion_llm_backend-0.1.0-py3-none-any.whl"
 
 echo "Installing requirements..."
 %HomePath%\.local\bin\uv.exe pip install outetts

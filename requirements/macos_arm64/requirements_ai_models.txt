@@ -94,12 +94,12 @@ argmaxtools
 setuptools
 wheel
 scikit-build-core
-numpy>=2.0.2
+numpy>=2.4.0rc1
 numba>=0.60.0
-pandas>=2.0.0
+pandas>=3.0.0rc0
 matplotlib
 scikit-learn
-beautifulsoup4==4.13.5
+beautifulsoup4
 sympy==1.14.0
 scipy==1.16.0
 protobuf

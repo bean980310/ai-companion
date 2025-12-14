@@ -1,4 +1,8 @@
 import gradio as gr
+# from gradio_i18n import gettext as _
+
+# from translations import i18n as _
+
 from ..common.translations import translation_manager, _
 from ..common.default_language import default_language
 from dataclasses import dataclass
@@ -9,10 +13,11 @@ class HeaderUIComponent:
     title: gr.Markdown = None
     settings_button: gr.Button = None
     language_dropdown: gr.Dropdown = None
+    navbar: gr.Navbar = None
 
     @classmethod
     def create_header_container(cls):
-        with gr.Row(elem_classes="header-container"):
+        with gr.Row(elem_classes="header-container", scale=1, render=False) as head:
             with gr.Column(scale=3):
                 title = gr.Markdown(f"## {_('main_title')}", elem_classes="title")
                 gr.Markdown("### Beta Release")
@@ -29,8 +34,21 @@ class HeaderUIComponent:
                     elem_classes="language-selector"
                 )
         
-        ui_component.title = title
-        ui_component.settings_button = settings_button
-        ui_component.language_dropdown = language_dropdown
+        # navbar = gr.Navbar(main_page_name="Chat")
+        
+        if ui_component.title is None:
+            ui_component.title = title
+        if ui_component.settings_button is None:
+            ui_component.settings_button = settings_button
+        if ui_component.language_dropdown is None:
+            ui_component.language_dropdown = language_dropdown
         
         return cls(title, settings_button, language_dropdown)
+
+    @classmethod
+    def create_navbar(cls):
+        navbar = gr.Navbar(value=[("Chat", "chat"), ("Image Gen", "image"), ("Storyteller", "story"), ("TTS", "tts"), ("Translator", "translate"), ("Download", "download"), ("Settings", "settings")])
+        if ui_component.navbar is None:
+            ui_component.navbar = navbar
+
+        # return cls.navbar

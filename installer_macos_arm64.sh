@@ -14,7 +14,7 @@ echo "Installing requirements..."
 uv pip install "transformers[audio]"
 
 echo "Installing LLM Backend for AI Companion..."
-uv pip install ai-companion-llm-backend
+uv pip install "ai-companion-llm-backend[metal] @ https://github.com/bean980310/ai-companion-llm-backend/releases/download/v0.1.0/ai_companion_llm_backend-0.1.0-py3-none-any.whl"
 
 echo "Installing requirements..."
 uv pip install outetts

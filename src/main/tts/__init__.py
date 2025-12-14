@@ -13,4 +13,4 @@ def get_tts_models():
     
     app_state.tts_choices = tts_choices
     
-    return tts_choices
+    # return tts_choices

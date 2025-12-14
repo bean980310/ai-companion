@@ -23,7 +23,7 @@ class ComfyUIImageUpload(ComfyUIClient):
 
         files = {"image": (file_name, file_data, "image/png")}
         data = {}
-        # data["image"] = (file_name, file_data, "image/png")
+        data["image"] = (file_name, file_data, "image/png")
         if overwrite:
             data["overwrite"] = "true"
         

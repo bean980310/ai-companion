@@ -34,11 +34,11 @@ def create_settings_popup(demo):
                     # 사용자 지정 모델 경로 설정 섹션
                     create_custom_model_tab()
                     create_system_preset_management_tab()
-                    # 프리셋 Dropdown 초기화
+                    # # 프리셋 Dropdown 초기화
                     demo.load(
                         fn=chat_bot.initial_load_presets,
                         inputs=[],
-                        outputs=[ui_component.preset_dropdown],
+                        outputs=[ui_component.text_preset_dropdown],
                         queue=False
                     )                        
                     create_save_history_tab()

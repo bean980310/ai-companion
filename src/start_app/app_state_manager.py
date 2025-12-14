@@ -8,12 +8,12 @@ from ..characters.persona_speech_manager import PersonaSpeechManager
 class AppState:
     speech_manager_state: gr.State | PersonaSpeechManager | None = None
 
-    session_id: str | None = None
+    initial_session_id: str | None = None
     loaded_history: list[dict[str, str | Any]] | None = None
     session_dropdown: gr.State | None = None
-    last_character: gr.State | str | None = None
+    initial_last_character: gr.State | str | None = None
     last_preset: gr.State | str | None = None
-    system_message: gr.State | str | None = None
+    initial_system_message: gr.State | str | None = None
     session_label: gr.State | str | None = None
 
     last_sid_state: gr.State | None = None

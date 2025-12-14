@@ -7,6 +7,7 @@
   "system_message_default": "あなたは役に立つAIアシスタントです。",
   "system_message_placeholder": "会話の性格、話し方などを定義してください。",
   "tab_main": "メイン",
+  "model_provider_label": "モデル提供元の選択",
   "model_type_label": "モデルタイプの選択",
   "model_select_label": "モデル選択",
   "character_select_label": "キャラクター選択",
@@ -83,5 +84,10 @@
   "refresh_info_label": "更新結果",
   "cache_clear_all_button": "すべてのモデルキャッシュを削除",
   "clear_all_result_label": "結果",
-  "handle_character_change_invalid_error": "❌ 選択したキャラクターが無効です。"
+  "handle_character_change_invalid_error": "❌ 選択したキャラクターが無効です。",
+  "reset_confirm_title": "⚠️ 確認",
+  "reset_confirm_current_message": "現在のセッションのすべての会話内容が削除されます。続行しますか？",
+  "reset_confirm_all_message": "すべてのセッションの会話内容が削除されます。続行しますか？",
+  "cancel": "キャンセル",
+  "ok": "確認"
 }

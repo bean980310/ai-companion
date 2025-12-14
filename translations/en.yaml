@@ -1,0 +1,94 @@
+advanced_setting: Advanced Settings
+api_key_label: API Key
+auth_required_info: Check for private or gated model downloads
+auth_required_label: Authentication Required
+cache_clear_all_button: Delete all model caches
+cache_tab_title: Cache
+cancel: Cancel
+character_select_info: Select the character you want to talk to.
+character_select_label: Character selection
+clear_all_result_label: Results
+custom_model_id_info: Enter a HuggingFace model ID (e.g., organization/model-name)
+custom_model_id_label: Custom Model ID
+custom_model_id_placeholder: e.g., facebook/opt-350m
+download_cancel_button: Cancel
+download_complete: ✅ Download complete!
+download_description: Download models from HuggingFace and save them locally.
+download_description_detail: You can select from a predefined list of models or directly
+  enter a custom model ID.
+download_details_label: Details
+download_error: ❌ Error occurred
+download_error_no_model: ❌ Please enter a model ID.
+download_failed: ❌ Download failed
+download_in_progress: 🔄 Downloading...
+download_log_label: Download Log
+download_mode_custom: Custom Model ID
+download_mode_label: Download Method
+download_mode_predefined: Predefined Models
+download_preparing: 🔄 Preparing download...
+download_start_button: Start Download
+download_tab: Download
+download_title: Model Download
+handle_character_change_invalid_error: ❌ The selected character is invalid.
+hf_token_info: Enter your HuggingFace token.
+hf_token_label: HuggingFace Token
+hf_token_placeholder: hf_...
+hub_auth_required_info: Check for private or gated model downloads
+hub_auth_required_label: Authentication Required
+hub_cancel_button: Cancel
+hub_description: HuggingFace Hub Model Search
+hub_description_detail: Search and download models from HuggingFace Hub.
+hub_details_label: Details
+hub_download_button: Download
+hub_download_log_label: Download Log
+hub_language_label: Language
+hub_library_label: Library
+hub_model_list_label: Search Results
+hub_model_type_label: Model Type
+hub_save_path_info: Leave empty for automatic path generation.
+hub_save_path_label: Save Path
+hub_save_path_placeholder: ./models/my-model
+hub_search_button: Search
+hub_search_description: You can find desired models using keywords or filters.
+hub_search_label: Search
+hub_search_placeholder: Enter model name, tags, or keywords
+hub_selected_model_label: Selected Model
+hub_tab_title: Hub
+hub_token_info: Enter your HuggingFace token.
+hub_token_label: HuggingFace Token
+hub_token_placeholder: hf_...
+image_upload_label: Upload Image (Optional)
+language_info: Choose interface language
+language_select: Select Language
+main_title: AI Companion for Local Machines
+message_input_label: Enter Message
+message_placeholder: Type your message...
+model_provider_label: Model Provider
+model_select_info: List of supported models.
+model_select_label: Model Select
+model_type_label: Select Model Type
+ok: OK
+refresh_info_label: Refresh Results
+refresh_model_list_button: Refresh Model List
+repetition_penalty_label: Repetition Penalty
+reset_all_sessions_button: Reset all Sessions
+reset_confirm_all_message: All conversations in all sessions will be deleted. Do you
+  want to continue?
+reset_confirm_current_message: All conversations in the current session will be deleted.
+  Do you want to continue?
+reset_confirm_title: ⚠️ Confirm
+reset_session_button: Reset Session
+save_path_info: Leave empty for automatic path generation.
+save_path_label: Save Path
+save_path_placeholder: ./models/my-model
+seed_info: Set a seed value to make model predictions reproducible.
+seed_label: Seed Value
+select_session_info: The selected session is displayed.
+send_button: Send
+system_message: System Message
+system_message_default: You are a helpful AI assistant.
+system_message_placeholder: Define conversation characteristics, tone, etc.
+tab_main: Main
+temperature_label: Temperature
+top_k_label: Top K
+top_p_label: Top P

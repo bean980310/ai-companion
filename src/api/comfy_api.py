@@ -1,9 +1,12 @@
 #This is an example that uses the websockets api and the SaveImageWebsocket node to get images directly without
 #them being saved to disk
 
+import websockets.sync.client as ws_client
+import websockets.asyncio.client as ws_async_client
 import websocket #NOTE: websocket-client (https://github.com/websocket-client/websocket-client)
 import uuid
 import json
+import urllib3
 import urllib.request
 import urllib.parse
 import pandas as pd
@@ -16,30 +19,36 @@ import datetime
 from io import BytesIO
 import numpy as np
 import torch
+import httpx
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+import asyncio
+from typing import Union
 
 class ComfyUIClient:
-    def __init__(self, server_address="127.0.0.1:8000"):
+    def __init__(self, server_address: str="127.0.0.1:8000", client_id: str=str(uuid.uuid4())):
         self.server_address=server_address
-        self.client_id=str(uuid.uuid4())
+        self.client_id=client_id
 
-    def queue_prompt(self, prompt):
+    def queue_prompt(self, prompt: str):
         p = {"prompt": prompt, "client_id": self.client_id}
         data = json.dumps(p).encode('utf-8')
-        req =  urllib.request.Request("http://{}/prompt".format(self.server_address), data=data,
+        req =  urllib.request.Request(f"http://{self.server_address}/prompt", data=data,
         headers={'Content-Type': 'application/json'})
         return json.loads(urllib.request.urlopen(req).read())
 
-    def get_image(self, filename, subfolder, folder_type):
+    def get_image(self, filename: str, subfolder: str, folder_type: str):
         data = {"filename": filename, "subfolder": subfolder, "type": folder_type}
         url_values = urllib.parse.urlencode(data)
-        with urllib.request.urlopen("http://{}/view?{}".format(self.server_address, url_values)) as response:
+        # response = httpx.get(f"http://{self.server_address}/view", params=url_values)
+        with urllib.request.urlopen(f"http://{self.server_address}/view?{url_values}") as response:
             return response.read()
 
-    def get_history(self, prompt_id):
-        with urllib.request.urlopen("http://{}/history/{}".format(self.server_address, prompt_id)) as response:
+    def get_history(self, prompt_id: str):
+        with urllib.request.urlopen(f"http://{self.server_address}/history/{prompt_id}") as response:
             return json.loads(response.read())
 
-    def get_images(self, ws, prompt):
+    def get_images(self, ws: websocket.WebSocket, prompt: str):
         prompt_id = self.queue_prompt(prompt)['prompt_id']
         output_images = {}
         output_dir = 'outputs'
@@ -79,7 +88,7 @@ class ComfyUIClient:
                     
         return output_images
     
-    def upload_image(self, input_img, subfolder="", overwrite=False):
+    def upload_image(self, input_img: Union[str, Image.Image], subfolder: str="", overwrite: bool=False):
         if input_img is None:
             return None
         
@@ -119,7 +128,7 @@ class ComfyUIClient:
         print("img2img upload:", path)
         return image
     
-    def upload_mask(self, original_img, mask_img, subfolder="clipspace", overwrite=False):
+    def upload_mask(self, original_img: Union[str, Image.Image], mask_img: Union[str, Image.Image], subfolder: str="clipspace", overwrite: bool=False):
         """
         inpaint 용 업로드 함수.
         보통 inpaint용 이미지는 배경과 마스크를 합성한 최종 이미지이므로,
@@ -177,22 +186,19 @@ class ComfyUIClient:
         return mask
     
     def text2image_generate(self, prompt: dict):
-        ws_url = "ws://{}/ws?clientId={}".format(self.server_address, self.client_id)
+        ws_url = f"ws://{self.server_address}/ws?clientId={self.client_id}"
         ws = websocket.WebSocket()
-        ws.connect(ws_url)
-        images = self.get_images(ws, prompt)
-        ws.close()
+        with ws.connect(ws_url):
+            images = self.get_images(ws, prompt)
         
         return images
     
     def image2image_generate(self, prompt: dict):
-        ws_url = "ws://{}/ws?clientId={}".format(self.server_address, self.client_id)
+        ws_url = f"ws://{self.server_address}/ws?clientId={self.client_id}"
         ws = websocket.WebSocket()
-        ws.connect(ws_url)
-        # self.upload_image(input_path, name)
-        images = self.get_images(ws, prompt)
-        ws.close()
-        
+        with ws.connect(ws_url):
+            images = self.get_images(ws, prompt)
+
         return images
     
     def get_models_list(self, folder: str):
