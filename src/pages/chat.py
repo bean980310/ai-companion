@@ -216,12 +216,23 @@ with gr.Blocks() as demo:
     text_enable_thinking_checkbox.change(lambda enable: enable if enable is True else False, inputs=[text_enable_thinking_checkbox], outputs=[app_state.enable_thinking_state])
 
     # Preset & Character
-    gr.on(
-        triggers=[character_dropdown.change, change_preset_button.click],
+    character_dropdown.change(
+        fn=chat_bot.update_system_message_and_profile,
+        inputs=[character_dropdown, language_dropdown, app_state.session_id_state],
+        outputs=[system_message_box, profile_image, preset_dropdown]
+    )
+
+    character_dropdown.change(
         fn=chat_bot.handle_change_preset,
         inputs=[preset_dropdown, app_state.history_state, app_state.selected_language_state],
         outputs=[app_state.history_state, system_message_box, profile_image]
     )
+
+    # character_dropdown.change(
+    #     fn=chat_bot.update_system_message_and_profile,
+    #     inputs=[character_dropdown, language_dropdown, app_state.session_id_state],
+    #     outputs=[system_message_box, profile_image, preset_dropdown]
+    # )
 
     # Note: language_dropdown is NOT here (it will likely be in the Navbar or Global Header if we keep one).
     # If we want language support PER PAGE or Global, we need to decide. 
@@ -287,13 +298,39 @@ with gr.Blocks() as demo:
     )
 
     # Language Change Event
-    def on_chat_language_change(selected_lang: str):
+    def on_chat_language_change(selected_lang: str, selected_character: str):
         lang_code = get_language_code(selected_lang)
         translation_manager.set_language(lang_code)
+
+        if selected_lang in characters[selected_character]["languages"]:
+            app_state.speech_manager_state.current_language = selected_lang
+        else:
+            app_state.speech_manager_state.current_language = characters[selected_character]["languages"][0]
+                
+            
+        system_presets: dict[str, dict[str, str]] = {
+            "AI 비서 (AI Assistant)": AI_ASSISTANT_PRESET,
+            "Image Generator": SD_IMAGE_GENERATOR_PRESET,
+            "미나미 아스카 (南飛鳥, みなみあすか, Minami Asuka)": MINAMI_ASUKA_PRESET,
+            "마코토노 아오이 (真琴乃葵, まことのあおい, Makotono Aoi)": MAKOTONO_AOI_PRESET,
+            "아이노 코이토 (愛野小糸, あいのこいと, Aino Koito)": AINO_KOITO_PRESET,
+            "아리아 프린세스 페이트 (アリア·プリンセス·フェイト, Aria Princess Fate)": ARIA_PRINCESS_FATE_PRESET,
+            "아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)": ARIA_PRINCE_FATE_PRESET,
+            "왕 메이린 (王美玲, ワン·メイリン, Wang Mei-Ling)": WANG_MEI_LING_PRESET,
+            "미스티 레인 (ミスティ·レーン, Misty Lane)": MISTY_LANE_PRESET,
+            '릴리 엠프레스 (リリー·エンプレス, Lily Empress)': LILY_EMPRESS_PRESET,
+            "최유나 (崔有娜, チェ·ユナ, Choi Yuna)": CHOI_YUNA_PRESET,
+            "최유리 (崔有莉, チェ·ユリ, Choi Yuri)": CHOI_YURI_PRESET
+        }
+                
+        preset_name = system_presets.get(selected_character, AI_ASSISTANT_PRESET)
+        system_content = preset_name.get(lang_code, "당신은 유용한 AI 비서입니다.")
+
         return [
             gr.update(value=f"## {_('main_title')}"),
             gr.update(label=_('language_select'), info=_('language_info')),
             gr.update(label=_('system_message')),
+            gr.update(label=_('system_message'), value=system_content),
             gr.update(label=_('advanced_setting')),
             gr.update(label=_('seed_label'), info=_('seed_info')),
             gr.update(label=_('temperature_label')),
@@ -307,11 +344,12 @@ with gr.Blocks() as demo:
 
     language_dropdown.change(
         fn=on_chat_language_change,
-        inputs=[language_dropdown],
+        inputs=[language_dropdown, character_dropdown],
         outputs=[
             page_header.title,
             language_dropdown,
             system_message_accordion,
+            system_message_box,
             text_advanced_settings,
             text_seed_input,
             text_temperature_slider,

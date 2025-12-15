@@ -44,7 +44,7 @@ logger.info(f"Detected OS: {os_name}, Architecture: {arch}")
 load_initial_data()
 
 # Import Pages
-from src import chat, image_gen, storyteller, tts, translator, download, settings
+from src.pages import chat, image_gen, storyteller, tts, translator, download, settings
 
 # Global Initialization
 # Creating a dummy block to run initialization if needed, 

@@ -141,7 +141,7 @@ class ChatbotComponent:
                 system_message_box = gr.Textbox(
                     label=_("system_message"),
                     value=app_state.initial_system_message,
-                    placeholder=_("system_message_placeholder"),
+                    # placeholder=_("system_message_placeholder"),
                     elem_classes="system-message",
                     autofocus=True
                 )
