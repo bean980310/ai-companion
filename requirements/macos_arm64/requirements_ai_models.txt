@@ -56,6 +56,7 @@ gptqmodel>=4.0.0
 # gptqmodel @ git+https://github.com/ModelCloud/GPTQModel.git@29402342228414b81020a28a4c5b5828c1e76d59
 jiwer
 gtts>=2.5.4
+coqui-tts
 chromadb
 # outetts==0.3.3
 pydub
