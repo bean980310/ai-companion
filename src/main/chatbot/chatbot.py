@@ -460,12 +460,12 @@ class Chatbot:
                 messages_for_chatbot.append({"role": msg["role"], "content": display_content})
         return messages_for_chatbot
 
-    def reset_session(self, history: list[dict[str, str | Any]], chatbot: list[dict[str, str | Any]], system_message_default: str, language: str | None = None, session_id: str="demo_session"):
+    def reset_session(self, history: list[dict[str, str | Any]], chatbot: list[dict[str, str | Any]], system_message_default: str, selected_character: str, language: str | None = None, session_id: str = "demo_session"):
         """
         특정 세션을 초기화하는 함수.
-        
+
         Returns:
-            tuple: (reset_modal, single_content, all_content, msg, new_history, chatbot_history, status)
+            tuple: (reset_modal, single_content, all_content, msg, new_history, chatbot_history, status, session_dropdown)
         """
         if language is None:
             language = self.default_language
@@ -473,6 +473,7 @@ class Chatbot:
         try:
             success = delete_session_history(session_id)
             if not success:
+                sessions = get_existing_sessions()
                 return (
                     gr.update(visible=False),  # reset_modal
                     gr.update(visible=False),  # single_content
@@ -480,7 +481,8 @@ class Chatbot:
                     gr.update(),               # msg
                     history,                   # history 유지
                     chatbot,                   # chatbot 유지
-                    "❌ 세션 초기화에 실패했습니다."  # status
+                    "❌ 세션 초기화에 실패했습니다.",  # status
+                    gr.update(choices=sessions, value=session_id),  # session_dropdown
                 )
 
             # 새로운 시스템 메시지로 히스토리 초기화
@@ -490,24 +492,27 @@ class Chatbot:
             }
             new_history = [default_system]
 
-            # 새 히스토리 저장
-            save_chat_history_db(new_history, session_id=session_id)
-            
+            # 새 히스토리 저장 (선택된 캐릭터도 함께 저장)
+            save_chat_history_db(new_history, session_id=session_id, selected_character=selected_character)
+
             # chatbot 컴포넌트를 위한 메시지 필터링
             chatbot_history = self.filter_messages_for_chatbot(new_history)
 
+            sessions = get_existing_sessions()
             return (
                 gr.update(visible=False),  # reset_modal
                 gr.update(visible=False),  # single_content
                 gr.update(visible=False),  # all_content
                 "",                        # msg
-                new_history,              # new_history
-                chatbot_history,          # filtered chatbot messages
-                "✅ 세션이 초기화되었습니다."  # status
+                new_history,               # new_history
+                chatbot_history,           # filtered chatbot messages
+                "✅ 세션이 초기화되었습니다.",  # status
+                gr.update(choices=sessions, value=session_id),  # session_dropdown
             )
 
         except Exception as e:
             logger.error(f"Error resetting session: {str(e)}")
+            sessions = get_existing_sessions()
             return (
                 gr.update(visible=False),  # reset_modal
                 gr.update(visible=False),  # single_content
@@ -515,22 +520,28 @@ class Chatbot:
                 "",                        # msg
                 history,                   # history 유지
                 chatbot,                   # chatbot 유지
-                f"❌ 세션 초기화 중 오류가 발생했습니다: {str(e)}"  # status
+                f"❌ 세션 초기화 중 오류가 발생했습니다: {str(e)}",  # status
+                gr.update(choices=sessions, value=session_id),  # session_dropdown
             )
 
-    def reset_all_sessions(self, history: list[dict[str, str | Any]], chatbot: list[dict[str, str | Any]], system_message_default: str, language: str | None = None):
+    def reset_all_sessions(self, history: list[dict[str, str | Any]], chatbot: list[dict[str, str | Any]], system_message_default: str, selected_character: str, language: str | None = None):
         """
         모든 세션을 초기화하는 함수.
-        
+        demo_session을 제외한 모든 세션을 삭제하고, demo_session을 초기 상태로 되돌립니다.
+
         Returns:
-            tuple: (reset_modal, single_content, all_content, msg, new_history, chatbot_history, status)
+            tuple: (reset_modal, single_content, all_content, msg, new_history, chatbot_history, status, session_dropdown, session_id)
         """
         if language is None:
             language = self.default_language
 
+        # 기본 캐릭터 (첫 번째 캐릭터)
+        default_character = list(self.characters.keys())[0]
+
         try:
             success = delete_all_sessions()
             if not success:
+                sessions = get_existing_sessions()
                 return (
                     gr.update(visible=False),  # reset_modal
                     gr.update(visible=False),  # single_content
@@ -538,7 +549,9 @@ class Chatbot:
                     gr.update(),               # msg
                     history,                   # history 유지
                     chatbot,                   # chatbot 유지
-                    "❌ 모든 세션 초기화에 실패했습니다."  # status
+                    "❌ 모든 세션 초기화에 실패했습니다.",  # status
+                    gr.update(choices=sessions, value="demo_session"),  # session_dropdown
+                    "demo_session",            # session_id
                 )
 
             # 새로운 시스템 메시지로 히스토리 초기화
@@ -548,24 +561,28 @@ class Chatbot:
             }
             new_history = [default_system]
 
-            # demo_session에 대해 새 히스토리 저장
-            save_chat_history_db(new_history, session_id="demo_session")
-            
+            # demo_session에 대해 새 히스토리 저장 (기본 캐릭터로)
+            save_chat_history_db(new_history, session_id="demo_session", selected_character=default_character)
+
             # chatbot 컴포넌트를 위한 메시지 필터링
             chatbot_history = self.filter_messages_for_chatbot(new_history)
 
+            sessions = get_existing_sessions()
             return (
                 gr.update(visible=False),  # reset_modal
                 gr.update(visible=False),  # single_content
                 gr.update(visible=False),  # all_content
                 "",                        # msg
-                new_history,              # new_history
-                chatbot_history,          # filtered chatbot messages
-                "✅ 모든 세션이 초기화되었습니다."  # status
+                new_history,               # new_history
+                chatbot_history,           # filtered chatbot messages
+                "✅ 모든 세션이 초기화되었습니다.",  # status
+                gr.update(choices=sessions, value="demo_session"),  # session_dropdown
+                "demo_session",            # session_id
             )
 
         except Exception as e:
             logger.error(f"Error resetting all sessions: {str(e)}")
+            sessions = get_existing_sessions()
             return (
                 gr.update(visible=False),  # reset_modal
                 gr.update(visible=False),  # single_content
@@ -573,7 +590,9 @@ class Chatbot:
                 "",                        # msg
                 history,                   # history 유지
                 chatbot,                   # chatbot 유지
-                f"❌ 모든 세션 초기화 중 오류가 발생했습니다: {str(e)}"  # status
+                f"❌ 모든 세션 초기화 중 오류가 발생했습니다: {str(e)}",  # status
+                gr.update(choices=sessions, value="demo_session"),  # session_dropdown
+                "demo_session",            # session_id
             )
 
     def refresh_preset_list(self, language: str | None = None):
@@ -920,30 +939,39 @@ class Chatbot:
             gr.update(visible=False),  # all_content
         )
 
-    def handle_reset_confirm(self, history: list[dict[str, str | Any]], chatbot: list[dict[str, str | Any]], system_msg: str, language: str | None = None, session_id: str = "demo_session"):
-        """초기화 확인 시 처리"""
+    def handle_reset_confirm(self, history: list[dict[str, str | Any]], chatbot: list[dict[str, str | Any]], system_msg: str, selected_character: str, language: str | None = None, session_id: str = "demo_session"):
+        """초기화 확인 시 처리
+
+        Returns for single reset:
+            tuple: (reset_modal, single_content, all_content, msg, new_history, chatbot_history, status, session_dropdown)
+        Returns for all reset:
+            tuple: (reset_modal, single_content, all_content, msg, new_history, chatbot_history, status, session_dropdown, session_id)
+        """
         try:
             if self.reset_type == "single":
                 result = self.reset_session(
                     history=history,
-                    chatbot=self.filter_messages_for_chatbot(history),  # 현재 채팅 상태 전달
+                    chatbot=self.filter_messages_for_chatbot(history),
                     system_message_default=system_msg,
+                    selected_character=selected_character,
                     language=language,
                     session_id=session_id
                 )
             else:  # reset_type == "all"
                 result = self.reset_all_sessions(
                     history=history,
-                    chatbot=self.filter_messages_for_chatbot(history),  # 현재 채팅 상태 전달
+                    chatbot=self.filter_messages_for_chatbot(history),
                     system_message_default=system_msg,
+                    selected_character=selected_character,
                     language=language
                 )
-            
+
             # 모달 업데이트와 결과를 함께 반환
             return result
-            
+
         except Exception as e:
             logger.error(f"Reset confirmation error: {str(e)}")
+            sessions = get_existing_sessions()
             # 오류 발생 시 현재 상태 유지
             return (
                 gr.update(visible=False),  # reset_modal
@@ -952,7 +980,8 @@ class Chatbot:
                 "",                        # msg
                 history,                   # 현재 history 유지
                 self.filter_messages_for_chatbot(history),  # 현재 chatbot 상태 유지
-                f"❌ 초기화 중 오류가 발생했습니다: {str(e)}"  # status
+                f"❌ 초기화 중 오류가 발생했습니다: {str(e)}",  # status
+                gr.update(choices=sessions, value=session_id),  # session_dropdown
             )
         
     @staticmethod

@@ -772,6 +772,7 @@ def delete_session_history(session_id: str) -> SessionResult:
 
 def delete_all_sessions() -> SessionResult:
     """데이터베이스의 모든 세션과 채팅 기록을 삭제합니다.
+    demo_session을 제외한 모든 세션을 삭제하고, demo_session의 채팅 기록만 초기화합니다.
 
     Returns:
         SessionResult: 작업 결과 객체
@@ -782,25 +783,24 @@ def delete_all_sessions() -> SessionResult:
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            
+
             # 삭제 전 총 메시지 수 확인
             cursor.execute("SELECT COUNT(*) FROM chat_history")
             total_messages = cursor.fetchone()[0]
-            
-            if total_messages == 0:
-                message = "No chat history to delete"
-                logger.info(message)
-                return SessionResult(True, message, 0)
-            
+
             # 모든 채팅 기록 삭제
             cursor.execute("DELETE FROM chat_history")
             affected_rows = cursor.rowcount
+
+            # demo_session을 제외한 모든 세션 삭제
+            cursor.execute("DELETE FROM sessions WHERE id != 'demo_session'")
+
             conn.commit()
-            
+
             message = f"Successfully deleted all sessions ({affected_rows} messages)"
             logger.info(message)
             return SessionResult(True, message, affected_rows)
-            
+
     except sqlite3.Error as e:
         error_msg = f"Database error deleting all sessions: {e}"
         logger.error(error_msg)
