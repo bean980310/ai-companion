@@ -251,19 +251,20 @@ def on_app_start(language=None):  # language 매개변수에 기본값 설정
         if last_character in presets:
             preset_name = last_character
         else:
-            preset_name = list(system_presets.keys())[0]
+            preset_name = list(presets.keys())[0]
         display_system = presets[preset_name]
     else:
         preset_name = None
         display_system = _("system_message_default")
     # logger.info(f"로드된 프리셋: {presets()}")
-    
+
     preset_list = get_preset_choices(default_language)
+    last_preset = last_character  # 기본값 설정
     for i in range(len(preset_list)):
         if list(preset_list)[i] == last_character:
             last_preset = list(preset_list)[i]
             break
-        
+
     if not loaded_history:
         system_presets = load_system_presets(language)
         if len(system_presets) > 0:

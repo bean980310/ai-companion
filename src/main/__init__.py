@@ -152,20 +152,42 @@ def create_main_container(demo: gr.Blocks):
     image_history = diff_container.history_panel.image_history
 
     # 아래는 변경 이벤트 등록
-    def apply_session_immediately(chosen_sid):
+    def apply_session_with_character(chosen_sid: str):
         """
-        메인탭에서 세션이 선택되면 바로 main_tab.apply_session을 호출해 세션 적용.
+        세션 변경 시 히스토리와 캐릭터 정보를 함께 로드하고 UI 업데이트.
         """
-        return chat_bot.apply_session(chosen_sid)
-    
+        loaded_history, session_id, last_character, status_msg = chat_bot.apply_session(chosen_sid)
+
+        # 캐릭터 정보가 없으면 기본값 사용
+        if not last_character or last_character not in characters:
+            last_character = list(characters.keys())[0]
+
+        # 캐릭터의 프로필 이미지 가져오기
+        profile_img = characters[last_character].get("profile_image", None)
+
+        # chatbot 형식으로 변환
+        chatbot_history = chat_bot.filter_messages_for_chatbot(loaded_history)
+
+        return (
+            loaded_history,
+            session_id,
+            status_msg,
+            chatbot_history,
+            gr.update(value=last_character),
+            gr.update(value=profile_img) if profile_img else gr.update(),
+        )
+
     session_select_dropdown.change(
-        fn=chat_main.apply_session_immediately,
+        fn=apply_session_with_character,
         inputs=[session_select_dropdown],
-        outputs=[app_state.history_state, app_state.session_id_state, session_select_info]
-    ).then(
-        fn=chat_bot.filter_messages_for_chatbot,
-        inputs=[app_state.history_state],
-        outputs=[chatbot]
+        outputs=[
+            app_state.history_state,
+            app_state.session_id_state,
+            session_select_info,
+            chatbot,
+            character_dropdown,
+            profile_image,
+        ]
     )
 
     def init_session_dropdown(sessions: list[str] | Sequence[str]) -> gr.update:

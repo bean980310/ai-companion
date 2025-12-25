@@ -533,13 +533,17 @@ def handle_delete_preset(name: str, language: str):
         return message, gr.update(choices=get_preset_choices(language))
     
 def get_existing_sessions() -> List[str]:
-    """Get list of existing session IDs"""
+    """Get list of existing session IDs from sessions table, ordered by last_activity DESC"""
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT DISTINCT session_id FROM chat_history ORDER BY session_id ASC")
+            # sessions 테이블에서 가져오고, 최근 활동 순으로 정렬
+            cursor.execute("""
+                SELECT id FROM sessions
+                ORDER BY last_activity DESC NULLS LAST, created_at DESC
+            """)
             return [row[0] for row in cursor.fetchall()]
-            
+
     except DatabaseError as e:
         logger.error(f"Error retrieving sessions: {e}")
         return []
@@ -574,14 +578,20 @@ def save_chat_history_db(history: list[dict[str, str | list[dict[str, str]] | An
             
             # 세션 존재 여부 확인
             cursor.execute("SELECT COUNT(*) FROM sessions WHERE id = ?", (session_id,))
+            current_time = datetime.now().isoformat()
             if cursor.fetchone()[0] == 0:
                 # 세션이 존재하지 않으면 생성
-                current_time = datetime.now().isoformat()
                 cursor.execute("""
                     INSERT INTO sessions (id, name, created_at, updated_at, last_activity, last_character)
                     VALUES (?, ?, ?, ?, ?, ?)
                 """, (session_id, f"Session {session_id}", current_time, current_time, current_time, selected_character))
                 logger.info(f"Created new session: {session_id}")
+            else:
+                # 세션이 이미 존재하면 last_activity 업데이트
+                cursor.execute("""
+                    UPDATE sessions SET last_activity = ?, updated_at = ?
+                    WHERE id = ?
+                """, (current_time, current_time, session_id))
             
             for msg in history:
                 raw_content = msg.get("content")

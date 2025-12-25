@@ -180,18 +180,41 @@ with gr.Blocks() as demo:
     delete_modal, delete_message, delete_cancel_btn, delete_confirm_btn = chat_bot.create_delete_session_modal()
 
     # 2. Event Wiring (Copied from src/main/__init__.py and adapted)
-    
-    def apply_session_immediately(chosen_sid):
-        return chat_bot.apply_session(chosen_sid)
-    
+
+    def apply_session_with_character(chosen_sid: str):
+        """세션 변경 시 히스토리와 캐릭터 정보를 함께 로드하고 UI 업데이트"""
+        loaded_history, session_id, last_character, status_msg = chat_bot.apply_session(chosen_sid)
+
+        # 캐릭터 정보가 없으면 기본값 사용
+        if not last_character or last_character not in characters:
+            last_character = list(characters.keys())[0]
+
+        # 캐릭터의 프로필 이미지 가져오기
+        profile_img = characters[last_character].get("profile_image", None)
+
+        # chatbot 형식으로 변환
+        chatbot_history = chat_bot.filter_messages_for_chatbot(loaded_history)
+
+        return (
+            loaded_history,
+            session_id,
+            status_msg,
+            chatbot_history,
+            gr.update(value=last_character),  # character_dropdown 업데이트
+            gr.update(value=profile_img) if profile_img else gr.update(),  # profile_image 업데이트
+        )
+
     session_select_dropdown.change(
-        fn=apply_session_immediately,
+        fn=apply_session_with_character,
         inputs=[session_select_dropdown],
-        outputs=[app_state.history_state, app_state.session_id_state, session_select_info]
-    ).then(
-        fn=chat_bot.filter_messages_for_chatbot,
-        inputs=[app_state.history_state],
-        outputs=[chatbot]
+        outputs=[
+            app_state.history_state,
+            app_state.session_id_state,
+            session_select_info,
+            chatbot,
+            character_dropdown,
+            profile_image,
+        ]
     )
 
     @add_session_icon_btn.click(inputs=[character_dropdown, app_state.selected_language_state, app_state.speech_manager_state, app_state.history_state],outputs=[app_state.session_id_state, app_state.history_state, session_select_dropdown, session_select_info, chatbot])

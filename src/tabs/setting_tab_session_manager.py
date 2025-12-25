@@ -76,14 +76,17 @@ def create_session_management_tab()-> Tuple[gr.Tab, gr.Dropdown, gr.Textbox]:
             outputs=[ui_component.session_select_dropdown]
         )
                         
+        def apply_session_from_settings(chosen_sid: str):
+            """세션 적용 시 히스토리와 캐릭터 정보를 함께 로드"""
+            loaded_history, session_id, last_character, status_msg = chat_bot.apply_session(chosen_sid)
+            # chatbot 형식으로 변환
+            chatbot_history = chat_bot.filter_messages_for_chatbot(loaded_history)
+            return loaded_history, session_id, status_msg, chatbot_history
+
         apply_session_btn.click(
-            fn=chat_bot.apply_session,
+            fn=apply_session_from_settings,
             inputs=[existing_sessions_dropdown],
-            outputs=[app_state.history_state, app_state.session_id_state, session_manage_info]
-        ).then(
-            fn=chat_bot.filter_messages_for_chatbot,
-            inputs=[app_state.history_state],
-            outputs=[ui_component.chatbot]
+            outputs=[app_state.history_state, app_state.session_id_state, session_manage_info, ui_component.chatbot]
         ).then(
             fn=chat_bot.refresh_sessions,
             inputs=[],

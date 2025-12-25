@@ -613,27 +613,42 @@ class Chatbot:
     def apply_session(chosen_sid: str):
         """
         선택된 세션의 히스토리를 불러오고, session_id_state를 갱신.
+        Also loads the last used character for the session.
+
+        Returns:
+            tuple: (loaded_history, session_id, last_character, status_message)
         """
         if not chosen_sid:
-            return [], None, "세션 ID를 선택하세요."
+            return [], None, None, "세션 ID를 선택하세요."
         loaded_history = load_chat_from_db(chosen_sid)
-        # last_activity 갱신
+
+        # 세션의 마지막 사용 캐릭터 조회 및 last_activity 갱신
+        last_character = None
         with sqlite3.connect("chat_history.db") as conn:
             cursor = conn.cursor()
+            # 먼저 last_character 조회
+            cursor.execute("""
+                SELECT last_character FROM sessions WHERE id = ?
+            """, (chosen_sid,))
+            row = cursor.fetchone()
+            if row and row[0]:
+                last_character = row[0]
+
+            # last_activity 갱신
             cursor.execute("""
                 UPDATE sessions
                 SET last_activity = CURRENT_TIMESTAMP
                 WHERE id = ?
             """, (chosen_sid,))
             conn.commit()
-            
-        return loaded_history, chosen_sid, f"세션 {chosen_sid}이 적용되었습니다."
+
+        return loaded_history, chosen_sid, last_character, f"세션 {chosen_sid}이 적용되었습니다."
 
     @staticmethod
     def delete_session(chosen_sid: str, current_sid: str):
         """
         특정 세션 삭제 로직
-        
+
         Returns:
             tuple: (modal_visible, modal_message, session_dropdown_update)
         """
@@ -643,18 +658,21 @@ class Chatbot:
                 "삭제할 세션을 선택하세요.",  # error message
                 gr.update()  # no dropdown update
             )
-        
+
         if chosen_sid == current_sid:
             return (
                 gr.update(visible=True),  # modal visible
                 f"현재 활성 세션 '{chosen_sid}'은(는) 삭제할 수 없습니다.",  # error message
                 gr.update()  # no dropdown update
             )
-            
+
         try:
             conn = sqlite3.connect("chat_history.db")
             c = conn.cursor()
+            # 먼저 chat_history에서 삭제
             c.execute("DELETE FROM chat_history WHERE session_id = ?", (chosen_sid,))
+            # sessions 테이블에서도 삭제
+            c.execute("DELETE FROM sessions WHERE id = ?", (chosen_sid,))
             conn.commit()
             conn.close()
 
