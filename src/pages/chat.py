@@ -292,14 +292,34 @@ with gr.Blocks() as demo:
     reset_btn.click(fn=lambda: chat_bot.show_reset_modal("single"), outputs=[reset_modal, single_reset_content, all_reset_content])
     reset_all_btn.click(fn=lambda: chat_bot.show_reset_modal("all"), outputs=[reset_modal, single_reset_content, all_reset_content])
     cancel_btn.click(fn=chat_bot.hide_reset_modal, outputs=[reset_modal, single_reset_content, all_reset_content])
-    
+
+    def handle_reset_with_session_update(history, chatbot_state, system_msg, selected_character, language, session_id):
+        """
+        초기화 처리 후 세션 드롭다운과 세션 ID를 업데이트합니다.
+        단일 세션 초기화와 전체 세션 초기화 모두 동일한 출력 형식을 반환합니다.
+        """
+        result = chat_bot.handle_reset_confirm(
+            history=history,
+            chatbot=chatbot_state,
+            system_msg=system_msg,
+            selected_character=selected_character,
+            language=language,
+            session_id=session_id
+        )
+
+        # reset_all_sessions는 9개 값 반환 (session_id 포함)
+        # reset_session은 8개 값 반환
+        if len(result) == 9:
+            # 전체 초기화: session_id도 업데이트
+            return result[:8] + (result[8],)  # 8개 + session_id
+        else:
+            # 단일 초기화: session_id는 그대로 유지
+            return result + (session_id,)
+
     confirm_btn.click(
-        fn=chat_bot.handle_reset_confirm,
-        inputs=[app_state.history_state, chatbot, system_message_box, app_state.selected_language_state, app_state.session_id_state],
-        outputs=[reset_modal, single_reset_content, all_reset_content, msg, app_state.history_state, chatbot, status_text]
-    ).then(
-        fn=chat_bot.refresh_sessions,
-        outputs=[session_select_dropdown]
+        fn=handle_reset_with_session_update,
+        inputs=[app_state.history_state, chatbot, system_message_box, character_dropdown, app_state.selected_language_state, app_state.session_id_state],
+        outputs=[reset_modal, single_reset_content, all_reset_content, msg, app_state.history_state, chatbot, status_text, session_select_dropdown, app_state.session_id_state]
     )
     
     # Load Init

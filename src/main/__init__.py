@@ -681,15 +681,31 @@ def create_main_container(demo: gr.Blocks):
         fn=chat_bot.hide_reset_modal,
         outputs=[reset_modal, single_reset_content, all_reset_content]
     )
-    
+
+    def handle_reset_with_session_update(history, chatbot_state, system_msg, selected_character, language, session_id):
+        """
+        초기화 처리 후 세션 드롭다운과 세션 ID를 업데이트합니다.
+        """
+        result = chat_bot.handle_reset_confirm(
+            history=history,
+            chatbot=chatbot_state,
+            system_msg=system_msg,
+            selected_character=selected_character,
+            language=language,
+            session_id=session_id
+        )
+
+        # reset_all_sessions는 9개 값 반환 (session_id 포함)
+        # reset_session은 8개 값 반환
+        if len(result) == 9:
+            return result[:8] + (result[8],)
+        else:
+            return result + (session_id,)
+
     confirm_btn.click(
-        fn=chat_bot.handle_reset_confirm,
-        inputs=[app_state.history_state, chatbot, system_message_box, app_state.selected_language_state, app_state.session_id_state],
-        outputs=[reset_modal, single_reset_content, all_reset_content, 
-                msg, app_state.history_state, chatbot, status_text]
-    ).then(
-        fn=chat_bot.refresh_sessions,  # 세션 목록 갱신 (전체 초기화의 경우)
-        outputs=[session_select_dropdown]
+        fn=handle_reset_with_session_update,
+        inputs=[app_state.history_state, chatbot, system_message_box, character_dropdown, app_state.selected_language_state, app_state.session_id_state],
+        outputs=[reset_modal, single_reset_content, all_reset_content, msg, app_state.history_state, chatbot, status_text, session_select_dropdown, app_state.session_id_state]
     )
     
     @gr.on(triggers=[chatbot_sidetab.click, demo.load], inputs=[], outputs=[chat_side.sidebar, diff_side.sidebar, storyteller_side, tts_side, translate_side, chatbot_sidetab, diffusion_sidetab, storyteller_sidetab, tts_sidetab, translate_sidetab, download_sidetab, chat_container.container, diff_container.container, story_container, tts_container, translate_container, download_container])
