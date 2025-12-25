@@ -74,6 +74,7 @@ with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True) as demo:
     # demo.route("Chat", "/chat")
     # 1. Global State Registration
     initialize_global_state()
+    chat.demo.render()
     # with gr.Row(elem_classes="header-container", scale=1) as head:
     #     with gr.Column(scale=3):
     #         title = gr.Markdown(f"## {i18n('main_title')}", elem_classes="title")
@@ -117,8 +118,8 @@ with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True) as demo:
     # main_page = render_page_layout(demo)
     # header.demo.render()
 
-with demo.route("Chat", "/chat"):
-    chat.demo.render()
+# with demo.route("Chat", "/chat"):
+#     chat.demo.render()
     
     
     # 2. Pages
