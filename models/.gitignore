@@ -23,4 +23,5 @@ assets/
 *.bak
 *.mp4
 *.part
+*.onnx
 LICENSE

@@ -57,7 +57,9 @@ __all__=[
 
 PROVIDER_LIST = ["openai", "anthropic", "google-genai", "perplexity", "xai", 'mistralai', "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "local-ai", "self-provided"]
 
-IMAGE_PROVIDER_LIST = ["openai", 'google-genai', 'xai', 'hf-inference', 'comfyui', 'a1111', 'self-provided']
+IMAGE_PROVIDER_LIST = ["openai", 'google-genai', 'xai', 'hf-inference', 'comfyui', 'invokeai', 'drawthings', 'sd-webui', 'self-provided']
+
+TTS_PROVIDER_LIST = ["gtts", "edgetts"]
 
 REASONING_BAN = ["non-reasoning"]
 REASONING_CONTROLABLE = ["qwen3", "gpt-oss", "gpt-5", "claude-sonnet-4", "claude-opus-4", "claude-haiku-4", "gemini-2.5-flash", "gemini-3"]
