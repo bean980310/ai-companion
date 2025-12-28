@@ -614,12 +614,127 @@
     .delete-session-modal {
         background: #2d2d2d;
     }
-    
+
     .delete-session-title {
         color: #e5e7eb;
     }
-    
+
     .delete-session-message {
         color: #9ca3af;
+    }
+}
+
+/* ===== Session List Styles ===== */
+
+/* Session List Container */
+.session-list-container {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 4px;
+    margin-top: 8px;
+}
+
+/* New Chat Button */
+.new-chat-button {
+    width: 100%;
+    margin-bottom: 12px;
+    padding: 10px 16px !important;
+    border-radius: 8px !important;
+}
+
+/* Session Item Row */
+.session-item {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    padding: 4px 8px !important;
+    margin-bottom: 4px !important;
+    border-radius: 8px !important;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    gap: 4px !important;
+}
+
+.session-item:hover {
+    background-color: var(--color-background-tab);
+}
+
+/* Active Session Item */
+.session-item-active {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+}
+
+.session-item-active:hover {
+    background-color: rgba(59, 130, 246, 0.25) !important;
+}
+
+/* Session Title Button */
+.session-title-button {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    text-align: left !important;
+    padding: 8px 12px !important;
+    color: inherit !important;
+    font-weight: 400 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-grow: 1;
+    cursor: pointer;
+    min-height: auto !important;
+}
+
+.session-title-button:hover {
+    background: none !important;
+    box-shadow: none !important;
+}
+
+.session-item-active .session-title-button {
+    font-weight: 600 !important;
+}
+
+/* Session Delete Button - Hidden by default, shown on hover */
+.session-delete-button {
+    opacity: 0;
+    transition: opacity 0.2s;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 4px 8px !important;
+    min-width: auto !important;
+    min-height: auto !important;
+    cursor: pointer;
+}
+
+.session-item:hover .session-delete-button {
+    opacity: 1;
+}
+
+.session-delete-button:hover {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    border-radius: 4px;
+}
+
+/* Dark mode support for session list */
+@media (prefers-color-scheme: dark) {
+    .session-item:hover {
+        background-color: var(--color-background-tab-dark);
+    }
+
+    .session-item-active {
+        background-color: rgba(59, 130, 246, 0.25) !important;
+    }
+
+    .session-item-active:hover {
+        background-color: rgba(59, 130, 246, 0.35) !important;
+    }
+
+    .session-title-button {
+        color: #ffffff !important;
+    }
+
+    .session-delete-button:hover {
+        background-color: rgba(239, 68, 68, 0.3) !important;
     }
 }

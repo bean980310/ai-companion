@@ -547,6 +547,37 @@ def get_existing_sessions() -> List[str]:
     except DatabaseError as e:
         logger.error(f"Error retrieving sessions: {e}")
         return []
+
+def get_existing_sessions_with_names() -> List[Tuple[str, str]]:
+    """Get list of (session_id, display_name) tuples from sessions table, ordered by last_activity DESC"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, COALESCE(name, id) as display_name
+                FROM sessions
+                ORDER BY last_activity DESC NULLS LAST, created_at DESC
+            """)
+            return [(row[0], row[1]) for row in cursor.fetchall()]
+
+    except DatabaseError as e:
+        logger.error(f"Error retrieving sessions with names: {e}")
+        return []
+
+def update_session_name(session_id: str, name: str) -> bool:
+    """Update the name of a session"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE sessions SET name = ?, updated_at = ?
+                WHERE id = ?
+            """, (name, datetime.now().isoformat(), session_id))
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        logger.error(f"Error updating session name: {e}")
+        return False
     
 def save_chat_history_db(history: list[dict[str, str | list[dict[str, str]] | Any]], session_id: str="demo_session", selected_character: str=None) -> bool:
     """Save chat history to SQLite database"""

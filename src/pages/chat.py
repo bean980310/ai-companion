@@ -1,11 +1,12 @@
 import gradio as gr
 from src.main.chatbot import chat_main, chat_bot, chat_component
+from src.main.chatbot.component import MAX_VISIBLE_SESSIONS
 from src.start_app import app_state, ui_component, initialize_speech_manager
 from src.common.character_info import characters
 from src.common.translations import translation_manager, _
 from src.common_blocks import create_page_header, get_language_code
 from src.characters import PersonaSpeechManager
-from src.common.database import get_existing_sessions
+from src.common.database import get_existing_sessions, get_existing_sessions_with_names
 from presets import (
     AI_ASSISTANT_PRESET,
     SD_IMAGE_GENERATOR_PRESET,
@@ -54,7 +55,10 @@ with gr.Blocks() as demo:
         
         app_state.reset_confirmation = gr.State(False)
         app_state.reset_all_confirmation = gr.State(False)
-        
+
+        # Temporary session state
+        app_state.is_temp_session_state = gr.State(False)
+
         # We also need these if they were formerly global
         # selected_language_state is GLOBAL (in app.py)
         # selected_device_state is GLOBAL (in app.py)
@@ -77,17 +81,9 @@ with gr.Blocks() as demo:
 
     # 2. UI Construction
     with gr.Sidebar():
-        # Manually calling the component creators from chat_component 
-        # because create_chatbot_side wraps them in a gr.Column, not Sidebar 
-        # (though we can nest Column in Sidebar)
-        
-        # Let's see src/main/chatbot/__init__.py:
-        # with gr.Column() as chatbot_side:
-        #     chat_side_session = chat_component.create_chatbot_side_session_container()
-        #     chat_side_model = chat_component.create_chatbot_side_model_container()
-        
-        chat_side_session = chat_component.create_chatbot_side_session_container()
+        # Model container first, then session container (as per plan)
         chat_side_model = chat_component.create_chatbot_side_model_container()
+        chat_side_session = chat_component.create_chatbot_side_session_container()
 
     # Main Content
     # chat_main.create_chat_container() creates a Column with tab-container class.
@@ -98,12 +94,18 @@ with gr.Blocks() as demo:
     
     
     # Now we need to extract the components for wiring.
-    # References from chat_side
+    # References from chat_side - Session list components
     session_select_dropdown = chat_side_session.session_select_dropdown
     chat_title_box = chat_side_session.chat_title_box
     add_session_icon_btn = chat_side_session.add_session_icon_btn
     delete_session_icon_btn = chat_side_session.delete_session_icon_btn
-    
+
+    # New session list components
+    session_rows = chat_side_session.session_rows
+    session_buttons = chat_side_session.session_buttons
+    session_delete_buttons = chat_side_session.session_delete_buttons
+    selected_session_id = chat_side_session.selected_session_id
+
     # References from chat_model
     text_model_provider_dropdown = chat_side_model.model_provider_dropdown
     text_model_type_dropdown = chat_side_model.model_type_dropdown
@@ -149,8 +151,35 @@ with gr.Blocks() as demo:
 
     # 2. Event Wiring (Copied from src/main/__init__.py and adapted)
 
+    # ===== Session List Helper Functions =====
+
+    def refresh_session_list_ui(current_session_id: str = None):
+        """
+        세션 목록 UI를 갱신합니다.
+        각 세션 row의 visibility와 버튼 텍스트를 업데이트합니다.
+        """
+        sessions = get_existing_sessions_with_names()
+        updates = []
+
+        for i in range(MAX_VISIBLE_SESSIONS):
+            if i < len(sessions):
+                sid, name = sessions[i]
+                # Row visibility
+                updates.append(gr.update(visible=True))
+                # Button text (session name/title)
+                updates.append(gr.update(value=name))
+            else:
+                # Hide unused rows
+                updates.append(gr.update(visible=False))
+                updates.append(gr.update(value=""))
+
+        return updates
+
     def apply_session_with_character(chosen_sid: str, selected_language: str):
         """세션 변경 시 히스토리와 캐릭터 정보를 함께 로드하고 UI 업데이트"""
+        if not chosen_sid:
+            return ([], None, "세션을 선택하세요.", [], gr.update(), gr.update(), False)
+
         loaded_history, session_id, last_character, status_msg = chat_bot.apply_session(chosen_sid)
 
         # 캐릭터 정보가 없으면 기본값 사용
@@ -170,8 +199,91 @@ with gr.Blocks() as demo:
             chatbot_history,
             gr.update(value=last_character),  # character_dropdown 업데이트
             gr.update(value=profile_img) if profile_img else gr.update(),  # profile_image 업데이트
+            False,  # is_temp_session = False (기존 세션 선택시)
         )
 
+    # ===== Session Button Click Handlers =====
+
+    def make_session_click_handler(index: int):
+        """세션 버튼 클릭 핸들러를 생성합니다."""
+        def handler():
+            sessions = get_existing_sessions_with_names()
+            if index < len(sessions):
+                return sessions[index][0]  # Return session ID
+            return None
+        return handler
+
+    def make_delete_click_handler(index: int):
+        """삭제 버튼 클릭 핸들러를 생성합니다."""
+        def handler(current_sid: str):
+            sessions = get_existing_sessions_with_names()
+            if index < len(sessions):
+                selected_sid = sessions[index][0]
+                selected_name = sessions[index][1]
+                if selected_sid == current_sid:
+                    return gr.update(visible=True), f"현재 활성 세션 '{selected_name}'은(는) 삭제할 수 없습니다.", selected_sid
+                return gr.update(visible=True), f"세션 '{selected_name}'을(를) 삭제하시겠습니까?", selected_sid
+            return gr.update(visible=False), "", ""
+        return handler
+
+    # Wire session button click events
+    for i in range(MAX_VISIBLE_SESSIONS):
+        session_buttons[i].click(
+            fn=make_session_click_handler(i),
+            outputs=[selected_session_id]
+        ).then(
+            fn=apply_session_with_character,
+            inputs=[selected_session_id, app_state.selected_language_state],
+            outputs=[
+                app_state.history_state,
+                app_state.session_id_state,
+                session_select_info,
+                chatbot,
+                character_dropdown,
+                profile_image,
+                app_state.is_temp_session_state,
+            ]
+        )
+
+        session_delete_buttons[i].click(
+            fn=make_delete_click_handler(i),
+            inputs=[app_state.session_id_state],
+            outputs=[delete_modal, delete_message, selected_session_id]
+        )
+
+    # ===== New Chat (Temporary Session) Handler =====
+
+    def create_temp_session_handler(chosen_character: str, chosen_language: str, speech_manager_state: PersonaSpeechManager):
+        """임시 세션을 생성합니다 (DB에 저장하지 않음)"""
+        speech_manager = speech_manager_state
+        speech_manager.set_character_and_language(chosen_character, chosen_language)
+        new_system_msg = speech_manager.get_system_message()
+
+        is_temp, temp_history, temp_sys_msg, temp_char, chatbot_display, status = chat_bot.create_temp_session(
+            new_system_msg, chosen_character
+        )
+
+        return [
+            is_temp,  # is_temp_session_state
+            temp_history,  # history_state
+            chatbot_display,  # chatbot
+            status,  # session_select_info
+            "",  # session_id_state (empty for temp session)
+        ]
+
+    add_session_icon_btn.click(
+        fn=create_temp_session_handler,
+        inputs=[character_dropdown, app_state.selected_language_state, app_state.speech_manager_state],
+        outputs=[
+            app_state.is_temp_session_state,
+            app_state.history_state,
+            chatbot,
+            session_select_info,
+            app_state.session_id_state,
+        ]
+    )
+
+    # ===== Legacy dropdown change handler (for backward compatibility) =====
     session_select_dropdown.change(
         fn=apply_session_with_character,
         inputs=[session_select_dropdown, app_state.selected_language_state],
@@ -182,24 +294,12 @@ with gr.Blocks() as demo:
             chatbot,
             character_dropdown,
             profile_image,
+            app_state.is_temp_session_state,
         ]
     )
 
-    @add_session_icon_btn.click(inputs=[character_dropdown, app_state.selected_language_state, app_state.speech_manager_state, app_state.history_state],outputs=[app_state.session_id_state, app_state.history_state, session_select_dropdown, session_select_info, chatbot])
-    def create_and_apply_session(chosen_character: str, chosen_language: str, speech_manager_state: PersonaSpeechManager, history_state):
-        speech_manager = speech_manager_state
-        speech_manager.set_character_and_language(chosen_character, chosen_language)
-        new_system_msg = speech_manager.get_system_message()
-        new_sid, info, new_history = chat_bot.create_new_session(new_system_msg, chosen_character)
-        sessions = get_existing_sessions()
-        return [
-            new_sid,
-            new_history,
-            gr.update(choices=sessions, value=new_sid),
-            info,
-            chat_bot.filter_messages_for_chatbot(new_history)
-        ]
-    
+    # ===== Delete Session Handlers =====
+
     @delete_session_icon_btn.click(inputs=[session_select_dropdown, app_state.session_id_state], outputs=[delete_modal, delete_message])
     def show_delete_confirm(selected_sid: str, current_sid: str):
         if not selected_sid:
@@ -207,26 +307,31 @@ with gr.Blocks() as demo:
         if selected_sid == current_sid:
             return gr.update(visible=True), f"현재 활성 세션 '{selected_sid}'은(는) 삭제할 수 없습니다."
         return gr.update(visible=True), f"세션 '{selected_sid}'을(를) 삭제하시겠습니까?"
-            
+
     delete_cancel_btn.click(
         fn=lambda: (gr.update(visible=False), ""),
         outputs=[delete_modal, delete_message]
     )
 
+    # Build outputs for session list refresh
+    session_list_outputs = []
+    for i in range(MAX_VISIBLE_SESSIONS):
+        session_list_outputs.append(session_rows[i])
+        session_list_outputs.append(session_buttons[i])
+
+    def delete_and_refresh_session_list(selected_sid: str, current_sid: str):
+        """세션을 삭제하고 세션 목록을 갱신합니다."""
+        modal_visible, message, dropdown_update = chat_bot.delete_session(selected_sid, current_sid)
+
+        # Refresh session list
+        list_updates = refresh_session_list_ui(current_sid)
+
+        return [modal_visible, message] + list_updates
+
     delete_confirm_btn.click(
-        fn=chat_bot.delete_session,
-        inputs=[session_select_dropdown, app_state.session_id_state],
-        outputs=[delete_modal, delete_message, session_select_dropdown]
-    ).then(
-        fn=chat_bot.refresh_sessions,
-        inputs=[],
-        outputs=[session_select_dropdown]
-    )
-    
-    demo.load(None, None, None).then(
-        fn=lambda evt: (gr.update(visible=False), "") if evt.key == "Escape" else (gr.update(), ""),
-        inputs=[],
-        outputs=[delete_modal, delete_message]
+        fn=delete_and_refresh_session_list,
+        inputs=[selected_session_id, app_state.session_id_state],
+        outputs=[delete_modal, delete_message] + session_list_outputs
     )
     
     # State synchronization
@@ -322,14 +427,29 @@ with gr.Blocks() as demo:
         outputs=[reset_modal, single_reset_content, all_reset_content, msg, app_state.history_state, chatbot, status_text, session_select_dropdown, app_state.session_id_state]
     )
     
-    # Load Init
+    # Load Init - Refresh session list on page load
+    demo.load(
+        fn=refresh_session_list_ui,
+        inputs=[],
+        outputs=session_list_outputs,
+        queue=False
+    )
+
+    # Also keep legacy dropdown updated for backward compatibility
     demo.load(
         fn=chat_bot.refresh_sessions,
         inputs=[],
         outputs=[session_select_dropdown],
         queue=False
     )
-    
+
+    # Refresh session list when session_id changes (e.g., after temp session becomes permanent)
+    app_state.session_id_state.change(
+        fn=refresh_session_list_ui,
+        inputs=[],
+        outputs=session_list_outputs
+    )
+
     # System Message Init
     def init_system_message_accordion():
         return gr.update(open=False)

@@ -7,7 +7,7 @@ import secrets
 import sqlite3
 
 from src.models.models import get_all_local_models, generate_answer, generate_chat_title
-from src.common.database import save_chat_history_db, delete_session_history, delete_all_sessions, get_preset_choices, load_system_presets, get_existing_sessions, load_chat_from_db, update_system_message_in_db, update_last_character_in_db
+from src.common.database import save_chat_history_db, delete_session_history, delete_all_sessions, get_preset_choices, load_system_presets, get_existing_sessions, get_existing_sessions_with_names, update_session_name, load_chat_from_db, update_system_message_in_db, update_last_character_in_db
 from src.common.translations import TranslationManager, translation_manager, _
 
 from src.characters.preset_images import PRESET_IMAGES
@@ -288,24 +288,56 @@ class Chatbot:
 
         return history, chatbot_history, status, chat_title
 
-    def chat_wrapper(self, message, history, session_id, system_msg, selected_character, language, 
-                     selected_model, provider, selected_lora, custom_path, api_key, device, seed, 
-                     max_length, temperature, top_k, top_p, repetition_penalty, enable_thinking):
+    def chat_wrapper(self, message, history, session_id, system_msg, selected_character, language,
+                     selected_model, provider, selected_lora, custom_path, api_key, device, seed,
+                     max_length, temperature, top_k, top_p, repetition_penalty, enable_thinking,
+                     is_temp_session=False):
         """
         gr.ChatInterface를 위한 래퍼 함수
         """
         # 1. 사용자 메시지 처리
         # history는 gr.ChatInterface에서 관리하는 list[dict] (type="messages"일 경우)
         # 하지만 우리는 내부 DB와 app_state.history_state를 동기화해야 함.
-        
+
         # 기존 history에 사용자 메시지 추가
         # message는 str 또는 dict(text=..., files=...)
-        
+
         current_history = history.copy() if history else []
-        
+
         # 시스템 메시지가 없으면 추가 (새 세션인 경우)
         if not current_history:
              current_history.append({"role": "system", "content": system_msg})
+
+        # 임시 세션 처리: 첫 메시지 전송 시 실제 세션으로 변환
+        new_session_id = session_id
+        is_temp_after = is_temp_session  # 처리 후 임시 세션 상태
+
+        if is_temp_session and message:
+            # 첫 메시지: 임시 세션을 실제 세션으로 변환
+            user_content = message
+            if isinstance(message, dict):
+                user_content = message.get("text", "")
+
+            # Determine model type
+            if provider == "self-provided":
+                model_type = self.determine_model_type(selected_model)
+            else:
+                model_type = None
+
+            new_session_id, title = self.confirm_temp_session(
+                temp_history=current_history,
+                first_message_content=user_content,
+                selected_character=selected_character,
+                selected_model=selected_model,
+                model_type=model_type,
+                selected_lora=selected_lora if selected_lora != "None" else None,
+                custom_path=custom_path,
+                device=device,
+                image_input=None
+            )
+            is_temp_after = False  # 더 이상 임시 세션이 아님
+            session_id = new_session_id
+            self.chat_titles[session_id] = title
         
         # 사용자 메시지 구성
         user_content = message
@@ -422,9 +454,16 @@ class Chatbot:
 
         # Return values for ChatInterface
         # 1. response (str)
-        # 2. Additional outputs: app_state.history_state, status_text, chat_title_box
-        
-        return styled_answer, current_history, status, gr.update(value=chat_title) if chat_title else gr.update()
+        # 2. Additional outputs: app_state.history_state, status_text, chat_title_box, session_id, is_temp_session
+
+        return (
+            styled_answer,
+            current_history,
+            status,
+            gr.update(value=chat_title) if chat_title else gr.update(),
+            session_id,  # Return the (possibly new) session_id
+            is_temp_after,  # Return the updated is_temp_session state
+        )
 
     @staticmethod
     def determine_model_type(selected_model: str) -> str:
@@ -613,6 +652,13 @@ class Chatbot:
         return gr.update(choices=sessions, value=sessions[0])
 
     @staticmethod
+    def refresh_sessions_with_names():
+        """
+        세션 목록을 (id, name) 튜플로 갱신합니다.
+        """
+        return get_existing_sessions_with_names()
+
+    @staticmethod
     def create_new_session(system_message_box_value: str, selected_character: str):
         """
         새 세션을 생성하고 DB에 기본 system_message를 저장합니다.
@@ -622,11 +668,85 @@ class Chatbot:
             "role": "system",
             "content": system_message_box_value
         }
-        
+
         new_history = [system_message]
         # DB에 저장
         save_chat_history_db(new_history, session_id=new_sid, selected_character=selected_character)
         return new_sid, f"현재 세션: {new_sid}", new_history
+
+    @staticmethod
+    def create_temp_session(system_message: str, selected_character: str):
+        """
+        임시 세션을 생성합니다 (DB에 저장하지 않음).
+        첫 번째 메시지가 전송될 때 실제 세션으로 변환됩니다.
+
+        Returns:
+            tuple: (is_temp_session, temp_history, temp_system_message, temp_character, chatbot_display, status_message)
+        """
+        temp_history = [{"role": "system", "content": system_message}]
+        return (
+            True,  # is_temp_session
+            temp_history,  # history
+            system_message,  # temp_system_message
+            selected_character,  # temp_character
+            [],  # empty chatbot display
+            "New Chat - 메시지를 입력하면 새 세션이 생성됩니다."  # status
+        )
+
+    @staticmethod
+    def confirm_temp_session(
+        temp_history: list,
+        first_message_content: str,
+        selected_character: str,
+        selected_model: str,
+        model_type: str,
+        selected_lora: str,
+        custom_path: str,
+        device: str,
+        image_input=None
+    ):
+        """
+        임시 세션을 실제 세션으로 변환합니다.
+        첫 번째 사용자 메시지가 전송될 때 호출됩니다.
+
+        Returns:
+            tuple: (new_session_id, session_title)
+        """
+        # Generate new session ID
+        new_sid = secrets.token_hex(8)
+
+        # Generate title from first message
+        title = None
+        try:
+            title = generate_chat_title(
+                first_message=first_message_content,
+                selected_model=selected_model,
+                model_type=model_type,
+                selected_lora=selected_lora,
+                local_model_path=custom_path if selected_model == "사용자 지정 모델 경로 변경" else None,
+                lora_path=None,
+                device=device,
+                image_input=image_input
+            )
+        except Exception as e:
+            logger.warning(f"Failed to generate chat title: {e}")
+
+        # Fallback to truncated first message if title generation fails
+        if not title:
+            if isinstance(first_message_content, str):
+                title = first_message_content[:50] + "..." if len(first_message_content) > 50 else first_message_content
+            elif isinstance(first_message_content, list):
+                # Handle multimodal content
+                text_content = next((item.get("text", "") for item in first_message_content if item.get("type") == "text"), "New Chat")
+                title = text_content[:50] + "..." if len(text_content) > 50 else text_content
+            else:
+                title = "New Chat"
+
+        # Save to DB with the generated title
+        save_chat_history_db(temp_history, session_id=new_sid, selected_character=selected_character)
+        update_session_name(new_sid, title)
+
+        return new_sid, title
 
     @staticmethod
     def apply_session(chosen_sid: str):

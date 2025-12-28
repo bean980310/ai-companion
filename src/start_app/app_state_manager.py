@@ -40,6 +40,9 @@ class AppState:
     reset_confirmation: gr.State | None = None
     reset_all_confirmation: gr.State | None = None
 
+    # Temporary session state for lazy session creation
+    is_temp_session_state: gr.State | None = None
+
     max_diffusion_lora_rows: int | None = None
     stored_image: gr.State | None = None
     stored_image_inpaint: gr.State | None = None

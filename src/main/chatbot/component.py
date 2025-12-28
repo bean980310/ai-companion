@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import List
 
 import gradio as gr
 # from gradio_i18n import gettext as _, translate_blocks
@@ -13,12 +14,21 @@ from ...common.default_language import default_language
 from ...common.character_info import characters
 from ...common.database import get_preset_choices
 
+# Maximum number of sessions to display in the sidebar
+MAX_VISIBLE_SESSIONS = 20
+
 @dataclass
 class ChatbotComponent:
     session_select_dropdown: gr.Dropdown = None
     chat_title_box: gr.Textbox = None
     add_session_icon_btn: gr.Button = None
     delete_session_icon_btn: gr.Button = None
+
+    # New session list components
+    session_rows: List[gr.Row] = field(default_factory=list)
+    session_buttons: List[gr.Button] = field(default_factory=list)
+    session_delete_buttons: List[gr.Button] = field(default_factory=list)
+    selected_session_id: gr.Textbox = None
 
     model_provider_dropdown: gr.Dropdown = None
     model_type_dropdown: gr.Radio = None
@@ -56,32 +66,73 @@ class ChatbotComponent:
 
     @classmethod
     def create_chatbot_side_session_container(cls):
-        with gr.Row(elem_classes="session-container"):
-            with gr.Column():
-                gr.Markdown("### Chat Session")
-                session_select_dropdown = gr.Dropdown(
-                    label="세션 선택",
-                    choices=[],  # 앱 시작 시 혹은 별도의 로직으로 세션 목록을 채움
-                    value=None,
-                    interactive=True,
-                    container=False,
-                    scale=8,
-                    elem_classes="session-dropdown"
-                )
-                chat_title_box=gr.Textbox(
-                    value="",
-                    interactive=False
-                )
-                add_session_icon_btn = gr.Button("📝", elem_classes="icon-button", scale=1, variant="secondary")
-                delete_session_icon_btn = gr.Button("🗑️", elem_classes="icon-button-delete", scale=1, variant="stop")
-                
-        
+        session_buttons = []
+        delete_buttons = []
+        session_rows = []
+
+        with gr.Column(elem_classes="session-container"):
+            gr.Markdown("### Chat Sessions")
+
+            # New Chat button at the top
+            add_session_icon_btn = gr.Button(
+                "+ New Chat",
+                elem_classes="new-chat-button",
+                variant="primary"
+            )
+
+            # Session list container
+            with gr.Column(elem_classes="session-list-container"):
+                for i in range(MAX_VISIBLE_SESSIONS):
+                    with gr.Row(visible=False, elem_classes="session-item") as row:
+                        session_btn = gr.Button(
+                            "",
+                            elem_classes="session-title-button",
+                            scale=8
+                        )
+                        delete_btn = gr.Button(
+                            "🗑️",
+                            elem_classes="session-delete-button",
+                            scale=1
+                        )
+                        session_rows.append(row)
+                        session_buttons.append(session_btn)
+                        delete_buttons.append(delete_btn)
+
+            # Hidden components for state management
+            selected_session_id = gr.Textbox(visible=False, value="")
+            chat_title_box = gr.Textbox(value="", interactive=False, visible=False)
+
+            # Keep session_select_dropdown for backward compatibility (hidden)
+            session_select_dropdown = gr.Dropdown(
+                label="세션 선택",
+                choices=[],
+                value=None,
+                interactive=True,
+                visible=False,
+                elem_classes="session-dropdown"
+            )
+            delete_session_icon_btn = gr.Button("🗑️", visible=False)
+
+        # Store references in ui_component
         ui_component.session_select_dropdown = session_select_dropdown
         ui_component.chat_title_box = chat_title_box
         ui_component.add_session_icon_btn = add_session_icon_btn
         ui_component.delete_session_icon_btn = delete_session_icon_btn
+        ui_component.session_rows = session_rows
+        ui_component.session_buttons = session_buttons
+        ui_component.session_delete_buttons = delete_buttons
+        ui_component.selected_session_id = selected_session_id
 
-        return cls(session_select_dropdown=session_select_dropdown, chat_title_box=chat_title_box, add_session_icon_btn=add_session_icon_btn, delete_session_icon_btn=delete_session_icon_btn)
+        return cls(
+            session_select_dropdown=session_select_dropdown,
+            chat_title_box=chat_title_box,
+            add_session_icon_btn=add_session_icon_btn,
+            delete_session_icon_btn=delete_session_icon_btn,
+            session_rows=session_rows,
+            session_buttons=session_buttons,
+            session_delete_buttons=delete_buttons,
+            selected_session_id=selected_session_id
+        )
 
     @classmethod
     def create_chatbot_side_model_container(cls):
@@ -178,7 +229,13 @@ class ChatbotComponent:
                 chatbot=chatbot,
                 multimodal=True,
                 additional_inputs=real_additional_inputs,
-                additional_outputs=[app_state.history_state, ui_component.status_text, ui_component.chat_title_box],
+                additional_outputs=[
+                    app_state.history_state,
+                    ui_component.status_text,
+                    ui_component.chat_title_box,
+                    app_state.session_id_state,
+                    app_state.is_temp_session_state,
+                ],
                 autofocus=True,
                 fill_height=True,
                 save_history=False # We handle history manually

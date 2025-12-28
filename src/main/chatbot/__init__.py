@@ -85,6 +85,7 @@ class ChatbotMain:
                 app_state.top_p_state,
                 app_state.repetition_penalty_state,
                 app_state.enable_thinking_state,
+                app_state.is_temp_session_state,  # For temporary session handling
             ]
 
             with col_main:
@@ -133,6 +134,7 @@ class ChatbotMain:
                 app_state.top_p_state,
                 app_state.repetition_penalty_state,
                 app_state.enable_thinking_state,
+                app_state.is_temp_session_state,  # For temporary session handling
             ]
 
             with col_main:

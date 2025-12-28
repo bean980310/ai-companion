@@ -13,6 +13,12 @@ class UIComponent:
     chat_title_box: gr.Textbox = None
     add_session_icon_btn: gr.Button = None
     delete_session_icon_btn: gr.Button = None
+
+    # Session list components
+    session_rows: list = None
+    session_buttons: list = None
+    session_delete_buttons: list = None
+    selected_session_id: gr.Textbox = None
     
     model_provider_dropdown: gr.Dropdown = None
     model_type_dropdown: gr.Radio = None
