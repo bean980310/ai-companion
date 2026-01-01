@@ -160,7 +160,6 @@ class ImageGeneration:
     def toggle_diffusion_refiner_visible(self, provider: str | gr.Dropdown):
         refiner_visible = any(x in provider.lower() for x in ["comfyui", "invokeai", "drawthings", "sd-webui", "self-provided"])
         
-        refiner_type = "all" if provider == "self-provided" else None
         if provider == "comfyui":
             updated_choices = comfyui_image_models
         elif provider == "self-provided":
