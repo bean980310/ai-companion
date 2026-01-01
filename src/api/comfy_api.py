@@ -25,10 +25,12 @@ from pydantic import BaseModel
 import asyncio
 from typing import Union
 
-class ComfyUIClient:
-    def __init__(self, server_address: str="127.0.0.1:8000", client_id: str=str(uuid.uuid4())):
-        self.server_address=server_address
-        self.client_id=client_id
+from comfy_sdk import ComfyUI
+from comfy_sdk.client import ComfyClient
+
+class ComfyUIClientWrapper:
+    def __init__(self, host="127.0.0.1", port=8188):
+        self.client = ComfyClient(host=host, port=port)
 
     def queue_prompt(self, prompt: str):
         p = {"prompt": prompt, "client_id": self.client_id}
@@ -48,7 +50,7 @@ class ComfyUIClient:
         with urllib.request.urlopen(f"http://{self.server_address}/history/{prompt_id}") as response:
             return json.loads(response.read())
 
-    def get_images(self, ws: websocket.WebSocket, prompt: str):
+    def generate_images(self, ws: websocket.WebSocket, prompt: str):
         prompt_id = self.queue_prompt(prompt)['prompt_id']
         output_images = {}
         output_dir = 'outputs'
@@ -189,7 +191,7 @@ class ComfyUIClient:
         ws_url = f"ws://{self.server_address}/ws?clientId={self.client_id}"
         ws = websocket.WebSocket()
         with ws.connect(ws_url):
-            images = self.get_images(ws, prompt)
+            images = self.generate_images(ws, prompt)
         
         return images
     
@@ -197,7 +199,7 @@ class ComfyUIClient:
         ws_url = f"ws://{self.server_address}/ws?clientId={self.client_id}"
         ws = websocket.WebSocket()
         with ws.connect(ws_url):
-            images = self.get_images(ws, prompt)
+            images = self.generate_images(ws, prompt)
 
         return images
     
@@ -207,6 +209,6 @@ class ComfyUIClient:
         responsed_content = [x for x in response.content[1:-1].decode().replace("\"", "").strip().split(', ') if x]
         return responsed_content
         
-Client=ComfyUIClient
+Client=ComfyUIClientWrapper
 
 client=Client()
