@@ -19,9 +19,8 @@ from PIL import Image, ImageOps, ImageFile
 
 from src.start_app.app_state_manager import app_state
 
-from ...pipelines.diffusion.provider.comfyui_tasks.comfyui_txt2img_pipeline import Txt2ImgPipeline
-from src.pipelines.diffusion import generate_images_to_images, generate_images_to_images_with_refiner, generate_images_inpaint, generate_images_inpaint_with_refiner
-
+# Import models module for ComfyUI pipeline creation
+from src.models.models import create_comfyui_pipeline
 
 from src.common.utils import get_all_diffusion_models, detect_platform, get_diffusion_loras, get_diffusion_vae
 from src.models import diffusion_api_models, openai_image_api_models, google_genai_image_models, comfyui_image_models, comfyui_image_loras, comfyui_image_vae, diffusers_local, checkpoints_local
@@ -48,14 +47,16 @@ class ImageGeneration:
             return self.api_image_generation(positive_prompt, width, height, model, api_key)
         else:
             if image_to_image_mode == "None":
-                pipeline = Txt2ImgPipeline(
+                # Create pipeline through models.py
+                pipeline = create_comfyui_pipeline(
+                    image_to_image_mode=image_to_image_mode,
                     model=model,
-                    refiner=refiner_model,
+                    refiner_model=refiner_model,
                     loras=lora_multiselect,
                     vae=vae
                 )
                 if refiner_model == "None":
-                    return pipeline.generate_images(
+                    return pipeline.generate(
                         positive_prompt, negative_prompt, style, generation_step, width, height,
                         clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
                         batch_size, batch_count, cfg_scale, seed, random_seed,
@@ -63,41 +64,57 @@ class ImageGeneration:
                     )
                 else:
                     clip_g=True
-                    return pipeline.generate_images_with_refiner(
+                    return pipeline.generate_with_refiner(
                         positive_prompt, negative_prompt, style, generation_step, diffusion_refiner_start, width, height,
                         clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
                         batch_size, batch_count, cfg_scale, seed, random_seed,
                         text_weights_json, unet_weights_json
                     )
             elif image_to_image_mode == "Image to Image":
+                # Create pipeline through models.py
+                pipeline = create_comfyui_pipeline(
+                    image_to_image_mode=image_to_image_mode,
+                    model=model,
+                    refiner_model=refiner_model,
+                    loras=lora_multiselect,
+                    vae=vae
+                )
                 if refiner_model == "None":
-                    return generate_images_to_images(
+                    return pipeline.generate(
                         positive_prompt, negative_prompt, style, generation_step,
-                        model, model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
+                        clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
                         batch_count, cfg_scale, seed, random_seed, image_input, denoise_strength,
                         text_weights_json, unet_weights_json
                     )
                 else:
                     clip_g=True
-                    return generate_images_to_images_with_refiner(
+                    return pipeline.generate_with_refiner(
                         positive_prompt, negative_prompt, style, generation_step, img2img_step_start, diffusion_refiner_start,
-                        model, refiner_model, model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
+                        clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
                         batch_count, cfg_scale, seed, random_seed, image_input, denoise_strength,
                         text_weights_json, unet_weights_json
                     )
             elif image_to_image_mode == "Inpaint":
+                # Create pipeline through models.py
+                pipeline = create_comfyui_pipeline(
+                    image_to_image_mode=image_to_image_mode,
+                    model=model,
+                    refiner_model=refiner_model,
+                    loras=lora_multiselect,
+                    vae=vae
+                )
                 if refiner_model == "None":
-                    return generate_images_inpaint(
+                    return pipeline.generate(
                         positive_prompt, negative_prompt, style, generation_step,
-                        model, model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
+                        clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
                         batch_count, cfg_scale, seed, random_seed, image_inpaint_input, denoise_strength, blur_radius, blur_expansion_radius,
                         text_weights_json, unet_weights_json
                     )
                 else:
                     clip_g=True
-                    return generate_images_inpaint_with_refiner(
+                    return pipeline.generate_with_refiner(
                         positive_prompt, negative_prompt, style, generation_step, img2img_step_start, diffusion_refiner_start,
-                        model, refiner_model, model_type, lora_multiselect, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
+                        clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
                         batch_count, cfg_scale, seed, random_seed, image_inpaint_input, denoise_strength, blur_radius, blur_expansion_radius,
                         text_weights_json, unet_weights_json
                     )

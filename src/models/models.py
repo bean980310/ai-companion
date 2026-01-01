@@ -37,6 +37,8 @@ from ai_companion_llm_backend.provider import (
 )
 from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models, convert_folder_to_modelid
 
+from src.pipelines.diffusion.provider.comfyui import ComfyUIProvider, Txt2ImgPipeline, Img2ImgPipeline, InpaintPipeline
+
 from src import logger
 
 LOCAL_MODELS_ROOT = "./models"
@@ -423,43 +425,107 @@ def generate_chat_title(first_message, selected_model, model_type, selected_lora
     except Exception as e:
         logger.error(f"채팅 제목 생성 오류: {str(e)}\n\n{traceback.format_exc()}")
         return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
-    
-def generate_images(
-    positive_prompt: str,
-    negative_prompt: str,
-    style: str,
-    generation_step: int,
-    width: int,
-    height: int,
+
+
+def create_comfyui_pipeline(
+    image_to_image_mode: str,
     model: str,
-    model_type: str,
-    loras: List[str],
-    vae: str,
-    clip_skip: int,
-    enable_clip_skip: bool,
-    clip_g: bool,
-    sampler: str,
-    scheduler: str,
-    batch_size: int,
-    batch_count: int,
-    cfg_scale: float,
-    seed: int,
-    random_seed: bool = False,
-    refiner_model: str | None = None,
-    image_input: str | Image.Image | ImageFile.ImageFile | Any = None,
-    denoise_strength: float = 1.0,
-    blur_radius: float = 5.0,
-    blur_expansion_radius: int = 1,
-    lora_text_weights_json: str = None,
-    lora_unet_weights_json: str = None,
-    image_to_image_mode: str = "None"
-):
-    use_comfyui = True if model_type == "checkpoints" else False
-    if refiner_model:
-        if image_to_image_mode == "None":
-            return generate_images(
-                positive_prompt, negative_prompt, style, generation_step, width, height,
-                model, model_type, loras, vae, clip_skip, enable_clip_skip, clip_g, sampler, scheduler,
-                batch_size, batch_count, cfg_scale, seed, random_seed,
-                lora_text_weights_json, lora_unet_weights_json
-            )
+    refiner_model: str = "None",
+    loras: List[str] = None,
+    vae: str = "Default",
+    host: str = "127.0.0.1",
+    port: int = 8000
+) -> Txt2ImgPipeline | Img2ImgPipeline | InpaintPipeline:
+    """
+    Create a ComfyUI pipeline based on the generation mode.
+
+    Args:
+        image_to_image_mode: Generation mode ("None" for txt2img, "Image to Image", or "Inpaint")
+        model: Main checkpoint model name
+        refiner_model: Refiner model name (for SDXL)
+        loras: List of LoRA model names
+        vae: VAE model name or 'Default'
+        host: ComfyUI server host
+        port: ComfyUI server port
+
+    Returns:
+        The appropriate pipeline instance (Txt2ImgPipeline, Img2ImgPipeline, or InpaintPipeline)
+    """
+    if loras is None:
+        loras = []
+
+    # Normalize refiner_model value
+    refiner = None if refiner_model == "None" else refiner_model
+
+    # Create the appropriate pipeline based on mode
+    if image_to_image_mode == "None":
+        logger.info(f"Creating Txt2ImgPipeline with model={model}, refiner={refiner}")
+        pipeline = Txt2ImgPipeline(
+            model=model,
+            refiner=refiner,
+            loras=loras,
+            vae=vae
+        )
+    elif image_to_image_mode == "Image to Image":
+        logger.info(f"Creating Img2ImgPipeline with model={model}, refiner={refiner}")
+        pipeline = Img2ImgPipeline(
+            model=model,
+            refiner=refiner,
+            loras=loras,
+            vae=vae
+        )
+    elif image_to_image_mode == "Inpaint":
+        logger.info(f"Creating InpaintPipeline with model={model}, refiner={refiner}")
+        pipeline = InpaintPipeline(
+            model=model,
+            refiner=refiner,
+            loras=loras,
+            vae=vae
+        )
+    else:
+        raise ValueError(f"Unknown image_to_image_mode: {image_to_image_mode}")
+
+    return pipeline
+
+
+def create_comfyui_provider(
+    model: str,
+    refiner_model: str = "None",
+    loras: List[str] = None,
+    vae: str = "Default",
+    host: str = "127.0.0.1",
+    port: int = 8000
+) -> ComfyUIProvider:
+    """
+    Create a ComfyUI provider instance.
+
+    Args:
+        model: Main checkpoint model name
+        refiner_model: Refiner model name (for SDXL)
+        loras: List of LoRA model names
+        vae: VAE model name or 'Default'
+        host: ComfyUI server host
+        port: ComfyUI server port
+
+    Returns:
+        Configured ComfyUIProvider instance
+    """
+    if loras is None:
+        loras = []
+
+    # Normalize refiner_model value
+    refiner = None if refiner_model == "None" else refiner_model
+
+    logger.info(f"Creating ComfyUIProvider with model={model}, refiner={refiner}")
+
+    provider = ComfyUIProvider(
+        model=model,
+        model_type="checkpoint",
+        refiner=refiner,
+        loras=loras,
+        vae=vae,
+        host=host,
+        port=port
+    )
+
+    return provider

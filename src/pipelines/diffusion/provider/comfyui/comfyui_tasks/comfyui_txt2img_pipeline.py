@@ -1,34 +1,44 @@
-import websocket #NOTE: websocket-client (https://github.com/websocket-client/websocket-client)
-import uuid
+"""
+Text-to-Image generation pipeline using ComfyUI.
+"""
+
+import io
 import json
-import urllib.request
-import urllib.parse
-from typing import List, Tuple, Optional, Dict, Any
-import pandas as pd
 import random
 import traceback
-import os
-import io
-from PIL import Image 
+from typing import List, Tuple, Optional, Dict, Any
 
-from src.api.comfy_api import ComfyUIClient
-from workflows.load_workflow import (
-    load_txt2img_workflow, 
-    load_txt2img_sdxl_workflow, 
-    load_txt2img_sdxl_with_refiner_workflow, 
-    load_txt2img_workflow_clip_skip, 
-    load_txt2img_sdxl_workflow_clip_skip, 
+import pandas as pd
+from PIL import Image
+
+from ..comfy_api import ComfyUIClientWrapper
+from ..comfyui_workflows import (
+    load_txt2img_workflow,
+    load_txt2img_sdxl_workflow,
+    load_txt2img_sdxl_with_refiner_workflow,
+    load_txt2img_workflow_clip_skip,
+    load_txt2img_sdxl_workflow_clip_skip,
     load_txt2img_sdxl_with_refiner_workflow_clip_skip
 )
 
 from src import logger
 
 class Txt2ImgPipeline:
-    def __init__(self, model: str, refiner: str = None, loras: List[str] = None, vae: str = None):
-        self.client = ComfyUIClient()
+    """Text-to-Image generation pipeline using ComfyUI."""
+
+    def __init__(
+        self, 
+        model: str, 
+        model_type: str = "checkpoint", 
+        refiner: str = None, 
+        loras: List[str] = None, 
+        vae: str = None
+    ):
+        self.client = ComfyUIClientWrapper()
         self.model = model
+        self.model_type = model_type
         self.refiner = refiner
-        self.loras = loras
+        self.loras = loras or []
         self.vae = vae
 
     def _get_seed(self, seed: int, random_seed: bool) -> int:
@@ -75,11 +85,12 @@ class Txt2ImgPipeline:
         if self.vae == "Default":
             return base_node, current_node_id
             
+        vae_value = self.vae
         new_node_id = str(current_node_id)
         prompt[new_node_id] = {
             "class_type": "VAELoader",
             "inputs": {
-                "vae_name": self.vae
+                "vae_name": vae_value
             }
         }
         base_node = new_node_id
@@ -113,7 +124,7 @@ class Txt2ImgPipeline:
         history_df = pd.DataFrame([history_data])
         return output_images, history_df
 
-    def generate_images(
+    def generate(
         self,
         positive_prompt: str,
         negative_prompt: str,
@@ -237,7 +248,7 @@ class Txt2ImgPipeline:
             logger.error(f"이미지 생성 중 오류 발생: {str(e)}\n\n{traceback.format_exc()}")
             return [], None
 
-    def generate_images_with_refiner(
+    def generate_with_refiner(
         self,
         positive_prompt: str,
         negative_prompt: str,

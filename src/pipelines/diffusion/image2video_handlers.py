@@ -9,7 +9,7 @@ import random
 import traceback
 import os
 
-from src.api.comfy_api import ComfyUIClient
+# from src.api.comfy_api import ComfyUIClient
 
 from workflows.load_workflow import load_image2video_wan_workflow
 
