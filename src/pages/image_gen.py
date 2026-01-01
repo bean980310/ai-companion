@@ -2,13 +2,15 @@ import gradio as gr
 from transformers.pipelines import image_classification
 from src.main.image_generation import diff_main, image_gen, diff_component
 from src.start_app import app_state, ui_component
-from src.api.comfy_api import client
+from comfy_sdk import ComfyUI
 from src.common.translations import translation_manager, _
 from src.common_blocks import create_page_header, get_language_code
 from typing import Any, List, Sequence, Callable
 from PIL import Image
 import numpy as np
 import random
+
+client = ComfyUI(port=8000)
 
 with gr.Blocks() as demo:
     # 0. Page-Specific State Registration

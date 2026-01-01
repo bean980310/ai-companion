@@ -15,13 +15,15 @@ from .container import create_body_container
 from ..common.database import get_existing_sessions
 from ..common.character_info import characters
 from ..common.translations import translation_manager, _
-from ..api.comfy_api import client
 from . import header
+from comfy_sdk import ComfyUI
 from .header import HeaderUIComponent
 from ..characters import PersonaSpeechManager
 from ..common.utils import clear_all_model_cache
 
 from .. import __version__
+
+client = ComfyUI(port=8000)
 
 from presets import (
     AI_ASSISTANT_PRESET, 

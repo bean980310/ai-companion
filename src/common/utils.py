@@ -19,7 +19,6 @@ from model_converter import convert_model_to_float8, convert_model_to_int8, conv
 import platform
 import gc
 from src.common.cache import models_cache
-from src.api.comfy_api import client
 
 from src import logger
 

@@ -177,13 +177,18 @@ class ImageGeneration:
     def toggle_diffusion_refiner_visible(self, provider: str | gr.Dropdown):
         refiner_visible = any(x in provider.lower() for x in ["comfyui", "invokeai", "drawthings", "sd-webui", "self-provided"])
         
-        if provider == "comfyui":
-            updated_choices = comfyui_image_models
-        elif provider == "self-provided":
-            updated_choices = sorted(list(dict.fromkeys(diffusers_local + checkpoints_local)))
-        else:
+        if not refiner_visible:
+            refiner_visible = "hidden"
             updated_choices = ["Not Supported"]
+        else:
+            if provider == "comfyui":
+                updated_choices = comfyui_image_models
+            elif provider == "self-provided":
+                updated_choices = sorted(list(dict.fromkeys(diffusers_local + checkpoints_local)))
 
+            if "None" not in updated_choices:
+                updated_choices.insert(0, "None")
+            
         app_state.diffusion_refiner_choices = updated_choices
         return gr.update(visible=refiner_visible), gr.update(choices=updated_choices)
 
