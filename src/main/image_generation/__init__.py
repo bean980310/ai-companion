@@ -30,19 +30,14 @@ class DiffusionMain:
     def share_allowed_diffusion_models():
         diffusion_choices, diffusion_type_choices = image_gen.get_allowed_diffusion_models(os_name, arch)
         
-        diffusion_lora_choices = get_diffusion_loras()
-        diffusion_lora_choices = list(dict.fromkeys(diffusion_lora_choices))
-        diffusion_lora_choices = sorted(diffusion_lora_choices)
+        diffusion_lora_choices = image_gen.get_allowed_diffusion_loras(ui_component.diffusion_model_provider_dropdown)
         
-        vae_choices = get_diffusion_vae()
+        vae_choices = image_gen.get_allowed_diffusion_vae(ui_component.diffusion_model_provider_dropdown)
         
         diffusion_refiner_choices, diffusion_refiner_type_choices = image_gen.get_allowed_diffusion_models(os_name, arch)
         
         if "None" not in diffusion_refiner_choices:
             diffusion_refiner_choices.insert(0, "None")
-        
-        if "Default" not in vae_choices:
-            vae_choices.insert(0, "Default")
         
         app_state.diffusion_choices = diffusion_choices
         app_state.diffusion_type_choices = diffusion_type_choices

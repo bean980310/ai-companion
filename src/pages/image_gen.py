@@ -1,4 +1,5 @@
 import gradio as gr
+from transformers.pipelines import image_classification
 from src.main.image_generation import diff_main, image_gen, diff_component
 from src.start_app import app_state, ui_component
 from src.api.comfy_api import client
@@ -38,17 +39,22 @@ with gr.Blocks() as demo:
     # 2. Extract Components for Event Wiring
     
     # Sidebar components
+    diffusion_model_provider_dropdown = diff_side_model.model_provider_dropdown
     diffusion_model_type_dropdown = diff_side_model.model_type_dropdown
     diffusion_model_dropdown = diff_side_model.model_dropdown
     diffusion_api_key_text = diff_side_model.api_key_text
 
+    diffusion_refiner_row = diff_side_refiner.refiner_row
     diffusion_refiner_model_dropdown = diff_side_refiner.refiner_model_dropdown
     diffusion_refiner_start = diff_side_refiner.refiner_start
     diffusion_with_refiner_image_to_image_start = diff_side_refiner.with_refiner_image_to_image_start
 
+    diffusion_lora_row = diff_side_lora.lora_row
     diffusion_lora_multiselect = diff_side_lora.lora_multiselect
     diffusion_lora_text_encoder_sliders = diff_side_lora.lora_text_encoder_sliders
     diffusion_lora_unet_sliders = diff_side_lora.lora_unet_sliders
+
+    vae_row = diff_container_obj.side_panel.vae_row
     
     # Main Container components
     image_to_image_mode = diff_container_obj.image_panel.image_to_image_mode
@@ -90,19 +96,39 @@ with gr.Blocks() as demo:
 
     # 3. Event Wiring (Copied from src/main/__init__.py)
     
+    # gr.on(
+    #     triggers=[diffusion_model_dropdown.change, demo.load],
+    #     fn=lambda selected_model: (
+    #         image_gen.toggle_diffusion_api_key_visibility(selected_model)
+    #     ),
+    #     inputs=[diffusion_model_dropdown],
+    #     outputs=[diffusion_api_key_text]
+    # )
+
     gr.on(
-        triggers=[diffusion_model_dropdown.change, demo.load],
-        fn=lambda selected_model: (
-            image_gen.toggle_diffusion_api_key_visibility(selected_model)
-        ),
-        inputs=[diffusion_model_dropdown],
-        outputs=[diffusion_api_key_text]
+        triggers=[diffusion_model_provider_dropdown.change, diffusion_model_type_dropdown.change, demo.load],
+        fn=image_gen.update_diffusion_model_list,
+        inputs=[diffusion_model_provider_dropdown, diffusion_model_type_dropdown],
+        outputs=[diffusion_model_type_dropdown, diffusion_model_dropdown]
     )
 
-    diffusion_model_type_dropdown.change(
-        fn=image_gen.update_diffusion_model_list,
-        inputs=[diffusion_model_type_dropdown],
-        outputs=[diffusion_model_dropdown]
+    gr.on(
+        triggers=[diffusion_model_provider_dropdown.change, demo.load],
+        fn=image_gen.toggle_diffusion_api_key_visibility,
+        inputs=[diffusion_model_provider_dropdown],
+        outputs=[diffusion_api_key_text]
+    ).then(
+        fn=image_gen.toggle_diffusion_lora_visible,
+        inputs=[diffusion_model_provider_dropdown],
+        outputs=[diffusion_lora_row, diffusion_lora_multiselect]
+    ).then(
+        fn=image_gen.toggle_diffusion_vae_visible,
+        inputs=[diffusion_model_provider_dropdown],
+        outputs=[vae_row, vae_dropdown]
+    ).then(
+        fn=image_gen.toggle_diffusion_refiner_visible,
+        inputs=[diffusion_model_provider_dropdown],
+        outputs=[diffusion_refiner_row, diffusion_refiner_model_dropdown]
     )
     
     diffusion_refiner_model_dropdown.change(

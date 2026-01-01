@@ -5,6 +5,7 @@ import gradio as gr
 
 from ...common.translations import _
 from ...start_app import app_state, ui_component
+from ...models import IMAGE_PROVIDER_LIST
 from dataclasses import dataclass
 
 @dataclass
@@ -14,10 +15,12 @@ class DiffusionComponent:
     model_dropdown: gr.Dropdown = None
     api_key_text: gr.Textbox = None
 
+    refiner_row: gr.Row = None
     refiner_model_dropdown: gr.Dropdown = None
     refiner_start: gr.Slider = None
     with_refiner_image_to_image_start: gr.Slider = None
 
+    lora_row: gr.Row = None
     lora_multiselect: gr.Dropdown = None
     lora_text_encoder_sliders: list = None
     lora_unet_sliders: list = None
@@ -56,6 +59,8 @@ class DiffusionComponent:
     clip_g_checkbox: gr.Checkbox = None
     batch_size_input: gr.Number = None
     batch_count_input: gr.Number = None
+
+    vae_row: gr.Row = None
     
     image_history: gr.Dataframe = None
 
@@ -64,6 +69,12 @@ class DiffusionComponent:
         with gr.Row(elem_classes="model-container"):
             with gr.Column():
                 gr.Markdown("### Model Selection")
+                model_provider_dropdown = gr.Dropdown(
+                    label=_("model_provider_select_label"),
+                    choices=IMAGE_PROVIDER_LIST,
+                    value=IMAGE_PROVIDER_LIST[0],
+                    elem_classes="model-dropdown"
+                )
                 model_type_dropdown = gr.Radio(
                     label=_("model_type_label"),
                     choices=app_state.diffusion_type_choices,
@@ -83,15 +94,16 @@ class DiffusionComponent:
                     elem_classes="api-key-input"
                 )
                 
+        ui_component.diffusion_model_provider_dropdown = model_provider_dropdown
         ui_component.diffusion_model_type_dropdown = model_type_dropdown
         ui_component.diffusion_model_dropdown = model_dropdown
         ui_component.diffusion_api_key_text = api_key_text
         
-        return cls(model_type_dropdown=model_type_dropdown, model_dropdown=model_dropdown, api_key_text=api_key_text)
+        return cls(model_provider_dropdown=model_provider_dropdown, model_type_dropdown=model_type_dropdown, model_dropdown=model_dropdown, api_key_text=api_key_text)
 
     @classmethod
     def create_diffusion_side_refiner_model_container(cls):
-        with gr.Row(elem_classes="model-container"):
+        with gr.Row(elem_classes="model-container") as refiner_row:
             with gr.Column():
                 gr.Markdown("### Refiner Model Selection")
                 refiner_model_dropdown = gr.Dropdown(
@@ -121,12 +133,12 @@ class DiffusionComponent:
         ui_component.diffusion_refiner_start = refiner_start
         ui_component.diffusion_with_refiner_image_to_image_start = with_refiner_image_to_image_start
         
-        return cls(refiner_model_dropdown=refiner_model_dropdown, refiner_start=refiner_start, with_refiner_image_to_image_start=with_refiner_image_to_image_start)
+        return cls(refiner_row=refiner_row, refiner_model_dropdown=refiner_model_dropdown, refiner_start=refiner_start, with_refiner_image_to_image_start=with_refiner_image_to_image_start)
 
 
     @classmethod
     def create_diffusion_side_lora_container(cls):
-        with gr.Row(elem_classes="model-container"):
+        with gr.Row(elem_classes="model-container") as lora_row:
             with gr.Accordion("LoRA Settings", open=False, elem_classes="accordion-container"):
                 lora_multiselect=gr.Dropdown(
                     label=_("lora_select_label"),
@@ -170,7 +182,7 @@ class DiffusionComponent:
         ui_component.diffusion_lora_text_encoder_sliders = lora_text_encoder_sliders
         ui_component.diffusion_lora_unet_sliders = lora_unet_sliders
 
-        return cls(lora_multiselect=lora_multiselect, lora_text_encoder_sliders=lora_text_encoder_sliders, lora_unet_sliders=lora_unet_sliders)
+        return cls(lora_row=lora_row, lora_multiselect=lora_multiselect, lora_text_encoder_sliders=lora_text_encoder_sliders, lora_unet_sliders=lora_unet_sliders)
 
     @classmethod
     def create_diffusion_container_image_to_image_panel(cls):
@@ -341,7 +353,7 @@ class DiffusionComponent:
                         label="Random Seed",
                         value=True
                     )
-                with gr.Row():
+                with gr.Row() as vae_row:
                     vae_dropdown=gr.Dropdown(
                         label="Select VAE Model",
                         choices=app_state.vae_choices,
@@ -390,7 +402,7 @@ class DiffusionComponent:
         ui_component.batch_size_input = batch_size_input
         ui_component.batch_count_input = batch_count_input
 
-        return cls(advanced_setting=advanced_setting, sampler_dropdown=sampler_dropdown, scheduler_dropdown=scheduler_dropdown, cfg_scale_slider=cfg_scale_slider, seed_input=seed_input, random_seed_checkbox=random_seed_checkbox, vae_dropdown=vae_dropdown, clip_skip_slider=clip_skip_slider, enable_clip_skip_checkbox=enable_clip_skip_checkbox, clip_g_checkbox=clip_g_checkbox, batch_size_input=batch_size_input, batch_count_input=batch_count_input)
+        return cls(advanced_setting=advanced_setting, sampler_dropdown=sampler_dropdown, scheduler_dropdown=scheduler_dropdown, cfg_scale_slider=cfg_scale_slider, seed_input=seed_input, random_seed_checkbox=random_seed_checkbox, vae_dropdown=vae_dropdown, clip_skip_slider=clip_skip_slider, enable_clip_skip_checkbox=enable_clip_skip_checkbox, clip_g_checkbox=clip_g_checkbox, batch_size_input=batch_size_input, batch_count_input=batch_count_input, vae_row=vae_row)
 
     @classmethod
     def create_diffusion_container_history_panel(cls):

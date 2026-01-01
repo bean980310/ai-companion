@@ -28,6 +28,7 @@ class UIComponent:
     refresh_button: gr.Button = None
     clear_all_btn: gr.Button = None
     
+    diffusion_model_provider_dropdown: gr.Dropdown = None
     diffusion_model_type_dropdown: gr.Radio = None
     diffusion_model_dropdown: gr.Dropdown = None
     diffusion_api_key_text: gr.Textbox = None
