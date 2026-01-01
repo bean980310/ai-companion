@@ -37,7 +37,7 @@ from ai_companion_llm_backend.provider import (
 )
 from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models, convert_folder_to_modelid
 
-from src.pipelines.diffusion.provider.comfyui import ComfyUIProvider, Txt2ImgPipeline, Img2ImgPipeline, InpaintPipeline
+from ai_companion_image_backend.provider.comfyui import ComfyUIProvider, Txt2ImgPipeline, Img2ImgPipeline, InpaintPipeline
 
 from src import logger
 
