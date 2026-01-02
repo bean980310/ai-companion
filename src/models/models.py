@@ -3,7 +3,7 @@
 import random
 import platform
 import traceback
-from typing import Any, List, Literal
+from typing import Any, Callable, List, Literal
 
 import numpy as np
 import torch

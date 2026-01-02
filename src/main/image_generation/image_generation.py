@@ -300,8 +300,8 @@ class ImageGeneration:
         return vae_choices
 
     @staticmethod
-    def api_image_generation(prompt, width, height, model, api_key=None):
-        if "dall-e" in model:
+    def api_image_generation(prompt: str, width: int, height: int, model: str, api_key: str = None):
+        if "dall-e" in model.lower():
             import openai
             if not api_key:
                 logger.error("OpenAI API Key가 missing.")
@@ -340,7 +340,7 @@ class ImageGeneration:
             except Exception as e:
                 logger.error(f"Error generating image: {e}")
                 return [], None
-        elif "gpt-image" in model:
+        elif "gpt-image" in model.lower():
             import base64
             import openai
             if not api_key:
@@ -354,6 +354,7 @@ class ImageGeneration:
                     size=f"{width}x{height}",
                     quality="high",
                     n=1,
+                    output_format="png"
                 )
                 output_images=[]
                 image = response.data[0].url
@@ -388,6 +389,49 @@ class ImageGeneration:
                 logger.error("Google API Key가 missing.")
                 return [], None
             client = genai.Client(api_key=api_key)
+
+            res = str(f"{width}x{height}")
+
+            if any(x in res for x in ["1024x1024", "2048x2048", "4096x4096"]):
+                aspect_ratio = "1:1"
+                if "pro" in model.lower():
+                    if res == "1024x1024": image_size = "1K"
+                    if res == "2048x2048": image_size = "2K"
+                    if res == "4096x4096": image_size = "4K"
+                else: image_size = "1K"
+                    
+            elif any(x in res for x in ["832x1248", "848x1264", "1696x2528", "3392x5056"]):
+                aspect_ratio = "2:3"
+                if "pro" in model.lower():
+                    if any(x in res for x in ["832x1248", "848x1264"]): image_size = "1K"
+                    if res == "1696x2528": image_size = "2K"
+                    if res == "3392x5056": image_size = "4K"
+                else: image_size = "1K"
+            elif any(x in res for x in ["1248x832", "1264x848", "2528x1696", "5056x3392"]):
+                aspect_ratio = "3:2"
+                if "pro" in model.lower():
+                    if any(x in res for x in ["1248x832", "1264x848"]): image_size = "1K"
+                    if res == "2528x1696": image_size = "2K"
+                    if res == "5056x3392": image_size = "4K"
+                else: image_size = "1K"
+            elif any(x in res for x in ["864x1184", "896x1200", "1792x2400", "3584x4800"]):
+                aspect_ratio = "3:4"
+                if "pro" in model.lower():
+                    if any(x in res for x in ["864x1184", "896x1200"]): image_size = "1K"
+                    if res == "1792x2400": image_size = "2K"
+                    if res == "3584x4800": image_size = "4K"
+                else: image_size = "1K"
+            elif any(x in res for x in ["1184x864", "1200x896", "2400x1792", "4800x3584"]):
+                aspect_ratio = "4:3"
+                if "pro" in model.lower():
+                    if any(x in res for x in ["1184x864", "1200x896"]): image_size = "1K"
+                    if res == "2400x1792": image_size = "2K"
+                    if res == "4800x3584": image_size = "4K"
+                else: image_size = "1K"
+            else:
+                aspect_ratio = "1:1"
+                image_size = "1K"
+            
             try:
                 response = client.models.generate_content(
                     model=model,
@@ -397,8 +441,8 @@ class ImageGeneration:
                             "IMAGE"
                         ],
                         image_config=types.ImageConfig(
-                            aspect_ratio=f"{width}:{height}",
-                            image_size='1K'
+                            aspect_ratio=aspect_ratio,
+                            image_size=image_size,
                         )
                     )
                 )
@@ -446,7 +490,7 @@ class ImageGeneration:
                     model=model,
                     prompt=prompt,
                     config=types.GenerateImagesConfig(
-                        aspect_ratio=f"{width}:{height}",
+                        aspect_ratio="1:1",
                         number_of_images=1
                     )
                 )
