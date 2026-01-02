@@ -57,6 +57,7 @@ gptqmodel>=4.0.0
 jiwer
 gtts>=2.5.4
 coqui-tts
+edge-tts
 chromadb
 # outetts==0.3.3
 pydub

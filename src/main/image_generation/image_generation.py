@@ -136,21 +136,25 @@ class ImageGeneration:
             app_state.diffusion_choices = updated_list
             return gr.update(visible='hidden'), gr.update(choices=updated_list, value=updated_list[0] if updated_list else None)
         else:
+            diffusion_choices, diffusion_type_choices = self.get_allowed_diffusion_models(os_name, arch)
             if selected_type == "all":
-                all_models = diffusers_local + checkpoints_local
+                all_models = diffusion_choices
                 # 중복 제거 후 정렬
                 all_models = sorted(list(dict.fromkeys(all_models)))
-                return gr.update(choices=all_models, value=all_models[0] if all_models else None)
+                app_state.diffusion_choices = all_models
+                app_state.diffusion_type_choices = diffusion_type_choices
+                return gr.update(visible=True), gr.update(choices=all_models, value=all_models[0] if all_models else None)
             
             elif selected_type == "diffusers":
                 updated_list = diffusers_local
             elif selected_type == "checkpoints":
                 updated_list = checkpoints_local
             else:
-                updated_list == diffusers_local
+                updated_list = diffusers_local
                 
             updated_list = sorted(list(dict.fromkeys(updated_list)))
             app_state.diffusion_choices = updated_list
+            app_state.diffusion_type_choices = selected_type
             return gr.update(visible=True), gr.update(choices=updated_list, value=updated_list[0] if updated_list else None)
 
     @staticmethod
