@@ -33,7 +33,7 @@ class ImageGeneration:
         self.os_name, self.arch = detect_platform()
 
     def generate_images_wrapper(self, positive_prompt: str, negative_prompt: str, style: str, generation_step: int, img2img_step_start: int, diffusion_refiner_start: int, width: int, height: int,
-        model: str, refiner_model: str, model_type: str, lora_multiselect: List[str], vae: str, clip_skip: int, enable_clip_skip: bool, clip_g: bool, sampler: str, scheduler: str,
+        model: str, refiner_model: str, model_provider: str, model_type: str, lora_multiselect: List[str], vae: str, clip_skip: int, enable_clip_skip: bool, clip_g: bool, sampler: str, scheduler: str,
         batch_size: int, batch_count: int, cfg_scale: float, seed: int, random_seed: bool, image_to_image_mode: str, image_input: str | Image.Image | ImageFile.ImageFile | np.ndarray | Callable | Any | None = None, image_inpaint_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, denoise_strength: float = 1, blur_radius: float = 5.0, blur_expansion_radius: float = 1, api_key: str | None = None,
         # 이후 20개의 슬라이더 값 (max_diffusion_lora_rows * 2; 예를 들어 10행이면 20개)
         *lora_slider_values):
@@ -43,9 +43,9 @@ class ImageGeneration:
         # JSON 문자열로 변환
         text_weights_json = json.dumps(text_weights)
         unet_weights_json = json.dumps(unet_weights)
-        if model_type == "api":
+        if all(x not in model_provider.lower() for x in ["self-provided", "comfyui", "invokeai", "drawthings", "sd-webui"]):
             return self.api_image_generation(positive_prompt, width, height, model, api_key)
-        else:
+        elif model_provider.lower() == "comfyui":
             if image_to_image_mode == "None":
                 # Create pipeline through models.py
                 pipeline = create_comfyui_pipeline(
@@ -118,6 +118,10 @@ class ImageGeneration:
                         batch_count, cfg_scale, seed, random_seed, image_inpaint_input, denoise_strength, blur_radius, blur_expansion_radius,
                         text_weights_json, unet_weights_json
                     )
+
+        else:
+            logger.error("self-provided를 통한 이미 생성은 현재 지원하지 않습니다. 추후 업데이트에서 지원하도록 하겠습니다.")
+            return [], None
                 
     def update_diffusion_model_list(self, provider: str, selected_type: str | None = None):
         diffusion_models_data = get_all_diffusion_models()
