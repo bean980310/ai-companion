@@ -93,7 +93,7 @@ def get_google_genai_image_models(api_key: str = None):
         model = client.models.list()
 
         for m in model.page:
-            include = any(k in m.name.lower() for k in ["imagen"])
+            include = any(k in m.name.lower() for k in ["imagen", "image"])
 
             if include:
                 model_list.append(m.name)

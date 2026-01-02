@@ -376,6 +376,62 @@ class ImageGeneration:
             except Exception as e:
                 logger.error(f"Error generating image: {e}")
                 return [], None 
+        elif all(n in model.lower() for n in ["gemini", "image"]):
+            import base64
+            import mimetypes
+            import datetime
+            from google import genai
+            from google.genai import types
+            from PIL import Image
+            from io import BytesIO
+            if not api_key:
+                logger.error("Google API Key가 missing.")
+                return [], None
+            client = genai.Client(api_key=api_key)
+            try:
+                response = client.models.generate_content(
+                    model=model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_modalities=[
+                            "IMAGE"
+                        ],
+                        image_config=types.ImageConfig(
+                            aspect_ratio=f"{width}:{height}",
+                            image_size='1K'
+                        )
+                    )
+                )
+                output_images=[]
+                for generated_image in response.parts:
+                    if generated_image.inline_data:
+                        file_name = f"generated_image{datetime.datetime.now().strftime('%y%m%d_%H%M%S')}"
+                        data = generated_image.inline_data.data
+                        ext = mimetypes.guess_extension(generated_image.inline_data.mime_type)
+                        with open(f"{file_name}{ext}", "wb") as f:
+                            f.write(data)
+                        image = Image.open(BytesIO(generated_image.as_image()))
+                        output_images.append(image)
+                    else:
+                        pass
+                    
+                history_entry = {
+                    "Positive Prompt": prompt,
+                    "Negative Prompt": "",
+                    "Generation Steps": "",
+                    "Model": model,
+                    "Sampler": "",
+                    "Scheduler": "",
+                    "CFG Scale": "",
+                    "Seed": "",
+                    "Width": "",
+                    "Height": ""
+                }
+                history_df = pd.DataFrame([history_entry])
+                return output_images, history_df
+            except Exception as e:
+                logger.error(f"Error generating image: {e}")
+                return [], None 
         else:
             from google import genai
             from google.genai import types
@@ -390,6 +446,7 @@ class ImageGeneration:
                     model=model,
                     prompt=prompt,
                     config=types.GenerateImagesConfig(
+                        aspect_ratio=f"{width}:{height}",
                         number_of_images=1
                     )
                 )
