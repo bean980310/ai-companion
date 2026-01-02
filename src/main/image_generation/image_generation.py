@@ -120,7 +120,7 @@ class ImageGeneration:
                     )
 
         else:
-            logger.error("self-provided를 통한 이미 생성은 현재 지원하지 않습니다. 추후 업데이트에서 지원하도록 하겠습니다.")
+            logger.error("self-provided를 통한 이미지 생성은 현재 지원하지 않습니다. 추후 업데이트에서 지원하도록 하겠습니다.")
             return [], None
                 
     def update_diffusion_model_list(self, provider: str, selected_type: str | None = None):
