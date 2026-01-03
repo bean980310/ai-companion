@@ -101,9 +101,9 @@ def get_openai_llm_models(api_key: str = None):
 
             include = any(k in model_id.lower() for k in gpt_pattern)
             exclude_type = all(k not in model_id.lower() for k in ["image", "realtime", "tts", "audio", "transcribe", "codex", "search", "preview"])
-            exclude_mini = all(k not in model_id.lower() for k in ["gpt-4.1-mini", "gpt-4.1-nano", 'gpt-4o-mini'])
+            exclude_model = all(k not in model_id.lower() for k in ["gpt-4.1-mini", "gpt-4.1-nano", 'gpt-4o-mini', 'chatgpt-4o-latest'])
             latest_or_date = ("latest" in model_id) or bool(date_pattern.search(model_id.lower()))
-            if include and exclude_type and exclude_mini and latest_or_date:
+            if include and exclude_type and exclude_model and latest_or_date:
                 model_list.append(model_id)
 
         return model_list
