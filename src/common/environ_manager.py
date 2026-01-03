@@ -19,3 +19,12 @@ def save_env_variables(key: str, value: str, path: StrPath="config/environment.e
     set_key(dotenv_path=path, key_to_set=key, value_to_set=value)
 
     return load_env_variables(key=key)
+
+def delete_env_variables(key: str, path: StrPath="config/environment.env"):
+    import os
+    from dotenv import unset_key
+
+    if not os.path.exists(path):
+        return
+
+    unset_key(dotenv_path=path, key_to_unset=key)

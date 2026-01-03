@@ -43,6 +43,8 @@ from ai_companion_image_backend.provider.comfyui import ComfyUIProvider, Txt2Img
 
 from src import logger
 
+from src.common.environ_manager import load_env_variables
+
 LOCAL_MODELS_ROOT = "./models"
 
 def get_default_device():
@@ -83,7 +85,7 @@ def load_model(selected_model: str, provider: Literal["openai", "anthropic", "go
     # 각자 공급자에 따라 클라이언트 생성.
     if provider == "openai":
         if not api_key:
-            api_key = get_key("config/environment.env", "OPENAI_API_KEY")
+            api_key = load_env_variables("OPENAI_API_KEY")
 
         if not api_key:
             logger.error("OpenAI API Key가 missing.")
@@ -94,7 +96,7 @@ def load_model(selected_model: str, provider: Literal["openai", "anthropic", "go
     
     elif provider == "anthropic":
         if not api_key:
-            api_key = get_key("config/environment.env", "ANTHROPIC_API_KEY")
+            api_key = load_env_variables("ANTHROPIC_API_KEY")
 
         if not api_key:
             logger.error("Anthropic API Key가 missing.")
@@ -105,7 +107,7 @@ def load_model(selected_model: str, provider: Literal["openai", "anthropic", "go
     
     elif provider == "google-genai":
         if not api_key:
-            api_key = get_key("config/environment.env", "GEMINI_API_KEY")
+            api_key = load_env_variables("GEMINI_API_KEY")
 
         if not api_key:
             logger.error("Google AI API Key가 missing.")
@@ -116,7 +118,7 @@ def load_model(selected_model: str, provider: Literal["openai", "anthropic", "go
     
     elif provider == "perplexity":
         if not api_key:
-            api_key = get_key("config/environment.env", "PERPLEXITY_API_KEY")
+            api_key = load_env_variables("PERPLEXITY_API_KEY")
 
         if not api_key:
             logger.error("Perplexity API Key가 missing.")
@@ -127,7 +129,7 @@ def load_model(selected_model: str, provider: Literal["openai", "anthropic", "go
 
     elif provider == "xai":
         if not api_key:
-            api_key = get_key("config/environment.env", "XAI_API_KEY")
+            api_key = load_env_variables("XAI_API_KEY")
 
         if not api_key:
             logger.error("XAI API Key가 missing.")
@@ -138,6 +140,9 @@ def load_model(selected_model: str, provider: Literal["openai", "anthropic", "go
     
     elif provider == "openrouter":
         if not api_key:
+            api_key = load_env_variables("OPENROUTER_API_KEY")
+
+        if not api_key:
             logger.error("OpenRouter API Key가 missing.")
             return "OpenRouter API Key가 필요합니다."
             
@@ -146,7 +151,7 @@ def load_model(selected_model: str, provider: Literal["openai", "anthropic", "go
 
     elif provider == "hf-inference":
         if not api_key:
-            api_key = get_key("config/environment.env", "HF_TOKEN")
+            api_key = load_env_variables("HF_TOKEN")
 
         if not api_key:
             logger.error("Huggingface Token Key가 missing.")
