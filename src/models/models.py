@@ -4,6 +4,7 @@ import random
 import platform
 import traceback
 from typing import Any, Callable, List, Literal
+from dotenv import get_key
 
 import numpy as np
 import torch
@@ -33,7 +34,8 @@ from ai_companion_llm_backend.provider import (
     XAIClientWrapper,
     OpenRouterClientWrapper,
     HuggingfaceInferenceClientWrapper,
-    LMStudioIntegrator
+    LMStudioIntegrator,
+    OllamaIntegrator
 )
 from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models, convert_folder_to_modelid
 
@@ -81,6 +83,9 @@ def load_model(selected_model: str, provider: Literal["openai", "anthropic", "go
     # 각자 공급자에 따라 클라이언트 생성.
     if provider == "openai":
         if not api_key:
+            api_key = get_key("config/environment.env", "OPENAI_API_KEY")
+
+        if not api_key:
             logger.error("OpenAI API Key가 missing.")
             return "OpenAI API Key가 필요합니다."
             
@@ -88,6 +93,9 @@ def load_model(selected_model: str, provider: Literal["openai", "anthropic", "go
         return wrapper
     
     elif provider == "anthropic":
+        if not api_key:
+            api_key = get_key("config/environment.env", "ANTHROPIC_API_KEY")
+
         if not api_key:
             logger.error("Anthropic API Key가 missing.")
             return "Anthropic API Key가 필요합니다."
@@ -97,6 +105,9 @@ def load_model(selected_model: str, provider: Literal["openai", "anthropic", "go
     
     elif provider == "google-genai":
         if not api_key:
+            api_key = get_key("config/environment.env", "GEMINI_API_KEY")
+
+        if not api_key:
             logger.error("Google AI API Key가 missing.")
             return "Google AI API Key가 필요합니다."
 
@@ -105,6 +116,9 @@ def load_model(selected_model: str, provider: Literal["openai", "anthropic", "go
     
     elif provider == "perplexity":
         if not api_key:
+            api_key = get_key("config/environment.env", "PERPLEXITY_API_KEY")
+
+        if not api_key:
             logger.error("Perplexity API Key가 missing.")
             return "Perplexity API Key가 필요합니다."
             
@@ -112,6 +126,9 @@ def load_model(selected_model: str, provider: Literal["openai", "anthropic", "go
         return wrapper
 
     elif provider == "xai":
+        if not api_key:
+            api_key = get_key("config/environment.env", "XAI_API_KEY")
+
         if not api_key:
             logger.error("XAI API Key가 missing.")
             return "XAI API Key가 필요합니다."
@@ -129,6 +146,9 @@ def load_model(selected_model: str, provider: Literal["openai", "anthropic", "go
 
     elif provider == "hf-inference":
         if not api_key:
+            api_key = get_key("config/environment.env", "HF_TOKEN")
+
+        if not api_key:
             logger.error("Huggingface Token Key가 missing.")
             return "Huggingface Token Key가 필요합니다."
             
@@ -136,7 +156,8 @@ def load_model(selected_model: str, provider: Literal["openai", "anthropic", "go
         return wrapper
     elif provider == "ollama":
         # API 모델은 별도의 로드가 필요 없으므로 핸들러 생성 안함
-        return None
+        wrapper = OllamaIntegrator(selected_model)
+        return wrapper
     elif provider == "lmstudio":
         # API 모델은 별도의 로드가 필요 없으므로 핸들러 생성 안함
         wrapper = LMStudioIntegrator(selected_model)

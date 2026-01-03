@@ -180,7 +180,7 @@ def get_perplexity_llm_models(api_key: str = None):
     api_models = [
         "sonar",
         "sonar-pro",
-        "sonar-reasoning",
+        # "sonar-reasoning",
         "sonar-reasoning-pro",
         "sonar-deep-research",
     ]
@@ -192,7 +192,7 @@ def get_perplexity_llm_models(api_key: str = None):
     client = Perplexity(api_key=api_key)
 
     try:
-        test = client.search.create(query="test")
+        # test = client.search.create(query="test")
 
         for m in api_models:
             model_list.append(m)
