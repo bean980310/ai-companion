@@ -6,24 +6,26 @@ import uuid
 import json
 import urllib.request
 import urllib.parse
-from typing import List, Any, Callable
+from typing import List, Any, Callable, Literal
 import pandas as pd
 import random
 import traceback
 import os
+import datetime
 import gradio as gr
 
 import numpy as np
 
 from PIL import Image, ImageOps, ImageFile
 
+from src.common.environ_manager import load_env_variables
 from src.start_app.app_state_manager import app_state
 
 # Import models module for ComfyUI pipeline creation
 from src.models.models import create_comfyui_pipeline
 
 from src.common.utils import get_all_diffusion_models, detect_platform, get_diffusion_loras, get_diffusion_vae
-from src.models import diffusion_api_models, openai_image_api_models, google_genai_image_models, comfyui_image_models, comfyui_image_loras, comfyui_image_vae, diffusers_local, checkpoints_local
+from src.models import diffusion_api_models, openai_image_api_models, google_genai_image_models, comfyui_image_models, comfyui_image_loras, comfyui_image_vae, diffusers_local, checkpoints_local, GPT_IMAGE_ALLOWED_SIZES
 from src import logger, os_name, arch
 
 from .upload import ComfyUIImageUpload
@@ -304,6 +306,8 @@ class ImageGeneration:
         if "dall-e" in model.lower():
             import openai
             if not api_key:
+                api_key = load_env_variables("OPENAI_API_KEY")
+            if not api_key:
                 logger.error("OpenAI API Key가 missing.")
                 return [], None 
             openai.api_key = api_key
@@ -343,12 +347,21 @@ class ImageGeneration:
         elif "gpt-image" in model.lower():
             import base64
             import openai
+            import io
+            from PIL import Image
+            from openai import OpenAI
+            if not api_key:
+                api_key = load_env_variables("OPENAI_API_KEY")
             if not api_key:
                 logger.error("OpenAI API Key가 missing.")
+                return [], None
+            res = f"{width}x{height}"
+            if res not in GPT_IMAGE_ALLOWED_SIZES:
+                logger.error("size는 1024x1024, 1024x1536, 1536x1024 중 하나여야 합니다.")
                 return [], None 
-            openai.api_key = api_key
+            client = OpenAI(api_key=api_key)
             try:
-                response = openai.images.generate(
+                response = client.images.generate(
                     model=model,
                     prompt=prompt,
                     size=f"{width}x{height}",
@@ -357,7 +370,14 @@ class ImageGeneration:
                     output_format="png"
                 )
                 output_images=[]
-                image = response.data[0].url
+                image_base64 = response.data[0].b64_json
+                image_bytes=base64.b64decode(image_base64)
+                file_name = f"generated_image{datetime.datetime.now().strftime('%y%m%d_%H%M%S')}"
+                with open(file_name, "wb") as f:
+                    f.write(image_bytes)
+                image_stream = io.BytesIO(image_bytes)
+                image = Image.open(image_stream)
+
                 output_images.append(image)
                 
                 history_entry = {

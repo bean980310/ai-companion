@@ -264,6 +264,7 @@ with gr.Blocks() as demo:
             height_slider,               # Height
             diffusion_model_dropdown,    # 선택한 이미지 생성 모델 (체크포인트 파일명 또는 diffusers model id)
             diffusion_refiner_model_dropdown, 
+            diffusion_model_provider_dropdown,
             diffusion_model_type_dropdown,  # "checkpoint" 또는 "diffusers" 선택 (라디오 버튼 등)
             diffusion_lora_multiselect,  # 선택한 LoRA 모델 리스트
             vae_dropdown,                # 선택한 VAE 모델
@@ -287,7 +288,8 @@ with gr.Blocks() as demo:
             *diffusion_lora_text_encoder_sliders,
             *diffusion_lora_unet_sliders
         ],
-        outputs=[gallery, image_history]
+        outputs=[gallery, image_history],
+        api_name="generations"
     )
 
     # Language Change Event

@@ -255,7 +255,7 @@ def generate_answer(history: list[dict[str, str | list[dict[str, str | Image.Ima
         }
         history = [system_message]
     
-    cache_key = build_model_cache_key(selected_model, model_type, selected_lora, local_path=local_model_path)
+    cache_key = build_model_cache_key(selected_model, model_type, provider, selected_lora, local_path=local_model_path)
     handler = models_cache.get(cache_key)
     
     last_message = history[-1]

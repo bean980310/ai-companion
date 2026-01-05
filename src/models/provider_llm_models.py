@@ -160,7 +160,7 @@ def get_google_genai_llm_models(api_key: str = None):
             exclude_type = all(k not in m.name.lower() for k in ["embedding", "tts", "exp"])
             exclude_model = all(k not in m.name.lower() for k in ["gemini-2.0"])
 
-            preview_check = ("preview" not in m.name.lower()) or any(k in m.name.lower() for k in ["gemini-3-pro-preview", "gemini-3-pro-image-preview"])
+            preview_check = ("preview" not in m.name.lower()) or any(k in m.name.lower() for k in ["gemini-3"])
 
             if "generateContent" in m.supported_actions and include and exclude_type and exclude_model and preview_check:
                 model_list.append(m.name)
@@ -303,6 +303,7 @@ huggingface_inference_api_models = [
     "meta-llama/Llama-4-Maverick-17B-128E-Instruct:groq",
     'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8',
     'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8:novita',
+    'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8:together',
     'Qwen/Qwen3-VL-30B-A3B-Instruct',
     'Qwen/Qwen3-VL-30B-A3B-Thinking',
     "Qwen/Qwen3-VL-235B-A22B-Instruct",
@@ -318,6 +319,8 @@ huggingface_inference_api_models = [
     "moonshotai/Kimi-K2-Instruct",
     "moonshotai/Kimi-K2-Instruct-0905",
     "moonshotai/Kimi-K2-Thinking",
+    "google/gemma-3-27b-it",
+    "google/gemma-3-27b-it:nebius",
     'zai-org/GLM-4.1V-9B-Thinking',
     "zai-org/GLM-4.5",
     "zai-org/GLM-4.5:zai-org",
@@ -326,13 +329,22 @@ huggingface_inference_api_models = [
     "zai-org/GLM-4.5-Air-FP8",
     'zai-org/GLM-4.5V',
     'zai-org/GLM-4.5V:zai-org',
-    'zai-org/GLM-4.5V-FP8'
+    'zai-org/GLM-4.5V-FP8',
     "zai-org/GLM-4.6",
+    "zai-org/GLM-4.6:zai-org",
+    "zai-org/GLM-4.6V",
+    "zai-org/GLM-4.6V:zai-org",
+    "zai-org/GLM-4.6V-Flash",
+    "zai-org/GLM-4.6V-Flash:zai-org",
+    "zai-org/GLM-4.7",
+    "zai-org/GLM-4.7:zai-org",
     "deepseek-ai/DeepSeek-V3",
     "deepseek-ai/DeepSeek-V3-0324",
     "deepseek-ai/DeepSeek-R1",
     "deepseek-ai/DeepSeek-R1-0528",
     "deepseek-ai/DeepSeek-V3.1",
+    "deepseek-ai/DeepSeek-V3.1-Terminus",
+    "deepseek-ai/DeepSeek-V3.2",
     'MiniMaxAI/MiniMax-M1-80k',
     "MiniMaxAI/MiniMax-M2",
     "CohereLabs/command-a-vision-07-2025",

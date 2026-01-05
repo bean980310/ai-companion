@@ -129,7 +129,7 @@ with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True) as demo:
 #     chat.demo.render()
     
 # Other Pages
-with demo.route("Image Gen", "/image"):
+with demo.route("Image Gen", "/images"):
     # ui_component.head.render()
     # header.demo.render()
     # image_gen_header = HeaderUIComponent()

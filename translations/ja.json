@@ -33,7 +33,6 @@
   "reset_session_button": "セッション初期化",
   "reset_all_sessions_button": "すべてのセッションの初期化",
   "download_tab": "ダウンロード",
-  "download_title": "モデルダウンロード",
   "download_description": "HuggingFaceからモデルをダウンロードしてローカルに保存します。",
   "download_description_detail": "事前定義されたモデルリストから選択するか、カスタムモデルIDを直接入力できます。",
   "download_mode_label": "ダウンロード方式",

@@ -132,7 +132,7 @@ class Chatbot:
         else:
             return history, gr.update(value=content), None, gr.update()
 
-    def process_message_user(self, user_input: gr.Component |  str | dict[str, str | Image.Image | Any] | Any, session_id: str, history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]] | list[gr.MessageDict | gr.ChatMessage], system_msg: str, selected_character: str, language: str):
+    def process_message_user(self, user_input: gr.Component | dict[str, str | Image.Image | Any], session_id: str, history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]] | list[gr.MessageDict | gr.ChatMessage], system_msg: str, selected_character: str, language: str):
         """
         사용자 메시지를 처리하고 봇 응답을 생성하는 통합 함수.
 
@@ -151,12 +151,11 @@ class Chatbot:
         Returns:
             tuple: 업데이트된 입력 필드, 히스토리, Chatbot 컴포넌트, 상태 메시지.
         """
-        if isinstance(user_input, dict):
-            text = str(user_input.get("text", ""))
-            files = str(user_input.get("files", ""))
-            if not text.strip() and not files:
-                # 빈 입력일 경우 아무 것도 하지 않음
-                return "", history, self.filter_messages_for_chatbot(history), ""
+        text = str(user_input.get("text", ""))
+        files = str(user_input.get("files", ""))
+        if not text.strip() and not files:
+            # 빈 입력일 경우 아무 것도 하지 않음
+            return "", history, self.filter_messages_for_chatbot(history), ""
         else:
             if not user_input.strip():
                 # 빈 입력일 경우 아무 것도 하지 않음
@@ -182,34 +181,30 @@ class Chatbot:
             logger.error(f"캐릭터 설정 오류: {str(e)}\n{tb}")
             history.append({"role": "assistant", "content": "❌ 캐릭터 설정 중 오류가 발생했습니다."})
             return "", history, self.filter_messages_for_chatbot(history), "❌ 캐릭터 설정 오류"
-    
-        
-        if isinstance(user_input, dict):
-            text = str(user_input.get("text", ""))
-            files = str(user_input.get("files", ""))
-            with open(files, "rb") as f:
-                if files.rsplit('.')[-1] == "jpg" or "jpeg":
-                    mime_type="image/jpeg"
-                elif files.rsplit('.')[-1] == "png":
-                    mime_type="image/png"
-                elif files.rsplit('.')[-1] == "webp":
-                    mime_type="image/webp"
-                elif files.rsplit('.')[-1] == "gif":
-                    mime_type="image/gif"
-                image = base64.b64encode(f.read()).decode('utf-8')
-            new_message = {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": text},
-                    {"type": "image", "image_url": f"data:{mime_type};base64,{image}"}
-                ],
-            }
-            history.append(new_message)
-            speech_manager.update_tone(text)
-        else:
-        # 사용자 메시지 추가
-            history.append({"role": "user", "content": user_input})
-            speech_manager.update_tone(user_input)
+
+        user_contents = [{"type": "text", "text": text}]
+        if files:
+            if files.rsplit('.')[-1] in ["jpg", "jpeg", "png", "webp", "gif"]:
+                with open(files, "rb") as f:
+                    if files.rsplit('.')[-1] == "jpg" or "jpeg":
+                        mime_type="image/jpeg"
+                    elif files.rsplit('.')[-1] == "png":
+                        mime_type="image/png"
+                    elif files.rsplit('.')[-1] == "webp":
+                        mime_type="image/webp"
+                    elif files.rsplit('.')[-1] == "gif":
+                        mime_type="image/gif"
+                    image = base64.b64encode(f.read()).decode('utf-8')
+                user_contents.append({"type": "image", "image_url": f"data:{mime_type};base64,{image}"})
+            # elif files.rsplit('.')[-1] == "txt":
+                
+        new_message = {
+            "role": "user",
+            "content": user_contents,
+        }
+
+        history.append(new_message)
+        speech_manager.update_tone(text)
         
         return "", history, self.filter_messages_for_chatbot(history)
 
@@ -288,9 +283,9 @@ class Chatbot:
 
         return history, chatbot_history, status, chat_title
 
-    def chat_wrapper(self, message, history, session_id, system_msg, selected_character, language,
-                     selected_model, provider, selected_lora, custom_path, api_key, device, seed,
-                     max_length, temperature, top_k, top_p, repetition_penalty, enable_thinking,
+    def chat_wrapper(self, message, history, session_id: str, system_msg: str | gr.Textbox, selected_character: str, language: str,
+                     selected_model: str, provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"], selected_lora: str, custom_path: str, api_key: str, device: str, seed: int,
+                     max_length: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float, enable_thinking: bool,
                      is_temp_session=False):
         """
         gr.ChatInterface를 위한 래퍼 함수
@@ -302,11 +297,21 @@ class Chatbot:
         # 기존 history에 사용자 메시지 추가
         # message는 str 또는 dict(text=..., files=...)
 
+        # 시스템 메시지가 없으면 추가 (새 세션인 경우)
+        if not history:
+            history.append({"role": "system", "content": system_msg})
+
         current_history = history.copy() if history else []
 
-        # 시스템 메시지가 없으면 추가 (새 세션인 경우)
-        if not current_history:
-             current_history.append({"role": "system", "content": system_msg})
+        speech_manager = self.get_speech_manager(session_id)
+        try:
+            speech_manager.set_character_and_language(selected_character, language)
+            
+        except ValueError as e:
+            tb = traceback.format_exc()
+            logger.error(f"캐릭터 설정 오류: {str(e)}\n{tb}")
+            history.append({"role": "assistant", "content": "❌ 캐릭터 설정 중 오류가 발생했습니다."})
+            return "", history, self.filter_messages_for_chatbot(history), "❌ 캐릭터 설정 오류"
 
         # 임시 세션 처리: 첫 메시지 전송 시 실제 세션으로 변환
         new_session_id = session_id
@@ -314,9 +319,7 @@ class Chatbot:
 
         if is_temp_session and message:
             # 첫 메시지: 임시 세션을 실제 세션으로 변환
-            user_content = message
-            if isinstance(message, dict):
-                user_content = message.get("text", "")
+            user_content = message.get("text", "")
 
             # Determine model type
             if provider == "self-provided":
@@ -340,38 +343,32 @@ class Chatbot:
             self.chat_titles[session_id] = title
         
         # 사용자 메시지 구성
-        user_content = message
-        user_files = []
-        if isinstance(message, dict):
-            user_content = message.get("text", "")
-            user_files = message.get("files", [])
-            
-            if user_files:
-                # 멀티모달 메시지 처리
-                content_list = [{"type": "text", "text": user_content}]
-                for file_path in user_files:
-                    with open(file_path, "rb") as f:
-                        if file_path.rsplit('.')[-1] == "jpg" or "jpeg":
-                            mime_type="image/jpeg"
-                        elif file_path.rsplit('.')[-1] == "png":
-                            mime_type="image/png"
-                        elif file_path.rsplit('.')[-1] == "webp":
-                            mime_type="image/webp"
-                        elif file_path.rsplit('.')[-1] == "gif":
-                            mime_type="image/gif"
-                        image = base64.b64encode(f.read()).decode('utf-8')
+        user_content = message.get("text", "")
+        user_files = message.get("files", [])
 
-                        image_url = f"data:{mime_type};base64,{image}"
-                    # 이미지 파일을 base64로 변환하거나 경로를 사용
-                    # 여기서는 기존 process_message_user 로직을 참고하여 처리
-                    # 다만 ChatInterface는 로컬 경로를 넘겨줌
-                    content_list.append({"type": "image", "image_url": image_url}) 
+        content_list = [{"type": "text", "text": user_content}]
+        if user_files:
+            # 멀티모달 메시지 처리
+            for file_path in user_files:
+                with open(file_path, "rb") as f:
+                    if file_path.rsplit('.')[-1] == "jpg" or "jpeg":
+                        mime_type="image/jpeg"
+                    elif file_path.rsplit('.')[-1] == "png":
+                        mime_type="image/png"
+                    elif file_path.rsplit('.')[-1] == "webp":
+                        mime_type="image/webp"
+                    elif file_path.rsplit('.')[-1] == "gif":
+                        mime_type="image/gif"
+                    image = base64.b64encode(f.read()).decode('utf-8')
+
+                    image_url = f"data:{mime_type};base64,{image}"
+                # 이미지 파일을 base64로 변환하거나 경로를 사용
+                # 여기서는 기존 process_message_user 로직을 참고하여 처리
+                # 다만 ChatInterface는 로컬 경로를 넘겨줌
+                content_list.append({"type": "image", "image_url": image_url}) 
                 
-                current_history.append({"role": "user", "content": content_list})
-            else:
-                current_history.append({"role": "user", "content": user_content})
-        else:
-            current_history.append({"role": "user", "content": user_content})
+        current_history.append({"role": "user", "content": content_list})
+
 
         # 2. 봇 응답 생성
         # process_message_bot 로직 활용
@@ -393,7 +390,7 @@ class Chatbot:
             model_type = self.determine_model_type(selected_model)
         else:
             model_type = None
-            
+        
         try:
             answer = generate_answer(
                 history=current_history,
@@ -416,7 +413,6 @@ class Chatbot:
                 character_language=language
             )
             
-            speech_manager = self.get_speech_manager(session_id)
             styled_answer = speech_manager.generate_response(answer)
             
             # 응답을 히스토리에 추가

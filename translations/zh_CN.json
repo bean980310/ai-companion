@@ -33,7 +33,6 @@
   "reset_session_button": "会话初始化",
   "reset_all_sessions_button": "初始化所有会话",
   "download_tab": "下载",
-  "download_title": "模型下载",
   "download_description": "从HuggingFace下载模型并保存到本地。",
   "download_description_detail": "您可以从预定义模型列表中选择，或直接输入自定义模型ID。",
   "download_mode_label": "下载方式",

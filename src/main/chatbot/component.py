@@ -238,7 +238,8 @@ class ChatbotComponent:
                 ],
                 autofocus=True,
                 fill_height=True,
-                save_history=False # We handle history manually
+                save_history=False, # We handle history manually
+                api_name="chat"
             )
 
 
@@ -248,6 +249,8 @@ class ChatbotComponent:
             msg.show_label = False
             msg.container = False
             msg.scale = 9
+            msg.placeholder = _("message_placeholder")
+
             
             # For compatibility with existing code that expects multimodal_msg
             multimodal_msg = msg 

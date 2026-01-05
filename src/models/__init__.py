@@ -1,3 +1,4 @@
+from typing import Literal
 from src.models.models import default_device
 from src.models import provider_llm_models, provider_vision_models
 from src.models.api_models import api_models, diffusion_api_models, tts_api_models
@@ -58,6 +59,8 @@ __all__=[
 PROVIDER_LIST = ["openai", "anthropic", "google-genai", "perplexity", "xai", 'mistralai', "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "local-ai", "self-provided"]
 
 # IMAGE_PROVIDER_LIST = ["openai", 'google-genai', 'xai', 'hf-inference', 'comfyui', 'invokeai', 'drawthings', 'sd-webui', 'self-provided']
+
+GPT_IMAGE_ALLOWED_SIZES = ["1024x1024","1024x1536","1536x1024"]
 
 IMAGE_PROVIDER_LIST = ["openai", 'google-genai', 'comfyui', 'self-provided']
 

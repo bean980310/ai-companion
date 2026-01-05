@@ -1,5 +1,4 @@
 import os
-import requests
 from typing import List
 import re
 from ..common.environ_manager import load_env_variables
@@ -155,5 +154,33 @@ openai_video_api_models = get_openai_video_models(load_env_variables('OPENAI_API
 google_genai_image_api_models = get_google_genai_image_models(load_env_variables('GEMINI_API_KEY'))
 google_genai_video_api_models = get_google_genai_video_models(load_env_variables('GEMINI_API_KEY'))
 
+huggingface_inference_image_api_models = [
+    "stabilityai/stable-diffusion-xl-base-1.0",
+    "stabilityai/stable-diffusion-3.5-large",
+    "stabilityai/stable-diffusion-3.5-medium",
+    "stabilityai/stable-diffusion-3.5-large-turbo",
+    "black-forest-labs/FLUX.1-dev",
+    "black-forest-labs/FLUX.1-schnell",
+    "Qwen/Qwen-Image",
+    "Qwen/Qwen-Image-2512",
+    "Tongyi-MAI/Z-Image-Turbo",
+    "Alpha-VLLM/Lumina-Image-2.0",
+    "fal/AuraFlow-v0.3",
+    "zai-org/CogView4-6B",
+    "HiDream-ai/HiDream-I1-Fast",
+    "HiDream-ai/HiDream-I1-Dev",
+    "HiDream-ai/HiDream-I1-Full"
+]
+
+huggingface_inference_image_edit_api_models = [
+    "stabilityai/stable-diffusion-xl-refiner-1.0",
+    "black-forest-labs/FLUX.2-dev",
+    "Qwen/Qwen-Image-Edit",
+    "Qwen/Qwen-Image-Edit-2509",
+    "Qwen/Qwen-Image-Edit-2511"
+]
+
 image_api_models.extend(openai_image_api_models)
+image_api_models.extend(google_genai_image_api_models)
 video_api_models.extend(openai_video_api_models)
+video_api_models.extend(google_genai_video_api_models)

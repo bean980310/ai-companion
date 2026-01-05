@@ -504,32 +504,34 @@ def convert_and_save(model_id, output_dir, push_to_hub, quant_type, model_type="
     else:
         return "지원되지 않는 변환 유형입니다."
     
-def build_model_cache_key(model_id: str, model_type: str, lora_model_id: str = None, quantization_bit: str = None, local_path: str = None) -> str:
+def build_model_cache_key(model_id: str, model_type: str, model_provider: str, lora_model_id: str = None, quantization_bit: str = None, local_path: str = None) -> str:
     """
     models_cache에 사용될 key를 구성.
     - 만약 model_id == 'Local (Custom Path)' 이고 local_path가 주어지면 'local::{local_path}'
     - 그 외에는 'auto::{model_type}::{local_dir}::hf::{model_id}::{quantization_bit}' 형태.
     """
-    if model_id == "Local (Custom Path)" and local_path:
-        return f"local::{local_path}"
-    elif model_type == "api":
-        return f"api::{model_id}"
-    else:
-        local_dirname = make_local_dir_name(model_id)
-        local_dirpath = os.path.join("./models/llm", model_type, local_dirname)
-        if lora_model_id:
-            lora_dirname = make_local_dir_name(lora_model_id)
-            lora_dirpath = os.path.join("./models/llm/loras", lora_dirname)
-            lora_part = lora_dirpath
-            if quantization_bit:
-                return f"auto::{model_type}::{local_dirpath}::hf::{model_id}::{quantization_bit}::lora::{lora_part}"
-            else:
-                return f"auto::{model_type}::{local_dirpath}::hf::{model_id}::lora::{lora_part}"
+    if model_provider == "self-provided":
+        if model_id == "Local (Custom Path)" and local_path:
+            return f"local::{local_path}"
         else:
-            if quantization_bit:
-                return f"auto::{model_type}::{local_dirpath}::hf::{model_id}::{quantization_bit}"
+            local_dirname = make_local_dir_name(model_id)
+            local_dirpath = os.path.join("./models/llm", model_type, local_dirname)
+            if lora_model_id:
+                lora_dirname = make_local_dir_name(lora_model_id)
+                lora_dirpath = os.path.join("./models/llm/loras", lora_dirname)
+                lora_part = lora_dirpath
+                if quantization_bit:
+                    return f"auto::{model_type}::{local_dirpath}::hf::{model_id}::{quantization_bit}::lora::{lora_part}"
+                else:
+                    return f"auto::{model_type}::{local_dirpath}::hf::{model_id}::lora::{lora_part}"
             else:
-                return f"auto::{model_type}::{local_dirpath}::hf::{model_id}"
+                if quantization_bit:
+                    return f"auto::{model_type}::{local_dirpath}::hf::{model_id}::{quantization_bit}"
+                else:
+                    return f"auto::{model_type}::{local_dirpath}::hf::{model_id}"
+    else:
+        return f"provider::{model_provider}::id::{model_id}"
+
 
 def clear_model_cache(model_id: str, local_path: str = None) -> str:
     """

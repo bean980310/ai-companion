@@ -33,7 +33,6 @@
   "reset_session_button": "Reset Session",
   "reset_all_sessions_button": "Reset all Sessions",
   "download_tab": "Download",
-  "download_title": "Model Download",
   "download_description": "Download models from HuggingFace and save them locally.",
   "download_description_detail": "You can select from a predefined list of models or directly enter a custom model ID.",
   "download_mode_label": "Download Method",
