@@ -1,1 +1,1 @@
-from . import chat, image_gen, storyteller, tts, translator, download, settings
+from . import audio, chat, image_gen, storyteller, translator, download, settings

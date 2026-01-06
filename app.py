@@ -44,7 +44,7 @@ logger.info(f"Detected OS: {os_name}, Architecture: {arch}")
 load_initial_data()
 
 # Import Pages
-from src.pages import chat, image_gen, storyteller, tts, translator, download, settings
+from src.pages import audio, chat, image_gen, storyteller, translator, download, settings
 
 # Global Initialization
 # Creating a dummy block to run initialization if needed, 
@@ -148,7 +148,7 @@ with demo.route("Storyteller", "/story"):
     # storyteller_page = storyteller.demo
     storyteller.demo.render()
     
-with demo.route("TTS", "/tts"):
+with demo.route("Audio", "/audio"):
     # ui_component.head.render()
     # header.demo.render()
     # tts_header = HeaderUIComponent()
@@ -156,7 +156,7 @@ with demo.route("TTS", "/tts"):
     # tts_header.create_navbar()
     # header.create_header_container()
     # tts_page = tts.demo
-    tts.demo.render()
+    audio.demo.render()
     
 with demo.route("Translator", "/translate"):
     # ui_component.head.render()
