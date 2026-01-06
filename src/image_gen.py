@@ -16,7 +16,7 @@ from PIL import Image
 import numpy as np
 import random 
 
-client = ComfyUI(port=8000)
+client = ComfyUI(port=8188)
 
 with gr.Blocks() as demo:
     # 0. Page-Specific State Registration

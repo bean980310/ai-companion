@@ -19,7 +19,7 @@
 #     Provides methods for image generation, uploading, and model management.
 #     """
 
-#     def __init__(self, host: str = "127.0.0.1", port: int = 8000):
+#     def __init__(self, host: str = "127.0.0.1", port: int = 8188):
 #         """
 #         Initialize the ComfyUI client wrapper.
 

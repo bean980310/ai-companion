@@ -421,17 +421,17 @@ def generate_text(history, selected_model, model_type, selected_lora=None, local
             logger.error(f"모델 추론 오류: {str(e)}\n\n{traceback.format_exc()}")
             return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
         
-def generate_chat_title(first_message, selected_model, model_type, selected_lora=None, local_model_path=None, lora_path=None, device="cpu", image_input=None):
+def generate_chat_title(first_message, selected_model, model_type, provider, selected_lora=None, local_model_path=None, lora_path=None, device="cpu", image_input=None, **kwargs):
     """
     첫 번째 메시지를 기반으로 채팅 제목을 생성하는 함수.
     모델 핸들러에 generate_chat_title 메서드가 구현되어 있어야 함.
     """
-    cache_key = build_model_cache_key(selected_model, model_type, selected_lora, local_path=local_model_path)
+    cache_key = build_model_cache_key(selected_model, model_type, provider, selected_lora, local_path=local_model_path)
     handler = models_cache.get(cache_key)
     
     if not handler:
         logger.info(f"[*] 모델 로드 중: {selected_model}")
-        handler = load_model(selected_model, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path)
+        handler = load_model(selected_model, provider, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path, image_input=image_input)
     
     if not handler:
         logger.error("모델 핸들러가 로드되지 않았습니다.")
@@ -460,7 +460,7 @@ def create_comfyui_pipeline(
     loras: List[str] = None,
     vae: str = "Default",
     host: str = "127.0.0.1",
-    port: int = 8000
+    port: int = 8188
 ) -> Txt2ImgPipeline | Img2ImgPipeline | InpaintPipeline:
     """
     Create a ComfyUI pipeline based on the generation mode.
@@ -520,7 +520,7 @@ def create_comfyui_provider(
     loras: List[str] = None,
     vae: str = "Default",
     host: str = "127.0.0.1",
-    port: int = 8000
+    port: int = 8188
 ) -> ComfyUIProvider:
     """
     Create a ComfyUI provider instance.

@@ -8,7 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
 def main():
     print("Initializing ComfyUI Client...")
-    client = ComfyUI(host="127.0.0.1", port=8000)
+    client = ComfyUI(host="127.0.0.1", port=8188)
     
     print("--- Connection Test ---")
     try:

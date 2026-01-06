@@ -3,7 +3,7 @@ from typing import List
 import re
 from ..common.environ_manager import load_env_variables
 
-def get_comfyui_image_models(url: str="127.0.0.1:8000", folder: str = "checkpoints"):
+def get_comfyui_image_models(url: str="127.0.0.1:8188", folder: str = "checkpoints"):
     from comfy_sdk import ComfyUI
     client = ComfyUI(host=url.split(":")[0], port=int(url.split(":")[1]))
     model_list = []

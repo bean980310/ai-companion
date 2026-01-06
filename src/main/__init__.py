@@ -23,7 +23,7 @@ from ..common.utils import clear_all_model_cache
 
 from .. import __version__
 
-client = ComfyUI(port=8000)
+client = ComfyUI(port=8188)
 
 from presets import (
     AI_ASSISTANT_PRESET, 

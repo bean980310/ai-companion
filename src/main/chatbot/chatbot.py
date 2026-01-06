@@ -273,17 +273,18 @@ class Chatbot:
             chat_title=generate_chat_title(
                 first_message=history[1]["content"],
                 selected_model=selected_model,
-                model_type=self.determine_model_type(selected_model),
+                model_type=model_type,
+                provider=provider,
                 selected_lora=selected_lora if selected_lora != "None" else None,
                 local_model_path=custom_path if selected_model == "사용자 지정 모델 경로 변경" else None,
                 lora_path=None,
                 device=device,
-                image_input=image,  # image 인자 전달
+                image_input=image,
             )
 
         return history, chatbot_history, status, chat_title
 
-    def chat_wrapper(self, message, history, session_id: str, system_msg: str | gr.Textbox, selected_character: str, language: str,
+    def chat_wrapper(self, message: str | list[dict[str, str | Image.Image | Any]] | Any, history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]], session_id: str, system_msg: str | gr.Textbox, selected_character: str, language: str,
                      selected_model: str, provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"], selected_lora: str, custom_path: str, api_key: str, device: str, seed: int,
                      max_length: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float, enable_thinking: bool,
                      is_temp_session=False):
@@ -333,6 +334,7 @@ class Chatbot:
                 selected_character=selected_character,
                 selected_model=selected_model,
                 model_type=model_type,
+                provider=provider,
                 selected_lora=selected_lora if selected_lora != "None" else None,
                 custom_path=custom_path,
                 device=device,
@@ -436,10 +438,17 @@ class Chatbot:
              # 첫 번째 사용자 메시지 찾기
             first_user_msg = next((msg for msg in current_history if msg["role"] == "user"), None)
             if first_user_msg:
+                # Determine model type for self-provided models
+                if provider == "self-provided":
+                    model_type = self.determine_model_type(selected_model)
+                else:
+                    model_type = None
+
                 chat_title = generate_chat_title(
                     first_message=first_user_msg["content"],
                     selected_model=selected_model,
-                    model_type=self.determine_model_type(selected_model),
+                    model_type=model_type,
+                    provider=provider,
                     selected_lora=selected_lora if selected_lora != "None" else None,
                     local_model_path=custom_path if selected_model == "사용자 지정 모델 경로 변경" else None,
                     lora_path=None,
@@ -696,6 +705,7 @@ class Chatbot:
         selected_character: str,
         selected_model: str,
         model_type: str,
+        provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"],
         selected_lora: str,
         custom_path: str,
         device: str,
@@ -718,6 +728,7 @@ class Chatbot:
                 first_message=first_message_content,
                 selected_model=selected_model,
                 model_type=model_type,
+                provider=provider,
                 selected_lora=selected_lora,
                 local_model_path=custom_path if selected_model == "사용자 지정 모델 경로 변경" else None,
                 lora_path=None,
