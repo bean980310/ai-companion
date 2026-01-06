@@ -10,6 +10,12 @@
 
 유저 페르소나는 주로 일반 사용자를 대상으로 하며, 그림·비디오·음악·오디오 생성 서비스는 전문가 사용자도 포함됩니다.
 
+## Side Project
+
+[LLM Backend](https://github.com/bean980310/ai-companion-llm-backend.git)
+[Image Backend](https://github.com/bean980310/ai-companion-image-backend.git)
+[Langchain Integrator](https://github.com/bean980310/ai-companion-langchain-integrator.git)
+
 ## 주요 기능
 
 ### 챗봇(Chatbot)

@@ -10,6 +10,12 @@
 
 用户人格主要面向一般用户，而图像、视频、音乐和音频生成服务也可满足专业用户的需求。
 
+## Side Project
+
+[LLM Backend](https://github.com/bean980310/ai-companion-llm-backend.git)
+[Image Backend](https://github.com/bean980310/ai-companion-image-backend.git)
+[Langchain Integrator](https://github.com/bean980310/ai-companion-langchain-integrator.git)
+
 ## 主要功能
 
 ### 聊天机器人（Chatbot）

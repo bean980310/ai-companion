@@ -11,6 +11,12 @@
 
 ユーザーペルソナは一般ユーザーを主な対象とし、画像・動画・音楽・音声生成サービスはプロユーザーも対象に含みます。
 
+## Side Project
+
+[LLM Backend](https://github.com/bean980310/ai-companion-llm-backend.git)
+[Image Backend](https://github.com/bean980310/ai-companion-image-backend.git)
+[Langchain Integrator](https://github.com/bean980310/ai-companion-langchain-integrator.git)
+
 ## 主な機能
 
 ### チャットボット(Chatbot)

@@ -10,6 +10,12 @@ The AI Companion offers chatbot services along with AI-powered generation of ima
 
 While the user persona mainly targets general users, the image, video, music, and audio generation services also cater to professional users.
 
+## Side Project
+
+[LLM Backend](https://github.com/bean980310/ai-companion-llm-backend.git)
+[Image Backend](https://github.com/bean980310/ai-companion-image-backend.git)
+[Langchain Integrator](https://github.com/bean980310/ai-companion-langchain-integrator.git)
+
 ## Main Features
 
 ### Chatbot
