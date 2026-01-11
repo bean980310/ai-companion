@@ -159,8 +159,8 @@ def scan_local_models(root="./models/llm", model_type=None):
     
     local_models = []
     # model_type이 지정되지 않았다면, 세부 폴더 목록: transformers, gguf, mlx
-    subdirs = ['transformers', 'gguf', 'mlx'] if model_type is None else [model_type]
-    
+    subdirs = ['transformers', 'gguf', 'mlx', 'vllm'] if model_type is None else [model_type]
+
     for subdir in subdirs:
         subdir_path = os.path.join(root, subdir)
         if not os.path.isdir(subdir_path):
@@ -189,7 +189,30 @@ def scan_tts_models(root="./models/audio/tts", model_type=None):
         
     local_models = []
     
-    subdirs = ["vits"] if model_type is None else [model_type]
+    subdirs = ["vits", "onnx", "gguf", "mlx"] if model_type is None else [model_type]
+    allowed_extensions = { ".safetensors", ".bin", ".pt", ".pth" }
+    required_names = {"config.json"}
+    
+    for subdir in subdirs:
+        subdir_path = os.path.join(root, subdir)
+        if not os.path.isdir(subdir_path):
+            continue
+        
+        for dirpath, _, filenames in os.walk(subdir_path):
+            if has_required_files(filenames, required_names=required_names, required_extensions=allowed_extensions):
+                rel_path = os.path.relpath(dirpath, subdir_path)
+                model_id = subdir if rel_path == "." else os.path.join(subdir, rel_path)
+                local_models.append({"model_id": model_id, "model_type": "tts"})
+                
+    return local_models
+
+def scan_asr_models(root="./models/audio/asr", model_type=None):
+    if not os.path.isdir(root):
+        os.makedirs(root, exist_ok=True)
+        
+    local_models = []
+    
+    subdirs = ["onnx", "gguf", "mlx", "transformers"] if model_type is None else [model_type]
     allowed_extensions = { ".safetensors", ".bin", ".pt", ".pth" }
     required_names = {"config.json"}
     
@@ -249,10 +272,12 @@ def get_all_local_models():
     """모든 모델 유형별 로컬 모델 목록을 가져옴"""
     models = scan_local_models()  # 모든 유형 스캔
     transformers = [m["model_id"] for m in models if m["model_type"] == "transformers"]
+    vllm = [m["model_id"] for m in models if m["model_type"] == "vllm-local"]
     gguf = [m["model_id"] for m in models if m["model_type"] == "gguf"]
     mlx = [m["model_id"] for m in models if m["model_type"] == "mlx"]
     return {
         "transformers": transformers,
+        "vllm-local": vllm,
         "gguf": gguf,
         "mlx": mlx
     }

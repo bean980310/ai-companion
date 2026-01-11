@@ -11,8 +11,7 @@ from src.common.database import save_chat_history_db, delete_session_history, de
 from src.common.translations import TranslationManager, translation_manager, _
 
 from src.characters.preset_images import PRESET_IMAGES
-from src.models import llm_api_models, openai_llm_api_models, anthropic_llm_api_models, google_genai_llm_api_models, perplexity_llm_api_models, xai_llm_api_models, mistralai_llm_api_models, openrouter_llm_api_models, huggingface_inference_llm_api_models, ollama_llm_models, lmstudio_llm_models, oobabooga_llm_models, REASONING_CONTROLABLE, REASONING_KWD, REASONING_BAN
-from src.models.local_llm_models import transformers_local, gguf_local, mlx_local
+from src.models import llm_api_models, openai_llm_api_models, anthropic_llm_api_models, google_genai_llm_api_models, perplexity_llm_api_models, xai_llm_api_models, mistralai_llm_api_models, openrouter_llm_api_models, huggingface_inference_llm_api_models, ollama_llm_models, lmstudio_llm_models, oobabooga_llm_models, vllm_llm_api_models,REASONING_CONTROLABLE, REASONING_KWD, REASONING_BAN, transformers_local, vllm_local, gguf_local, mlx_local
 from src.common.default_language import default_language
 from src.common.utils import detect_platform
 
@@ -1015,6 +1014,8 @@ class Chatbot:
                 updated_list = ollama_llm_models
             elif provider == "lmstudio":
                 updated_list = lmstudio_llm_models
+            elif provider == "vllm-api":
+                updated_list = vllm_llm_api_models
             # elif provider == "oobabooga":
             #     updated_list = oobabooga_llm_models
 
@@ -1032,6 +1033,8 @@ class Chatbot:
             # 개별 로컬 모델 유형 선택
             elif selected_type == "transformers":
                 updated_list = transformers_local
+            elif selected_type == "vllm-local":
+                updated_list = vllm_local
             elif selected_type == "gguf":
                 updated_list = gguf_local
             elif selected_type == "mlx":

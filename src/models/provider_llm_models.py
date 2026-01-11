@@ -77,6 +77,23 @@ def get_oobabooga_models(host: str = "http://localhost:5000/v1"):
     except:
         return ["Oobabooga를 설치하고 서버를 실행해주세요."]
 
+def get_vllm_models(host: str = "http://localhost:8000"):
+    import openai
+    from openai import OpenAI
+
+    llm = []
+    client = OpenAI(api_key="not-needed", base_url=host)
+
+    try:
+        model = client.models.list()
+
+        for m in model.data:
+            llm.append(m.id)
+
+        return llm
+    except:
+        return ["vllm을 설치하고 서버를 실행해주세요."]
+
 def get_openai_llm_models(api_key: str = None):
     import openai
     from openai import OpenAI
@@ -255,6 +272,7 @@ llm_api_models = []
 lmstudio_models = get_lmstudio_models()
 ollama_models = get_ollama_models()
 oobabooga_models = get_oobabooga_models()
+vllm_api_models = get_vllm_models()
 openai_api_models = get_openai_llm_models(load_env_variables('OPENAI_API_KEY'))
 anthropic_api_models = get_anthropic_llm_models(load_env_variables('ANTHROPIC_API_KEY'))
 google_genai_api_models = get_google_genai_llm_models(load_env_variables('GEMINI_API_KEY'))

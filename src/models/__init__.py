@@ -2,7 +2,7 @@ from typing import Literal
 from src.models.models import default_device
 from src.models import provider_llm_models, provider_vision_models
 from src.models.api_models import api_models, diffusion_api_models, tts_api_models
-from src.models.local_llm_models import transformers_local, gguf_local, mlx_local
+from src.models.local_llm_models import transformers_local, vllm_local, gguf_local, mlx_local
 from src.models.known_hf_models import known_hf_models
 from src.models.local_diffusion_models import diffusers_local, checkpoints_local
 from src.models.local_tts_models import vits_local
@@ -10,6 +10,7 @@ from src.models.local_tts_models import vits_local
 lmstudio_llm_models = provider_llm_models.lmstudio_models
 ollama_llm_models = provider_llm_models.ollama_models
 oobabooga_llm_models = provider_llm_models.oobabooga_models
+vllm_llm_api_models = provider_llm_models.vllm_api_models
 openai_llm_api_models = provider_llm_models.openai_api_models
 anthropic_llm_api_models = provider_llm_models.anthropic_api_models
 google_genai_llm_api_models = provider_llm_models.google_genai_api_models
@@ -44,6 +45,7 @@ __all__=[
     'default_device',
     'api_models',
     'transformers_local',
+    'vllm_local',
     'gguf_local',
     'mlx_local',
     'known_hf_models',
@@ -56,7 +58,7 @@ __all__=[
 
 # PROVIDER_LIST = ["openai", "anthropic", "google-genai", "perplexity", "xai", 'mistralai', "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"]
 
-PROVIDER_LIST = ["openai", "anthropic", "google-genai", "perplexity", "xai", 'mistralai', "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "local-ai", "self-provided"]
+PROVIDER_LIST = ["openai", "anthropic", "google-genai", "perplexity", "xai", 'mistralai', "openrouter", "hf-inference", "ollama", "lmstudio", "vllm-api", "oobabooga", "local-ai", "self-provided"]
 
 # IMAGE_PROVIDER_LIST = ["openai", 'google-genai', 'xai', 'hf-inference', 'comfyui', 'invokeai', 'drawthings', 'sd-webui', 'self-provided']
 
