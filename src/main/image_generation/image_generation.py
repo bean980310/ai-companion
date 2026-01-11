@@ -32,7 +32,7 @@ from .upload import ComfyUIImageUpload
 
 class ImageGeneration:
     def __init__(self):
-        self.os_name, self.arch = detect_platform()
+        self.os_name, self.arch, self.is_wsl = detect_platform()
 
     def generate_images_wrapper(self, positive_prompt: str, negative_prompt: str, style: str, generation_step: int, img2img_step_start: int, diffusion_refiner_start: int, width: int, height: int,
         model: str, refiner_model: str, model_provider: str, model_type: str, lora_multiselect: List[str], vae: str, clip_skip: int, enable_clip_skip: bool, clip_g: bool, sampler: str, scheduler: str,

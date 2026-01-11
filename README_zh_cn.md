@@ -259,3 +259,7 @@ python app.py
 在 Windows 环境下，低于 CUDA 12.4 的版本无法安装最新版本的 xformers。因此，在 CUDA 11.8 与 12.1 环境下，为兼容最后支持的 xformers **0.0.27.post2**，我们将 PyTorch 固定为 **2.4.0** 版本。  
 未来我们将停止支持安装了 CUDA 12.4 以下版本的 Windows 系统。  
 如果您正在使用 Windows 且 CUDA 版本低于 12.4，建议您升级到 12.4 或更高版本，并重新安装与之对应的 PyTorch 与 xformers。如果您的 GPU 不支持 CUDA 12.4 或更高版本，建议更换为支持 CUDA 12.4 的 GPU，或考虑迁移至更新的计算机。  
+
+### Windows支持说明
+
+面向本地环境的AI伴侣已针对UNIX/Linux内核的操作系统进行优化。虽然可在Windows环境下使用，但直接在Windows上运行时无法启用GPU加速功能。为确保在Windows系统中正确使用面向本地环境的AI伴侣，建议在WSL2环境下运行。

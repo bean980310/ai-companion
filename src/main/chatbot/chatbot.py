@@ -54,7 +54,7 @@ class Chatbot:
 
         self.vision_model = False
 
-        self.os_name, self.arch = detect_platform()
+        self.os_name, self.arch, self.is_wsl = detect_platform()
         self.session_speech_managers = {}
 
     def get_speech_manager(self, session_id: str) -> PersonaSpeechManager:
@@ -1047,9 +1047,11 @@ class Chatbot:
     
     def update_allowed_models(self):
         if self.os_name == "Darwin":
-            return transformers_local + gguf_local + mlx_local
-        else:
+            return transformers_local + vllm_local + gguf_local + mlx_local
+        elif self.os_name == "Windows" and not self.is_wsl:
             return transformers_local + gguf_local
+        else:
+            return transformers_local + vllm_local + gguf_local
 
     def show_reset_modal(self, reset_type: bool):
         """초기화 확인 모달 표시"""
@@ -1146,12 +1148,14 @@ class Chatbot:
     
     def get_allowed_llm_models(self) -> tuple[list[str], list[str]]:
         if self.os_name == "Darwin":
-            allowed = transformers_local + gguf_local + mlx_local
-            allowed_type = ["all", "transformers", "gguf", "mlx"]
-
-        else:
+            allowed = transformers_local + vllm_local + gguf_local + mlx_local
+            allowed_type = ["all", "transformers", "vllm-local", "gguf", "mlx"]
+        elif self.os_name == "Windows" and not self.is_wsl:
             allowed = transformers_local + gguf_local
             allowed_type = ["all", "transformers", "gguf"]
+        else:
+            allowed = transformers_local + vllm_local + gguf_local
+            allowed_type = ["all", "transformers", "vllm-local", "gguf"]
             
         allowed = list(dict.fromkeys(allowed))
         

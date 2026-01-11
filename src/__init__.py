@@ -24,7 +24,7 @@ from .characters.persona_speech_manager import PersonaSpeechManager
 from ._version import __version__
 
 args = parse_args()
-os_name, arch = detect_platform()
+os_name, arch, is_wsl = detect_platform()
 
 __all__ = ['logger']
 # __version__ = "0.2.0"

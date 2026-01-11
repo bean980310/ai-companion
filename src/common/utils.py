@@ -23,12 +23,7 @@ from src.common.cache import models_cache
 from src import logger
 
 LOCAL_MODELS_ROOT = "./models"
-COMFYUI_PATH=os.getenv('COMFYUI_PATH')
 
-if COMFYUI_PATH is None:
-    COMFYUI_PATH=os.path.join(os.path.expanduser('~'), 'ComfyUI')
-
-comfyui_path=os.path.join(COMFYUI_PATH, 'models')
 class DownloadTracker:
     """다운로드 진행 상황을 추적하는 클래스"""
     def __init__(self, total_size: int, progress_callback: Optional[Callable] = None):
@@ -46,7 +41,8 @@ class DownloadTracker:
 def detect_platform():
     os_name = platform.system()
     arch = platform.machine()
-    return os_name, arch
+    is_wsl = 'microsoft' in platform.uname().release.lower() and platform.system() == "Windows"
+    return os_name, arch, is_wsl
     
 def make_local_dir_name(model_id: str) -> str:
     """HuggingFace 모델 ID를 로컬 디렉토리 이름으로 변환"""
@@ -123,28 +119,6 @@ def scan_diffusion_models(root="./models/diffusion"):
                 # 모델 아이디에 mtype 디렉토리 이름을 접두어로 붙임
                 model_id = os.path.join(mtype, f)
                 local_models.append({"model_id": model_id, "model_type": mtype})
-    
-    return local_models
-
-def scan_comfyui_models(root="./comfyui/models"):
-    """
-    comfyui/models 디렉토리 내의 모델들을 재귀적으로 스캔.
-    해당 디렉토리 내에서도, allowed_extensions에 해당하는 파일이 있으면 모델로 인식.
-    모델 아이디는 comfyui_models/하위경로 형태로 반환.
-    """
-    if not os.path.isdir(root):
-        return []
-    
-    local_models = []
-    allowed_exts = {".safetensors", ".ckpt", ".pt", ".pth"}
-    
-    for dirpath, _, filenames in os.walk(root):
-        if has_required_files(filenames, required_extensions=allowed_exts):
-            rel_path = os.path.relpath(dirpath, root)
-            # rel_path가 '.'이면 root 자체를 의미하므로 comfyui_models 로 지정
-            model_id = "comfyui_models" if rel_path == "." else os.path.join("comfyui_models", rel_path)
-            # model_type을 별도로 'comfyui_models'로 표기
-            local_models.append({"model_id": model_id, "model_type": "comfyui_models"})
     
     return local_models
     
@@ -229,6 +203,7 @@ def scan_asr_models(root="./models/audio/asr", model_type=None):
                 
     return local_models
 
+# Get Local LLM LoRA Adapters
 def get_all_loras(lora_root="./models/llm/loras"):
     """
     lora 폴더 내에서, 확장자가 .safetensors, .bin, .pt, .pth 인 파일이 존재하는 폴더를
@@ -247,32 +222,32 @@ def get_all_loras(lora_root="./models/llm/loras"):
             lora_models.append(model_id)
     return lora_models
 
+# Get Local Image Diffusion VAE
 def get_diffusion_vae(vae_root="./models/diffusion/vae"):
     """
     diffusion/vae 폴더 내에서 필요한 파일들이 있는 폴더를 재귀적으로 스캔하여 VAE 모델 목록 반환.
     """
     models = scan_diffusion_models()
-    # comfyui_models = client.get_models_list('vae')
     all_models = models
     vae_models = [m['model_id'] for m in all_models if m['model_type'] == "vae"]
     return vae_models
 
-
+# Get Local Image Diffusion LoRA Adapters
 def get_diffusion_loras(lora_root="./models/diffusion/loras"):
     """
     diffusion/loras 폴더 내에서 필요한 파일들이 있는 폴더를 재귀적으로 스캔하여 LoRA 모델 목록 반환.
     """
     models = scan_diffusion_models()
-    # comfyui_models = client.get_models_list('loras')
     all_models = models
     lora_models = [m['model_id'] for m in all_models if m['model_type'] == "loras"]
     return lora_models
 
+# Get Local LLM Models
 def get_all_local_models():
     """모든 모델 유형별 로컬 모델 목록을 가져옴"""
     models = scan_local_models()  # 모든 유형 스캔
     transformers = [m["model_id"] for m in models if m["model_type"] == "transformers"]
-    vllm = [m["model_id"] for m in models if m["model_type"] == "vllm-local"]
+    vllm = [m["model_id"] for m in models if m["model_type"] == "vllm"]
     gguf = [m["model_id"] for m in models if m["model_type"] == "gguf"]
     mlx = [m["model_id"] for m in models if m["model_type"] == "mlx"]
     return {
@@ -282,6 +257,7 @@ def get_all_local_models():
         "mlx": mlx
     }
 
+# Get Local Image Diffusion Models
 def get_all_diffusion_models():
     models = scan_diffusion_models()
     # comfyui_models = client.get_models_list('checkpoints')
@@ -293,6 +269,7 @@ def get_all_diffusion_models():
         "checkpoints": checkpoints
     }
     
+# Get Local Text To Speech Models
 def get_all_tts_models():
     models = scan_tts_models()
     transformers = [m["model_id"] for m in models if m["model_type"] == "transformers"]

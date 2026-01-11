@@ -271,3 +271,7 @@ Intel Mac을 사용하고 계신경우, Apple Silicon Mac 또는 Nvidia GPU환�
 Windows 환경에서는 CUDA 12.4 미만 버전에서는 최신버전의 xformers를 설치할 수 없으며 이에 따라 cuda 11.8버전과 cuda12.1 버전의 의존성 설치시 Windows에서 이에 대한 cuda 버전을 사용할수 있는 마지막 버전인 **xformers 0.0.27.post2** 와의 호환을 위해 pytorch의 버전을 **2.4.0**으로 고정하고 있습니다.  
 또한 로컬 머신을 위한 AI 컴패니언은 향후 CUDA 12.4 미만 버전이 설치된 Windows의 지원을 중단할 예정입니다.  
 Windows를 사용하고 계시며 CUDA 12.4 미만의 버전이 설치되어 있을경우, 만일을 위해 CUDA 버전을 12.4 이상으로 업그레이드하시고 pytorch, xformers도 cuda 버전에 맞게 재설치하시길 바라며, CUDA 12.4 이상 버전을 설치할 수 없는 GPU가 탑재되어 있는 경우, CUDA 12.4 이상을 사용할 수 있는 GPU로 업그레이드하거나 최신 PC로 마이그레이션을 고려하는걸 추천드립니다.  
+
+### Windows 지원 안내
+
+로컬 머신을 위한 AI 컴패니언은 UNIX/Linux 커널의 OS에 최적화 되어있습니다. Windows에서도 사용은 가능하지만 Windows에서 직접 실행할경우 GPU 가속을 사용할수 없습니다. Windows에서의 로컬 머신을 위한 AI 컴패니언을 제대로 사용하기 위해 WSL2 환경에서의 사용을 권장합니다.

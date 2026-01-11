@@ -271,3 +271,7 @@ AI Companion for Local Machines provides support for dependency installation to 
 On Windows, versions of CUDA lower than 12.4 cannot install the latest xformers. Therefore, for CUDA 11.8 and 12.1 environments, the PyTorch version is fixed at **2.4.0** to ensure compatibility with the latest supported xformers version, **xformers 0.0.27.post2**.  
 Please note that future support for Windows systems with CUDA versions below 12.4 will be discontinued.  
 If you are using Windows and have a CUDA version below 12.4, we recommend upgrading to CUDA 12.4 or higher and reinstalling PyTorch and xformers accordingly. If your GPU does not support CUDA 12.4 or higher, we recommend upgrading to a compatible GPU or considering migration to a newer PC.  
+
+### Support for Windows
+
+AI Companion for Local Machines is optimized for UNIX/Linux kernel-based operating systems. While it can be used on Windows, GPU acceleration is unavailable when running directly on Windows. To properly use AI Companion for Local Machines on Windows, we recommend using it within a WSL2 environment.

@@ -15,7 +15,7 @@ from translations import i18n
 
 # gr.I18n(lang_store)
 
-from src import os_name, arch, args, __version__, logger
+from src import os_name, arch, is_wsl, args, __version__, logger
 # from src.start_app import initialize_app
 # from src import app
 
@@ -242,6 +242,8 @@ if __name__=="__main__":
     
     if os_name == "Darwin" and arch == "x86_64":
         raise EnvironmentError("ERROR: AI Companion for Local Machines no longer supports Intel CPU-based Macs.\nIf you are using an Intel CPU-based Macs, we recommend that you consider migrating to an Apple Silicon Based Macs or a Windows PC or Linux machine with an Nvidia GPU environment. If you have difficulty migrating from an Intel CPU-based Macs, you can use a companion application that supports Intel CPU-based Macs instead.")
+    if os_name == "Windows" and not is_wsl:
+        warnings.warn("")
     if args.listen:
         host="0.0.0.0"
     else:
