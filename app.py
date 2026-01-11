@@ -243,7 +243,7 @@ if __name__=="__main__":
     if os_name == "Darwin" and arch == "x86_64":
         raise EnvironmentError("ERROR: AI Companion for Local Machines no longer supports Intel CPU-based Macs.\nIf you are using an Intel CPU-based Macs, we recommend that you consider migrating to an Apple Silicon Based Macs or a Windows PC or Linux machine with an Nvidia GPU environment. If you have difficulty migrating from an Intel CPU-based Macs, you can use a companion application that supports Intel CPU-based Macs instead.")
     if os_name == "Windows" and not is_wsl:
-        warnings.warn("")
+        warnings.warn("AI Companion for Local Machines is optimized for UNIX/Linux kernel-based operating systems. While it can be used on Windows, GPU acceleration is unavailable when running directly on Windows. To properly use AI Companion for Local Machines on Windows, we recommend using it within a WSL2 environment.")
     if args.listen:
         host="0.0.0.0"
     else:
