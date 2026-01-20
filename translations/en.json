@@ -6,6 +6,8 @@
   "translator_title": "Translator",
   "download_title": "Model Download",
   "settings_title": "Settings",
+  "mcp_client_title": "MCP Client",
+  "mcp_tools_title": "MCP Tools",
   "select_session_info": "The selected session is displayed.",
   "language_select": "Select Language",
   "language_info": "Choose interface language",

@@ -1,0 +1,24 @@
+{
+  "servers": [
+    {
+      "name": "huggingface",
+      "url": "https://huggingface.co/mcp/sse",
+      "transport": "sse",
+      "api_key": null,
+      "headers": {},
+      "timeout": 30.0,
+      "enabled": false,
+      "description": "Hugging Face Hub - Search models, datasets, papers"
+    },
+    {
+      "name": "example-local",
+      "url": "http://localhost:8080/mcp/sse",
+      "transport": "sse",
+      "api_key": null,
+      "headers": {},
+      "timeout": 30.0,
+      "enabled": false,
+      "description": "Example local MCP server"
+    }
+  ]
+}

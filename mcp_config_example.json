@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "ai-companion": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "http://localhost:7861/gradio_api/mcp/sse"
+      ]
+    }
+  }
+}

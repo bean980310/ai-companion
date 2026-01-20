@@ -7,6 +7,7 @@ app.log*
 .idea
 .venv
 .claude
+.continue
 venv/
 __pycache__
 chat_history.db

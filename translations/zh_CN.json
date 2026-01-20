@@ -6,6 +6,8 @@
   "translator_title": "翻译器",
   "download_title": "模型下载",
   "settings_title": "设置",
+  "mcp_client_title": "MCP客户端",
+  "mcp_tools_title": "MCP工具",
   "select_session_info": "此时将显示选定的会话。",
   "language_select": "选择语言",
   "language_info": "选择界面语言",

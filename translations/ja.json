@@ -6,6 +6,8 @@
   "translator_title": "翻訳",
   "download_title": "モデルダウンロード",
   "settings_title": "設定",
+  "mcp_client_title": "MCPクライアント",
+  "mcp_tools_title": "MCPツール",
   "select_session_info": "選択されたセッションが表示されます。",
   "language_select": "言語選択",
   "language_info": "インターフェース言語を選択してください",

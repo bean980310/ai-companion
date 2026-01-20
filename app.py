@@ -20,13 +20,25 @@ from src import os_name, arch, is_wsl, args, __version__, logger
 # from src import app
 
 from src.start_app import (
-    app_state, 
+    app_state,
     ui_component,
     on_app_start,
     # register_speech_manager_state, # moved to register_global_state
     # shared_on_app_start,
     register_global_state,
     load_initial_data
+)
+
+# Import MCP tools
+from src.mcp.tools import (
+    chat_completion,
+    list_available_models,
+    list_chat_sessions,
+    get_chat_history,
+    translate_text,
+    summarize_text,
+    analyze_image,
+    generate_title
 )
 
 # from src.main import header
@@ -44,7 +56,7 @@ logger.info(f"Detected OS: {os_name}, Architecture: {arch}")
 load_initial_data()
 
 # Import Pages
-from src.pages import audio, chat, image_gen, storyteller, translator, download, settings
+from src.pages import audio, chat, image_gen, storyteller, translator, download, settings, mcp_client
 
 # Global Initialization
 # Creating a dummy block to run initialization if needed, 
@@ -187,7 +199,143 @@ with demo.route("Settings", "/settings"):
     # header.create_header_container()
     # settings_page = settings.demo
     settings.demo.render()
-        
+
+# MCP Client Route - Connect to external MCP servers
+with demo.route("MCP Client", "/mcp-client"):
+    mcp_client.demo.render()
+
+# MCP Tools Route - API endpoints for MCP clients
+with demo.route("MCP Tools", "/mcp-tools"):
+    gr.Markdown("# AI Companion MCP Tools")
+    gr.Markdown("This page exposes AI Companion functionality as MCP tools.")
+    gr.Markdown("Access the MCP server at: `http://localhost:{port}/gradio_api/mcp/sse`")
+
+    with gr.Tab("Chat"):
+        gr.Interface(
+            fn=chat_completion,
+            inputs=[
+                gr.Textbox(label="Message", placeholder="Enter your message..."),
+                gr.Textbox(label="Model", value="gpt-4o"),
+                gr.Dropdown(
+                    label="Provider",
+                    choices=["openai", "anthropic", "google-genai", "perplexity",
+                            "xai", "mistralai", "openrouter", "hf-inference",
+                            "ollama", "lmstudio", "self-provided"],
+                    value="openai"
+                ),
+                gr.Textbox(label="System Message", value="You are a helpful AI assistant."),
+                gr.Textbox(label="API Key", type="password"),
+                gr.Slider(label="Temperature", minimum=0, maximum=2, value=0.7, step=0.1),
+                gr.Number(label="Max Length", value=-1)
+            ],
+            outputs=gr.Textbox(label="Response"),
+            api_name="chat"
+        )
+
+    with gr.Tab("Models"):
+        gr.Interface(
+            fn=list_available_models,
+            inputs=[
+                gr.Dropdown(
+                    label="Category",
+                    choices=["all", "llm", "image"],
+                    value="all"
+                )
+            ],
+            outputs=gr.JSON(label="Available Models"),
+            api_name="list_models"
+        )
+
+    with gr.Tab("Sessions"):
+        gr.Interface(
+            fn=list_chat_sessions,
+            inputs=[],
+            outputs=gr.JSON(label="Chat Sessions"),
+            api_name="list_sessions"
+        )
+
+        gr.Interface(
+            fn=get_chat_history,
+            inputs=[gr.Textbox(label="Session ID")],
+            outputs=gr.JSON(label="Chat History"),
+            api_name="get_history"
+        )
+
+    with gr.Tab("Translation"):
+        gr.Interface(
+            fn=translate_text,
+            inputs=[
+                gr.Textbox(label="Text", placeholder="Text to translate...", lines=5),
+                gr.Textbox(label="Source Language", value="auto", info="Use 'auto' for auto-detection or language codes like 'ko', 'ja', 'zh'"),
+                gr.Textbox(label="Target Language", value="en"),
+                gr.Textbox(label="Model", value="gpt-4o"),
+                gr.Dropdown(
+                    label="Provider",
+                    choices=["openai", "anthropic", "google-genai"],
+                    value="openai"
+                ),
+                gr.Textbox(label="API Key", type="password")
+            ],
+            outputs=gr.Textbox(label="Translation", lines=5),
+            api_name="translate"
+        )
+
+    with gr.Tab("Summarization"):
+        gr.Interface(
+            fn=summarize_text,
+            inputs=[
+                gr.Textbox(label="Text", placeholder="Text to summarize...", lines=10),
+                gr.Dropdown(
+                    label="Style",
+                    choices=["concise", "detailed", "bullet_points"],
+                    value="concise"
+                ),
+                gr.Textbox(label="Model", value="gpt-4o"),
+                gr.Dropdown(
+                    label="Provider",
+                    choices=["openai", "anthropic", "google-genai"],
+                    value="openai"
+                ),
+                gr.Textbox(label="API Key", type="password")
+            ],
+            outputs=gr.Textbox(label="Summary", lines=5),
+            api_name="summarize"
+        )
+
+    with gr.Tab("Image Analysis"):
+        gr.Interface(
+            fn=analyze_image,
+            inputs=[
+                gr.Image(label="Image", type="filepath"),
+                gr.Textbox(label="Question", value="Describe this image in detail."),
+                gr.Textbox(label="Model", value="gpt-4o"),
+                gr.Dropdown(
+                    label="Provider",
+                    choices=["openai", "anthropic", "google-genai"],
+                    value="openai"
+                ),
+                gr.Textbox(label="API Key", type="password")
+            ],
+            outputs=gr.Textbox(label="Analysis", lines=10),
+            api_name="analyze_image"
+        )
+
+    with gr.Tab("Title Generation"):
+        gr.Interface(
+            fn=generate_title,
+            inputs=[
+                gr.Textbox(label="Content", placeholder="Content to generate title for...", lines=5),
+                gr.Textbox(label="Model", value="gpt-4o-mini"),
+                gr.Dropdown(
+                    label="Provider",
+                    choices=["openai", "anthropic", "google-genai"],
+                    value="openai"
+                )
+            ],
+            outputs=gr.Textbox(label="Generated Title"),
+            api_name="generate_title"
+        )
+
     # 3. Global Event Handlers (if any remaining)
     # The original grad_ui.py had some global load events.
     # We should ensure those are covered in pages or here.
