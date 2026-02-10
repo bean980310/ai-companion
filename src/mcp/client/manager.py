@@ -24,6 +24,7 @@ try:
     from mcp import ClientSession
     from mcp.client.sse import sse_client
     from mcp.client.stdio import stdio_client, StdioServerParameters
+    from mcp.client.streamable_http import streamable_http_client
     MCP_AVAILABLE = True
 except ImportError:
     MCP_AVAILABLE = False
@@ -198,6 +199,8 @@ class MCPClientManager:
                 await self._connect_sse(config)
             elif config.transport == MCPTransportType.STDIO:
                 await self._connect_stdio(config)
+            elif config.transport == MCPTransportType.HTTP:
+                await self._connect_http(config)
             else:
                 logger.error(f"Unsupported transport: {config.transport}")
                 return False
@@ -235,6 +238,19 @@ class MCPClientManager:
         )
 
         async with stdio_client(server_params) as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                self.sessions[config.name] = session
+                await self._discover_capabilities(config.name, session)
+
+    async def _connect_http(self, config: MCPServerConfig):
+        """Connect to an HTTP-based MCP server"""
+        headers = config.headers.copy()
+
+        if config.api_key:
+            headers["Authorization"] = f"Bearer {config.api_key}"
+
+        async with streamable_http_client(config.url, headers) as (read, write):
             async with ClientSession(read, write) as session:
                 await session.initialize()
                 self.sessions[config.name] = session
