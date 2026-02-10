@@ -3,6 +3,7 @@ import { ChatWindow, ChatInput } from '../components/chat';
 import { useChatStore } from '../stores/chatStore';
 import { useSessionStore } from '../stores/sessionStore';
 import { useModelStore } from '../stores/modelStore';
+import { sendChatMessage } from '../api/chat';
 
 export function ChatPage() {
   const {
@@ -16,7 +17,8 @@ export function ChatPage() {
   } = useChatStore();
 
   const { currentSessionId, createSession, updateSession } = useSessionStore();
-  const { selectedProvider, selectedModel } = useModelStore();
+  const { selectedProvider, selectedModel, apiKey } = useModelStore();
+  const { systemMessage, params } = useChatStore();
 
   const handleSendMessage = useCallback(
     async (content: string, _images?: File[]) => {
@@ -35,36 +37,25 @@ export function ChatPage() {
         timestamp: new Date().toISOString(),
       });
 
-      // Start streaming
+      // Start streaming indicator
       setStreaming(true);
       clearStreamContent();
 
       try {
-        // TODO: Replace with actual API call
-        // Simulated streaming response for demo
-        const response = `This is a simulated response from **${selectedModel}** (${selectedProvider}).
+        // Call the Gradio backend /api/chat endpoint
+        const response = await sendChatMessage({
+          message: content,
+          model: selectedModel,
+          provider: selectedProvider,
+          systemMessage: systemMessage || 'You are a helpful AI assistant.',
+          apiKey: apiKey || '',
+          temperature: params.temperature,
+          maxLength: params.maxLength,
+        });
 
-Your message was: "${content}"
-
-Here's some example formatted content:
-
-\`\`\`javascript
-function greet(name) {
-  return \`Hello, \${name}!\`;
-}
-
-console.log(greet('World'));
-\`\`\`
-
-- Feature 1: Real-time streaming
-- Feature 2: Markdown support
-- Feature 3: Code highlighting
-
-The AI Companion web app is now ready for development!`;
-
-        // Simulate streaming character by character
+        // Simulate streaming for smooth UX (response is already complete)
         for (let i = 0; i < response.length; i++) {
-          await new Promise((resolve) => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 5));
           appendStreamContent(response[i]);
         }
 
@@ -83,10 +74,16 @@ The AI Companion web app is now ready for development!`;
         }
       } catch (error) {
         console.error('Failed to send message:', error);
+
+        const errorMessage =
+          error instanceof Error
+            ? `Error: ${error.message}`
+            : 'Sorry, an error occurred. Please try again.';
+
         addMessage({
           id: `msg_${Date.now()}`,
           role: 'assistant',
-          content: 'Sorry, an error occurred. Please try again.',
+          content: errorMessage,
           timestamp: new Date().toISOString(),
         });
       } finally {
@@ -105,6 +102,10 @@ The AI Companion web app is now ready for development!`;
       messages.length,
       selectedModel,
       selectedProvider,
+      apiKey,
+      systemMessage,
+      params.temperature,
+      params.maxLength,
     ]
   );
 

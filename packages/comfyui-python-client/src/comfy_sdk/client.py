@@ -1,6 +1,7 @@
 import json
 import uuid
 import websocket
+import httpx
 import urllib.parse
 import urllib.request
 from typing import Dict, Optional, Any, Union
@@ -9,12 +10,24 @@ from dataclasses import dataclass
 
 from .api import ComfyResponse
 
-
 class ComfyClient:
     def __init__(self, host: str = "127.0.0.1", port: int = 8188):
         self.host = host
         self.port = port
         self.client_id = str(uuid.uuid4())
+        self.client = None
+        # self.ws: Optional[websocket.WebSocket] = None
+        self.base_url = f"http://{host}:{port}"
+        # self.ws_url = f"ws://{host}:{port}/ws?clientId={self.client_id}"
+    def connect(self):
+        self.client = httpx.Client()
+
+class AsyncComfyClient:
+    def __init__(self, host: str = "127.0.0.1", port: int = 8188):
+        self.host = host
+        self.port = port
+        self.client_id = str(uuid.uuid4())
+        self.client = None
         self.ws: Optional[websocket.WebSocket] = None
         self.base_url = f"http://{host}:{port}"
         self.ws_url = f"ws://{host}:{port}/ws?clientId={self.client_id}"
@@ -22,6 +35,7 @@ class ComfyClient:
     def connect(self):
         """Establish WebSocket connection."""
         try:
+            self.client = httpx.AsyncClient()
             self.ws = websocket.WebSocket()
             self.ws.connect(self.ws_url)
         except Exception as e:

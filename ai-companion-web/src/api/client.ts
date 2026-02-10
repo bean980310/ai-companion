@@ -60,6 +60,32 @@ export async function apiRequest<T>(
   return response.data;
 }
 
+// Gradio API response format
+interface GradioResponse<T = unknown> {
+  data: T[];
+}
+
+/**
+ * Call a Gradio API endpoint.
+ * Gradio expects: POST /api/{api_name} with body { "data": [arg1, arg2, ...] }
+ * Gradio returns: { "data": [result1, ...] }
+ */
+export async function gradioPredict<T = string>(
+  apiName: string,
+  args: unknown[],
+  config?: AxiosRequestConfig
+): Promise<T> {
+  const response = await apiClient.post<GradioResponse<T>>(
+    `/api/${apiName}`,
+    { data: args },
+    {
+      timeout: 120000, // LLM responses can take a while
+      ...config,
+    }
+  );
+  return response.data.data[0];
+}
+
 // Helper functions for common HTTP methods
 export const api = {
   get: <T>(url: string, config?: AxiosRequestConfig) =>
@@ -75,4 +101,5 @@ export const api = {
     apiRequest<T>({ ...config, method: 'DELETE', url }),
 };
 
+export { apiClient };
 export default apiClient;

@@ -1,82 +1,75 @@
-import { api } from './client';
-import type { ChatMessage, ApiResponse } from '../types';
+import { gradioPredict } from './client';
+import type { ChatMessage } from '../types';
 
-export interface ChatCompletionRequest {
+export interface GradioChatRequest {
   message: string;
-  sessionId: string;
-  systemMessage?: string;
   model: string;
   provider: string;
-  modelType?: string;
+  systemMessage?: string;
   apiKey?: string;
   temperature?: number;
-  topK?: number;
-  topP?: number;
-  repetitionPenalty?: number;
   maxLength?: number;
-  enableThinking?: boolean;
-  imageInput?: string;
 }
 
-export interface ChatCompletionResponse {
-  content: string;
-  sessionId: string;
-  messageId: string;
-  title?: string;
-}
-
-// Chat completion
+/**
+ * Send a chat message to the Gradio backend.
+ * Uses the Gradio API format: POST /api/chat with { data: [message, model, provider, ...] }
+ *
+ * The Gradio 'chat' endpoint (api_name="chat") expects these positional arguments:
+ *   0: message (str)
+ *   1: model (str)
+ *   2: provider (str)
+ *   3: system_message (str)
+ *   4: api_key (str)
+ *   5: temperature (float)
+ *   6: max_length (int)
+ */
 export async function sendChatMessage(
-  request: ChatCompletionRequest
-): Promise<ApiResponse<ChatCompletionResponse>> {
-  return api.post('/api/chat/completion', request);
+  request: GradioChatRequest
+): Promise<string> {
+  const {
+    message,
+    model = 'gpt-4o',
+    provider = 'openai',
+    systemMessage = 'You are a helpful AI assistant.',
+    apiKey = '',
+    temperature = 0.7,
+    maxLength = -1,
+  } = request;
+
+  return gradioPredict<string>('chat', [
+    message,
+    model,
+    provider,
+    systemMessage,
+    apiKey,
+    temperature,
+    maxLength,
+  ]);
 }
 
-// Stream chat completion (SSE)
-export function streamChatMessage(
-  request: ChatCompletionRequest,
-  onMessage: (content: string) => void,
-  onError: (error: Error) => void,
-  onComplete: () => void
-): () => void {
-  const eventSource = new EventSource(
-    `/api/chat/stream?${new URLSearchParams({
-      message: request.message,
-      sessionId: request.sessionId,
-      model: request.model,
-      provider: request.provider,
-    })}`
-  );
-
-  eventSource.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      if (data.content) {
-        onMessage(data.content);
-      }
-      if (data.done) {
-        eventSource.close();
-        onComplete();
-      }
-    } catch (error) {
-      console.error('Failed to parse SSE message:', error);
-    }
-  };
-
-  eventSource.onerror = () => {
-    eventSource.close();
-    onError(new Error('Stream connection failed'));
-  };
-
-  // Return cleanup function
-  return () => {
-    eventSource.close();
-  };
-}
-
-// Generate chat title
+// Generate chat title using the Gradio endpoint
 export async function generateChatTitle(
-  messages: ChatMessage[]
-): Promise<ApiResponse<{ title: string }>> {
-  return api.post('/api/chat/title', { messages });
+  content: string,
+  model: string = 'gpt-4o-mini',
+  provider: string = 'openai'
+): Promise<string> {
+  return gradioPredict<string>('generate_title', [content, model, provider]);
+}
+
+// List available models
+export async function listModels(
+  category: 'all' | 'llm' | 'image' = 'all'
+): Promise<Record<string, unknown>> {
+  return gradioPredict<Record<string, unknown>>('list_models', [category]);
+}
+
+// List chat sessions
+export async function listSessions(): Promise<ChatMessage[]> {
+  return gradioPredict<ChatMessage[]>('list_sessions', []);
+}
+
+// Get chat history
+export async function getChatHistory(sessionId: string): Promise<ChatMessage[]> {
+  return gradioPredict<ChatMessage[]>('get_history', [sessionId]);
 }

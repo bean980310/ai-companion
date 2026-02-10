@@ -17,6 +17,8 @@ persona_state.db
 *.mp3
 *.wav
 *.patch
+mcp_servers.json
+mcp_config.json
 
 # Python-generated files
 __pycache__/
