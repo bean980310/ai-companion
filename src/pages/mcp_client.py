@@ -391,7 +391,7 @@ with gr.Blocks() as demo:
                 )
                 transport_dropdown = gr.Dropdown(
                     label="Transport",
-                    choices=["sse", "http", "stdio"],
+                    choices=["sse", "streamable-http", "stdio"],
                     value="sse"
                 )
                 api_key_input = gr.Textbox(

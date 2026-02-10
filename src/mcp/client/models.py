@@ -7,7 +7,7 @@ from enum import Enum
 class MCPTransportType(str, Enum):
     """Supported MCP transport types"""
     SSE = "sse"
-    HTTP = "http"
+    HTTP = "streamable-http"
     STDIO = "stdio"
 
 
