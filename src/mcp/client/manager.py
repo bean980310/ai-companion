@@ -4,6 +4,7 @@
 import asyncio
 import json
 import os
+import traceback
 from typing import Any, Dict, List, Optional, Callable
 from pathlib import Path
 
@@ -210,7 +211,7 @@ class MCPClientManager:
             return True
 
         except Exception as e:
-            logger.error(f"Error connecting to {server_name}: {e}")
+            logger.error(f"Error connecting to {server_name}: {e}\n\n{traceback.format_exc()}")
             return False
 
     async def _connect_sse(self, config: MCPServerConfig):
@@ -219,7 +220,13 @@ class MCPClientManager:
         if config.api_key:
             headers["Authorization"] = f"Bearer {config.api_key}"
 
-        async with sse_client(config.url, headers=headers) as (read, write):
+        # OAuth 2.1 authentication
+        auth = None
+        if config.oauth_enabled:
+            from .oauth import create_oauth_provider
+            auth = await create_oauth_provider(config)
+
+        async with sse_client(config.url, headers=headers, auth=auth) as (read, write):
             async with ClientSession(read, write) as session:
                 await session.initialize()
                 self.sessions[config.name] = session
@@ -250,7 +257,17 @@ class MCPClientManager:
         if config.api_key:
             headers["Authorization"] = f"Bearer {config.api_key}"
 
-        async with streamable_http_client(config.url, headers) as (read, write):
+        # OAuth 2.1 authentication
+        http_client = None
+        if config.oauth_enabled:
+            from .oauth import create_oauth_provider
+            auth = await create_oauth_provider(config)
+            from mcp.shared._httpx_utils import create_mcp_http_client
+            http_client = create_mcp_http_client(headers=headers, auth=auth)
+
+        async with streamable_http_client(config.url, http_client=http_client) as (
+            read, write, _get_session_id
+        ):
             async with ClientSession(read, write) as session:
                 await session.initialize()
                 self.sessions[config.name] = session

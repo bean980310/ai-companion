@@ -22,6 +22,11 @@ class MCPServerConfig:
     timeout: float = 30.0
     enabled: bool = True
     description: str = ""
+    # OAuth 2.1 settings
+    oauth_enabled: bool = False
+    oauth_client_name: Optional[str] = None
+    oauth_scopes: Optional[str] = None
+    oauth_redirect_port: int = 3000
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -32,7 +37,11 @@ class MCPServerConfig:
             "headers": self.headers,
             "timeout": self.timeout,
             "enabled": self.enabled,
-            "description": self.description
+            "description": self.description,
+            "oauth_enabled": self.oauth_enabled,
+            "oauth_client_name": self.oauth_client_name,
+            "oauth_scopes": self.oauth_scopes,
+            "oauth_redirect_port": self.oauth_redirect_port
         }
 
     @classmethod
@@ -45,7 +54,11 @@ class MCPServerConfig:
             headers=data.get("headers", {}),
             timeout=data.get("timeout", 30.0),
             enabled=data.get("enabled", True),
-            description=data.get("description", "")
+            description=data.get("description", ""),
+            oauth_enabled=data.get("oauth_enabled", False),
+            oauth_client_name=data.get("oauth_client_name"),
+            oauth_scopes=data.get("oauth_scopes"),
+            oauth_redirect_port=data.get("oauth_redirect_port", 3000)
         )
 
 
