@@ -1,0 +1,29 @@
+[build-system]
+requires=[
+    "setuptools>=80",
+    "setuptools-scm>=8",
+    "wheel",
+    "build",
+    "uv-build"
+]
+
+[project]
+name = "ai-companion-agent-connector"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+dependencies = ["mcp", "fastmcp"]
+
+[project.optional-dependencies]
+openai = ["openai-agents"]
+langchain = ["ai-companion-langchain-integrator", "deepagents"]
+smolagents = ["smolagents[mcp, toolkit]"]
+crewai = ["crewai"]
+llama-index = ["llama-index-core", "llama-index-llms-openai", "llama-index-embeddings-huggingface"]
+autogen = ["autogen-agentchat", "autogen-ext[openai]"]
+adk = ["google-adk[a2a]"]
+claude = ["claude-agent-sdk"]
+
+[tool.uv.sources]
+langchain = { url = "https://github.com/bean980310/ai-companion-langchain-integrator/releases/download/v0.1.6/ai_companion_langchain_integrator-0.1.6-py3-none-any.whl"}

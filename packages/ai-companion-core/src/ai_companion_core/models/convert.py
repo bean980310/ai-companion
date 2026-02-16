@@ -2,7 +2,7 @@
 
 import os
 import traceback
-import logging
+from ..logging import logger
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
@@ -10,7 +10,7 @@ def convert_model_to_float8(model_id: str, output_dir: str, push_to_hub: float=F
     try:
         from optimum.quanto import QuantizedModelForCausalLM, qfloat8
     except ImportError:
-        logging.error()
+        logger.error("optimum-quanto is Not installed. Please Install it to use convert features.")
     """
     모델을 8비트로 변환하여 저장하는 함수
     """
@@ -39,7 +39,10 @@ def convert_model_to_float8(model_id: str, output_dir: str, push_to_hub: float=F
     
 def convert_model_to_int8(model_id: str, output_dir: str, push_to_hub: float=False):
     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-    from optimum.quanto import QuantizedModelForCausalLM, qint8
+    try:
+        from optimum.quanto import QuantizedModelForCausalLM, qint8
+    except ImportError:
+        logger.error("optimum-quanto is Not installed. Please Install it to use convert features.")
     """
     모델을 8비트로 변환하여 저장하는 함수
     """
@@ -69,7 +72,10 @@ def convert_model_to_int8(model_id: str, output_dir: str, push_to_hub: float=Fal
     
 def convert_model_to_int4(model_id: str, output_dir: str, push_to_hub: float=False):
     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-    from optimum.quanto import QuantizedModelForCausalLM, qint4
+    try:
+        from optimum.quanto import QuantizedModelForCausalLM, qint4
+    except ImportError:
+        logger.error("optimum-quanto is Not installed. Please Install it to use convert features.")
     """
     모델을 8비트로 변환하여 저장하는 함수
     """

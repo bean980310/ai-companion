@@ -43,7 +43,8 @@ def add_mcp_server(
     transport: str,
     api_key: str,
     timeout: float,
-    description: str
+    description: str,
+    oauth_enabled: bool
 ) -> tuple:
     """Add a new MCP server configuration"""
     if not name or not url:
@@ -60,7 +61,8 @@ def add_mcp_server(
             transport=transport,
             api_key=api_key if api_key else None,
             timeout=timeout,
-            description=description
+            description=description,
+            oauth_enabled=oauth_enabled
         )
 
         servers = get_servers_display()
@@ -403,6 +405,9 @@ with gr.Blocks() as demo:
                     label="Description",
                     placeholder="Description of this server"
                 )
+                enable_oauth_checkbox = gr.Checkbox(
+                    label="Use OAuth"
+                )
                 add_server_btn = gr.Button("Add Server", variant="primary")
 
         with gr.Row():
@@ -504,7 +509,8 @@ with gr.Blocks() as demo:
             transport_dropdown,
             api_key_input,
             timeout_input,
-            description_input
+            description_input,
+            enable_oauth_checkbox
         ],
         outputs=[servers_table, status_text, server_select]
     ).then(

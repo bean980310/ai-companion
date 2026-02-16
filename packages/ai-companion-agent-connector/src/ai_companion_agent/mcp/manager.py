@@ -5,7 +5,8 @@ import asyncio
 import json
 import os
 import traceback
-from typing import Any, Dict, List, Optional, Callable
+import glob
+from typing import Any, Dict, List, Optional, Callable, Union
 from pathlib import Path
 
 from src import logger
@@ -31,6 +32,7 @@ except ImportError:
     MCP_AVAILABLE = False
     logger.warning("MCP SDK not available. Install with: pip install mcp")
 
+StrPath = Union[str, "os.PathLike[str]"]
 
 class MCPClientManager:
     """
@@ -43,7 +45,7 @@ class MCPClientManager:
     - Managing server configurations
     """
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: Optional[StrPath] = os.getenv('AI_COMPANION_MCP_CONFIG')):
         """
         Initialize the MCP Client Manager.
 
@@ -51,10 +53,7 @@ class MCPClientManager:
             config_path: Path to the MCP servers configuration file.
                         Defaults to 'mcp_servers.json' in the project root.
         """
-        self.config_path = config_path or os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
-            "mcp_servers.json"
-        )
+        self.config_path = config_path
         self.servers: Dict[str, MCPServerConfig] = {}
         self.sessions: Dict[str, ClientSession] = {}
         self.tools: Dict[str, MCPTool] = {}
@@ -99,7 +98,6 @@ class MCPClientManager:
         headers: Optional[Dict[str, str]] = None,
         timeout: float = 30.0,
         description: str = "",
-        oauth_enabled: bool = True,
         save: bool = True
     ) -> MCPServerConfig:
         """
@@ -125,9 +123,7 @@ class MCPClientManager:
             api_key=api_key,
             headers=headers or {},
             timeout=timeout,
-            description=description,
-            oauth_enabled=oauth_enabled,
-            oauth_client_name="AI Companion MCP Client"
+            description=description
         )
         self.servers[name] = config
 

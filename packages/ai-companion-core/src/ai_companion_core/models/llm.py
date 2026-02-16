@@ -1,0 +1,18 @@
+VISION_MODELS = [
+    'gpt-4o',
+    'gpt-4.1',
+    'gpt-5',
+    'qwen2-vl', 
+    'qwen2.5-vl', 
+    'qwen3-vl',
+    'llama-3.2-vision',
+    'llama-4',
+    "pixtral",
+    "mistral-small-3",
+    "paligemma",
+    "gemma-3-4b",
+    "gemma-3-12b",
+    "gemma-3-27b",
+    "gemma-3n",
+    "glm4v",
+]
