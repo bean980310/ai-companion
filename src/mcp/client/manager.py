@@ -51,10 +51,7 @@ class MCPClientManager:
             config_path: Path to the MCP servers configuration file.
                         Defaults to 'mcp_servers.json' in the project root.
         """
-        self.config_path = config_path or os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
-            "mcp_servers.json"
-        )
+        self.config_path = config_path or Path.home() / ".ai-companion" / "mcp_servers.json"
         self.servers: Dict[str, MCPServerConfig] = {}
         self.sessions: Dict[str, ClientSession] = {}
         self.tools: Dict[str, MCPTool] = {}
