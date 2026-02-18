@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import gradio as gr
 # from gradio_i18n import translate_blocks, gettext as _
 
@@ -6,7 +7,6 @@ import gradio as gr
 from ...common.translations import _
 from ...start_app import app_state, ui_component
 from ...models import IMAGE_PROVIDER_LIST
-from dataclasses import dataclass
 
 @dataclass
 class DiffusionComponent:
@@ -70,7 +70,7 @@ class DiffusionComponent:
             with gr.Column():
                 gr.Markdown("### Model Selection")
                 model_provider_dropdown = gr.Dropdown(
-                    label=_("model_provider_select_label"),
+                    label=_("model_provider_label"),
                     choices=IMAGE_PROVIDER_LIST,
                     value=IMAGE_PROVIDER_LIST[0],
                     elem_classes="model-dropdown"

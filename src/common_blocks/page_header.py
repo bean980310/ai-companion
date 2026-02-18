@@ -5,6 +5,8 @@ import gradio as gr
 from typing import Optional, Tuple, Callable, List
 from dataclasses import dataclass, field
 
+from src.start_app.ui_component_manager import ui_component
+
 from ..common.translations import translation_manager, _
 from ..common.default_language import default_language
 
@@ -67,6 +69,11 @@ def create_page_header(
                 container=False,
                 elem_classes="language-selector"
             )
+    
+    ui_component.header_row = header_row,
+    ui_component.title = title,
+    ui_component.subtitle = subtitle,
+    ui_component.language_dropdown = language_dropdown
 
     return PageHeaderComponents(
         header_row=header_row,

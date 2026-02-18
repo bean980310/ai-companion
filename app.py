@@ -68,7 +68,8 @@ logger.info(f"Detected OS: {os_name}, Architecture: {arch}")
 load_initial_data()
 
 # Import Pages
-from src.pages import audio, chat, image_gen, storyteller, translator, download, settings, mcp_client
+from src.pages import header
+from src.pages import audio, chat, image_gen, storyteller, translator, download, settings, mcp_client, mcp_tools
 
 # Global Initialization
 # Creating a dummy block to run initialization if needed, 
@@ -98,8 +99,7 @@ with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True) as demo:
     # demo.route("Chat", "/chat")
     # 1. Global State Registration
     initialize_global_state()
-    # page_header = create_page_header(page_title_key="main_title")
-    # language_dropdown = page_header.language_dropdown
+    header.demo.render()
     with gr.Tab("Chat", elem_classes="tab"):
         chat.demo.render()
     with gr.Tab("Image Gen", elem_classes="tab"):
@@ -285,6 +285,46 @@ with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True) as demo:
         # We should probably add initialization there too.
         
         pass
+
+    header.language_dropdown.change(
+        fn=header.on_header_language_change,
+        inputs=[header.language_dropdown],
+        outputs=[
+            header.page_header.title,
+            header.language_dropdown
+        ]
+    ).then(
+        fn=chat.on_chat_language_change,
+        inputs=[header.language_dropdown, chat.character_dropdown],
+        outputs=[
+            chat.text_model_provider_dropdown,
+            chat.text_model_type_dropdown,
+            chat.text_model_dropdown,
+            chat.text_api_key_text,
+            chat.text_lora_dropdown,
+            chat.system_message_accordion,
+            chat.system_message_box,
+            chat.text_advanced_settings,
+            chat.text_seed_input,
+            chat.text_temperature_slider,
+            chat.text_top_k_slider,
+            chat.text_top_p_slider,
+            chat.text_repetition_penalty_slider,
+            chat.reset_btn,
+            chat.reset_all_btn,
+            app_state.selected_language_state
+        ]
+    ).then(
+        fn=image_gen.on_image_gen_language_change,
+        inputs=[header.language_dropdown],
+        outputs=[
+            image_gen.diffusion_model_provider_dropdown,
+            image_gen.diffusion_model_type_dropdown,
+            image_gen.diffusion_model_dropdown,
+            image_gen.diffusion_api_key_text,
+            image_gen.diffusion_lora_multiselect,
+        ]
+    )
 
 # if __name__ == "__main__":
 #     demo.launch()

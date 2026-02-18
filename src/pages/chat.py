@@ -5,6 +5,7 @@ from src.start_app import app_state, ui_component, initialize_speech_manager
 from src.common.character_info import characters
 from src.common.translations import translation_manager, _
 from src.common_blocks import create_page_header, get_language_code
+from src.pages import header
 from src.characters import PersonaSpeechManager
 from src.common.database import get_existing_sessions, get_existing_sessions_with_names
 from presets import (
@@ -76,8 +77,8 @@ with gr.Blocks() as demo:
     register_chat_state()
 
     # 1. Page Header with Language Selector
-    page_header = create_page_header(page_title_key="main_title")
-    language_dropdown = page_header.language_dropdown
+    # page_header = header.page_header
+    # language_dropdown = header.language_dropdown
 
     # 2. UI Construction
     with gr.Sidebar():
@@ -346,7 +347,7 @@ with gr.Blocks() as demo:
     # Preset & Character
     character_dropdown.change(
         fn=chat_bot.update_system_message_and_profile,
-        inputs=[character_dropdown, language_dropdown, app_state.session_id_state],
+        inputs=[character_dropdown, header.language_dropdown, app_state.session_id_state],
         outputs=[system_message_box, profile_image, preset_dropdown]
     )
 
@@ -490,8 +491,11 @@ with gr.Blocks() as demo:
         system_content = preset_name.get(lang_code, "당신은 유용한 AI 비서입니다.")
 
         return [
-            gr.update(value=f"## {_('main_title')}"),
-            gr.update(label=_('language_select'), info=_('language_info')),
+            gr.update(label=_("model_provider_label")),
+            gr.update(label=_("model_type_label")),
+            gr.update(label=_("model_select_label")),
+            gr.update(label=_("api_key_label")),
+            gr.update(label=_("lora_select_label")),
             gr.update(label=_('system_message')),
             gr.update(label=_('system_message'), value=system_content),
             gr.update(label=_('advanced_setting')),
@@ -505,25 +509,25 @@ with gr.Blocks() as demo:
             lang_code
         ]
 
-    language_dropdown.change(
-        fn=on_chat_language_change,
-        inputs=[language_dropdown, character_dropdown],
-        outputs=[
-            page_header.title,
-            language_dropdown,
-            system_message_accordion,
-            system_message_box,
-            text_advanced_settings,
-            text_seed_input,
-            text_temperature_slider,
-            text_top_k_slider,
-            text_top_p_slider,
-            text_repetition_penalty_slider,
-            reset_btn,
-            reset_all_btn,
-            app_state.selected_language_state
-        ]
-    )
+    # language_dropdown.change(
+    #     fn=on_chat_language_change,
+    #     inputs=[language_dropdown, character_dropdown],
+    #     outputs=[
+    #         page_header.title,
+    #         language_dropdown,
+    #         system_message_accordion,
+    #         system_message_box,
+    #         text_advanced_settings,
+    #         text_seed_input,
+    #         text_temperature_slider,
+    #         text_top_k_slider,
+    #         text_top_p_slider,
+    #         text_repetition_penalty_slider,
+    #         reset_btn,
+    #         reset_all_btn,
+    #         app_state.selected_language_state
+    #     ]
+    # )
 
 
 if __name__ == "__main__":

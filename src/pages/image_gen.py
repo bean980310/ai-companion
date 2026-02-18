@@ -5,6 +5,7 @@ from src.start_app import app_state, ui_component
 from comfy_sdk import ComfyUI
 from src.common.translations import translation_manager, _
 from src.common_blocks import create_page_header, get_language_code
+from src.pages import header
 from typing import Any, List, Sequence, Callable
 from PIL import Image
 import numpy as np
@@ -25,8 +26,8 @@ with gr.Blocks() as demo:
     register_image_gen_state()
 
     # 1. Page Header with Language Selector
-    page_header = create_page_header(page_title_key="image_gen_title")
-    language_dropdown = page_header.language_dropdown
+    # page_header = header.page_header
+    # language_dropdown = header.language_dropdown
 
     # 2. UI Construction
     with gr.Sidebar():
@@ -297,15 +298,18 @@ with gr.Blocks() as demo:
         lang_code = get_language_code(selected_lang)
         translation_manager.set_language(lang_code)
         return [
-            gr.update(value=f"## {_('image_gen_title')}"),
-            gr.update(label=_('language_select'), info=_('language_info'))
+            gr.update(label=_("model_provider_label")),
+            gr.update(label=_("model_type_label")),
+            gr.update(label=_("model_select_label")),
+            gr.update(label=_("api_key_label")),
+            gr.update(label=_("lora_select_label")),
         ]
 
-    language_dropdown.change(
-        fn=on_image_gen_language_change,
-        inputs=[language_dropdown],
-        outputs=[page_header.title, language_dropdown]
-    )
+    # language_dropdown.change(
+    #     fn=on_image_gen_language_change,
+    #     inputs=[language_dropdown],
+    #     outputs=[page_header.title, language_dropdown]
+    # )
 
 if __name__ == "__main__":
     demo.launch()

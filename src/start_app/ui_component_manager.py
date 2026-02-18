@@ -4,11 +4,13 @@ from dataclasses import dataclass
 @dataclass
 class UIComponent:
     head: gr.Row = None
+    header_row: gr.Row = None
     title: gr.Markdown = None
+    subtitle: gr.Markdown = None
     settings_button: gr.Button = None
     language_dropdown: gr.Dropdown = None
     navbar: gr.Navbar = None
-    
+
     session_select_dropdown: gr.Dropdown = None
     chat_title_box: gr.Textbox = None
     add_session_icon_btn: gr.Button = None
