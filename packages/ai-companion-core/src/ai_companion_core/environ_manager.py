@@ -27,6 +27,6 @@ def delete_env_variables(key: str, path: StrPath=Path.home() / ".ai-companion" /
     from dotenv import unset_key
 
     if not path.exists():
-        pass
+        return
 
     unset_key(dotenv_path=path, key_to_unset=key)

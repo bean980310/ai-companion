@@ -5,8 +5,6 @@ from .image_generation import ImageGeneration
 from .component import DiffusionComponent
 from dataclasses import dataclass
 
-from ...common.utils import get_diffusion_loras, get_diffusion_vae
-
 from ... import os_name, arch
 from ...start_app import app_state, ui_component
 

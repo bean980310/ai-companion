@@ -9,7 +9,7 @@ def text_to_speech(model_id: str, inputs: str) -> Any:
         print("Please select a model.")
         return None
 
-    model_path = os.path.join("./models/tts", model_id)
+    model_path = os.path.join("./models/audio/tts", model_id)
     tokenizer = VitsTokenizer.from_pretrained(model_path)
     model = VitsModel.from_pretrained(model_path)
 

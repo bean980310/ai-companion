@@ -164,9 +164,11 @@ huggingface_inference_image_api_models = [
     "Qwen/Qwen-Image",
     "Qwen/Qwen-Image-2512",
     "Tongyi-MAI/Z-Image-Turbo",
+    "Tongyi-MAI/Z-Image",
     "Alpha-VLLM/Lumina-Image-2.0",
     "fal/AuraFlow-v0.3",
     "zai-org/CogView4-6B",
+    'zai-org/GLM-Image',
     "HiDream-ai/HiDream-I1-Fast",
     "HiDream-ai/HiDream-I1-Dev",
     "HiDream-ai/HiDream-I1-Full"
@@ -174,10 +176,21 @@ huggingface_inference_image_api_models = [
 
 huggingface_inference_image_edit_api_models = [
     "stabilityai/stable-diffusion-xl-refiner-1.0",
+    'black-forest-labs/FLUX.2-klein-4B',
     "black-forest-labs/FLUX.2-dev",
     "Qwen/Qwen-Image-Edit",
     "Qwen/Qwen-Image-Edit-2509",
     "Qwen/Qwen-Image-Edit-2511"
+]
+
+huggingface_inference_video_api_models = [
+    'Wan-AI/Wan2.2-T2V-A14B-Diffusers',
+    'zai-org/CogVideoX-5b'
+]
+
+huggingface_inference_image_to_video_api_models = [
+    'Wan-AI/Wan2.2-I2V-A14B-Diffusers',
+    'Lightricks/LTX-2'
 ]
 
 image_api_models.extend(openai_image_api_models)

@@ -426,6 +426,10 @@ with gr.Blocks() as demo:
         fn=handle_reset_with_session_update,
         inputs=[app_state.history_state, chatbot, system_message_box, character_dropdown, app_state.selected_language_state, app_state.session_id_state],
         outputs=[reset_modal, single_reset_content, all_reset_content, msg, app_state.history_state, chatbot, status_text, session_select_dropdown, app_state.session_id_state]
+    ).then(
+        fn=refresh_session_list_ui,
+        inputs=[],
+        outputs=session_list_outputs
     )
     
     # Load Init - Refresh session list on page load

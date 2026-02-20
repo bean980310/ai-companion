@@ -251,9 +251,8 @@ class ChatbotComponent:
             msg.scale = 9
             msg.placeholder = _("message_placeholder")
 
-            
             # For compatibility with existing code that expects multimodal_msg
-            multimodal_msg = msg 
+            multimodal_msg = msg
         
         ui_component.system_message_accordion = system_message_accordion
         ui_component.system_message_box = system_message_box
