@@ -11,7 +11,8 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--port",
+        "--gradio-server-port",
+        dest="gradio_server_port",
         type=int,
         default=7861,
         help="Gradio 서버가 실행될 포트 번호를 지정합니다. (default: %(default)d)"
@@ -52,7 +53,8 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--mcp_server",
+        "--mcp-server",
+        dest="mcp_server",
         type=bool,
         default=True,
         help="MCP 서버를 활성화합니다."
@@ -65,4 +67,6 @@ def parse_args():
         help="PWA를 활성화합니다."
     )
 
-    return parser.parse_args()
+    args, _ = parser.parse_known_args()
+
+    return args

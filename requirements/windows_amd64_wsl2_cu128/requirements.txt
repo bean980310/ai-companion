@@ -55,7 +55,7 @@ xformers>=0.0.32 --index-url https://download.pytorch.org/whl/cu128
 bitsandbytes
 onnxruntime-gpu
 faiss-gpu
-eva-decord
+decord2
 opencc
 vllm
 triton

@@ -13,6 +13,7 @@ from ...common.utils import get_all_loras
 from ...common.default_language import default_language
 from ...common.character_info import characters
 from ...common.database import get_preset_choices
+from ...common.file_types import COMMON_FILE_TYPES
 
 # Maximum number of sessions to display in the sidebar
 MAX_VISIBLE_SESSIONS = 20
@@ -41,6 +42,7 @@ class ChatbotComponent:
     system_message_accordion: gr.Accordion = None
     system_message_box: gr.Textbox = None
     chatbot: gr.Chatbot = None
+    chat_interface: gr.ChatInterface = None
     msg: gr.Textbox = None
     multimodal_msg: gr.MultimodalTextbox = None
 
@@ -228,6 +230,7 @@ class ChatbotComponent:
                 # type='messages',
                 chatbot=chatbot,
                 multimodal=True,
+                textbox=gr.MultimodalTextbox(file_count="multiple", sources=['upload'], file_types=COMMON_FILE_TYPES),
                 additional_inputs=real_additional_inputs,
                 additional_outputs=[
                     app_state.history_state,
@@ -260,7 +263,7 @@ class ChatbotComponent:
         ui_component.msg = msg
         ui_component.multimodal_msg = multimodal_msg
 
-        return cls(system_message_accordion=system_message_accordion, system_message_box=system_message_box, chatbot=chatbot, msg=msg, multimodal_msg=multimodal_msg)
+        return cls(system_message_accordion=system_message_accordion, system_message_box=system_message_box, chatbot=chatbot, chat_interface=chat_interface, msg=msg, multimodal_msg=multimodal_msg)
 
     @classmethod
     def create_chat_container_side_panel(cls):

@@ -27,6 +27,11 @@ class MCPServerConfig:
     oauth_client_name: Optional[str] = None
     oauth_scopes: Optional[str] = None
     oauth_redirect_port: int = 3000
+    # External OAuth client settings (GitHub, Google, etc.)
+    oauth_client_id: Optional[str] = None
+    oauth_client_secret: Optional[str] = None
+    oauth_authorization_endpoint: Optional[str] = None
+    oauth_token_endpoint: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -41,7 +46,11 @@ class MCPServerConfig:
             "oauth_enabled": self.oauth_enabled,
             "oauth_client_name": self.oauth_client_name,
             "oauth_scopes": self.oauth_scopes,
-            "oauth_redirect_port": self.oauth_redirect_port
+            "oauth_redirect_port": self.oauth_redirect_port,
+            "oauth_client_id": self.oauth_client_id,
+            "oauth_client_secret": self.oauth_client_secret,
+            "oauth_authorization_endpoint": self.oauth_authorization_endpoint,
+            "oauth_token_endpoint": self.oauth_token_endpoint
         }
 
     @classmethod
@@ -58,7 +67,11 @@ class MCPServerConfig:
             oauth_enabled=data.get("oauth_enabled", False),
             oauth_client_name=data.get("oauth_client_name"),
             oauth_scopes=data.get("oauth_scopes"),
-            oauth_redirect_port=data.get("oauth_redirect_port", 3000)
+            oauth_redirect_port=data.get("oauth_redirect_port", 3000),
+            oauth_client_id=data.get("oauth_client_id"),
+            oauth_client_secret=data.get("oauth_client_secret"),
+            oauth_authorization_endpoint=data.get("oauth_authorization_endpoint"),
+            oauth_token_endpoint=data.get("oauth_token_endpoint")
         )
 
 

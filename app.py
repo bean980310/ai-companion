@@ -1,6 +1,7 @@
 # app.py
 import os
 import warnings
+import json
 from pathlib import Path
 
 warnings.filterwarnings("ignore", module="gradio")
@@ -28,6 +29,8 @@ from translations import i18n
 from src import os_name, arch, is_wsl, args, __version__, logger
 # from src.start_app import initialize_app
 # from src import app
+
+from src.server import app, Request, StreamingResponse
 
 from src.start_app import (
     app_state,
@@ -157,7 +160,6 @@ with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True) as demo:
 #     app.demo.render()
 
 if __name__=="__main__":
-    
     if os_name == "Darwin" and arch == "x86_64":
         raise EnvironmentError("ERROR: AI Companion for Local Machines no longer supports Intel CPU-based Macs.\nIf you are using an Intel CPU-based Macs, we recommend that you consider migrating to an Apple Silicon Based Macs or a Windows PC or Linux machine with an Nvidia GPU environment. If you have difficulty migrating from an Intel CPU-based Macs, you can use a companion application that supports Intel CPU-based Macs instead.")
     if os_name == "Windows" and not is_wsl:
@@ -169,5 +171,15 @@ if __name__=="__main__":
     
     # demo.queue().launch(debug=args.debug, share=args.share, inbrowser=args.inbrowser, server_name=host, server_port=args.port, mcp_server=args.mcp_server, pwa=args.pwa, i18n=i18n)
 
-    demo.queue().launch(debug=args.debug, share=args.share, inbrowser=args.inbrowser, server_name=host, server_port=args.port, mcp_server=args.mcp_server, pwa=args.pwa, css_paths="html/css/style.css", i18n=i18n)
+    demo.queue().launch(debug=args.debug, share=args.share, inbrowser=args.inbrowser, server_name=host, server_port=args.gradio_server_port, mcp_server=args.mcp_server, pwa=args.pwa, css_paths="html/css/style.css", i18n=i18n)
+else:
+    if os_name == "Darwin" and arch == "x86_64":
+        raise EnvironmentError("ERROR: AI Companion for Local Machines no longer supports Intel CPU-based Macs.\nIf you are using an Intel CPU-based Macs, we recommend that you consider migrating to an Apple Silicon Based Macs or a Windows PC or Linux machine with an Nvidia GPU environment. If you have difficulty migrating from an Intel CPU-based Macs, you can use a companion application that supports Intel CPU-based Macs instead.")
+    if os_name == "Windows" and not is_wsl:
+        warnings.warn("AI Companion for Local Machines is optimized for UNIX/Linux kernel-based operating systems. While it can be used on Windows, GPU acceleration is unavailable when running directly on Windows. To properly use AI Companion for Local Machines on Windows, we recommend using it within a WSL2 environment.")
+    if args.listen:
+        host="0.0.0.0"
+    else:
+        host="127.0.0.1"
 
+    app = gr.mount_gradio_app(app, demo, path="/gradio", server_name=host, server_port=args.gradio_server_port, mcp_server=args.mcp_server, pwa=args.pwa, css_paths="html/css/style.css")

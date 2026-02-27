@@ -63,7 +63,6 @@ layoutparser
 # bitsandbytes
 onnxruntime
 faiss-cpu
-eva-decord;  python_version < '3.12'
-eva-decord-plus; python_version == '3.12'
+decord2
 opencc
 mlx[dev]

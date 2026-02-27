@@ -1,11 +1,14 @@
 # import logging
-from typing import Any, Generator, Literal
+from typing import Any, Generator, Literal, Callable
 import gradio as gr
 # from gradio_i18n import gettext as _, translate_blocks
 import os
 import secrets
 import sqlite3
 
+from transformers import AutoConfig
+
+from src.models import IS_MULTIMODAL_API, IS_MULTIMODAL_LOCAL, IS_ANY_TO_ANY, IS_IMAGE_TEXT_TO_TEXT, IS_OMNI_API
 from src.models.models import get_all_local_models, generate_answer, generate_chat_title
 from src.common.database import save_chat_history_db, delete_session_history, delete_all_sessions, get_preset_choices, load_system_presets, get_existing_sessions, get_existing_sessions_with_names, update_session_name, load_chat_from_db, update_system_message_in_db, update_last_character_in_db
 from src.common.translations import TranslationManager, translation_manager, _
@@ -14,6 +17,7 @@ from src.characters.preset_images import PRESET_IMAGES
 from src.models import llm_api_models, openai_llm_api_models, anthropic_llm_api_models, google_genai_llm_api_models, perplexity_llm_api_models, xai_llm_api_models, mistralai_llm_api_models, openrouter_llm_api_models, huggingface_inference_llm_api_models, ollama_llm_models, lmstudio_llm_models, oobabooga_llm_models, vllm_llm_api_models,REASONING_CONTROLABLE, REASONING_KWD, REASONING_BAN, transformers_local, vllm_local, gguf_local, mlx_local
 from src.common.default_language import default_language
 from src.common.utils import detect_platform
+from src.common.file_types import COMMON_FILE_TYPES, MULTIMODAL_VISION_FILE_TYPES, MULTIMODAL_OMNI_FILE_TYPES
 
 import traceback
 from src.characters.persona_speech_manager import PersonaSpeechManager
@@ -28,6 +32,10 @@ import base64
 from io import BytesIO
 from PIL import Image, ImageOps, ImageFile
 import pandas as pd
+
+import soundfile as sf
+import sounddevice as sd
+from scipy.io import wavfile as wav
 
 from src import logger
 
@@ -194,7 +202,7 @@ class Chatbot:
                     elif files.rsplit('.')[-1] == "gif":
                         mime_type="image/gif"
                     image = base64.b64encode(f.read()).decode('utf-8')
-                user_contents.append({"type": "image", "image_url": f"data:{mime_type};base64,{image}"})
+                user_contents.append({"type": "image", "url": f"data:{mime_type};base64,{image}"})
             # elif files.rsplit('.')[-1] == "txt":
                 
         new_message = {
@@ -283,7 +291,7 @@ class Chatbot:
 
         return history, chatbot_history, status, chat_title
 
-    def chat_wrapper(self, message: str | list[dict[str, str | Image.Image | Any]] | Any, history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]], session_id: str, system_msg: str | gr.Textbox, selected_character: str, language: str,
+    def chat_wrapper(self, message: str | dict[str, str | dict] | list[dict[str, str | Image.Image | Any]] | Callable | Any, history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]], session_id: str, system_msg: str | gr.Textbox, selected_character: str, language: str,
                      selected_model: str, provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"], selected_lora: str, custom_path: str, api_key: str, device: str, seed: int,
                      max_length: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float, enable_thinking: bool,
                      is_temp_session=False):
@@ -317,6 +325,8 @@ class Chatbot:
         new_session_id = session_id
         is_temp_after = is_temp_session  # 처리 후 임시 세션 상태
 
+        user_message = {"role": "user", "content": []}
+
         if is_temp_session and message:
             # 첫 메시지: 임시 세션을 실제 세션으로 변환
             user_content = message.get("text", "")
@@ -342,31 +352,51 @@ class Chatbot:
             is_temp_after = False  # 더 이상 임시 세션이 아님
             session_id = new_session_id
             self.chat_titles[session_id] = title
+
+        is_multimodal = AutoConfig.from_pretrained(os.path.join("./models/llm", selected_model)).architectures[0] in IS_MULTIMODAL_LOCAL or any(x in selected_model.lower() for x in IS_MULTIMODAL_API)
         
         # 사용자 메시지 구성
-        user_content = message.get("text", "")
-        user_files = message.get("files", [])
+        if is_multimodal:
+            user_content = message.get("text", "")
+            user_files = message.get("files", [])
+        else:
+            user_content = message
+            user_files = None
 
-        content_list = [{"type": "text", "text": user_content}]
+        content_list = [{"type": "text", "text": user_content}] if user_files else user_content
+
         if user_files:
             # 멀티모달 메시지 처리
             for file_path in user_files:
-                with open(file_path, "rb") as f:
-                    if file_path.rsplit('.')[-1] == "jpg" or "jpeg":
-                        mime_type="image/jpeg"
-                    elif file_path.rsplit('.')[-1] == "png":
-                        mime_type="image/png"
-                    elif file_path.rsplit('.')[-1] == "webp":
-                        mime_type="image/webp"
-                    elif file_path.rsplit('.')[-1] == "gif":
-                        mime_type="image/gif"
-                    image = base64.b64encode(f.read()).decode('utf-8')
+                if file_path.rsplit('.')[-1] == "jpg" or "jpeg" or "png" or "webp" or "gif" or "bmp" or "avif" or "tiff" or "svg":
+                    with open(file_path, "rb") as f:
+                        if file_path.rsplit('.')[-1] == "jpg" or "jpeg":
+                            mime_type="image/jpeg"
+                        elif file_path.rsplit('.')[-1] == "png":
+                            mime_type="image/png"
+                        elif file_path.rsplit('.')[-1] == "webp":
+                            mime_type="image/webp"
+                        elif file_path.rsplit('.')[-1] == "gif":
+                            mime_type="image/gif"
+                        elif file_path.rsplit('.')[-1] == "bmp":
+                            mime_type="image/bmp"
+                        elif file_path.rsplit('.')[-1] == "avif":
+                            mime_type="image/avif"
+                        elif file_path.rsplit('.')[-1] == "tiff":
+                            mime_type="image/tiff"
+                        elif file_path.rsplit('.')[-1] == "svg":
+                            mime_type="image/svg+xml"
+                        image = base64.b64encode(f.read()).decode('utf-8')
 
-                    image_url = f"data:{mime_type};base64,{image}"
-                # 이미지 파일을 base64로 변환하거나 경로를 사용
-                # 여기서는 기존 process_message_user 로직을 참고하여 처리
-                # 다만 ChatInterface는 로컬 경로를 넘겨줌
-                content_list.append({"type": "image", "image_url": image_url}) 
+                        image_url = f"data:{mime_type};base64,{image}"
+                    # 이미지 파일을 base64로 변환하거나 경로를 사용
+                    # 여기서는 기존 process_message_user 로직을 참고하여 처리
+                    # 다만 ChatInterface는 로컬 경로를 넘겨줌
+                    content_list.append({"type": "image", "url": image_url})
+                if file_path.rsplit('.')[-1] == "wav" or "mp3" or "aac" or "flac" or "ogg" or "webm":
+                    with open(file_path, "rb") as f:
+                        pass
+                        
                 
         current_history.append({"role": "user", "content": content_list})
 
@@ -382,8 +412,10 @@ class Chatbot:
         
         # 이미지 입력 준비
         image_input = None
+        audio_input = None
         if user_files:
-             image_input = user_files # 리스트 전달
+            for file_path in user_files:
+                if file_path.rsplit('.')[-1] == "jpg" or "jpeg" or "png" or "webp" or "gif": image_input = file_path # 리스트 전달
         
         chat_title = self.chat_titles.get(session_id)
         
@@ -894,6 +926,38 @@ class Chatbot:
         """
         api_visible = any(x in provider.lower() for x in ["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference"])
         return gr.update(visible=api_visible)
+
+    def handle_file_upload_type(self, provider: str | gr.Dropdown, model_type: str | gr.Dropdown, selected_model: str | gr.Dropdown):
+        API_PROVIDERS = {"openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference"}
+        LOCAL_PROVIDERS = {"ollama", "lmstudio", "vllm-api", "oobabooga", "local-ai"}
+
+        file_types = COMMON_FILE_TYPES
+        sources = ['upload']
+
+        if provider in API_PROVIDERS or provider in LOCAL_PROVIDERS:
+            # API 모델 및 로컬 공급자: 모델명 키워드 매칭으로 판단
+            model_name_lower = selected_model.lower() if selected_model else ""
+            if any(x in model_name_lower for x in IS_OMNI_API):
+                file_types = MULTIMODAL_OMNI_FILE_TYPES
+                sources = ['upload', 'microphone']
+            elif any(x in model_name_lower for x in IS_MULTIMODAL_API):
+                file_types = MULTIMODAL_VISION_FILE_TYPES
+
+        elif provider == "self-provided":
+            # 로컬 모델: AutoConfig로 아키텍처 확인
+            try:
+                arch = AutoConfig.from_pretrained(
+                    os.path.join("./models/llm", selected_model)
+                ).architectures[0]
+                if arch in IS_ANY_TO_ANY:
+                    file_types = MULTIMODAL_OMNI_FILE_TYPES
+                    sources = ['upload', 'microphone']
+                elif arch in IS_IMAGE_TEXT_TO_TEXT:
+                    file_types = MULTIMODAL_VISION_FILE_TYPES
+            except Exception as e:
+                logger.warning(f"Failed to detect model architecture for '{selected_model}': {e}")
+
+        return gr.update(file_types=file_types, sources=sources)
 
     def toggle_standard_msg_input_visibility(self, selected_model: str | gr.Dropdown) -> bool:
         msg_visible = all(x not in selected_model.lower() for x in [

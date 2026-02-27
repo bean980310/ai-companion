@@ -128,6 +128,12 @@ def get_openai_llm_models(api_key: str = None):
     except openai.AuthenticationError as e:
         model_list.append(f"OpenAI API 오류 발생: {e}")
         return model_list
+    except openai.APIConnectionError as e:
+        model_list.append(f"OpenAI API 오류 발생: {e}")
+        return model_list
+    except openai.InternalServerError as e:
+        model_list.append(f"OpenAI API 오류 발생: {e}")
+        return model_list
 
 def get_anthropic_llm_models(api_key: str = None):
     import anthropic
@@ -154,6 +160,12 @@ def get_anthropic_llm_models(api_key: str = None):
         return model_list
 
     except anthropic.AuthenticationError as e:
+        model_list.append(f"Anthropic API 오류 발생: {e}")
+        return model_list
+    except anthropic.APIConnectionError as e:
+        model_list.append(f"Anthropic API 오류 발생: {e}")
+        return model_list
+    except anthropic.InternalServerError as e:
         model_list.append(f"Anthropic API 오류 발생: {e}")
         return model_list
 
@@ -185,6 +197,21 @@ def get_google_genai_llm_models(api_key: str = None):
         return model_list
 
     except exceptions.Unauthenticated as e:
+        model_list.append(f"Google AI API 오류 발생: {e}")
+        return model_list
+    except exceptions.PermissionDenied as e:
+        model_list.append(f"Google AI API 오류 발생: {e}")
+        return model_list
+    except exceptions.ResourceExhausted as e:
+        model_list.append(f"Google AI API 오류 발생: {e}")
+        return model_list
+    except exceptions.ServiceUnavailable as e:
+        model_list.append(f"Google AI API 오류 발생: {e}")
+        return model_list
+    except exceptions.InternalServerError as e:
+        model_list.append(f"Google AI API 오류 발생: {e}")
+        return model_list
+    except exceptions.GoogleAPIError as e:
         model_list.append(f"Google AI API 오류 발생: {e}")
         return model_list
 
@@ -284,13 +311,18 @@ openrouter_api_models = [
     "meta-llama/llama-3.3-70b-instruct",
     "meta-llama/llama-4-scout",
     "meta-llama/llama-4-maverick",
+    "qwen/qwen3-vl-30b-a3b-instruct",
+    "qwen/qwen3-vl-30b-a3b-thinking",
     "qwen/qwen3-vl-235b-a22b-instruct",
     "qwen/qwen3-vl-235b-a22b-thinking",
     "qwen/qwen3-max",
     "qwen/qwen3.5-397b-a17b",
     'qwen/qwen3.5-plus-02-15',
+    'qwen/qwen3.5-122b-a10b',
+    'qwen/qwen3.5-35b-a3b',
     "mistralai/mistral-small-3.2-24b-instruct",
-    "mistralai/magistral-small-2506",
+    'mistralai/mistral-medium-3.1',
+    "mistralai/mistral-large-2512",
     "moonshotai/kimi-k2",
     "moonshotai/kimi-k2-0905",
     'moonshotai/kimi-k2.5',
@@ -306,65 +338,103 @@ openrouter_api_models = [
 ]
 
 huggingface_inference_api_models = [
-    'meta-llama/Llama-3.3-70B-Instruct',
-    "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+    'meta-llama/Llama-3.3-70B-Instruct:fastest',
+    'meta-llama/Llama-3.3-70B-Instruct:cheapest',
+    "meta-llama/Llama-4-Scout-17B-16E-Instruct:fastest",
+    "meta-llama/Llama-4-Scout-17B-16E-Instruct:cheapest",
     'meta-llama/Llama-4-Scout-17B-16E-Instruct:groq',
     'meta-llama/Llama-4-Scout-17B-16E-Instruct:novita',
     'meta-llama/Llama-4-Scout-17B-16E-Instruct:nscale',
     'meta-llama/Llama-4-Scout-17B-16E-Instruct:together',
-    "meta-llama/Llama-4-Maverick-17B-128E-Instruct",
+    "meta-llama/Llama-4-Maverick-17B-128E-Instruct:fastest",
+    "meta-llama/Llama-4-Maverick-17B-128E-Instruct:cheapest",
     "meta-llama/Llama-4-Maverick-17B-128E-Instruct:groq",
-    'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8',
+    'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8:fastest',
+    'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8:cheapest',
     'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8:novita',
     'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8:together',
-    'Qwen/Qwen3-VL-30B-A3B-Instruct',
-    'Qwen/Qwen3-VL-30B-A3B-Thinking',
-    "Qwen/Qwen3-VL-235B-A22B-Instruct",
-    "Qwen/Qwen3-VL-235B-A22B-Thinking",
-    'Qwen/Qwen3-Next-80B-A3B-Instruct',
+    'Qwen/Qwen3-VL-30B-A3B-Instruct:fastest',
+    'Qwen/Qwen3-VL-30B-A3B-Instruct:cheapest',
+    'Qwen/Qwen3-VL-30B-A3B-Thinking:fastest',
+    'Qwen/Qwen3-VL-30B-A3B-Thinking:cheapest',
+    "Qwen/Qwen3-VL-235B-A22B-Instruct:fastest",
+    "Qwen/Qwen3-VL-235B-A22B-Instruct:cheapest",
+    "Qwen/Qwen3-VL-235B-A22B-Thinking:fastest",
+    "Qwen/Qwen3-VL-235B-A22B-Thinking:cheapest",
+    'Qwen/Qwen3-Next-80B-A3B-Instruct:fastest',
+    'Qwen/Qwen3-Next-80B-A3B-Instruct:cheapest',
     'Qwen/Qwen3-Next-80B-A3B-Instruct:novita',
     'Qwen/Qwen3-Next-80B-A3B-Instruct:hyperbolic',
     'Qwen/Qwen3-Next-80B-A3B-Instruct:together',
-    'Qwen/Qwen3-Next-80B-A3B-Thinking',
+    'Qwen/Qwen3-Next-80B-A3B-Thinking:fastest',
+    'Qwen/Qwen3-Next-80B-A3B-Thinking:cheapest',
     'Qwen/Qwen3-Next-80B-A3B-Thinking:novita',
     'Qwen/Qwen3-Next-80B-A3B-Thinking:hyperbolic',
     'Qwen/Qwen3-Next-80B-A3B-Thinking:together',
-    "Qwen/Qwen3.5-397B-A17B",
+    "Qwen/Qwen3.5-397B-A17B:fastest",
+    "Qwen/Qwen3.5-397B-A17B:cheapest",
     'Qwen/Qwen3.5-397B-A17B:novita',
     'Qwen/Qwen3.5-397B-A17B:together',
-    'deepcogito/cogito-v2-preview-llama-109B-MoE',
+    'deepcogito/cogito-v2-preview-llama-109B-MoE:fastest',
+    'deepcogito/cogito-v2-preview-llama-109B-MoE:cheapest',
     'deepcogito/cogito-v2-preview-llama-109B-MoE:together',
-    "moonshotai/Kimi-K2-Instruct",
-    "moonshotai/Kimi-K2-Instruct-0905",
-    "moonshotai/Kimi-K2-Thinking",
-    "moonshotai/Kimi-K2.5",
-    "google/gemma-3-27b-it",
+    "moonshotai/Kimi-K2-Instruct:fastest",
+    "moonshotai/Kimi-K2-Instruct:cheapest",
+    "moonshotai/Kimi-K2-Instruct-0905:fastest",
+    "moonshotai/Kimi-K2-Instruct-0905:cheapest",
+    "moonshotai/Kimi-K2-Thinking:fastest",
+    "moonshotai/Kimi-K2-Thinking:cheapest",
+    "moonshotai/Kimi-K2.5:fastest",
+    "moonshotai/Kimi-K2.5:cheapest",
+    "google/gemma-3-27b-it:fastest",
+    "google/gemma-3-27b-it:cheapest",
     "google/gemma-3-27b-it:nebius",
-    "zai-org/GLM-4.6",
+    "zai-org/GLM-4.6:fastest",
+    "zai-org/GLM-4.6:cheapest",
     "zai-org/GLM-4.6:zai-org",
-    "zai-org/GLM-4.6V",
+    "zai-org/GLM-4.6V:fastest",
+    "zai-org/GLM-4.6V:cheapest",
     "zai-org/GLM-4.6V:zai-org",
-    "zai-org/GLM-4.6V-Flash",
+    "zai-org/GLM-4.6V-Flash:fastest",
+    "zai-org/GLM-4.6V-Flash:cheapest",
     "zai-org/GLM-4.6V-Flash:zai-org",
-    "zai-org/GLM-4.7",
+    "zai-org/GLM-4.7:fastest",
+    "zai-org/GLM-4.7:cheapest",
     "zai-org/GLM-4.7:zai-org",
-    'zai-org/GLM-4.7-Flash'
+    'zai-org/GLM-4.7-Flash:fastest',
+    'zai-org/GLM-4.7-Flash:cheapest',
     "zai-org/GLM-4.7-Flash:zai-org",
-    'zai-org/GLM-5',
+    'zai-org/GLM-5:fastest',
+    'zai-org/GLM-5:cheapest',
     'zai-org/GLM-5:zai-org',
-    "deepseek-ai/DeepSeek-V3",
-    "deepseek-ai/DeepSeek-V3-0324",
-    "deepseek-ai/DeepSeek-R1",
-    "deepseek-ai/DeepSeek-R1-0528",
-    "deepseek-ai/DeepSeek-V3.1",
-    "deepseek-ai/DeepSeek-V3.1-Terminus",
-    "deepseek-ai/DeepSeek-V3.2",
-    'MiniMaxAI/MiniMax-M1-80k',
-    "MiniMaxAI/MiniMax-M2",
-    "MiniMaxAI/MiniMax-M2.1",
-    "MiniMaxAI/MiniMax-M2.5",
-    "CohereLabs/command-a-vision-07-2025",
-    "CohereLabs/command-a-reasoning-08-2025",
+    "deepseek-ai/DeepSeek-V3:fastest",
+    "deepseek-ai/DeepSeek-V3:cheapest",
+    "deepseek-ai/DeepSeek-V3-0324:fastest",
+    "deepseek-ai/DeepSeek-V3-0324:cheapest",
+    "deepseek-ai/DeepSeek-R1:fastest",
+    "deepseek-ai/DeepSeek-R1:cheapest",
+    "deepseek-ai/DeepSeek-R1-0528:fastest",
+    "deepseek-ai/DeepSeek-R1-0528:cheapest",
+    "deepseek-ai/DeepSeek-V3.1:fastest",
+    "deepseek-ai/DeepSeek-V3.1:cheapest",
+    "deepseek-ai/DeepSeek-V3.1-Terminus:fastest",
+    "deepseek-ai/DeepSeek-V3.1-Terminus:cheapest",
+    "deepseek-ai/DeepSeek-V3.2:fastest",
+    "deepseek-ai/DeepSeek-V3.2:cheapest",
+    'MiniMaxAI/MiniMax-M1-80k:fastest',
+    'MiniMaxAI/MiniMax-M1-80k:cheapest',
+    "MiniMaxAI/MiniMax-M2:fastest",
+    "MiniMaxAI/MiniMax-M2:cheapest",
+    "MiniMaxAI/MiniMax-M2.1:fastest",
+    "MiniMaxAI/MiniMax-M2.1:cheapest",
+    "MiniMaxAI/MiniMax-M2.5:fastest",
+    "MiniMaxAI/MiniMax-M2.5:cheapest",
+    "CohereLabs/command-a-vision-07-2025:cohere",
+    "CohereLabs/command-a-reasoning-08-2025:cohere",
+    'openai/gpt-oss-20b:fastest',
+    'openai/gpt-oss-20b:cheapest',
+    'openai/gpt-oss-120b:fastest',
+    'openai/gpt-oss-120b:cheapest',
 ]
 
 llm_api_models.extend(lmstudio_models)

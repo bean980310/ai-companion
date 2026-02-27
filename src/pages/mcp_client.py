@@ -13,6 +13,7 @@ from src import logger
 # Import MCP client components
 from src.mcp.client import MCPClientManager, MCPServerConfig, MCPTool, MCPToolResult
 from src.mcp.client.manager import get_mcp_client_manager
+from src.mcp.client.oauth import OAUTH_PRESETS
 
 
 def run_async(coro):
@@ -44,7 +45,12 @@ def add_mcp_server(
     api_key: str,
     timeout: float,
     description: str,
-    oauth_enabled: bool
+    oauth_enabled: bool,
+    oauth_client_id: str,
+    oauth_client_secret: str,
+    oauth_authorization_endpoint: str,
+    oauth_token_endpoint: str,
+    oauth_scopes: str
 ) -> tuple:
     """Add a new MCP server configuration"""
     if not name or not url:
@@ -62,7 +68,12 @@ def add_mcp_server(
             api_key=api_key if api_key else None,
             timeout=timeout,
             description=description,
-            oauth_enabled=oauth_enabled
+            oauth_enabled=oauth_enabled,
+            oauth_client_id=oauth_client_id if oauth_client_id else None,
+            oauth_client_secret=oauth_client_secret if oauth_client_secret else None,
+            oauth_authorization_endpoint=oauth_authorization_endpoint if oauth_authorization_endpoint else None,
+            oauth_token_endpoint=oauth_token_endpoint if oauth_token_endpoint else None,
+            oauth_scopes=oauth_scopes if oauth_scopes else None,
         )
 
         servers = get_servers_display()
@@ -365,8 +376,8 @@ def generate_arguments_template(tool_name: str) -> str:
 # Create the page
 with gr.Blocks() as demo:
     # Page Header
-    page_header = create_page_header(page_title_key="mcp_client_title")
-    language_dropdown = page_header.language_dropdown
+    # page_header = create_page_header(page_title_key="mcp_client_title")
+    # language_dropdown = page_header.language_dropdown
 
     gr.Markdown("""
     Connect to external MCP servers and use their tools.
@@ -408,6 +419,34 @@ with gr.Blocks() as demo:
                 enable_oauth_checkbox = gr.Checkbox(
                     label="Use OAuth"
                 )
+                with gr.Column(visible=False) as oauth_details_column:
+                    oauth_provider_preset = gr.Dropdown(
+                        label="OAuth Provider Preset",
+                        choices=["(Custom)"] + list(OAUTH_PRESETS.keys()),
+                        value="(Custom)",
+                        interactive=True
+                    )
+                    oauth_client_id_input = gr.Textbox(
+                        label="OAuth Client ID",
+                        placeholder="your-client-id"
+                    )
+                    oauth_client_secret_input = gr.Textbox(
+                        label="OAuth Client Secret",
+                        type="password",
+                        placeholder="your-client-secret"
+                    )
+                    oauth_auth_endpoint_input = gr.Textbox(
+                        label="Authorization Endpoint",
+                        placeholder="https://github.com/login/oauth/authorize"
+                    )
+                    oauth_token_endpoint_input = gr.Textbox(
+                        label="Token Endpoint",
+                        placeholder="https://github.com/login/oauth/access_token"
+                    )
+                    oauth_scopes_input = gr.Textbox(
+                        label="OAuth Scopes",
+                        placeholder="read:user repo"
+                    )
                 add_server_btn = gr.Button("Add Server", variant="primary")
 
         with gr.Row():
@@ -500,6 +539,30 @@ with gr.Blocks() as demo:
             interactive=False
         )
 
+    # OAuth checkbox toggles visibility of external OAuth fields
+    enable_oauth_checkbox.change(
+        fn=lambda enabled: gr.update(visible=enabled),
+        inputs=[enable_oauth_checkbox],
+        outputs=[oauth_details_column]
+    )
+
+    # OAuth provider preset fills in endpoints automatically
+    def apply_oauth_preset(preset_name: str):
+        if preset_name == "(Custom)" or preset_name not in OAUTH_PRESETS:
+            return (gr.update(), gr.update(), gr.update())
+        preset = OAUTH_PRESETS[preset_name]
+        return (
+            gr.update(value=preset["authorization_endpoint"]),
+            gr.update(value=preset["token_endpoint"]),
+            gr.update(value=preset["default_scopes"]),
+        )
+
+    oauth_provider_preset.change(
+        fn=apply_oauth_preset,
+        inputs=[oauth_provider_preset],
+        outputs=[oauth_auth_endpoint_input, oauth_token_endpoint_input, oauth_scopes_input]
+    )
+
     # Event handlers
     add_server_btn.click(
         fn=add_mcp_server,
@@ -510,15 +573,24 @@ with gr.Blocks() as demo:
             api_key_input,
             timeout_input,
             description_input,
-            enable_oauth_checkbox
+            enable_oauth_checkbox,
+            oauth_client_id_input,
+            oauth_client_secret_input,
+            oauth_auth_endpoint_input,
+            oauth_token_endpoint_input,
+            oauth_scopes_input
         ],
         outputs=[servers_table, status_text, server_select]
     ).then(
         fn=lambda: (gr.update(value=""), gr.update(value=""), gr.update(value="sse"),
-                   gr.update(value=""), gr.update(value=30.0), gr.update(value="")),
+                   gr.update(value=""), gr.update(value=30.0), gr.update(value=""),
+                   gr.update(value=False), gr.update(value=""), gr.update(value=""),
+                   gr.update(value=""), gr.update(value=""), gr.update(value="")),
         outputs=[
             server_name_input, server_url_input, transport_dropdown,
-            api_key_input, timeout_input, description_input
+            api_key_input, timeout_input, description_input,
+            enable_oauth_checkbox, oauth_client_id_input, oauth_client_secret_input,
+            oauth_auth_endpoint_input, oauth_token_endpoint_input, oauth_scopes_input
         ]
     ).then(
         fn=lambda: gr.update(choices=get_server_names()),
@@ -595,11 +667,11 @@ with gr.Blocks() as demo:
             gr.update(label=_('language_select'), info=_('language_info'))
         ]
 
-    language_dropdown.change(
-        fn=on_mcp_client_language_change,
-        inputs=[language_dropdown],
-        outputs=[page_header.title, language_dropdown]
-    )
+    # language_dropdown.change(
+    #     fn=on_mcp_client_language_change,
+    #     inputs=[language_dropdown],
+    #     outputs=[page_header.title, language_dropdown]
+    # )
 
 
 if __name__ == "__main__":

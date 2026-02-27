@@ -5,8 +5,8 @@ from src.common_blocks import create_page_header, get_language_code
 
 with gr.Blocks() as demo:
     # Page Header with Language Selector
-    page_header = create_page_header(page_title_key="download_title")
-    language_dropdown = page_header.language_dropdown
+    # page_header = create_page_header(page_title_key="download_title")
+    # language_dropdown = page_header.language_dropdown
 
     create_download_tab()
 
@@ -19,11 +19,11 @@ with gr.Blocks() as demo:
             gr.update(label=_('language_select'), info=_('language_info'))
         ]
 
-    language_dropdown.change(
-        fn=on_download_language_change,
-        inputs=[language_dropdown],
-        outputs=[page_header.title, language_dropdown]
-    )
+    # language_dropdown.change(
+    #     fn=on_download_language_change,
+    #     inputs=[language_dropdown],
+    #     outputs=[page_header.title, language_dropdown]
+    # )
 
 if __name__ == "__main__":
     demo.launch()

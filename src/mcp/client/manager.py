@@ -7,6 +7,7 @@ import os
 import traceback
 from typing import Any, Dict, List, Optional, Callable
 from pathlib import Path
+from contextlib import AsyncExitStack
 
 from src import logger
 
@@ -26,11 +27,13 @@ try:
     from mcp.client.sse import sse_client
     from mcp.client.stdio import stdio_client, StdioServerParameters
     from mcp.client.streamable_http import streamable_http_client
+    from mcp.shared._httpx_utils import create_mcp_http_client
     MCP_AVAILABLE = True
 except ImportError:
     MCP_AVAILABLE = False
     logger.warning("MCP SDK not available. Install with: pip install mcp")
 
+from .oauth import create_oauth_provider
 
 class MCPClientManager:
     """
@@ -97,6 +100,11 @@ class MCPClientManager:
         timeout: float = 30.0,
         description: str = "",
         oauth_enabled: bool = True,
+        oauth_client_id: Optional[str] = None,
+        oauth_client_secret: Optional[str] = None,
+        oauth_authorization_endpoint: Optional[str] = None,
+        oauth_token_endpoint: Optional[str] = None,
+        oauth_scopes: Optional[str] = None,
         save: bool = True
     ) -> MCPServerConfig:
         """
@@ -110,6 +118,12 @@ class MCPClientManager:
             headers: Optional HTTP headers
             timeout: Connection timeout in seconds
             description: Human-readable description
+            oauth_enabled: Whether to use OAuth authentication
+            oauth_client_id: Pre-registered OAuth client ID (for GitHub, Google, etc.)
+            oauth_client_secret: Pre-registered OAuth client secret
+            oauth_authorization_endpoint: OAuth authorization endpoint URL
+            oauth_token_endpoint: OAuth token endpoint URL
+            oauth_scopes: Space-separated OAuth scopes
             save: Whether to persist the configuration
 
         Returns:
@@ -124,7 +138,12 @@ class MCPClientManager:
             timeout=timeout,
             description=description,
             oauth_enabled=oauth_enabled,
-            oauth_client_name="AI Companion MCP Client"
+            oauth_client_name="AI Companion MCP Client",
+            oauth_client_id=oauth_client_id,
+            oauth_client_secret=oauth_client_secret,
+            oauth_authorization_endpoint=oauth_authorization_endpoint,
+            oauth_token_endpoint=oauth_token_endpoint,
+            oauth_scopes=oauth_scopes,
         )
         self.servers[name] = config
 
@@ -223,7 +242,6 @@ class MCPClientManager:
         # OAuth 2.1 authentication
         auth = None
         if config.oauth_enabled:
-            from .oauth import create_oauth_provider
             auth = await create_oauth_provider(config)
 
         async with sse_client(config.url, headers=headers, auth=auth) as (read, write):
@@ -260,9 +278,7 @@ class MCPClientManager:
         # OAuth 2.1 authentication
         http_client = None
         if config.oauth_enabled:
-            from .oauth import create_oauth_provider
             auth = await create_oauth_provider(config)
-            from mcp.shared._httpx_utils import create_mcp_http_client
             http_client = create_mcp_http_client(headers=headers, auth=auth)
 
         async with streamable_http_client(config.url, http_client=http_client) as (

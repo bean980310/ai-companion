@@ -16,8 +16,8 @@ from src.mcp.tools import (
 )
 
 with gr.Blocks() as demo:
-    page_header = create_page_header(page_title_key="main_title")
-    language_dropdown = page_header.language_dropdown
+    # page_header = create_page_header(page_title_key="main_title")
+    # language_dropdown = page_header.language_dropdown
     gr.Markdown("# AI Companion MCP Tools")
     gr.Markdown("This page exposes AI Companion functionality as MCP tools.")
     gr.Markdown("Access the MCP server at: `http://localhost:{port}/gradio_api/mcp/sse`")
@@ -102,7 +102,7 @@ with gr.Blocks() as demo:
                         choices=["concise", "detailed", "bullet_points"],
                         value="concise"
                     ),
-                    gr.Textbox(label="Model", value="gpt-4o"),
+                gr.Textbox(label="Model", value="gpt-4o"),
                 gr.Dropdown(
                     label="Provider",
                     choices=["openai", "anthropic", "google-genai"],

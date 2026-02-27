@@ -1,5 +1,6 @@
 # MCP OAuth 2.1 Authentication Support
-# Provides FileTokenStorage and helper for creating OAuthClientProvider
+# Provides FileTokenStorage, PreRegisteredOAuthProvider,
+# and helper for creating OAuthClientProvider
 
 import asyncio
 import json
@@ -18,10 +19,26 @@ try:
         OAuthToken,
         OAuthClientInformationFull,
     )
+    from mcp.shared.auth import OAuthMetadata
     OAUTH_AVAILABLE = True
 except ImportError:
     OAUTH_AVAILABLE = False
     logger.warning("MCP OAuth modules not available. Update mcp SDK.")
+
+
+# Well-known OAuth provider presets
+OAUTH_PRESETS = {
+    "github": {
+        "authorization_endpoint": "https://github.com/login/oauth/authorize",
+        "token_endpoint": "https://github.com/login/oauth/access_token",
+        "default_scopes": "read:user repo",
+    },
+    "google": {
+        "authorization_endpoint": "https://accounts.google.com/o/oauth2/v2/auth",
+        "token_endpoint": "https://oauth2.googleapis.com/token",
+        "default_scopes": "openid profile email",
+    },
+}
 
 
 class FileTokenStorage:
@@ -83,14 +100,140 @@ class FileTokenStorage:
             logger.error(f"Failed to save client info: {e}")
 
 
+class PreRegisteredOAuthProvider(OAuthClientProvider):
+    """
+    OAuth provider for external providers (GitHub, Google, etc.)
+    that require pre-registered client credentials.
+
+    Extends OAuthClientProvider to bypass dynamic client registration
+    while keeping the Authorization Code + PKCE flow intact.
+    """
+
+    def __init__(
+        self,
+        server_url: str,
+        client_metadata: "OAuthClientMetadata",
+        storage: "FileTokenStorage",
+        redirect_handler,
+        callback_handler,
+        timeout: float,
+        client_id: str,
+        client_secret: str,
+        authorization_endpoint: str,
+        token_endpoint: str,
+    ):
+        super().__init__(
+            server_url=server_url,
+            client_metadata=client_metadata,
+            storage=storage,
+            redirect_handler=redirect_handler,
+            callback_handler=callback_handler,
+            timeout=timeout,
+        )
+        # Pre-registered client info — bypasses dynamic registration
+        self._fixed_client_info = OAuthClientInformationFull(
+            client_id=client_id,
+            client_secret=client_secret,
+            redirect_uris=client_metadata.redirect_uris,
+            token_endpoint_auth_method=client_metadata.token_endpoint_auth_method,
+            grant_types=client_metadata.grant_types,
+            response_types=client_metadata.response_types,
+            scope=client_metadata.scope,
+        )
+        # Pre-configured OAuth metadata for the external provider
+        self._fixed_oauth_metadata = OAuthMetadata(
+            issuer=authorization_endpoint,
+            authorization_endpoint=authorization_endpoint,
+            token_endpoint=token_endpoint,
+        )
+
+    async def _initialize(self) -> None:
+        """Load stored tokens and inject pre-configured client info & metadata."""
+        self.context.current_tokens = await self.context.storage.get_tokens()
+        self.context.client_info = self._fixed_client_info
+        self.context.oauth_metadata = self._fixed_oauth_metadata
+        self._initialized = True
+
+
+def _build_callback_handler(redirect_port: int):
+    """Build a reusable OAuth callback handler."""
+
+    async def callback_handler() -> tuple[str, str | None]:
+        """Wait for the OAuth callback and return (auth_code, state)."""
+        auth_code_future: asyncio.Future[tuple[str, str | None]] = (
+            asyncio.get_event_loop().create_future()
+        )
+
+        from aiohttp import web
+
+        async def handle_callback(request: web.Request) -> web.Response:
+            code = request.query.get("code")
+            state = request.query.get("state")
+            error = request.query.get("error")
+
+            if error:
+                auth_code_future.set_exception(
+                    RuntimeError(
+                        f"OAuth error: {error} - "
+                        f"{request.query.get('error_description', '')}"
+                    )
+                )
+                return web.Response(
+                    text="<html><body><h1>Authentication Failed</h1>"
+                         f"<p>Error: {error}</p>"
+                         "<p>You can close this window.</p></body></html>",
+                    content_type="text/html",
+                )
+
+            if not code:
+                auth_code_future.set_exception(
+                    RuntimeError("No authorization code received")
+                )
+                return web.Response(
+                    text="<html><body><h1>Error</h1>"
+                         "<p>No authorization code received.</p></body></html>",
+                    content_type="text/html",
+                )
+
+            auth_code_future.set_result((code, state))
+            return web.Response(
+                text="<html><body><h1>Authentication Successful!</h1>"
+                     "<p>You can close this window and return to the application.</p></body></html>",
+                content_type="text/html",
+            )
+
+        app = web.Application()
+        app.router.add_get("/callback", handle_callback)
+
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, "localhost", redirect_port)
+        await site.start()
+
+        logger.info(
+            f"OAuth callback server listening on "
+            f"http://localhost:{redirect_port}/callback"
+        )
+
+        try:
+            result = await asyncio.wait_for(auth_code_future, timeout=300.0)
+            return result
+        finally:
+            await runner.cleanup()
+
+    return callback_handler
+
+
 async def create_oauth_provider(config) -> "OAuthClientProvider":
     """
     Create an OAuthClientProvider from an MCPServerConfig.
 
-    This sets up the full OAuth 2.1 Authorization Code + PKCE flow:
-    - Opens the user's browser for authorization
-    - Runs a local HTTP server to receive the callback
-    - Stores tokens locally for reuse
+    If the config has oauth_client_id set, creates a PreRegisteredOAuthProvider
+    for external OAuth providers (GitHub, Google, etc.) that require
+    pre-registered client credentials.
+
+    Otherwise, creates a standard OAuthClientProvider that uses
+    MCP's dynamic client registration.
 
     Args:
         config: MCPServerConfig with oauth_enabled=True
@@ -107,6 +250,42 @@ async def create_oauth_provider(config) -> "OAuthClientProvider":
     redirect_port = config.oauth_redirect_port or 3000
     redirect_uri = f"http://localhost:{redirect_port}/callback"
 
+    storage = FileTokenStorage(server_name=config.name)
+
+    # Authorization redirect: open browser
+    async def redirect_handler(authorization_url: str) -> None:
+        logger.info(f"Opening browser for OAuth authorization: {authorization_url}")
+        webbrowser.open(authorization_url)
+
+    callback_handler = _build_callback_handler(redirect_port)
+
+    # External OAuth provider (GitHub, Google, etc.)
+    if config.oauth_client_id:
+        auth_method = "client_secret_post"
+        client_metadata = OAuthClientMetadata(
+            redirect_uris=[redirect_uri],
+            token_endpoint_auth_method=auth_method,
+            grant_types=["authorization_code", "refresh_token"],
+            response_types=["code"],
+            client_name=config.oauth_client_name or "AI Companion MCP Client",
+            scope=config.oauth_scopes,
+        )
+
+        provider = PreRegisteredOAuthProvider(
+            server_url=config.url,
+            client_metadata=client_metadata,
+            storage=storage,
+            redirect_handler=redirect_handler,
+            callback_handler=callback_handler,
+            timeout=config.timeout,
+            client_id=config.oauth_client_id,
+            client_secret=config.oauth_client_secret or "",
+            authorization_endpoint=config.oauth_authorization_endpoint,
+            token_endpoint=config.oauth_token_endpoint,
+        )
+        return provider
+
+    # Standard MCP OAuth (dynamic client registration)
     client_metadata = OAuthClientMetadata(
         redirect_uris=[redirect_uri],
         token_endpoint_auth_method="none",
@@ -115,69 +294,6 @@ async def create_oauth_provider(config) -> "OAuthClientProvider":
         client_name=config.oauth_client_name or "AI Companion MCP Client",
         scope=config.oauth_scopes,
     )
-
-    storage = FileTokenStorage(server_name=config.name)
-
-    # Authorization redirect: open browser
-    async def redirect_handler(authorization_url: str) -> None:
-        logger.info(f"Opening browser for OAuth authorization: {authorization_url}")
-        webbrowser.open(authorization_url)
-
-    # Callback: run a temporary local HTTP server to receive the auth code
-    async def callback_handler() -> tuple[str, str | None]:
-        """Wait for the OAuth callback and return (auth_code, state)."""
-        auth_code_future: asyncio.Future[tuple[str, str | None]] = asyncio.get_event_loop().create_future()
-
-        from aiohttp import web
-
-        async def handle_callback(request: web.Request) -> web.Response:
-            code = request.query.get("code")
-            state = request.query.get("state")
-            error = request.query.get("error")
-
-            if error:
-                auth_code_future.set_exception(
-                    RuntimeError(f"OAuth error: {error} - {request.query.get('error_description', '')}")
-                )
-                return web.Response(
-                    text="<html><body><h1>Authentication Failed</h1>"
-                         f"<p>Error: {error}</p>"
-                         "<p>You can close this window.</p></body></html>",
-                    content_type="text/html"
-                )
-
-            if not code:
-                auth_code_future.set_exception(
-                    RuntimeError("No authorization code received")
-                )
-                return web.Response(
-                    text="<html><body><h1>Error</h1>"
-                         "<p>No authorization code received.</p></body></html>",
-                    content_type="text/html"
-                )
-
-            auth_code_future.set_result((code, state))
-            return web.Response(
-                text="<html><body><h1>Authentication Successful!</h1>"
-                     "<p>You can close this window and return to the application.</p></body></html>",
-                content_type="text/html"
-            )
-
-        app = web.Application()
-        app.router.add_get("/callback", handle_callback)
-
-        runner = web.AppRunner(app)
-        await runner.setup()
-        site = web.TCPSite(runner, "localhost", redirect_port)
-        await site.start()
-
-        logger.info(f"OAuth callback server listening on http://localhost:{redirect_port}/callback")
-
-        try:
-            result = await asyncio.wait_for(auth_code_future, timeout=300.0)
-            return result
-        finally:
-            await runner.cleanup()
 
     provider = OAuthClientProvider(
         server_url=config.url,

@@ -15,8 +15,8 @@ from src.common_blocks import create_page_header, get_language_code
 
 with gr.Blocks() as demo:
     # Page Header with Language Selector
-    page_header = create_page_header(page_title_key="settings_title")
-    language_dropdown = page_header.language_dropdown
+    # page_header = create_page_header(page_title_key="settings_title")
+    # language_dropdown = page_header.language_dropdown
 
     with gr.Tabs():
         create_cache_tab()
@@ -42,19 +42,19 @@ with gr.Blocks() as demo:
                 create_device_setting_tab()
 
     # Language Change Event
-    def on_settings_language_change(selected_lang: str):
-        lang_code = get_language_code(selected_lang)
-        translation_manager.set_language(lang_code)
-        return [
-            gr.update(value=f"## {_('settings_title')}"),
-            gr.update(label=_('language_select'), info=_('language_info'))
-        ]
+    # def on_settings_language_change(selected_lang: str):
+    #     lang_code = get_language_code(selected_lang)
+    #     translation_manager.set_language(lang_code)
+    #     return [
+    #         gr.update(value=f"## {_('settings_title')}"),
+    #         gr.update(label=_('language_select'), info=_('language_info'))
+    #     ]
 
-    language_dropdown.change(
-        fn=on_settings_language_change,
-        inputs=[language_dropdown],
-        outputs=[page_header.title, language_dropdown]
-    )
+    # language_dropdown.change(
+    #     fn=on_settings_language_change,
+    #     inputs=[language_dropdown],
+    #     outputs=[page_header.title, language_dropdown]
+    # )
 
 if __name__ == "__main__":
     demo.launch()

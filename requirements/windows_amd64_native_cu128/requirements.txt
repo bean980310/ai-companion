@@ -67,6 +67,6 @@ xformers --index-url https://download.pytorch.org/whl/cu128
 bitsandbytes
 onnxruntime
 # faiss-cpu
-eva-decord
+decord2
 opencc
 triton-windows

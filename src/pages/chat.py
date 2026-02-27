@@ -122,6 +122,7 @@ with gr.Blocks() as demo:
     
     system_message_accordion = chat_container_obj.main_panel.system_message_accordion
     system_message_box = chat_container_obj.main_panel.system_message_box
+    chat_interface = chat_container_obj.main_panel.chat_interface
     chatbot = chat_container_obj.main_panel.chatbot
     msg = chat_container_obj.main_panel.msg
     
@@ -392,6 +393,13 @@ with gr.Blocks() as demo:
         ),
         inputs=[text_model_provider_dropdown],
         outputs=[text_api_key_text, text_lora_dropdown]
+    )
+
+    gr.on(
+        triggers=[text_model_provider_dropdown.change, text_model_type_dropdown.change, text_model_dropdown.change, demo.load],
+        fn=chat_bot.handle_file_upload_type,
+        inputs=[text_model_provider_dropdown, text_model_type_dropdown, text_model_dropdown],
+        outputs=[chat_interface.textbox]
     )
     
     # Reset Logic
