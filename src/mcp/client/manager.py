@@ -254,12 +254,27 @@ class MCPClientManager:
         """Connect to a STDIO-based MCP server"""
         # For STDIO, url is the command, headers can contain args
         command = config.url
-        args = config.headers.get("args", "").split() if config.headers.get("args") else []
+        # Handle args gently (could be list or string)
+        args_raw = config.headers.get("args")
+        if isinstance(args_raw, list):
+            args = [str(a) for a in args_raw]
+        elif isinstance(args_raw, str):
+            args = args_raw.split()
+        else:
+            args = []
+
+        # Handle env gently (could be dict)
+        env_raw = config.headers.get("env")
+        if isinstance(env_raw, dict):
+            env = os.environ.copy()
+            env.update({str(k): str(v) for k, v in env_raw.items()})
+        else:
+            env = None
 
         server_params = StdioServerParameters(
             command=command,
             args=args,
-            env=None
+            env=env
         )
 
         async with stdio_client(server_params) as (read, write):
