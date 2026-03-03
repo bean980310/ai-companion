@@ -234,20 +234,20 @@ pip install git+https://github.com/myshell-ai/MeloTTS.git --no-deps
 
 ```zsh
 brew update
-brew install gcc cmake llvm@18 libomp
+brew install gcc cmake llvm libomp
 ```
 
 ```zsh
-export PATH="/opt/homebrew/opt/llvm@18/bin:$PATH"
+export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
 
 export LDFLAGS="-L/opt/homebrew/opt/libomp/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/libomp/include"
 export CXXFLAGS="-Xpreprocessor -fopenmp"
 
-export CC=/opt/homebrew/opt/llvm@18/bin/clang
-export CXX=/opt/homebrew/opt/llvm@18/bin/clang++
-export LDFLAGS="-L/opt/homebrew/opt/llvm@18/lib"
-export CPPFLAGS="-I/opt/homebrew/opt/llvm@18/include"
+export CC=/opt/homebrew/opt/llvm/bin/clang
+export CXX=/opt/homebrew/opt/llvm/bin/clang++
+export LDFLAGS="-L/opt/homebrew/opt/llvm/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
 ```
 
 ```zsh
