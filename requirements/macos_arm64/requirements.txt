@@ -10,7 +10,7 @@ beautifulsoup4==4.13.5
 sympy==1.14.0
 scipy==1.16.0
 protobuf
-packaging==25.0
+packaging
 fsspec
 pyyaml==6.0.2
 jinja2==3.1.6

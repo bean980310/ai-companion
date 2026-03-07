@@ -1,4 +1,4 @@
-transformers[ja, sklearn, tiktoken, serving, testing, sentencepiece, num2words, video, quality, mistral-common]>=4.55.4
+transformers[sentencepiece]>=5.0.0,<6.0.0
 x_transformers>=2.7.2
 sentence_transformers>=5.1.0
 datasets[audio]>=3.6.0

@@ -1,2 +1,2 @@
-environment.env
-config.env
+*
+!environment.env.example

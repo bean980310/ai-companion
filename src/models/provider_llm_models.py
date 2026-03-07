@@ -1,7 +1,11 @@
 import os
 from typing import List
 import re
+from src import logger
 from ..common.environ_manager import load_env_variables
+
+class LocalModelNotFound(Exception):
+    pass
 
 def get_lmstudio_models(api_host: str = "localhost:1234"):
     import lmstudio as lms
@@ -12,13 +16,17 @@ def get_lmstudio_models(api_host: str = "localhost:1234"):
         downloaded_llm = client.list_downloaded_models("llm")
 
         if len(downloaded_llm) == 0:
-            return ["모델이 존재하지 않습니다."]
+            raise LocalModelNotFound("모델이 존재하지 않습니다.")
         
         for m in downloaded_llm:
             llm.append(m.model_key)
 
         return llm
+    except LocalModelNotFound:
+        logger.error("모델이 존재하지 않습니다.")
+        return ["모델이 존재하지 않습니다."]
     except:
+        logger.error("LM Studio를 설치하고 서버를 실행해주세요.")
         return ["LM Studio를 설치하고 서버를 실행해주세요."]
 
 def get_lmstudio_embedding_models(api_host: str = "localhost:1234"):
@@ -30,13 +38,17 @@ def get_lmstudio_embedding_models(api_host: str = "localhost:1234"):
         downloaded_embedding = client.list_downloaded_models("embedding")
 
         if len(downloaded_embedding) == 0:
-            return ["모델이 존재하지 않습니다."]
+            raise LocalModelNotFound("모델이 존재하지 않습니다.")
         
         for m in downloaded_embedding:
             embedding.append(m.model_key)
 
         return embedding
+    except LocalModelNotFound:
+        logger.error("모델이 존재하지 않습니다.")
+        return ["모델이 존재하지 않습니다."]
     except:
+        logger.error("LM Studio를 설치하고 서버를 실행해주세요.")
         return ["LM Studio를 설치하고 서버를 실행해주세요."]
 
 def get_ollama_models(host: str = "http://localhost:11434"):
@@ -48,13 +60,17 @@ def get_ollama_models(host: str = "http://localhost:11434"):
         models = client.list().models
 
         if len(models) == 0:
-            return ["모델이 존재하지 않습니다."]
+            raise LocalModelNotFound("모델이 존재하지 않습니다.")
 
         for m in models:
             llm.append(m.model)
 
         return llm
+    except LocalModelNotFound:
+        logger.error("모델이 존재하지 않습니다.")
+        return ["모델이 존재하지 않습니다."]
     except:
+        logger.error("Ollama를 설치하고 서버를 실행해주세요.")
         return ["Ollama를 설치하고 서버를 실행해주세요."]
 
 def get_oobabooga_models(host: str = "http://localhost:5000/v1"):
@@ -68,13 +84,17 @@ def get_oobabooga_models(host: str = "http://localhost:5000/v1"):
         model = client.models.list()
 
         if len(model.data) == 0:
-            return ["모델이 존재하지 않습니다."]
+            raise LocalModelNotFound("모델이 존재하지 않습니다.")
 
         for m in model.data:
             llm.append(m.id)
 
         return llm
+    except LocalModelNotFound:
+        logger.error("모델이 존재하지 않습니다.")
+        return ["모델이 존재하지 않습니다."]
     except:
+        logger.error("Oobabooga를 설치하고 서버를 실행해주세요.")
         return ["Oobabooga를 설치하고 서버를 실행해주세요."]
 
 def get_vllm_models(host: str = "http://localhost:8000"):
@@ -87,11 +107,18 @@ def get_vllm_models(host: str = "http://localhost:8000"):
     try:
         model = client.models.list()
 
+        if len(model.data) == 0:
+            raise LocalModelNotFound("모델이 존재하지 않습니다.")
+
         for m in model.data:
             llm.append(m.id)
 
         return llm
+    except LocalModelNotFound:
+        logger.error("모델이 존재하지 않습니다.")
+        return ["모델이 존재하지 않습니다."]
     except:
+        logger.error("vllm을 설치하고 서버를 실행해주세요.")
         return ["vllm을 설치하고 서버를 실행해주세요."]
 
 def get_openai_llm_models(api_key: str = None):
@@ -114,25 +141,49 @@ def get_openai_llm_models(api_key: str = None):
         for m in model.data:
             model_id = m.id
 
-            date_pattern = re.compile(r"\d{4}-\d{2}-\d{2}")
-
             include = any(k in model_id.lower() for k in gpt_pattern)
             exclude_type = all(k not in model_id.lower() for k in ["image", "realtime", "tts", "audio", "transcribe", "codex", "search", "preview"])
             exclude_model = all(k not in model_id.lower() for k in ["gpt-4.1-mini", "gpt-4.1-nano", 'gpt-4o-mini', 'chatgpt-4o-latest'])
-            latest_or_date = ("latest" in model_id) or bool(date_pattern.search(model_id.lower()))
-            if include and exclude_type and exclude_model and latest_or_date:
+            if include and exclude_type and exclude_model:
                 model_list.append(model_id)
 
         return model_list
-        
+
+    except openai.BadRequestError as e:
+        model_list.append(f"OpenAI API 오류 발생: {e}")
+        logger.error(f"OpenAI API 오류 발생 (잘못된 요청): {e}")
+        return model_list
     except openai.AuthenticationError as e:
         model_list.append(f"OpenAI API 오류 발생: {e}")
+        logger.error(f"OpenAI API 오류 발생 (인증 오류): {e}")
         return model_list
+    except openai.PermissionDeniedError as e:
+        model_list.append(f"OpenAI API 오류 발생: {e}")
+        logger.error(f"OpenAI API 오류 발생 (권한 오류): {e}")
+        return model_list
+    except openai.APITimeoutError as e:
+        model_list.append(f"OpenAI API 오류 발생: {e}")
+        logger.error(f"OpenAI API 오류 발생 (시간 초과): {e}")
+        return model_list   
     except openai.APIConnectionError as e:
         model_list.append(f"OpenAI API 오류 발생: {e}")
+        logger.error(f"OpenAI API 오류 발생 (연결 오류): {e}")
+        return model_list
+    except openai.RateLimitError as e:
+        model_list.append(f"OpenAI API 오류 발생: {e}")
+        logger.error(f"OpenAI API 오류 발생 (한도 초과): {e}")
         return model_list
     except openai.InternalServerError as e:
         model_list.append(f"OpenAI API 오류 발생: {e}")
+        logger.error(f"OpenAI API 오류 발생 (서버 오류): {e}")
+        return model_list
+    except openai.APIError as e:
+        model_list.append(f"OpenAI API 오류 발생: {e}")
+        logger.error(f"OpenAI API 오류 발생 (API 오류): {e}")
+        return model_list
+    except Exception as e:
+        model_list.append(f"OpenAI API 오류 발생: {e}")
+        logger.exception(f"OpenAI API 오류 발생 (예기치 못한 오류): {e}")
         return model_list
 
 def get_anthropic_llm_models(api_key: str = None):
@@ -148,29 +199,54 @@ def get_anthropic_llm_models(api_key: str = None):
     client = Anthropic(api_key=api_key)
 
     try:
-        model = client.models.list()
+        model = client.beta.models.list()
 
         for m in model.data:
             model_id = m.id
-            exclude = "claude-3" not in model_id.lower()
-
-            if exclude:
-                model_list.append(model_id)
+            model_list.append(model_id)
         
         return model_list
 
+    except anthropic.BadRequestError as e:
+        model_list.append(f"Anthropic API 오류 발생: {e}")
+        logger.error(f"Anthropic API 오류 발생 (잘못된 요청): {e}")
+        return model_list
     except anthropic.AuthenticationError as e:
         model_list.append(f"Anthropic API 오류 발생: {e}")
+        logger.error(f"Anthropic API 오류 발생 (인증 오류): {e}")
+        return model_list
+    except anthropic.PermissionDeniedError as e:
+        model_list.append(f"Anthropic API 오류 발생: {e}")
+        logger.error(f"Anthropic API 오류 발생 (권한 오류): {e}")
+        return model_list
+    except anthropic.APITimeoutError as e:
+        model_list.append(f"Anthropic API 오류 발생: {e}")
+        logger.error(f"Anthropic API 오류 발생 (시간 초과): {e}")
         return model_list
     except anthropic.APIConnectionError as e:
         model_list.append(f"Anthropic API 오류 발생: {e}")
+        logger.error(f"Anthropic API 오류 발생 (연결 오류): {e}")
         return model_list
     except anthropic.InternalServerError as e:
         model_list.append(f"Anthropic API 오류 발생: {e}")
+        logger.error(f"Anthropic API 오류 발생 (서버 오류): {e}")
+        return model_list
+    except anthropic.RateLimitError as e:
+        model_list.append(f"Anthropic API 오류 발생: {e}")
+        logger.error(f"Anthropic API 오류 발생 (한도 초과): {e}")
+        return model_list
+    except anthropic.APIError as e:
+        model_list.append(f"Anthropic API 오류 발생: {e}")
+        logger.error(f"Anthropic API 오류 발생 (API 오류): {e}")
+        return model_list
+    except Exception as e:
+        model_list.append(f"Anthropic API 오류 발생: {e}")
+        logger.exception(f"Anthropic API 오류 발생 (예기치 못한 오류): {e}")
         return model_list
 
 def get_google_genai_llm_models(api_key: str = None):
     from google import genai
+    from google.genai import errors
     from google.api_core import exceptions
 
     model_list = []
@@ -196,23 +272,21 @@ def get_google_genai_llm_models(api_key: str = None):
 
         return model_list
 
-    except exceptions.Unauthenticated as e:
+    except errors.ClientError as e:
         model_list.append(f"Google AI API 오류 발생: {e}")
+        logger.error(f"Google AI API 오류 발생 (클라이언트 오류): {e}")
         return model_list
-    except exceptions.PermissionDenied as e:
+    except errors.ServerError as e:
         model_list.append(f"Google AI API 오류 발생: {e}")
+        logger.error(f"Google AI API 오류 발생 (서버 오류): {e}")
         return model_list
-    except exceptions.ResourceExhausted as e:
+    except errors.APIError as e:
         model_list.append(f"Google AI API 오류 발생: {e}")
+        logger.error(f"Google AI API 오류 발생 (API 오류): {e}")
         return model_list
-    except exceptions.ServiceUnavailable as e:
+    except Exception as e:
         model_list.append(f"Google AI API 오류 발생: {e}")
-        return model_list
-    except exceptions.InternalServerError as e:
-        model_list.append(f"Google AI API 오류 발생: {e}")
-        return model_list
-    except exceptions.GoogleAPIError as e:
-        model_list.append(f"Google AI API 오류 발생: {e}")
+        logger.exception(f"Google AI API 오류 발생 (예기치 못한 오류): {e}")
         return model_list
 
 def get_perplexity_llm_models(api_key: str = None):
@@ -245,6 +319,15 @@ def get_perplexity_llm_models(api_key: str = None):
 
     except perplexity.AuthenticationError as e:
         model_list.append(f"Perplexity API 오류 발생: {e}")
+        logger.error(f"Perplexity API 오류 발생 (인증 오류): {e}")
+        return model_list
+    except perplexity.APIError as e:
+        model_list.append(f"Perplexity API 오류 발생: {e}")
+        logger.error(f"Perplexity API 오류 발생 (API 오류): {e}")
+        return model_list
+    except Exception as e:
+        model_list.append(f"Perplexity API 오류 발생: {e}")
+        logger.exception(f"Perplexity API 오류 발생 (예기치 못한 오류): {e}")
         return model_list
 
 def get_xai_llm_models(api_key: str = None):
@@ -267,6 +350,7 @@ def get_xai_llm_models(api_key: str = None):
 
     except Exception as e:
         model_list.append(f"XAI API 오류 발생: {e}")
+        logger.error(f"XAI API 오류 발생: {e}")
         return model_list
 
 def get_mistralai_llm_models(api_key: str = None):
@@ -293,6 +377,7 @@ def get_mistralai_llm_models(api_key: str = None):
     
     except Exception as e:
         model_list.append(f"Mistral AI API 오류 발생: {e}")
+        logger.error(f"Mistral AI API 오류 발생: {e}")
         return model_list
 
 llm_api_models = []

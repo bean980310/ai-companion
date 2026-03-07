@@ -934,28 +934,27 @@ class Chatbot:
         file_types = COMMON_FILE_TYPES
         sources = ['upload']
 
-        if provider in API_PROVIDERS or provider in LOCAL_PROVIDERS:
-            # API 모델 및 로컬 공급자: 모델명 키워드 매칭으로 판단
-            model_name_lower = selected_model.lower() if selected_model else ""
-            if any(x in model_name_lower for x in IS_OMNI_API):
-                file_types = MULTIMODAL_OMNI_FILE_TYPES
-                sources = ['upload', 'microphone']
-            elif any(x in model_name_lower for x in IS_MULTIMODAL_API):
-                file_types = MULTIMODAL_VISION_FILE_TYPES
+        model_name_lower = selected_model.lower() if selected_model else ""
+        if any(x in model_name_lower for x in IS_OMNI_API):
+            file_types = MULTIMODAL_OMNI_FILE_TYPES
+            sources = ['upload', 'microphone']
+        elif any(x in model_name_lower for x in IS_MULTIMODAL_API):
+            file_types = MULTIMODAL_VISION_FILE_TYPES
 
-        elif provider == "self-provided":
-            # 로컬 모델: AutoConfig로 아키텍처 확인
-            try:
-                arch = AutoConfig.from_pretrained(
-                    os.path.join("./models/llm", selected_model)
-                ).architectures[0]
-                if arch in IS_ANY_TO_ANY:
-                    file_types = MULTIMODAL_OMNI_FILE_TYPES
-                    sources = ['upload', 'microphone']
-                elif arch in IS_IMAGE_TEXT_TO_TEXT:
-                    file_types = MULTIMODAL_VISION_FILE_TYPES
-            except Exception as e:
-                logger.warning(f"Failed to detect model architecture for '{selected_model}': {e}")
+        # elif provider == "self-provided":
+        #     # 로컬 모델: AutoConfig로 아키텍처 확인
+        #     model_name_lower = 
+        #     try:
+        #         arch = AutoConfig.from_pretrained(
+        #             os.path.join("./models/llm", selected_model)
+        #         ).architectures[0]
+        #         if arch in IS_ANY_TO_ANY:
+        #             file_types = MULTIMODAL_OMNI_FILE_TYPES
+        #             sources = ['upload', 'microphone']
+        #         elif arch in IS_IMAGE_TEXT_TO_TEXT:
+        #             file_types = MULTIMODAL_VISION_FILE_TYPES
+        #     except Exception as e:
+        #         logger.warning(f"Failed to detect model architecture for '{selected_model}': {e}")
 
         return gr.update(file_types=file_types, sources=sources)
 
