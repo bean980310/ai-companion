@@ -78,6 +78,7 @@ def get_openai_video_models(api_key: str = None):
 
 def get_google_genai_image_models(api_key: str = None):
     from google import genai
+    from google.genai import errors
     from google.api_core import exceptions
 
     model_list = []
@@ -99,12 +100,26 @@ def get_google_genai_image_models(api_key: str = None):
 
         return model_list
 
-    except exceptions.Unauthenticated as e:
+    except errors.ClientError as e:
         model_list.append(f"Google AI API 오류 발생: {e}")
+        logger.error(f"Google AI API 오류 발생 (클라이언트 오류): {e}")
+        return model_list
+    except errors.ServerError as e:
+        model_list.append(f"Google AI API 오류 발생: {e}")
+        logger.error(f"Google AI API 오류 발생 (서버 오류): {e}")
+        return model_list
+    except errors.APIError as e:
+        model_list.append(f"Google AI API 오류 발생: {e}")
+        logger.error(f"Google AI API 오류 발생 (API 오류): {e}")
+        return model_list
+    except Exception as e:
+        model_list.append(f"Google AI API 오류 발생: {e}")
+        logger.exception(f"Google AI API 오류 발생 (예기치 못한 오류): {e}")
         return model_list
 
 def get_google_genai_video_models(api_key: str = None):
     from google import genai
+    from google.genai import errors
     from google.api_core import exceptions
 
     model_list = []
@@ -126,8 +141,21 @@ def get_google_genai_video_models(api_key: str = None):
 
         return model_list
 
-    except exceptions.Unauthenticated as e:
+    except errors.ClientError as e:
         model_list.append(f"Google AI API 오류 발생: {e}")
+        logger.error(f"Google AI API 오류 발생 (클라이언트 오류): {e}")
+        return model_list
+    except errors.ServerError as e:
+        model_list.append(f"Google AI API 오류 발생: {e}")
+        logger.error(f"Google AI API 오류 발생 (서버 오류): {e}")
+        return model_list
+    except errors.APIError as e:
+        model_list.append(f"Google AI API 오류 발생: {e}")
+        logger.error(f"Google AI API 오류 발생 (API 오류): {e}")
+        return model_list
+    except Exception as e:
+        model_list.append(f"Google AI API 오류 발생: {e}")
+        logger.exception(f"Google AI API 오류 발생 (예기치 못한 오류): {e}")
         return model_list
 
 

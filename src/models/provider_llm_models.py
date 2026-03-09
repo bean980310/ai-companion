@@ -265,9 +265,7 @@ def get_google_genai_llm_models(api_key: str = None):
             exclude_type = all(k not in m.name.lower() for k in ["embedding", "tts", "exp"])
             exclude_model = all(k not in m.name.lower() for k in ["gemini-2.0"])
 
-            preview_check = ("preview" not in m.name.lower()) or any(k in m.name.lower() for k in ["gemini-3"])
-
-            if "generateContent" in m.supported_actions and include and exclude_type and exclude_model and preview_check:
+            if "generateContent" in m.supported_actions and include and exclude_type and exclude_model:
                 model_list.append(m.name)
 
         return model_list

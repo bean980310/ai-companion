@@ -20,10 +20,12 @@ from src.common.cache import models_cache
 
 from ai_companion_llm_backend import (
     TransformersCausalModelHandler, 
-    TransformersVisionModelHandler, 
+    TransformersVisionModelHandler,
+    TransformersUnifiedModelHandler,
     GGUFCausalModelHandler, 
     MlxCausalModelHandler, 
     MlxVisionModelHandler,
+    MlxUnifiedModelHandler
 )
 
 from ai_companion_llm_backend.provider import (
@@ -65,7 +67,7 @@ def get_default_device():
 default_device = get_default_device()
 logger.info(f"Default device set to: {default_device}")
 
-def load_model(selected_model: str, provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", 'mistralai', "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"], model_type: str | None = None, selected_lora: str | None = None, quantization_bit: str = "Q8_0", local_model_path: str | None = None, api_key: str | None = None, device: str = "cpu", lora_path: str | None = None, image_input: str | Image.Image | ImageFile.ImageFile | Any | None = None, **kwargs):
+def load_model(selected_model: str, provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", 'mistralai', "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"], model_type: str | None = None, selected_lora: str | None = None, quantization_bit: str = "Q8_0", local_model_path: str | None = None, api_key: str | None = None, device: str = "cpu", lora_path: str | None = None, image_input: str | List[str] | Image.Image | List[Image.Image] | ImageFile.ImageFile | List[ImageFile.ImageFile] | Any | None = None, audio_input: str | List[str] | Any | None = None, video_input: str | List[str] | Any | None = None, **kwargs):
     """
     모델 로드 함수. 특정 모델에 대한 로드 로직을 외부 핸들러로 분리.
     """
@@ -191,47 +193,70 @@ def load_model(selected_model: str, provider: Literal["openai", "anthropic", "go
             models_cache[cache_key] = handler
             return handler
         elif model_type == "mlx":
-            if vision_model:
-                handler = MlxVisionModelHandler(
-                    model_id=model_id,
-                    lora_model_id=lora_model_id,
-                    model_type=model_type,
-                    image_input=image_input,
-                    **kwargs
-                )
-                models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
-                return handler
-            else:
-                handler = MlxCausalModelHandler(
-                    model_id=model_id,
-                    lora_model_id=lora_model_id,
-                    model_type=model_type, 
-                    **kwargs
-                )
-                models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
-                return handler
+            handler = MlxUnifiedModelHandler(
+                model_id=model_id,
+                lora_model_id=lora_model_id,
+                model_type=model_type,
+                image_input=image_input,
+                audio_input=audio_input,
+                video_input=video_input,
+                **kwargs    
+            )
+            models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+            return handler
+            # if vision_model:
+            #     handler = MlxVisionModelHandler(
+            #         model_id=model_id,
+            #         lora_model_id=lora_model_id,
+            #         model_type=model_type,
+            #         image_input=image_input,
+            #         **kwargs
+            #     )
+            #     models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+            #     return handler
+            # else:
+            #     handler = MlxCausalModelHandler(
+            #         model_id=model_id,
+            #         lora_model_id=lora_model_id,
+            #         model_type=model_type, 
+            #         **kwargs
+            #     )
+            #     models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+            #     return handler
         else:
-            if vision_model:
-                handler = TransformersVisionModelHandler(
-                    model_id=model_id,
-                    lora_model_id=lora_model_id,
-                    model_type=model_type,
-                    device=device,
-                    image_input=image_input, 
-                    **kwargs
-                )
-                models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
-                return handler
-            else:
-                handler = TransformersCausalModelHandler(
-                    model_id=model_id, 
-                    lora_model_id=lora_model_id, 
-                    model_type=model_type,
-                    device=device, 
-                    **kwargs
-                )
-                models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
-                return handler
+            handler = TransformersUnifiedModelHandler(
+                model_id=model_id,
+                lora_model_id=lora_model_id,
+                model_type=model_type,
+                device=device,
+                image_input=image_input,
+                audio_input=audio_input,
+                video_input=video_input,
+                **kwargs    
+            )
+            models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+            return handler
+            # if vision_model:
+            #     handler = TransformersVisionModelHandler(
+            #         model_id=model_id   ,
+            #         lora_model_id=lora_model_id,
+            #         model_type=model_type,
+            #         device=device,
+            #         image_input=image_input, 
+            #         **kwargs
+            #     )
+            #     models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+            #     return handler
+            # else:
+            #     handler = TransformersCausalModelHandler(
+            #         model_id=model_id, 
+            #         lora_model_id=lora_model_id, 
+            #         model_type=model_type,
+            #         device=device, 
+            #         **kwargs
+            #     )
+            #     models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+            #     return handler
 
 def generate_answer(history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]], selected_model: str, provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", 'mistralai', "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"], model_type: str | None = None, selected_lora: str | None = None, local_model_path: str | None = None, lora_path: str | None = None, image_input: str | list[str] | Image.Image | ImageFile.ImageFile | Any | None = None, audio_input: str | list[str] | Any | None = None, video_input: str | list[str] | Any | None = None, api_key: str | None = None, device: str = "cpu", seed: int = 42, max_length: int = -1, temperature: float = 1.0, top_k: int = 50, top_p: float = 1.0, repetition_penalty: float = 1.0, enable_thinking: bool = False, enable_streaming: bool = False, character_language: str = 'ko'):
     """
@@ -265,7 +290,7 @@ def generate_answer(history: list[dict[str, str | list[dict[str, str | Image.Ima
     if not handler:
         logger.info(f"[*] 모델 공급자: {provider}")
         logger.info(f"[*] 모델 로드 중: {selected_model}")
-        handler = load_model(selected_model, provider, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path, image_input=image_input, seed=seed, max_length=max_length, temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty, enable_thinking=enable_thinking)
+        handler = load_model(selected_model, provider, model_type, selected_lora, local_model_path=local_model_path, device=device, lora_path=lora_path, image_input=image_input, audio_input=audio_input, video_input=video_input, seed=seed, max_length=max_length, temperature=temperature, top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty, enable_thinking=enable_thinking)
         
     if not handler:
         logger.error("모델 핸들러가 로드되지 않았습니다.")
