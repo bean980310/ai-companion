@@ -281,7 +281,7 @@ async def create_oauth_provider(config) -> "OAuthClientProvider":
             timeout=config.timeout,
             client_id=config.oauth_client_id,
             client_secret=config.oauth_client_secret or "",
-            issuer=config.issuer,
+            issuer=config.oauth_issuer,
             authorization_endpoint=config.oauth_authorization_endpoint,
             token_endpoint=config.oauth_token_endpoint,
         )
