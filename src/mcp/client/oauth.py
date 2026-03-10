@@ -119,6 +119,7 @@ class PreRegisteredOAuthProvider(OAuthClientProvider):
         timeout: float,
         client_id: str,
         client_secret: str,
+        issuer: str,
         authorization_endpoint: str,
         token_endpoint: str,
     ):
@@ -142,7 +143,7 @@ class PreRegisteredOAuthProvider(OAuthClientProvider):
         )
         # Pre-configured OAuth metadata for the external provider
         self._fixed_oauth_metadata = OAuthMetadata(
-            issuer=authorization_endpoint,
+            issuer=issuer,
             authorization_endpoint=authorization_endpoint,
             token_endpoint=token_endpoint,
         )
@@ -280,6 +281,7 @@ async def create_oauth_provider(config) -> "OAuthClientProvider":
             timeout=config.timeout,
             client_id=config.oauth_client_id,
             client_secret=config.oauth_client_secret or "",
+            issuer=config.issuer,
             authorization_endpoint=config.oauth_authorization_endpoint,
             token_endpoint=config.oauth_token_endpoint,
         )

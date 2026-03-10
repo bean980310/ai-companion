@@ -30,6 +30,7 @@ class MCPServerConfig:
     # External OAuth client settings (GitHub, Google, etc.)
     oauth_client_id: Optional[str] = None
     oauth_client_secret: Optional[str] = None
+    oauth_issuer: Optional[str] = None
     oauth_authorization_endpoint: Optional[str] = None
     oauth_token_endpoint: Optional[str] = None
 
@@ -49,6 +50,7 @@ class MCPServerConfig:
             "oauth_redirect_port": self.oauth_redirect_port,
             "oauth_client_id": self.oauth_client_id,
             "oauth_client_secret": self.oauth_client_secret,
+            "oauth_issuer": self.oauth_issuer,
             "oauth_authorization_endpoint": self.oauth_authorization_endpoint,
             "oauth_token_endpoint": self.oauth_token_endpoint
         }
@@ -70,6 +72,7 @@ class MCPServerConfig:
             oauth_redirect_port=data.get("oauth_redirect_port", 3000),
             oauth_client_id=data.get("oauth_client_id"),
             oauth_client_secret=data.get("oauth_client_secret"),
+            oauth_issuer=data.get("oauth_issuer"),
             oauth_authorization_endpoint=data.get("oauth_authorization_endpoint"),
             oauth_token_endpoint=data.get("oauth_token_endpoint")
         )

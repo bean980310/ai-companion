@@ -102,6 +102,7 @@ class MCPClientManager:
         oauth_enabled: bool = True,
         oauth_client_id: Optional[str] = None,
         oauth_client_secret: Optional[str] = None,
+        oauth_issuer: Optional[str] = None,
         oauth_authorization_endpoint: Optional[str] = None,
         oauth_token_endpoint: Optional[str] = None,
         oauth_scopes: Optional[str] = None,
@@ -121,6 +122,7 @@ class MCPClientManager:
             oauth_enabled: Whether to use OAuth authentication
             oauth_client_id: Pre-registered OAuth client ID (for GitHub, Google, etc.)
             oauth_client_secret: Pre-registered OAuth client secret
+            oauth_issuer: OAuth issuer URL
             oauth_authorization_endpoint: OAuth authorization endpoint URL
             oauth_token_endpoint: OAuth token endpoint URL
             oauth_scopes: Space-separated OAuth scopes
@@ -141,6 +143,7 @@ class MCPClientManager:
             oauth_client_name="AI Companion MCP Client",
             oauth_client_id=oauth_client_id,
             oauth_client_secret=oauth_client_secret,
+            oauth_issuer=oauth_issuer,
             oauth_authorization_endpoint=oauth_authorization_endpoint,
             oauth_token_endpoint=oauth_token_endpoint,
             oauth_scopes=oauth_scopes,
