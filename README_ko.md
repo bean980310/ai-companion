@@ -1,5 +1,7 @@
 # 로컬 머신을 위한 AI 컴패니언
 
+![AI Companion](assets/images/ai-companion-2.png)
+
 로컬 환경에서 실행되는 생성형 AI 모델(LLM, Diffusion 등)을 활용한 Gradio 기반 인공지능 컴패니언 앱입니다.
 
 [English](README.md) [한국어](README_ko.md) [日本語](README_ja.md) [简体中文](README_zh_cn.md) [繁體中文](README_zh_tw.md)

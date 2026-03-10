@@ -1,5 +1,7 @@
 # ローカル環境向けAIコンパニオン
 
+![AI Companion](assets/images/ai-companion-2.png)
+
 ローカル環境で動作する生成系AIモデル（LLM、Diffusionモデル等）を活用した、GradioベースのAIコンパニオンアプリです。
 
 [English](README.md) [한국어](README_ko.md) [日本語](README_ja.md) [简体中文](README_zh_cn.md) [繁體中文](README_zh_tw.md)

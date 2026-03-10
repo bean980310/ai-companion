@@ -1,5 +1,7 @@
 # 面向本地環境的AI伴侶
 
+![AI Companion](assets/images/ai-companion-2.png)
+
 一款基於Gradio、運行於本地環境的生成式AI（LLM、Diffusion等）伴侶應用程序。
 
 [English](README.md) [한국어](README_ko.md) [日本語](README_ja.md) [简体中文](README_zh_cn.md) [繁體中文](README_zh_tw.md)
