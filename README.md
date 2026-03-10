@@ -1,5 +1,7 @@
 # AI Companion for Local Machines
 
+![AI Companion](assets/images/ai-companion-logo-2.png)
+
 A Gradio-based AI companion app leveraging generative AI models (LLMs, Diffusion models, etc.) running in a local environment.
 
 [English](README.md) [한국어](README_ko.md) [日本語](README_ja.md) [简体中文](README_zh_cn.md) [繁體中文](README_zh_tw.md)
