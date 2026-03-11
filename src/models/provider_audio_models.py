@@ -1,6 +1,7 @@
 import os
 from typing import List
 import re
+from src import logger
 from ..common.environ_manager import load_env_variables
 
 def get_openai_asr_models(api_key: str = None):

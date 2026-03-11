@@ -2,13 +2,13 @@
 
 :root {
     --sidebar-width: 90%;
-    
+
     --color-background-primary: #f8fafc;
     --color-background-secondary: white;
     --color-background-tab: #f0f0f0;
     --color-background-tab-active: #adadad;
     --color-background-accordion: #f0f0f0;
-    
+
     --color-background-primary-dark: #1a1a1a;
     --color-background-secondary-dark: #2d2d2d;
     --color-background-tab-dark: #5c5c5c;
@@ -37,7 +37,8 @@
 }
 
 .sidebar-container {
-    width: var(--sidebar-width); /* 원하는 너비 */
+    width: var(--sidebar-width);
+    /* 원하는 너비 */
     margin: auto;
     padding: 10px;
     box-sizing: border-box;
@@ -57,13 +58,16 @@
 }
 
 .header-container {
+    position: sticky;
+    top: 0;
+    z-index: 100;
     width: 90%;
     height: 90%;
     margin: auto;
     background-color: var(--color-background-secondary);
     padding: 1rem 1.5rem;
     border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     margin-bottom: 1rem;
 }
 
@@ -121,55 +125,99 @@
     color: #dc2626;
 }
 
+/* ===== 탭 컨테이너 ===== */
 .tabs {
     display: flex;
+    flex-direction: column;
     width: 90%;
     margin: auto;
-    border-bottom: 2px solid #e5e7eb;
+    gap: 0.25rem;
     margin-bottom: 1rem;
 }
 
-/* 탭 기본 스타일 */
+/* ===== 사이드바 탭 버튼 기본 스타일 ===== */
 .tab {
     display: flex;
-    padding: 0.75rem 1rem;
-    /* cursor: pointer; */
-    background-color: var(--color-background-tab);
-    color: #1a1a1a;
+    align-items: center;
+    padding: 0.65rem 1rem;
+    background-color: transparent;
+    color: #4b5563;
     font-weight: 500;
-    /* transition: background-color 0.2s, color 0.2s; */
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    border-radius: 12px;
-    margin-right: 0.25rem;
-    border: none;
+    font-size: 0.9rem;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-right: 0;
+    width: 100%;
+    text-align: left;
 }
 
-/* 활성 탭 스타일 */
+/* 탭 컨텐츠 컨테이너 */
 .tab-container {
     width: 90%;
     margin: auto;
     background-color: var(--color-background-primary);
     color: #1a1a1a;
-    border-bottom: 2px solid var(--color-background-primary);
+    border-bottom: none;
 }
 
-/* 탭 호버 효과 */
+/* 사이드바 탭 호버 */
 .tab:hover {
-    background-color: #f0f0f0;
+    background-color: #f0f4ff;
+    color: #3b82f6;
+    border-color: #e0e7ff;
 }
 
+/* 사이드바 탭 활성 상태 */
 .tab-active {
     display: flex;
-    padding: 0.75rem 1rem;
-    background-color: var(--color-background-tab-active);
-    color: #1a1a1a;
+    align-items: center;
+    padding: 0.65rem 1rem;
+    background-color: #eff6ff;
+    color: #2563eb;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 10px;
+    border: 1px solid #bfdbfe;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-right: 0;
+    width: 100%;
+    text-align: left;
+    box-shadow: 0 1px 3px rgba(59, 130, 246, 0.1);
+}
+
+/* ===== Gradio 내장 탭 오버라이드 ===== */
+.gradio-container .tabs > .tab-nav {
+    border-bottom: 2px solid #e5e7eb;
+    gap: 0.25rem;
+    padding: 0 0.5rem;
+}
+
+.gradio-container .tabs > .tab-nav > button {
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px 8px 0 0;
+    border: none;
+    background-color: transparent;
+    color: #6b7280;
     font-weight: 500;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    border-radius: 12px;
-    margin-right: 0.25rem;
-    border-bottom: 2px solid var(--color-background-tab-active);
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+}
+
+.gradio-container .tabs > .tab-nav > button:hover {
+    background-color: #f0f4ff;
+    color: #3b82f6;
+}
+
+.gradio-container .tabs > .tab-nav > button.selected {
+    background-color: #eff6ff;
+    color: #2563eb;
+    font-weight: 600;
+    border-bottom: 2px solid #3b82f6;
 }
 
 .model-container {
@@ -338,7 +386,9 @@
     max-height: 100% !important;
 }
 
-.character-dropdown, .preset-dropdown, .model-dropdown {
+.character-dropdown,
+.preset-dropdown,
+.model-dropdown {
     width: 100%;
     margin: auto;
     height: 100%;
@@ -347,6 +397,7 @@
     padding: 1rem;
     margin-bottom: 1rem;
 }
+
 /* 
 .model-dropdown {
     width: 100%;
@@ -371,8 +422,14 @@
     .main-container {
         background-color: var(--color-background-primary-dark);
     }
-    
-    .header-container, .warning-container, .session-container, .model-container, .chat-interface, .history-container, .language-selector {
+
+    .header-container,
+    .warning-container,
+    .session-container,
+    .model-container,
+    .chat-interface,
+    .history-container,
+    .language-selector {
         background-color: var(--color-background-secondary-dark);
         border-color: #404040;
     }
@@ -380,68 +437,88 @@
     .accordion-container {
         background-color: var(--color-background-accordion-dark);
     }
-    
+
     .main-title {
         color: #ffffff;
     }
-    
+
     .chat-window {
         background-color: var(--color-background-secondary-dark);
         border-color: #404040;
     }
-    
+
     .chat-window .user-message {
         background-color: #3b4252;
     }
-    
+
     .chat-window .assistant-message {
         background-color: #2e3440;
     }
-    
-    .system-message, .input-area {
+
+    .system-message,
+    .input-area {
         background-color: var(--color-background-secondary-dark);
         border-color: #404040;
     }
-    
+
     .message-input .message-input-alt .message-output {
         background-color: var(--color-background-primary-dark);
         border-color: #404040;
         color: #ffffff;
     }
-    
+
     .status-bar {
         background-color: var(--color-background-secondary-dark);
         color: #9ca3af;
     }
 
     .tab {
-        background-color: var(--color-background-tab-dark);
-        color: #ffffff;
+        background-color: transparent;
+        color: #9ca3af;
+        border-color: transparent;
     }
-    
+
     .tab-container {
         background-color: var(--color-background-primary-dark);
         color: #ffffff;
-        border-bottom: 2px solid var(--color-background-primary-dark);
+        border-bottom: none;
     }
-    
+
     .tab:hover {
-        background-color: #3b3b3b;
+        background-color: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        border-color: rgba(59, 130, 246, 0.2);
     }
 
     .tab-active {
-        display: flex;
-        padding: 0.75rem 1rem;
-        background-color: var(--color-background-tab-active-dark);
-        color: #ffffff;
-        font-weight: 500;
-        border-top-left-radius: 8px;
-        border-top-right-radius: 8px;
-        border-radius: 12px;
-        margin-right: 0.25rem;
-        border-bottom: 2px solid var(--color-background-tab-active-dark);
+        background-color: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+        font-weight: 600;
+        border-color: rgba(96, 165, 250, 0.4);
+        box-shadow: 0 1px 3px rgba(59, 130, 246, 0.15);
+    }
+
+    /* Gradio 내장 탭 다크모드 */
+    .gradio-container .tabs > .tab-nav {
+        border-bottom-color: #404040;
+    }
+
+    .gradio-container .tabs > .tab-nav > button {
+        color: #9ca3af;
+    }
+
+    .gradio-container .tabs > .tab-nav > button:hover {
+        background-color: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+    }
+
+    .gradio-container .tabs > .tab-nav > button.selected {
+        background-color: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+        border-bottom-color: #3b82f6;
     }
 }
+
 /* css 변수에 추가 */
 .settings-popup {
     position: fixed;
@@ -451,7 +528,7 @@
     background: white;
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     z-index: 1000;
     width: 80%;
     max-width: 800px;
@@ -485,9 +562,10 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     z-index: -1;
 }
+
 .confirm-dialog {
     position: fixed;
     top: 50%;
@@ -497,7 +575,8 @@
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    z-index: 1100;  /* settings-popup보다 더 위에 표시 */
+    z-index: 1100;
+    /* settings-popup보다 더 위에 표시 */
     width: 400px;
     text-align: center;
 }
@@ -556,15 +635,16 @@
     .reset-confirm-modal {
         background: #2d2d2d;
     }
-    
+
     .reset-confirm-title {
         color: #e5e7eb;
     }
-    
+
     .reset-confirm-message {
         color: #9ca3af;
     }
 }
+
 .delete-session-modal {
     position: fixed !important;
     top: 50% !important;

@@ -27,7 +27,7 @@ class HeaderUIComponent:
     @classmethod
     def create_header_container(cls, render=True):
         with gr.Row(elem_classes="header-container", scale=1, render=render) as head:
-            with gr.Column(scale=3, render=render):
+            with gr.Column(scale=3, render=render, variant='panel'):
                 title = cls.title.render()
                 gr.Markdown("### Beta Release", render=render)
             with gr.Column(scale=1):

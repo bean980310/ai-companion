@@ -58,7 +58,8 @@ def create_page_header(
                 subtitle = gr.Markdown(subtitle_text)
             else:
                 subtitle = None
-
+        with gr.Column(scale=1):
+            settings_button = gr.Button("⚙️", elem_classes="settings-button")
         with gr.Column(scale=1, min_width=150):
             language_dropdown = gr.Dropdown(
                 label=_('language_select'),
@@ -70,9 +71,10 @@ def create_page_header(
                 elem_classes="language-selector"
             )
     
-    ui_component.header_row = header_row,
-    ui_component.title = title,
-    ui_component.subtitle = subtitle,
+    ui_component.header_row = header_row
+    ui_component.title = title
+    ui_component.settings_button = settings_button
+    ui_component.subtitle = subtitle
     ui_component.language_dropdown = language_dropdown
 
     return PageHeaderComponents(

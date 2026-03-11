@@ -1,6 +1,7 @@
 import os
 from typing import List
 import re
+from src import logger
 from ..common.environ_manager import load_env_variables
 
 def get_comfyui_image_models(url: str="127.0.0.1:8188", folder: str = "checkpoints"):

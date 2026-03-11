@@ -74,6 +74,8 @@ load_initial_data()
 from src.pages import header
 from src.pages import audio, chat, image_gen, storyteller, translator, download, settings, mcp_client, mcp_tools
 
+import importlib
+
 # Global Initialization
 # Creating a dummy block to run initialization if needed, 
 # or just running functions that don't require Gradio context (some might).
@@ -98,12 +100,32 @@ def initialize_global_state():
 
 
 # with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True, css_paths="html/css/style.css") as demo:
+def _reload_page_modules():
+    """Force reload page modules to get fresh demo objects during hot-reload."""
+    global header, chat, image_gen, storyteller, audio, translator, settings, mcp_client, download, mcp_tools
+    from src.pages import header as _h, chat as _c, image_gen as _ig, storyteller as _s
+    from src.pages import audio as _a, translator as _t, settings as _st, mcp_client as _mc
+    from src.pages import download as _d, mcp_tools as _mt
+    for mod in [_h, _c, _ig, _s, _a, _t, _st, _mc, _d, _mt]:
+        importlib.reload(mod)
+    header, chat, image_gen, storyteller = _h, _c, _ig, _s
+    audio, translator, settings, mcp_client = _a, _t, _st, _mc
+    download, mcp_tools = _d, _mt
+
+_reload_page_modules()
+
 with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True) as demo:
     # demo.route("Chat", "/chat")
     # 1. Global State Registration
     initialize_global_state()
     header.demo.render()
-    tapped_interface = gr.TabbedInterface([chat.demo, image_gen.demo, storyteller.demo, audio.demo, translator.demo, settings.demo, mcp_client.demo, download.demo, mcp_tools.demo], ["Chat", "Image Gen", "Storyteller", "Audio", "Translator", "Settings", "MCP Client", "Download", "MCP Tools"])
+
+    interface_list = [chat.demo, image_gen.demo, storyteller.demo, audio.demo, translator.demo, settings.demo, mcp_client.demo, download.demo, mcp_tools.demo]
+    interface_names = ["Chat", "Image Gen", "Storyteller", "Audio", "Translator", "Settings", "MCP Client", "Download", "MCP Tools"]
+    with gr.Tabs():
+        for interface, name in zip(interface_list, interface_names):
+            with gr.TabItem(name):
+                interface.render()
 
     header.language_dropdown.change(
         fn=header.on_header_language_change,
