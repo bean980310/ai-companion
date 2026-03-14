@@ -6,7 +6,7 @@ numba>=0.60.0
 pandas>=2.0.0
 matplotlib
 scikit-learn
-beautifulsoup4==4.13.5
+beautifulsoup4
 sympy==1.14.0
 scipy==1.16.0
 protobuf
@@ -38,7 +38,7 @@ markitdown[all]
 tensorboard
 # keras
 # tf-keras
-torch>=2.8.0 --index-url https://download.pytorch.org/whl/cu128
+torch>=2.10.0 --index-url https://download.pytorch.org/whl/cu128
 torchvision
 torchaudio
 # jax
@@ -51,7 +51,7 @@ optimum-quanto
 torchao
 iopath
 layoutparser
-xformers>=0.0.32 --index-url https://download.pytorch.org/whl/cu128
+xformers --index-url https://download.pytorch.org/whl/cu128
 bitsandbytes
 onnxruntime-gpu
 faiss-gpu

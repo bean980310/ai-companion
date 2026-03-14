@@ -97,7 +97,7 @@ def get_oobabooga_models(host: str = "http://localhost:5000/v1"):
         logger.error("Oobabooga를 설치하고 서버를 실행해주세요.")
         return ["Oobabooga를 설치하고 서버를 실행해주세요."]
 
-def get_vllm_models(host: str = "http://localhost:8000"):
+def get_vllm_models(host: str = "http://localhost:8000/v1"):
     import openai
     from openai import OpenAI
 
@@ -120,6 +120,30 @@ def get_vllm_models(host: str = "http://localhost:8000"):
     except:
         logger.error("vllm을 설치하고 서버를 실행해주세요.")
         return ["vllm을 설치하고 서버를 실행해주세요."]
+
+def get_sglang_llm_models(host: str = "http://localhost:30001/v1"):
+    import openai
+    from openai import OpenAI
+
+    llm = []
+    client = OpenAI(api_key="not-needed", base_url=host)
+
+    try:
+        model = client.models.list()
+
+        if len(model.data) == 0:
+            raise LocalModelNotFound("모델이 존재하지 않습니다.")
+
+        for m in model.data:
+            llm.append(m.id)
+
+        return llm
+    except LocalModelNotFound:
+        logger.error("모델이 존재하지 않습니다.")
+        return ["모델이 존재하지 않습니다."]
+    except:
+        logger.error("sglang을 설치하고 서버를 실행해주세요.")
+        return ["sglang을 설치하고 서버를 실행해주세요."]
 
 def get_openai_llm_models(api_key: str = None):
     import openai

@@ -240,6 +240,7 @@ brew install gcc cmake llvm libomp
 ```
 
 ```zsh
+# Case 1
 export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
 
 export LDFLAGS="-L/opt/homebrew/opt/libomp/lib"
@@ -250,10 +251,10 @@ export CC=/opt/homebrew/opt/llvm/bin/clang
 export CXX=/opt/homebrew/opt/llvm/bin/clang++
 export LDFLAGS="-L/opt/homebrew/opt/llvm/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
-```
+pip install --upgrade xformers
 
-```zsh
-pip install --no-build-isolation --upgrade xformers
+# Case 2
+PATH="/opt/homebrew/opt/llvm/bin:$PATH" LDFLAGS="-L/opt/homebrew/opt/libomp/lib" CPPFLAGS="-I/opt/homebrew/opt/libomp/include" CXXFLAGS="-Xpreprocessor -fopenmp" CC=/opt/homebrew/opt/llvm/bin/clang CXX=/opt/homebrew/opt/llvm/bin/clang++ LDFLAGS="-L/opt/homebrew/opt/llvm/lib" CPPFLAGS="-I/opt/homebrew/opt/llvm/include" pip install --upgrade xformers
 ```
 
 ## Run

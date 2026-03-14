@@ -23,6 +23,30 @@ def get_comfyui_image_models(url: str="127.0.0.1:8188", folder: str = "checkpoin
     except:
         return ["ComfyUI를 설치하고 서버를 실행해주세요."]
 
+def get_sglang_image_models(api_host: str = "http://localhost:30001/v1"):
+    import openai
+    from openai import OpenAI
+
+    model_list = []
+    client = OpenAI(api_key="not-needed", base_url=api_host)
+
+    try:
+        model = client.models.list()
+
+        if len(model.data) == 0:
+            raise LocalModelNotFound("모델이 존재하지 않습니다.")
+
+        for m in model.data:
+            model_list.append(m.id)
+
+        return model_list
+    except LocalModelNotFound:
+        logger.error("모델이 존재하지 않습니다.")
+        return ["모델이 존재하지 않습니다."]
+    except:
+        logger.error("sglang을 설치하고 서버를 실행해주세요.")
+        return ["sglang을 설치하고 서버를 실행해주세요."]
+
 def get_openai_image_models(api_key: str = None):
     import openai
     from openai import OpenAI

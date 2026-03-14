@@ -1,0 +1,149 @@
+transformers[sentencepiece]>=5.0.0,<6.0.0
+x_transformers>=2.7.2
+sentence_transformers>=5.1.0
+datasets[audio]>=3.6.0
+safetensors>=0.6.2
+tokenizers>=0.21.4
+diffusers[docs]>=0.35.0
+peft>=0.17.0
+trl>=0.21.0
+huggingface_hub[cli, hf_transfer, hf_xet, mcp]>=0.34.4,<1.0.0
+k_diffusion==0.0.12
+hf_transfer>=0.1.9
+hf_xet<2.0.0
+fastrtc[vad,tts,stt]>=0.0.30
+aiortc>=1.13.0
+modelscope>=1.29.0
+civitai-model-downloader
+evaluate>=0.4.4
+gradio[mcp]>=5.43.1,<6.0
+gradio_webrtc
+twilio
+mcp[cli]
+fastmcp
+accelerate>=1.10.0
+basicsr>=1.4.2
+groq>=0.31.0
+together
+replicate
+tavily-python
+fireworks-ai
+novita-sandbox
+cohere
+spaces
+facexlib>=0.3.0
+gfpgan>=1.3.8
+ultralytics>=8.3.181
+realesrgan @ git+https://github.com/xinntao/Real-ESRGAN.git
+openai>=1.100.2
+anthropic>=0.64.0
+google-genai>=1.31.0
+mistralai
+xai-sdk
+perplexityai
+ollama>=0.5.3
+lmstudio>=1.4.1
+unstructured[all-docs]>=0.18.11
+langchain[community, anthropic, openai, google-genai, ollama, huggingface, perplexity, xai, mistralai]>=0.3.27
+langchain-chroma>=0.1.2
+langchain-neo4j>=0.4.0
+langchain-unstructured
+langchain-mcp-adapters
+langgraph
+qwen-vl-utils
+qwen-omni-utils
+gptqmodel>=4.0.0
+# gptqmodel @ git+https://github.com/ModelCloud/GPTQModel.git@29402342228414b81020a28a4c5b5828c1e76d59
+jiwer
+gtts>=2.5.4
+chromadb
+# outetts==0.3.3
+pydub
+samplerate
+pyworld
+ffmpeg-python
+funasr
+pyopenjtalk
+openai-whisper
+openai-harmony
+Faster_whisper
+wavmark
+whisper-timestamped
+gguf
+stable-diffusion-cpp-python
+tipo-kgen
+nexaai
+a2a-sdk[http-server]>=0.3.0
+
+setuptools
+wheel
+scikit-build-core
+numpy>=2.0.2
+numba>=0.60.0
+pandas>=2.0.0
+matplotlib
+scikit-learn
+beautifulsoup4==4.13.5
+sympy==1.14.0
+scipy==1.16.0
+protobuf
+packaging==25.0
+fsspec
+pyyaml==6.0.2
+jinja2==3.1.6
+python-json-logger
+xgboost
+ninja
+cmake>=3.18,<4.0
+unidecode
+sqlite-vec
+sqlalchemy
+filelock>=3.18.0
+chardet
+attrdict
+twine
+websocket-client
+loguru
+imutils
+pytesseract
+easyocr
+pdf2image
+neo4j
+
+num2words
+spacy
+spacy-curated-transformers
+phonemizer-fork
+espeakng-loader
+g2p_en
+
+# tensorflow<2.20.0
+tensorboard
+# keras
+# tf-keras
+torch>=2.8.0
+torchvision
+torchaudio
+# jax
+# jaxlib
+# jaxtyping
+# jax[cuda12]
+# flax
+optimum
+optimum-quanto
+torchao
+iopath
+layoutparser
+xformers>=0.0.32 --index-url https://download.pytorch.org/whl/cu128
+bitsandbytes
+onnxruntime-gpu
+faiss-gpu
+eva-decord
+opencc==1.1.1
+triton
+# vllm
+# llmcompressor
+mlx[cuda]
+
+vllm
+llmcompressor

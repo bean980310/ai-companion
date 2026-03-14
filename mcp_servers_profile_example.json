@@ -1,0 +1,46 @@
+{
+    "mcpServers": {
+        "hf-mcp-server": {
+            "name": "Hugging Face",
+            "transport": "streamable-http",
+            "description": "Hugging Face MCP Server - Search models, datasets, papers",
+            "oauth_enabled": true,
+            "url": "https://huggingface.co/mcp?login"
+        },
+        "github": {
+            "name": "GitHub",
+            "transport": "streamable-http",
+            "description": "GitHub's official MCP Server",
+            "oauth_enabled": true,
+            "url": "https://server.smithery.ai/github"
+        },
+        "notion": {
+            "name": "Notion",
+            "transport": "streamable-http",
+            "description": "Official Notion MCP Server",
+            "oauth_enabled": true,
+            "url": "https://mcp.notion.com/mcp"
+        },
+        "google-drive": {
+            "name": "Google Drive",
+            "transport": "streamable-http",
+            "description": "Access to Google Drive MCP Server",
+            "oauth_enabled": true,
+            "url": "https://server.smithery.ai/googledrive"
+        },
+        "gmail": {
+            "name": "Gmail",
+            "transport": "streamable-http",
+            "description": "Access to Gmail MCP Server",
+            "oauth_enabled": true,
+            "url": "https://server.smithery.ai/gmail"
+        },
+        "google-calendar": {
+            "name": "Google Calendar",
+            "transport": "streamable-http",
+            "description": "Access to Google Calendar MCP Server",
+            "oauth_enabled": true,
+            "url": "https://server.smithery.ai/googlecalendar"
+        }
+    }
+}

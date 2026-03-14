@@ -6,7 +6,7 @@ numba>=0.60.0
 pandas>=2.0.0
 matplotlib
 scikit-learn
-beautifulsoup4==4.13.5
+beautifulsoup4
 sympy==1.14.0
 scipy==1.16.0
 protobuf
@@ -46,7 +46,7 @@ tensorboard
 # keras
 # tf-keras
 # tensorflow-metal
-torch>=2.8.0
+torch>=2.10.0
 torchvision
 torchaudio
 jax

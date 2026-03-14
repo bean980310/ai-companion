@@ -1,7 +1,7 @@
-from transformers import MBartForConditionalGeneration, MBart50TokenizerFast
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, PreTrainedModel, GenerationMixin, PreTrainedTokenizerBase, TokenizersBackend
 from src import logger
 
-languages = {
+mbart_languages = {
     "English": "en_XX",
     "한국어(Korean)": "ko_KR",
     "日本語(Japanese)": "ja_XX",
@@ -11,10 +11,25 @@ languages = {
     "Español(Spanish)": "es_XX"
 }
 
-def translate(text: str, src_lang: str, tgt_lang: str) -> str:
-    model_name = "facebook/mbart-large-50-many-to-many-mmt"
-    tokenizer: MBart50TokenizerFast = MBart50TokenizerFast.from_pretrained(model_name)
-    model: MBartForConditionalGeneration = MBartForConditionalGeneration.from_pretrained(model_name)
+m2m100_languages = {
+    "English": "en",
+    "한국어(Korean)": "ko",
+    "日本語(Japanese)": "ja",
+    "简体中文(Simp. Chinese)": "zh",
+    "Français(French)": "fr",
+    "Deutsche(German)": "de",
+    "Español(Spanish)": "es"
+}
+
+def get_lang_code(language: str, selected_model: str):
+    if "mbart" in selected_model:
+        return mbart_languages[language]
+    else:
+        return m2m100_languages[language]
+
+def translate(text: str, src_lang: str, tgt_lang: str, model_name: str) -> str:
+    tokenizer: AutoTokenizer | TokenizersBackend | PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(model_name)
+    model: AutoModelForSeq2SeqLM | PreTrainedModel | GenerationMixin = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 
     tokenizer.src_lang = src_lang
     encoded = tokenizer(text, return_tensors="pt")
@@ -22,7 +37,7 @@ def translate(text: str, src_lang: str, tgt_lang: str) -> str:
     translated = tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
     return translated[0]
 
-def translate_interface(text: str, src_language: str, tgt_language: str) -> str:
+def translate_interface(text: str, src_language: str, tgt_language: str, selected_model: str) -> str:
 
     """
     Translates text from source language to target language using the MBart model.
@@ -33,6 +48,8 @@ def translate_interface(text: str, src_language: str, tgt_language: str) -> str:
     Returns:
         The translated text as a string.
     """
-    src_lang = languages[src_language]
-    tgt_lang = languages[tgt_language]
-    return translate(text, src_lang, tgt_lang)
+
+    src_lang = get_lang_code(src_language, selected_model)
+    tgt_lang = get_lang_code(tgt_language, selected_model)
+
+    return translate(text, src_lang, tgt_lang, selected_model)

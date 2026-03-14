@@ -45,7 +45,7 @@ markitdown[all]
 tensorboard
 # keras
 # tf-keras
-torch>=2.8.0 --index-url https://download.pytorch.org/whl/cu126
+torch>=2.10.0 --index-url https://download.pytorch.org/whl/cu130
 torchvision
 torchaudio
 # jax
@@ -58,7 +58,7 @@ optimum-quanto
 torchao
 iopath
 layoutparser
-xformers>=0.0.32 --index-url https://download.pytorch.org/whl/cu128
+xformers --index-url https://download.pytorch.org/whl/cu130
 bitsandbytes
 onnxruntime-gpu
 faiss-gpu

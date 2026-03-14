@@ -19,6 +19,7 @@ persona_state.db
 *.patch
 mcp_servers.json
 mcp_config.json
+mcp_servers_profile.json
 
 # Python-generated files
 __pycache__/
