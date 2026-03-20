@@ -1,31 +1,17 @@
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, PreTrainedModel, GenerationMixin, PreTrainedTokenizerBase, TokenizersBackend
 from src import logger
 
-mbart_languages = {
-    "English": "en_XX",
-    "한국어(Korean)": "ko_KR",
-    "日本語(Japanese)": "ja_XX",
-    "简体中文(Simp. Chinese)": "zh_CN",
-    "Français(French)": "fr_XX",
-    "Deutsche(German)": "de_DE",
-    "Español(Spanish)": "es_XX"
-}
+mbart_languages = {"English": "en_XX", "한국어(Korean)": "ko_KR", "日本語(Japanese)": "ja_XX", "简体中文(Simp. Chinese)": "zh_CN", "Français(French)": "fr_XX", "Deutsche(German)": "de_DE", "Español(Spanish)": "es_XX"}
 
-m2m100_languages = {
-    "English": "en",
-    "한국어(Korean)": "ko",
-    "日本語(Japanese)": "ja",
-    "简体中文(Simp. Chinese)": "zh",
-    "Français(French)": "fr",
-    "Deutsche(German)": "de",
-    "Español(Spanish)": "es"
-}
+m2m100_languages = {"English": "en", "한국어(Korean)": "ko", "日本語(Japanese)": "ja", "简体中文(Simp. Chinese)": "zh", "Français(French)": "fr", "Deutsche(German)": "de", "Español(Spanish)": "es"}
+
 
 def get_lang_code(language: str, selected_model: str):
     if "mbart" in selected_model:
         return mbart_languages[language]
     else:
         return m2m100_languages[language]
+
 
 def translate(text: str, src_lang: str, tgt_lang: str, model_name: str) -> str:
     tokenizer: AutoTokenizer | TokenizersBackend | PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(model_name)
@@ -37,8 +23,8 @@ def translate(text: str, src_lang: str, tgt_lang: str, model_name: str) -> str:
     translated = tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
     return translated[0]
 
-def translate_interface(text: str, src_language: str, tgt_language: str, selected_model: str) -> str:
 
+def translate_interface(text: str, src_language: str, tgt_language: str, selected_model: str) -> str:
     """
     Translates text from source language to target language using the MBart model.
     Args:
