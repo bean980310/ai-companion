@@ -11,15 +11,7 @@ from contextlib import AsyncExitStack
 
 from src import logger
 
-from .models import (
-    MCPServerConfig,
-    MCPTool,
-    MCPToolResult,
-    MCPToolParameter,
-    MCPTransportType,
-    MCPResource,
-    MCPPrompt
-)
+from .models import MCPServerConfig, MCPTool, MCPToolResult, MCPToolParameter, MCPTransportType, MCPResource, MCPPrompt
 
 # MCP SDK imports
 try:
@@ -28,12 +20,14 @@ try:
     from mcp.client.stdio import stdio_client, StdioServerParameters
     from mcp.client.streamable_http import streamable_http_client
     from mcp.shared._httpx_utils import create_mcp_http_client
+
     MCP_AVAILABLE = True
 except ImportError:
     MCP_AVAILABLE = False
     logger.warning("MCP SDK not available. Install with: pip install mcp")
 
 from .oauth import create_oauth_provider
+
 
 class MCPClientManager:
     """
@@ -81,9 +75,7 @@ class MCPClientManager:
     def _save_config(self):
         """Save server configurations to file"""
         try:
-            data = {
-                "servers": [server.to_dict() for server in self.servers.values()]
-            }
+            data = {"servers": [server.to_dict() for server in self.servers.values()]}
             with open(self.config_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
             logger.info(f"Saved {len(self.servers)} MCP server configurations")
@@ -106,7 +98,7 @@ class MCPClientManager:
         oauth_authorization_endpoint: Optional[str] = None,
         oauth_token_endpoint: Optional[str] = None,
         oauth_scopes: Optional[str] = None,
-        save: bool = True
+        save: bool = True,
     ) -> MCPServerConfig:
         """
         Add a new MCP server configuration.
@@ -174,10 +166,7 @@ class MCPClientManager:
 
             del self.servers[name]
             # Remove associated tools
-            self.tools = {
-                k: v for k, v in self.tools.items()
-                if v.server_name != name
-            }
+            self.tools = {k: v for k, v in self.tools.items() if v.server_name != name}
 
             if save:
                 self._save_config()
@@ -274,11 +263,7 @@ class MCPClientManager:
         else:
             env = None
 
-        server_params = StdioServerParameters(
-            command=command,
-            args=args,
-            env=env
-        )
+        server_params = StdioServerParameters(command=command, args=args, env=env)
 
         async with stdio_client(server_params) as (read, write):
             async with ClientSession(read, write) as session:
@@ -299,9 +284,7 @@ class MCPClientManager:
             auth = await create_oauth_provider(config)
             http_client = create_mcp_http_client(headers=headers, auth=auth)
 
-        async with streamable_http_client(config.url, http_client=http_client) as (
-            read, write, _get_session_id
-        ):
+        async with streamable_http_client(config.url, http_client=http_client) as (read, write, _get_session_id):
             async with ClientSession(read, write) as session:
                 await session.initialize()
                 self.sessions[config.name] = session
@@ -321,22 +304,9 @@ class MCPClientManager:
                 required = input_schema.get("required", [])
 
                 for param_name, param_info in properties.items():
-                    params.append(MCPToolParameter(
-                        name=param_name,
-                        type=param_info.get("type", "string"),
-                        description=param_info.get("description", ""),
-                        required=param_name in required,
-                        default=param_info.get("default"),
-                        enum=param_info.get("enum")
-                    ))
+                    params.append(MCPToolParameter(name=param_name, type=param_info.get("type", "string"), description=param_info.get("description", ""), required=param_name in required, default=param_info.get("default"), enum=param_info.get("enum")))
 
-                mcp_tool = MCPTool(
-                    name=tool.name,
-                    description=tool.description or "",
-                    server_name=server_name,
-                    parameters=params,
-                    input_schema=input_schema
-                )
+                mcp_tool = MCPTool(name=tool.name, description=tool.description or "", server_name=server_name, parameters=params, input_schema=input_schema)
                 self.tools[mcp_tool.full_name] = mcp_tool
                 logger.debug(f"Discovered tool: {mcp_tool.full_name}")
 
@@ -348,13 +318,7 @@ class MCPClientManager:
         try:
             resources_result = await session.list_resources()
             for resource in resources_result.resources:
-                mcp_resource = MCPResource(
-                    uri=str(resource.uri),
-                    name=resource.name,
-                    description=resource.description or "",
-                    mime_type=resource.mimeType or "application/json",
-                    server_name=server_name
-                )
+                mcp_resource = MCPResource(uri=str(resource.uri), name=resource.name, description=resource.description or "", mime_type=resource.mimeType or "application/json", server_name=server_name)
                 self.resources[f"{server_name}__{resource.name}"] = mcp_resource
             logger.info(f"Discovered {len(resources_result.resources)} resources from {server_name}")
         except Exception as e:
@@ -366,18 +330,8 @@ class MCPClientManager:
             for prompt in prompts_result.prompts:
                 args = []
                 for arg in prompt.arguments or []:
-                    args.append(MCPToolParameter(
-                        name=arg.name,
-                        type="string",
-                        description=arg.description or "",
-                        required=arg.required or False
-                    ))
-                mcp_prompt = MCPPrompt(
-                    name=prompt.name,
-                    description=prompt.description or "",
-                    arguments=args,
-                    server_name=server_name
-                )
+                    args.append(MCPToolParameter(name=arg.name, type="string", description=arg.description or "", required=arg.required or False))
+                mcp_prompt = MCPPrompt(name=prompt.name, description=prompt.description or "", arguments=args, server_name=server_name)
                 self.prompts[f"{server_name}__{prompt.name}"] = mcp_prompt
             logger.info(f"Discovered {len(prompts_result.prompts)} prompts from {server_name}")
         except Exception as e:
@@ -395,10 +349,7 @@ class MCPClientManager:
         self._connected_servers.discard(server_name)
 
         # Remove associated tools
-        self.tools = {
-            k: v for k, v in self.tools.items()
-            if v.server_name != server_name
-        }
+        self.tools = {k: v for k, v in self.tools.items() if v.server_name != server_name}
 
         logger.info(f"Disconnected from MCP server: {server_name}")
 
@@ -455,12 +406,7 @@ class MCPClientManager:
 
         return None
 
-    async def call_tool(
-        self,
-        tool_name: str,
-        arguments: Dict[str, Any],
-        server_name: Optional[str] = None
-    ) -> MCPToolResult:
+    async def call_tool(self, tool_name: str, arguments: Dict[str, Any], server_name: Optional[str] = None) -> MCPToolResult:
         """
         Call an MCP tool with the given arguments.
 
@@ -473,12 +419,7 @@ class MCPClientManager:
             MCPToolResult containing the result or error
         """
         if not MCP_AVAILABLE:
-            return MCPToolResult(
-                tool_name=tool_name,
-                server_name=server_name or "unknown",
-                success=False,
-                error="MCP SDK not available"
-            )
+            return MCPToolResult(tool_name=tool_name, server_name=server_name or "unknown", success=False, error="MCP SDK not available")
 
         # Find the tool
         tool = None
@@ -489,23 +430,13 @@ class MCPClientManager:
             tool = self.get_tool(tool_name)
 
         if not tool:
-            return MCPToolResult(
-                tool_name=tool_name,
-                server_name=server_name or "unknown",
-                success=False,
-                error=f"Tool not found: {tool_name}"
-            )
+            return MCPToolResult(tool_name=tool_name, server_name=server_name or "unknown", success=False, error=f"Tool not found: {tool_name}")
 
         # Check if server is connected
         if tool.server_name not in self.sessions:
             # Try to connect
             if not await self.connect(tool.server_name):
-                return MCPToolResult(
-                    tool_name=tool_name,
-                    server_name=tool.server_name,
-                    success=False,
-                    error=f"Cannot connect to server: {tool.server_name}"
-                )
+                return MCPToolResult(tool_name=tool_name, server_name=tool.server_name, success=False, error=f"Cannot connect to server: {tool.server_name}")
 
         session = self.sessions[tool.server_name]
 
@@ -529,22 +460,11 @@ class MCPClientManager:
             # Join text content or return first item for non-text
             final_content = "\n".join(content) if content_type == "text" else content[0] if content else None
 
-            return MCPToolResult(
-                tool_name=tool.name,
-                server_name=tool.server_name,
-                success=not result.isError if hasattr(result, "isError") else True,
-                content=final_content,
-                content_type=content_type
-            )
+            return MCPToolResult(tool_name=tool.name, server_name=tool.server_name, success=not result.isError if hasattr(result, "isError") else True, content=final_content, content_type=content_type)
 
         except Exception as e:
             logger.error(f"Error calling tool {tool_name}: {e}")
-            return MCPToolResult(
-                tool_name=tool.name,
-                server_name=tool.server_name,
-                success=False,
-                error=str(e)
-            )
+            return MCPToolResult(tool_name=tool.name, server_name=tool.server_name, success=False, error=str(e))
 
     async def read_resource(self, uri: str, server_name: str) -> Optional[str]:
         """
@@ -571,12 +491,7 @@ class MCPClientManager:
             logger.error(f"Error reading resource {uri}: {e}")
             return None
 
-    async def get_prompt(
-        self,
-        prompt_name: str,
-        arguments: Dict[str, str],
-        server_name: str
-    ) -> Optional[str]:
+    async def get_prompt(self, prompt_name: str, arguments: Dict[str, str], server_name: str) -> Optional[str]:
         """
         Get a prompt from an MCP server.
 
@@ -615,14 +530,7 @@ class MCPClientManager:
         """
         tools = []
         for tool in self.tools.values():
-            tools.append({
-                "type": "function",
-                "function": {
-                    "name": tool.full_name,
-                    "description": tool.description,
-                    "parameters": tool.input_schema
-                }
-            })
+            tools.append({"type": "function", "function": {"name": tool.full_name, "description": tool.description, "parameters": tool.input_schema}})
         return tools
 
 

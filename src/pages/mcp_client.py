@@ -27,6 +27,7 @@ def run_async(coro):
     if loop.is_running():
         # Create a new thread for the coroutine
         import concurrent.futures
+
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future = executor.submit(asyncio.run, coro)
             return future.result()
@@ -38,26 +39,13 @@ def run_async(coro):
 mcp_manager = get_mcp_client_manager()
 
 
-def add_mcp_server(
-    name: str,
-    url: str,
-    transport: str,
-    api_key: str,
-    timeout: float,
-    description: str,
-    oauth_enabled: bool,
-    oauth_client_id: str,
-    oauth_client_secret: str,
-    oauth_authorization_endpoint: str,
-    oauth_token_endpoint: str,
-    oauth_scopes: str
-) -> tuple:
+def add_mcp_server(name: str, url: str, transport: str, api_key: str, timeout: float, description: str, oauth_enabled: bool, oauth_client_id: str, oauth_client_secret: str, oauth_issuer: str, oauth_authorization_endpoint: str, oauth_token_endpoint: str, oauth_scopes: str) -> tuple:
     """Add a new MCP server configuration"""
     if not name or not url:
         return (
             gr.update(),  # servers list
             "Error: Name and URL are required",
-            gr.update()  # tools list
+            gr.update(),  # tools list
         )
 
     try:
@@ -71,66 +59,39 @@ def add_mcp_server(
             oauth_enabled=oauth_enabled,
             oauth_client_id=oauth_client_id if oauth_client_id else None,
             oauth_client_secret=oauth_client_secret if oauth_client_secret else None,
+            oauth_issuer=oauth_issuer if oauth_issuer else None,
             oauth_authorization_endpoint=oauth_authorization_endpoint if oauth_authorization_endpoint else None,
             oauth_token_endpoint=oauth_token_endpoint if oauth_token_endpoint else None,
             oauth_scopes=oauth_scopes if oauth_scopes else None,
         )
 
         servers = get_servers_display()
-        return (
-            gr.update(value=servers),
-            f"Added server: {name}",
-            gr.update()
-        )
+        return (gr.update(value=servers), f"Added server: {name}", gr.update())
     except Exception as e:
         logger.error(f"Error adding server: {e}")
-        return (
-            gr.update(),
-            f"Error: {str(e)}",
-            gr.update()
-        )
+        return (gr.update(), f"Error: {str(e)}", gr.update())
 
 
 def remove_mcp_server(server_name: str) -> tuple:
     """Remove an MCP server"""
     if not server_name:
-        return (
-            gr.update(),
-            "Error: Select a server to remove",
-            gr.update()
-        )
+        return (gr.update(), "Error: Select a server to remove", gr.update())
 
     try:
         if mcp_manager.remove_server(server_name):
             servers = get_servers_display()
-            return (
-                gr.update(value=servers),
-                f"Removed server: {server_name}",
-                gr.update(choices=get_server_names(), value=None)
-            )
+            return (gr.update(value=servers), f"Removed server: {server_name}", gr.update(choices=get_server_names(), value=None))
         else:
-            return (
-                gr.update(),
-                f"Server not found: {server_name}",
-                gr.update()
-            )
+            return (gr.update(), f"Server not found: {server_name}", gr.update())
     except Exception as e:
         logger.error(f"Error removing server: {e}")
-        return (
-            gr.update(),
-            f"Error: {str(e)}",
-            gr.update()
-        )
+        return (gr.update(), f"Error: {str(e)}", gr.update())
 
 
 def connect_to_server(server_name: str) -> tuple:
     """Connect to an MCP server and discover tools"""
     if not server_name:
-        return (
-            "Error: Select a server to connect",
-            gr.update(),
-            gr.update()
-        )
+        return ("Error: Select a server to connect", gr.update(), gr.update())
 
     try:
         success = run_async(mcp_manager.connect(server_name))
@@ -138,51 +99,27 @@ def connect_to_server(server_name: str) -> tuple:
         if success:
             tools = get_tools_display()
             servers = get_servers_display()
-            return (
-                f"Connected to {server_name}. Discovered {len(mcp_manager.list_tools(server_name))} tools.",
-                gr.update(value=servers),
-                gr.update(value=tools)
-            )
+            return (f"Connected to {server_name}. Discovered {len(mcp_manager.list_tools(server_name))} tools.", gr.update(value=servers), gr.update(value=tools))
         else:
-            return (
-                f"Failed to connect to {server_name}",
-                gr.update(),
-                gr.update()
-            )
+            return (f"Failed to connect to {server_name}", gr.update(), gr.update())
     except Exception as e:
         logger.error(f"Error connecting to server: {e}")
-        return (
-            f"Error: {str(e)}",
-            gr.update(),
-            gr.update()
-        )
+        return (f"Error: {str(e)}", gr.update(), gr.update())
 
 
 def disconnect_from_server(server_name: str) -> tuple:
     """Disconnect from an MCP server"""
     if not server_name:
-        return (
-            "Error: Select a server to disconnect",
-            gr.update(),
-            gr.update()
-        )
+        return ("Error: Select a server to disconnect", gr.update(), gr.update())
 
     try:
         run_async(mcp_manager.disconnect(server_name))
         tools = get_tools_display()
         servers = get_servers_display()
-        return (
-            f"Disconnected from {server_name}",
-            gr.update(value=servers),
-            gr.update(value=tools)
-        )
+        return (f"Disconnected from {server_name}", gr.update(value=servers), gr.update(value=tools))
     except Exception as e:
         logger.error(f"Error disconnecting: {e}")
-        return (
-            f"Error: {str(e)}",
-            gr.update(),
-            gr.update()
-        )
+        return (f"Error: {str(e)}", gr.update(), gr.update())
 
 
 def connect_all_servers() -> tuple:
@@ -194,18 +131,10 @@ def connect_all_servers() -> tuple:
 
         tools = get_tools_display()
         servers = get_servers_display()
-        return (
-            f"Connected: {connected}, Failed: {failed}",
-            gr.update(value=servers),
-            gr.update(value=tools)
-        )
+        return (f"Connected: {connected}, Failed: {failed}", gr.update(value=servers), gr.update(value=tools))
     except Exception as e:
         logger.error(f"Error connecting all: {e}")
-        return (
-            f"Error: {str(e)}",
-            gr.update(),
-            gr.update()
-        )
+        return (f"Error: {str(e)}", gr.update(), gr.update())
 
 
 def get_servers_display() -> List[List[str]]:
@@ -215,14 +144,7 @@ def get_servers_display() -> List[List[str]]:
     for server in servers:
         status = "Connected" if mcp_manager.is_connected(server.name) else "Disconnected"
         tool_count = len(mcp_manager.list_tools(server.name)) if mcp_manager.is_connected(server.name) else "-"
-        data.append([
-            server.name,
-            server.url,
-            server.transport.value,
-            status,
-            str(tool_count),
-            server.description
-        ])
+        data.append([server.name, server.url, server.transport.value, status, str(tool_count), server.description])
     return data
 
 
@@ -234,12 +156,7 @@ def get_tools_display() -> List[List[str]]:
         params = ", ".join([f"{p.name}: {p.type}" for p in tool.parameters[:3]])
         if len(tool.parameters) > 3:
             params += f", ... (+{len(tool.parameters) - 3})"
-        data.append([
-            tool.server_name,
-            tool.name,
-            tool.description[:100] + "..." if len(tool.description) > 100 else tool.description,
-            params
-        ])
+        data.append([tool.server_name, tool.name, tool.description[:100] + "..." if len(tool.description) > 100 else tool.description, params])
     return data
 
 
@@ -257,12 +174,7 @@ def refresh_server_list() -> tuple:
     """Refresh the server and tool lists"""
     servers = get_servers_display()
     tools = get_tools_display()
-    return (
-        gr.update(value=servers),
-        gr.update(value=tools),
-        gr.update(choices=get_server_names()),
-        gr.update(choices=get_tool_names())
-    )
+    return (gr.update(value=servers), gr.update(value=tools), gr.update(choices=get_server_names()), gr.update(choices=get_tool_names()))
 
 
 def get_tool_info(tool_name: str) -> str:
@@ -388,73 +300,29 @@ with gr.Blocks() as demo:
         with gr.Row():
             with gr.Column(scale=2):
                 gr.Markdown("### Configured Servers")
-                servers_table = gr.DataFrame(
-                    headers=["Name", "URL", "Transport", "Status", "Tools", "Description"],
-                    value=get_servers_display(),
-                    interactive=False,
-                    wrap=True
-                )
+                servers_table = gr.DataFrame(headers=["Name", "URL", "Transport", "Status", "Tools", "Description"], value=get_servers_display(), interactive=False, wrap=True)
 
             with gr.Column(scale=1):
                 gr.Markdown("### Add Server")
                 server_name_input = gr.Textbox(label="Server Name", placeholder="my-mcp-server")
-                server_url_input = gr.Textbox(
-                    label="URL",
-                    placeholder="http://localhost:8080/mcp/sse"
-                )
-                transport_dropdown = gr.Dropdown(
-                    label="Transport",
-                    choices=["sse", "streamable-http", "stdio"],
-                    value="sse"
-                )
-                api_key_input = gr.Textbox(
-                    label="API Key (optional)",
-                    type="password"
-                )
+                server_url_input = gr.Textbox(label="URL", placeholder="http://localhost:8080/mcp/sse")
+                transport_dropdown = gr.Dropdown(label="Transport", choices=["sse", "streamable-http", "stdio"], value="sse")
+                api_key_input = gr.Textbox(label="API Key (optional)", type="password")
                 timeout_input = gr.Number(label="Timeout (seconds)", value=30.0)
-                description_input = gr.Textbox(
-                    label="Description",
-                    placeholder="Description of this server"
-                )
-                enable_oauth_checkbox = gr.Checkbox(
-                    label="Use OAuth"
-                )
+                description_input = gr.Textbox(label="Description", placeholder="Description of this server")
+                enable_oauth_checkbox = gr.Checkbox(label="Use OAuth")
                 with gr.Column(visible=False) as oauth_details_column:
-                    oauth_provider_preset = gr.Dropdown(
-                        label="OAuth Provider Preset",
-                        choices=["(Custom)"] + list(OAUTH_PRESETS.keys()),
-                        value="(Custom)",
-                        interactive=True
-                    )
-                    oauth_client_id_input = gr.Textbox(
-                        label="OAuth Client ID",
-                        placeholder="your-client-id"
-                    )
-                    oauth_client_secret_input = gr.Textbox(
-                        label="OAuth Client Secret",
-                        type="password",
-                        placeholder="your-client-secret"
-                    )
-                    oauth_auth_endpoint_input = gr.Textbox(
-                        label="Authorization Endpoint",
-                        placeholder="https://github.com/login/oauth/authorize"
-                    )
-                    oauth_token_endpoint_input = gr.Textbox(
-                        label="Token Endpoint",
-                        placeholder="https://github.com/login/oauth/access_token"
-                    )
-                    oauth_scopes_input = gr.Textbox(
-                        label="OAuth Scopes",
-                        placeholder="read:user repo"
-                    )
+                    oauth_provider_preset = gr.Dropdown(label="OAuth Provider Preset", choices=["(Custom)"] + list(OAUTH_PRESETS.keys()), value="(Custom)", interactive=True)
+                    oauth_client_id_input = gr.Textbox(label="OAuth Client ID", placeholder="your-client-id")
+                    oauth_client_secret_input = gr.Textbox(label="OAuth Client Secret", type="password", placeholder="your-client-secret")
+                    oauth_issuer_input = gr.Textbox(label="Issuer", placeholder="https://github.com")
+                    oauth_auth_endpoint_input = gr.Textbox(label="Authorization Endpoint", placeholder="https://github.com/login/oauth/authorize")
+                    oauth_token_endpoint_input = gr.Textbox(label="Token Endpoint", placeholder="https://github.com/login/oauth/access_token")
+                    oauth_scopes_input = gr.Textbox(label="OAuth Scopes", placeholder="read:user repo")
                 add_server_btn = gr.Button("Add Server", variant="primary")
 
         with gr.Row():
-            server_select = gr.Dropdown(
-                label="Select Server",
-                choices=get_server_names(),
-                interactive=True
-            )
+            server_select = gr.Dropdown(label="Select Server", choices=get_server_names(), interactive=True)
             connect_btn = gr.Button("Connect", variant="primary")
             disconnect_btn = gr.Button("Disconnect", variant="secondary")
             connect_all_btn = gr.Button("Connect All", variant="secondary")
@@ -467,33 +335,15 @@ with gr.Blocks() as demo:
         with gr.Row():
             with gr.Column(scale=1):
                 gr.Markdown("### Available Tools")
-                server_filter = gr.Dropdown(
-                    label="Filter by Server",
-                    choices=["All Servers"] + get_server_names(),
-                    value="All Servers"
-                )
-                tools_table = gr.DataFrame(
-                    headers=["Server", "Tool", "Description", "Parameters"],
-                    value=get_tools_display(),
-                    interactive=False,
-                    wrap=True
-                )
+                server_filter = gr.Dropdown(label="Filter by Server", choices=["All Servers"] + get_server_names(), value="All Servers")
+                tools_table = gr.DataFrame(headers=["Server", "Tool", "Description", "Parameters"], value=get_tools_display(), interactive=False, wrap=True)
 
             with gr.Column(scale=1):
                 gr.Markdown("### Call Tool")
-                tool_select = gr.Dropdown(
-                    label="Select Tool",
-                    choices=get_tool_names(),
-                    interactive=True
-                )
+                tool_select = gr.Dropdown(label="Select Tool", choices=get_tool_names(), interactive=True)
                 tool_info = gr.Markdown("Select a tool to see its details")
                 generate_template_btn = gr.Button("Generate Template", variant="secondary")
-                arguments_input = gr.Code(
-                    label="Arguments (JSON)",
-                    language="json",
-                    value="{}",
-                    lines=10
-                )
+                arguments_input = gr.Code(label="Arguments (JSON)", language="json", value="{}", lines=10)
                 call_tool_btn = gr.Button("Call Tool", variant="primary")
                 tool_result = gr.Markdown("Tool result will appear here")
 
@@ -529,22 +379,10 @@ with gr.Blocks() as demo:
         - Slack: Message and channel management
         """)
 
-        config_display = gr.Code(
-            label="Current Configuration",
-            language="json",
-            value=json.dumps(
-                {"servers": [s.to_dict() for s in mcp_manager.list_servers()]},
-                indent=2
-            ),
-            interactive=False
-        )
+        config_display = gr.Code(label="Current Configuration", language="json", value=json.dumps({"servers": [s.to_dict() for s in mcp_manager.list_servers()]}, indent=2), interactive=False)
 
     # OAuth checkbox toggles visibility of external OAuth fields
-    enable_oauth_checkbox.change(
-        fn=lambda enabled: gr.update(visible=enabled),
-        inputs=[enable_oauth_checkbox],
-        outputs=[oauth_details_column]
-    )
+    enable_oauth_checkbox.change(fn=lambda enabled: gr.update(visible=enabled), inputs=[enable_oauth_checkbox], outputs=[oauth_details_column])
 
     # OAuth provider preset fills in endpoints automatically
     def apply_oauth_preset(preset_name: str):
@@ -552,120 +390,47 @@ with gr.Blocks() as demo:
             return (gr.update(), gr.update(), gr.update())
         preset = OAUTH_PRESETS[preset_name]
         return (
+            gr.update(value=preset["issuer"]),
             gr.update(value=preset["authorization_endpoint"]),
             gr.update(value=preset["token_endpoint"]),
             gr.update(value=preset["default_scopes"]),
         )
 
-    oauth_provider_preset.change(
-        fn=apply_oauth_preset,
-        inputs=[oauth_provider_preset],
-        outputs=[oauth_auth_endpoint_input, oauth_token_endpoint_input, oauth_scopes_input]
-    )
+    oauth_provider_preset.change(fn=apply_oauth_preset, inputs=[oauth_provider_preset], outputs=[oauth_issuer_input, oauth_auth_endpoint_input, oauth_token_endpoint_input, oauth_scopes_input])
 
     # Event handlers
     add_server_btn.click(
         fn=add_mcp_server,
-        inputs=[
-            server_name_input,
-            server_url_input,
-            transport_dropdown,
-            api_key_input,
-            timeout_input,
-            description_input,
-            enable_oauth_checkbox,
-            oauth_client_id_input,
-            oauth_client_secret_input,
-            oauth_auth_endpoint_input,
-            oauth_token_endpoint_input,
-            oauth_scopes_input
-        ],
-        outputs=[servers_table, status_text, server_select]
+        inputs=[server_name_input, server_url_input, transport_dropdown, api_key_input, timeout_input, description_input, enable_oauth_checkbox, oauth_client_id_input, oauth_client_secret_input, oauth_issuer_input, oauth_auth_endpoint_input, oauth_token_endpoint_input, oauth_scopes_input],
+        outputs=[servers_table, status_text, server_select],
     ).then(
-        fn=lambda: (gr.update(value=""), gr.update(value=""), gr.update(value="sse"),
-                   gr.update(value=""), gr.update(value=30.0), gr.update(value=""),
-                   gr.update(value=False), gr.update(value=""), gr.update(value=""),
-                   gr.update(value=""), gr.update(value=""), gr.update(value="")),
-        outputs=[
-            server_name_input, server_url_input, transport_dropdown,
-            api_key_input, timeout_input, description_input,
-            enable_oauth_checkbox, oauth_client_id_input, oauth_client_secret_input,
-            oauth_auth_endpoint_input, oauth_token_endpoint_input, oauth_scopes_input
-        ]
-    ).then(
-        fn=lambda: gr.update(choices=get_server_names()),
-        outputs=[server_select]
-    )
+        fn=lambda: (gr.update(value=""), gr.update(value=""), gr.update(value="sse"), gr.update(value=""), gr.update(value=30.0), gr.update(value=""), gr.update(value=False), gr.update(value=""), gr.update(value=""), gr.update(value=""), gr.update(value=""), gr.update(value="")),
+        outputs=[server_name_input, server_url_input, transport_dropdown, api_key_input, timeout_input, description_input, enable_oauth_checkbox, oauth_client_id_input, oauth_client_secret_input, oauth_auth_endpoint_input, oauth_token_endpoint_input, oauth_scopes_input],
+    ).then(fn=lambda: gr.update(choices=get_server_names()), outputs=[server_select])
 
-    remove_server_btn.click(
-        fn=remove_mcp_server,
-        inputs=[server_select],
-        outputs=[servers_table, status_text, server_select]
-    )
+    remove_server_btn.click(fn=remove_mcp_server, inputs=[server_select], outputs=[servers_table, status_text, server_select])
 
-    connect_btn.click(
-        fn=connect_to_server,
-        inputs=[server_select],
-        outputs=[status_text, servers_table, tools_table]
-    ).then(
-        fn=lambda: gr.update(choices=get_tool_names()),
-        outputs=[tool_select]
-    )
+    connect_btn.click(fn=connect_to_server, inputs=[server_select], outputs=[status_text, servers_table, tools_table]).then(fn=lambda: gr.update(choices=get_tool_names()), outputs=[tool_select])
 
-    disconnect_btn.click(
-        fn=disconnect_from_server,
-        inputs=[server_select],
-        outputs=[status_text, servers_table, tools_table]
-    ).then(
-        fn=lambda: gr.update(choices=get_tool_names()),
-        outputs=[tool_select]
-    )
+    disconnect_btn.click(fn=disconnect_from_server, inputs=[server_select], outputs=[status_text, servers_table, tools_table]).then(fn=lambda: gr.update(choices=get_tool_names()), outputs=[tool_select])
 
-    connect_all_btn.click(
-        fn=connect_all_servers,
-        outputs=[status_text, servers_table, tools_table]
-    ).then(
-        fn=lambda: gr.update(choices=get_tool_names()),
-        outputs=[tool_select]
-    )
+    connect_all_btn.click(fn=connect_all_servers, outputs=[status_text, servers_table, tools_table]).then(fn=lambda: gr.update(choices=get_tool_names()), outputs=[tool_select])
 
-    refresh_btn.click(
-        fn=refresh_server_list,
-        outputs=[servers_table, tools_table, server_select, tool_select]
-    )
+    refresh_btn.click(fn=refresh_server_list, outputs=[servers_table, tools_table, server_select, tool_select])
 
-    server_filter.change(
-        fn=update_tool_selector,
-        inputs=[server_filter],
-        outputs=[tool_select]
-    )
+    server_filter.change(fn=update_tool_selector, inputs=[server_filter], outputs=[tool_select])
 
-    tool_select.change(
-        fn=get_tool_info,
-        inputs=[tool_select],
-        outputs=[tool_info]
-    )
+    tool_select.change(fn=get_tool_info, inputs=[tool_select], outputs=[tool_info])
 
-    generate_template_btn.click(
-        fn=generate_arguments_template,
-        inputs=[tool_select],
-        outputs=[arguments_input]
-    )
+    generate_template_btn.click(fn=generate_arguments_template, inputs=[tool_select], outputs=[arguments_input])
 
-    call_tool_btn.click(
-        fn=call_mcp_tool,
-        inputs=[tool_select, arguments_input],
-        outputs=[tool_result]
-    )
+    call_tool_btn.click(fn=call_mcp_tool, inputs=[tool_select, arguments_input], outputs=[tool_result])
 
     # Language change event
     def on_mcp_client_language_change(selected_lang: str):
         lang_code = get_language_code(selected_lang)
         translation_manager.set_language(lang_code)
-        return [
-            gr.update(value=f"## {_('mcp_client_title')}"),
-            gr.update(label=_('language_select'), info=_('language_info'))
-        ]
+        return [gr.update(value=f"## {_('mcp_client_title')}"), gr.update(label=_("language_select"), info=_("language_info"))]
 
     # language_dropdown.change(
     #     fn=on_mcp_client_language_change,

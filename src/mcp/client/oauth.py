@@ -20,6 +20,7 @@ try:
         OAuthClientInformationFull,
     )
     from mcp.shared.auth import OAuthMetadata
+
     OAUTH_AVAILABLE = True
 except ImportError:
     OAUTH_AVAILABLE = False
@@ -31,12 +32,32 @@ OAUTH_PRESETS = {
     "github": {
         "authorization_endpoint": "https://github.com/login/oauth/authorize",
         "token_endpoint": "https://github.com/login/oauth/access_token",
-        "default_scopes": "read:user repo",
+        "default_scopes": "read:user repo read:project read:packages",
+        "issuer": "https://github.com",
     },
-    "google": {
+    "google-drive": {
         "authorization_endpoint": "https://accounts.google.com/o/oauth2/v2/auth",
         "token_endpoint": "https://oauth2.googleapis.com/token",
-        "default_scopes": "openid profile email",
+        "default_scopes": "https://www.googleapis.com/auth/drive.readonly",
+        "issuer": "https://accounts.google.com",
+    },
+    "gmail": {
+        "authorization_endpoint": "https://accounts.google.com/o/oauth2/v2/auth",
+        "token_endpoint": "https://oauth2.googleapis.com/token",
+        "default_scopes": "https://www.googleapis.com/auth/gmail.readonly",
+        "issuer": "https://accounts.google.com",
+    },
+    "google-calendar": {
+        "authorization_endpoint": "https://accounts.google.com/o/oauth2/v2/auth",
+        "token_endpoint": "https://oauth2.googleapis.com/token",
+        "default_scopes": "https://www.googleapis.com/auth/calendar.readonly",
+        "issuer": "https://accounts.google.com",
+    },
+    "notion": {
+        "authorization_endpoint": "https://api.notion.com/v1/oauth/authorize",
+        "token_endpoint": "https://api.notion.com/v1/oauth/token",
+        "default_scopes": "read_content read_user",
+        "issuer": "https://api.notion.com",
     },
 }
 
@@ -50,9 +71,7 @@ class FileTokenStorage:
     """
 
     def __init__(self, server_name: str, base_dir: Optional[str] = None):
-        self.storage_dir = Path(
-            base_dir or os.path.expanduser("~/.mcp/tokens")
-        ) / server_name
+        self.storage_dir = Path(base_dir or os.path.expanduser("~/.mcp/tokens")) / server_name
         self.storage_dir.mkdir(parents=True, exist_ok=True)
         self._tokens_path = self.storage_dir / "tokens.json"
         self._client_info_path = self.storage_dir / "client_info.json"
@@ -71,10 +90,7 @@ class FileTokenStorage:
     async def set_tokens(self, tokens: "OAuthToken") -> None:
         """Persist OAuth tokens."""
         try:
-            self._tokens_path.write_text(
-                tokens.model_dump_json(indent=2),
-                encoding="utf-8"
-            )
+            self._tokens_path.write_text(tokens.model_dump_json(indent=2), encoding="utf-8")
         except Exception as e:
             logger.error(f"Failed to save OAuth tokens: {e}")
 
@@ -92,10 +108,7 @@ class FileTokenStorage:
     async def set_client_info(self, client_info: "OAuthClientInformationFull") -> None:
         """Persist client registration info."""
         try:
-            self._client_info_path.write_text(
-                client_info.model_dump_json(indent=2),
-                encoding="utf-8"
-            )
+            self._client_info_path.write_text(client_info.model_dump_json(indent=2), encoding="utf-8")
         except Exception as e:
             logger.error(f"Failed to save client info: {e}")
 
@@ -161,9 +174,7 @@ def _build_callback_handler(redirect_port: int):
 
     async def callback_handler() -> tuple[str, str | None]:
         """Wait for the OAuth callback and return (auth_code, state)."""
-        auth_code_future: asyncio.Future[tuple[str, str | None]] = (
-            asyncio.get_event_loop().create_future()
-        )
+        auth_code_future: asyncio.Future[tuple[str, str | None]] = asyncio.get_event_loop().create_future()
 
         from aiohttp import web
 
@@ -173,33 +184,22 @@ def _build_callback_handler(redirect_port: int):
             error = request.query.get("error")
 
             if error:
-                auth_code_future.set_exception(
-                    RuntimeError(
-                        f"OAuth error: {error} - "
-                        f"{request.query.get('error_description', '')}"
-                    )
-                )
+                auth_code_future.set_exception(RuntimeError(f"OAuth error: {error} - {request.query.get('error_description', '')}"))
                 return web.Response(
-                    text="<html><body><h1>Authentication Failed</h1>"
-                         f"<p>Error: {error}</p>"
-                         "<p>You can close this window.</p></body></html>",
+                    text=f"<html><body><h1>Authentication Failed</h1><p>Error: {error}</p><p>You can close this window.</p></body></html>",
                     content_type="text/html",
                 )
 
             if not code:
-                auth_code_future.set_exception(
-                    RuntimeError("No authorization code received")
-                )
+                auth_code_future.set_exception(RuntimeError("No authorization code received"))
                 return web.Response(
-                    text="<html><body><h1>Error</h1>"
-                         "<p>No authorization code received.</p></body></html>",
+                    text="<html><body><h1>Error</h1><p>No authorization code received.</p></body></html>",
                     content_type="text/html",
                 )
 
             auth_code_future.set_result((code, state))
             return web.Response(
-                text="<html><body><h1>Authentication Successful!</h1>"
-                     "<p>You can close this window and return to the application.</p></body></html>",
+                text="<html><body><h1>Authentication Successful!</h1><p>You can close this window and return to the application.</p></body></html>",
                 content_type="text/html",
             )
 
@@ -211,10 +211,7 @@ def _build_callback_handler(redirect_port: int):
         site = web.TCPSite(runner, "localhost", redirect_port)
         await site.start()
 
-        logger.info(
-            f"OAuth callback server listening on "
-            f"http://localhost:{redirect_port}/callback"
-        )
+        logger.info(f"OAuth callback server listening on http://localhost:{redirect_port}/callback")
 
         try:
             result = await asyncio.wait_for(auth_code_future, timeout=300.0)
@@ -243,10 +240,7 @@ async def create_oauth_provider(config) -> "OAuthClientProvider":
         OAuthClientProvider instance (httpx.Auth subclass)
     """
     if not OAUTH_AVAILABLE:
-        raise RuntimeError(
-            "MCP OAuth modules not available. "
-            "Update mcp SDK: pip install --upgrade mcp"
-        )
+        raise RuntimeError("MCP OAuth modules not available. Update mcp SDK: pip install --upgrade mcp")
 
     redirect_port = config.oauth_redirect_port or 3000
     redirect_uri = f"http://localhost:{redirect_port}/callback"
