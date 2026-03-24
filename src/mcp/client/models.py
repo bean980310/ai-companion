@@ -6,14 +6,41 @@ from enum import Enum
 
 class MCPTransportType(str, Enum):
     """Supported MCP transport types"""
+
     SSE = "sse"
     HTTP = "streamable-http"
     STDIO = "stdio"
 
 
 @dataclass
+class MCPServerStreamableHTTPConfig:
+    transport: MCPTransportType = MCPTransportType.HTTP
+    url: str
+    headers: Dict[str, str] = field(default_factory=dict)
+    description: Optional[str] = ""
+
+
+@dataclass
+class MCPServerSSEConfig:
+    transport: MCPTransportType = MCPTransportType.SSE
+    url: str
+    headers: Dict[str, str] = field(default_factory=dict)
+    description: Optional[str] = ""
+
+
+@dataclass
+class MCPServerSTDIOConfig:
+    transport: MCPTransportType = MCPTransportType.STDIO
+    command: str
+    args: List[str] = field(default_factory=list)
+    env: Optional[Dict[str, str]] = None
+    description: Optional[str] = ""
+
+
+@dataclass
 class MCPServerConfig:
     """Configuration for an MCP server connection"""
+
     name: str
     url: str
     transport: MCPTransportType = MCPTransportType.SSE
@@ -52,7 +79,7 @@ class MCPServerConfig:
             "oauth_client_secret": self.oauth_client_secret,
             "oauth_issuer": self.oauth_issuer,
             "oauth_authorization_endpoint": self.oauth_authorization_endpoint,
-            "oauth_token_endpoint": self.oauth_token_endpoint
+            "oauth_token_endpoint": self.oauth_token_endpoint,
         }
 
     @classmethod
@@ -74,13 +101,14 @@ class MCPServerConfig:
             oauth_client_secret=data.get("oauth_client_secret"),
             oauth_issuer=data.get("oauth_issuer"),
             oauth_authorization_endpoint=data.get("oauth_authorization_endpoint"),
-            oauth_token_endpoint=data.get("oauth_token_endpoint")
+            oauth_token_endpoint=data.get("oauth_token_endpoint"),
         )
 
 
 @dataclass
 class MCPToolParameter:
     """Parameter definition for an MCP tool"""
+
     name: str
     type: str
     description: str = ""
@@ -92,6 +120,7 @@ class MCPToolParameter:
 @dataclass
 class MCPTool:
     """Representation of an MCP tool"""
+
     name: str
     description: str
     server_name: str
@@ -104,28 +133,13 @@ class MCPTool:
         return f"{self.server_name}__{self.name}"
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            "name": self.name,
-            "description": self.description,
-            "server_name": self.server_name,
-            "parameters": [
-                {
-                    "name": p.name,
-                    "type": p.type,
-                    "description": p.description,
-                    "required": p.required,
-                    "default": p.default,
-                    "enum": p.enum
-                }
-                for p in self.parameters
-            ],
-            "input_schema": self.input_schema
-        }
+        return {"name": self.name, "description": self.description, "server_name": self.server_name, "parameters": [{"name": p.name, "type": p.type, "description": p.description, "required": p.required, "default": p.default, "enum": p.enum} for p in self.parameters], "input_schema": self.input_schema}
 
 
 @dataclass
 class MCPToolResult:
     """Result from calling an MCP tool"""
+
     tool_name: str
     server_name: str
     success: bool
@@ -134,19 +148,13 @@ class MCPToolResult:
     content_type: str = "text"  # text, image, json, etc.
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            "tool_name": self.tool_name,
-            "server_name": self.server_name,
-            "success": self.success,
-            "content": self.content,
-            "error": self.error,
-            "content_type": self.content_type
-        }
+        return {"tool_name": self.tool_name, "server_name": self.server_name, "success": self.success, "content": self.content, "error": self.error, "content_type": self.content_type}
 
 
 @dataclass
 class MCPResource:
     """Representation of an MCP resource"""
+
     uri: str
     name: str
     description: str = ""
@@ -157,6 +165,7 @@ class MCPResource:
 @dataclass
 class MCPPrompt:
     """Representation of an MCP prompt template"""
+
     name: str
     description: str = ""
     arguments: List[MCPToolParameter] = field(default_factory=list)
