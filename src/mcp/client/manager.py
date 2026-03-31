@@ -26,7 +26,7 @@ except ImportError:
     MCP_AVAILABLE = False
     logger.warning("MCP SDK not available. Install with: pip install mcp")
 
-from .oauth import create_oauth_provider
+from .oauth import create_oauth_provider, FileTokenStorage
 
 
 class MCPClientManager:
@@ -221,9 +221,70 @@ class MCPClientManager:
         """List all configured servers"""
         return list(self.servers.values())
 
+    def validate_server_token(self, server_name: str) -> bool:
+        """
+        Validate the stored OAuth token for a server.
+
+        Checks the token file in ~/.mcp/tokens/<server_name>/ for expiry.
+        If expired, the token files are deleted so the next connection
+        will trigger a fresh OAuth authentication flow.
+
+        Args:
+            server_name: Server ID to validate
+
+        Returns:
+            True if token is valid or no OAuth is used, False if expired (and cleared)
+        """
+        config = self.servers.get(server_name)
+        if not config:
+            return True
+
+        # Only relevant for OAuth-enabled servers
+        if not config.oauth_enabled:
+            return True
+
+        storage = FileTokenStorage(server_name=config.name)
+        if storage.is_token_expired():
+            logger.warning(
+                f"OAuth token for server '{server_name}' has expired. "
+                f"Clearing tokens — re-authentication will be required."
+            )
+            storage.clear_tokens()
+            return False
+
+        return True
+
+    def get_token_status(self, server_name: str) -> dict:
+        """
+        Get the token status for a server.
+
+        Returns:
+            Dict with keys: has_token, is_expired, server_name, oauth_enabled
+        """
+        config = self.servers.get(server_name)
+        if not config:
+            return {"server_name": server_name, "oauth_enabled": False, "has_token": False, "is_expired": False}
+
+        if not config.oauth_enabled:
+            return {"server_name": server_name, "oauth_enabled": False, "has_token": False, "is_expired": False}
+
+        storage = FileTokenStorage(server_name=config.name)
+        has_token = storage._tokens_path.exists()
+        is_expired = storage.is_token_expired() if has_token else False
+
+        return {
+            "server_name": server_name,
+            "oauth_enabled": True,
+            "has_token": has_token,
+            "is_expired": is_expired,
+        }
+
     async def connect(self, server_name: str) -> bool:
         """
         Connect to an MCP server and discover its tools.
+
+        Validates OAuth tokens before connecting. If a stored token
+        has expired, it is deleted so the OAuth flow can re-authenticate.
 
         Args:
             server_name: Name of the server to connect to
@@ -243,6 +304,15 @@ class MCPClientManager:
         if not config.enabled:
             logger.warning(f"Server {server_name} is disabled")
             return False
+
+        # Validate OAuth token before attempting connection
+        if config.oauth_enabled:
+            token_valid = self.validate_server_token(server_name)
+            if not token_valid:
+                logger.info(
+                    f"Expired token cleared for '{server_name}'. "
+                    f"OAuth re-authentication will be triggered."
+                )
 
         try:
             if config.transport == MCPTransportType.SSE:

@@ -111,14 +111,28 @@ def connect_to_server(server_name: str) -> tuple:
         return ("Error: Select a server to connect", gr.update(), gr.update())
 
     try:
+        # Check token validity and report status
+        token_status = mcp_manager.get_token_status(server_name)
+        reauth_msg = ""
+        if token_status["oauth_enabled"] and token_status["is_expired"]:
+            reauth_msg = " (expired token cleared — re-authenticating)"
+        elif token_status["oauth_enabled"] and not token_status["has_token"]:
+            reauth_msg = " (no stored token — authentication required)"
+
         success = run_async(mcp_manager.connect(server_name))
 
         if success:
             tools = get_tools_display()
             servers = get_servers_display()
-            return (f"Connected to {server_name}. Discovered {len(mcp_manager.list_tools(server_name))} tools.", gr.update(value=servers), gr.update(value=tools))
+            return (
+                f"Connected to {server_name}. "
+                f"Discovered {len(mcp_manager.list_tools(server_name))} tools."
+                + (f"{reauth_msg}" if reauth_msg else ""),
+                gr.update(value=servers),
+                gr.update(value=tools),
+            )
         else:
-            return (f"Failed to connect to {server_name}", gr.update(), gr.update())
+            return (f"Failed to connect to {server_name}{reauth_msg}", gr.update(), gr.update())
     except Exception as e:
         logger.error(f"Error connecting to server: {e}")
         return (f"Error: {str(e)}", gr.update(), gr.update())
@@ -158,7 +172,20 @@ def get_servers_display() -> List[List[str]]:
     """Get server list for display in DataFrame"""
     data = []
     for server_id, server in mcp_manager.servers.items():
-        status = "Connected" if mcp_manager.is_connected(server_id) else "Disconnected"
+        if mcp_manager.is_connected(server_id):
+            status = "Connected"
+        else:
+            # Show token status for OAuth-enabled servers
+            token_status = mcp_manager.get_token_status(server_id)
+            if token_status["oauth_enabled"]:
+                if token_status["is_expired"]:
+                    status = "Token Expired"
+                elif token_status["has_token"]:
+                    status = "Disconnected (Token OK)"
+                else:
+                    status = "Disconnected (No Token)"
+            else:
+                status = "Disconnected"
         tool_count = len(mcp_manager.list_tools(server_id)) if mcp_manager.is_connected(server_id) else "-"
         endpoint = server.url if server.url else server.command or ""
         data.append([server.name, endpoint, server.transport.value, status, str(tool_count), server.description])

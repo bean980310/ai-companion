@@ -5,6 +5,7 @@
 import asyncio
 import json
 import os
+import time
 import webbrowser
 from pathlib import Path
 from typing import Optional
@@ -68,18 +69,119 @@ class FileTokenStorage:
 
     Stores OAuth tokens and client registration info as JSON files
     in ~/.mcp/tokens/<server_name>/.
+
+    Token validity is tracked via a metadata file that records
+    the save timestamp and expires_in value from the token response.
     """
 
+    # Grace period in seconds — treat tokens as expired this much earlier
+    # to avoid using tokens that are about to expire mid-request.
+    EXPIRY_GRACE_SECONDS = 60
+
     def __init__(self, server_name: str, base_dir: Optional[str] = None):
+        self.server_name = server_name
         self.storage_dir = Path(base_dir or os.path.expanduser("~/.mcp/tokens")) / server_name
         self.storage_dir.mkdir(parents=True, exist_ok=True)
         self._tokens_path = self.storage_dir / "tokens.json"
         self._client_info_path = self.storage_dir / "client_info.json"
+        self._metadata_path = self.storage_dir / "token_metadata.json"
+
+    def _load_metadata(self) -> Optional[dict]:
+        """Load token metadata (saved_at, expires_in)."""
+        if not self._metadata_path.exists():
+            return None
+        try:
+            return json.loads(self._metadata_path.read_text(encoding="utf-8"))
+        except Exception:
+            return None
+
+    def _save_metadata(self, expires_in: Optional[int]) -> None:
+        """Save token metadata alongside the token file."""
+        metadata = {
+            "saved_at": time.time(),
+            "expires_in": expires_in,
+        }
+        try:
+            self._metadata_path.write_text(
+                json.dumps(metadata, indent=2), encoding="utf-8"
+            )
+        except Exception as e:
+            logger.warning(f"Failed to save token metadata for {self.server_name}: {e}")
+
+    def is_token_expired(self) -> bool:
+        """
+        Check whether the stored token has expired.
+
+        Uses the saved_at timestamp + expires_in from the token response.
+        If metadata is missing, falls back to the token file's mtime
+        combined with the expires_in parsed from the token itself.
+
+        Returns True if expired or if validity cannot be determined
+        (missing metadata and no expires_in in token).
+        """
+        if not self._tokens_path.exists():
+            return True
+
+        metadata = self._load_metadata()
+
+        # Try metadata first (most reliable)
+        if metadata and metadata.get("saved_at") and metadata.get("expires_in"):
+            saved_at = metadata["saved_at"]
+            expires_in = metadata["expires_in"]
+            elapsed = time.time() - saved_at
+            if elapsed >= (expires_in - self.EXPIRY_GRACE_SECONDS):
+                logger.info(
+                    f"Token for {self.server_name} has expired "
+                    f"(elapsed={elapsed:.0f}s, expires_in={expires_in}s)"
+                )
+                return True
+            return False
+
+        # Fallback: read expires_in from the token file + file mtime
+        try:
+            data = json.loads(self._tokens_path.read_text(encoding="utf-8"))
+            expires_in = data.get("expires_in")
+            if expires_in is not None:
+                file_mtime = self._tokens_path.stat().st_mtime
+                elapsed = time.time() - file_mtime
+                if elapsed >= (expires_in - self.EXPIRY_GRACE_SECONDS):
+                    logger.info(
+                        f"Token for {self.server_name} has expired (fallback check, "
+                        f"elapsed={elapsed:.0f}s, expires_in={expires_in}s)"
+                    )
+                    return True
+                return False
+        except Exception:
+            pass
+
+        # Cannot determine expiry — treat as valid to avoid unnecessary re-auth
+        # (the server will reject it if actually expired)
+        return False
+
+    def clear_tokens(self) -> None:
+        """Delete stored tokens, metadata, and client info to force re-authentication."""
+        for path in (self._tokens_path, self._metadata_path):
+            if path.exists():
+                try:
+                    path.unlink()
+                    logger.info(f"Deleted {path.name} for {self.server_name}")
+                except Exception as e:
+                    logger.error(f"Failed to delete {path.name} for {self.server_name}: {e}")
 
     async def get_tokens(self) -> "OAuthToken | None":
-        """Load stored OAuth tokens."""
+        """Load stored OAuth tokens, returning None if expired."""
         if not self._tokens_path.exists():
             return None
+
+        # Validate token expiry before returning
+        if self.is_token_expired():
+            logger.warning(
+                f"Stored token for {self.server_name} has expired. "
+                f"Clearing tokens to trigger re-authentication."
+            )
+            self.clear_tokens()
+            return None
+
         try:
             data = json.loads(self._tokens_path.read_text(encoding="utf-8"))
             return OAuthToken.model_validate(data)
@@ -88,9 +190,18 @@ class FileTokenStorage:
             return None
 
     async def set_tokens(self, tokens: "OAuthToken") -> None:
-        """Persist OAuth tokens."""
+        """Persist OAuth tokens with expiry metadata."""
         try:
             self._tokens_path.write_text(tokens.model_dump_json(indent=2), encoding="utf-8")
+
+            # Save metadata for expiry tracking
+            expires_in = getattr(tokens, "expires_in", None)
+            self._save_metadata(expires_in)
+
+            logger.info(
+                f"Saved OAuth tokens for {self.server_name}"
+                + (f" (expires_in={expires_in}s)" if expires_in else "")
+            )
         except Exception as e:
             logger.error(f"Failed to save OAuth tokens: {e}")
 
