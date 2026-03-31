@@ -59,15 +59,33 @@ class MCPClientManager:
         # Load saved configurations
         self._load_config()
 
+    @staticmethod
+    def _name_to_server_id(name: str) -> str:
+        """Convert a display name to a kebab-case server ID"""
+        return name.lower().replace(" ", "-").replace("_", "-")
+
     def _load_config(self):
         """Load server configurations from file"""
         if os.path.exists(self.config_path):
             try:
                 with open(self.config_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    for server_data in data.get("servers", []):
+
+                if "mcpServers" in data:
+                    # New dict-based format: {"mcpServers": {"server-id": {...}, ...}}
+                    for server_id, server_data in data["mcpServers"].items():
                         config = MCPServerConfig.from_dict(server_data)
-                        self.servers[config.name] = config
+                        self.servers[server_id] = config
+                elif "servers" in data:
+                    # Legacy list-based format: {"servers": [{...}, ...]}
+                    for server_data in data["servers"]:
+                        config = MCPServerConfig.from_dict(server_data)
+                        server_id = self._name_to_server_id(config.name)
+                        self.servers[server_id] = config
+                    # Migrate to new format
+                    self._save_config()
+                    logger.info("Migrated MCP config from legacy format to mcpServers format")
+
                 logger.info(f"Loaded {len(self.servers)} MCP server configurations")
             except Exception as e:
                 logger.error(f"Error loading MCP config: {e}")
@@ -75,7 +93,12 @@ class MCPClientManager:
     def _save_config(self):
         """Save server configurations to file"""
         try:
-            data = {"servers": [server.to_dict() for server in self.servers.values()]}
+            data = {
+                "mcpServers": {
+                    server_id: server.to_dict()
+                    for server_id, server in self.servers.items()
+                }
+            }
             with open(self.config_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
             logger.info(f"Saved {len(self.servers)} MCP server configurations")
@@ -85,10 +108,16 @@ class MCPClientManager:
     def add_server(
         self,
         name: str,
-        url: str,
         transport: str = "sse",
+        # SSE / HTTP fields
+        url: Optional[str] = None,
         api_key: Optional[str] = None,
         headers: Optional[Dict[str, str]] = None,
+        # STDIO fields
+        command: Optional[str] = None,
+        args: Optional[List[str]] = None,
+        env: Optional[Dict[str, str]] = None,
+        # Common fields
         timeout: float = 30.0,
         description: str = "",
         oauth_enabled: bool = True,
@@ -99,16 +128,20 @@ class MCPClientManager:
         oauth_token_endpoint: Optional[str] = None,
         oauth_scopes: Optional[str] = None,
         save: bool = True,
+        server_id: Optional[str] = None,
     ) -> MCPServerConfig:
         """
         Add a new MCP server configuration.
 
         Args:
-            name: Unique name for the server
-            url: Server URL (for SSE/HTTP) or command (for STDIO)
-            transport: Transport type ('sse', 'http', or 'stdio')
-            api_key: Optional API key for authentication
-            headers: Optional HTTP headers
+            name: Display name for the server
+            transport: Transport type ('sse', 'streamable-http', or 'stdio')
+            url: Server URL (for SSE/HTTP transports)
+            api_key: Optional API key for authentication (SSE/HTTP)
+            headers: Optional HTTP headers (SSE/HTTP)
+            command: Command to run (for STDIO transport)
+            args: Command arguments (for STDIO transport)
+            env: Environment variables (for STDIO transport)
             timeout: Connection timeout in seconds
             description: Human-readable description
             oauth_enabled: Whether to use OAuth authentication
@@ -119,16 +152,20 @@ class MCPClientManager:
             oauth_token_endpoint: OAuth token endpoint URL
             oauth_scopes: Space-separated OAuth scopes
             save: Whether to persist the configuration
+            server_id: Optional explicit server ID (defaults to kebab-case of name)
 
         Returns:
             The created MCPServerConfig
         """
         config = MCPServerConfig(
             name=name,
-            url=url,
             transport=MCPTransportType(transport),
+            url=url,
             api_key=api_key,
             headers=headers or {},
+            command=command,
+            args=args or [],
+            env=env,
             timeout=timeout,
             description=description,
             oauth_enabled=oauth_enabled,
@@ -140,12 +177,13 @@ class MCPClientManager:
             oauth_token_endpoint=oauth_token_endpoint,
             oauth_scopes=oauth_scopes,
         )
-        self.servers[name] = config
+        sid = server_id or self._name_to_server_id(name)
+        self.servers[sid] = config
 
         if save:
             self._save_config()
 
-        logger.info(f"Added MCP server: {name} ({url})")
+        logger.info(f"Added MCP server: {sid}")
         return config
 
     def remove_server(self, name: str, save: bool = True) -> bool:
@@ -208,11 +246,11 @@ class MCPClientManager:
 
         try:
             if config.transport == MCPTransportType.SSE:
-                await self._connect_sse(config)
+                await self._connect_sse(server_name, config)
             elif config.transport == MCPTransportType.STDIO:
-                await self._connect_stdio(config)
+                await self._connect_stdio(server_name, config)
             elif config.transport == MCPTransportType.HTTP:
-                await self._connect_http(config)
+                await self._connect_http(server_name, config)
             else:
                 logger.error(f"Unsupported transport: {config.transport}")
                 return False
@@ -225,7 +263,7 @@ class MCPClientManager:
             logger.error(f"Error connecting to {server_name}: {e}\n\n{traceback.format_exc()}")
             return False
 
-    async def _connect_sse(self, config: MCPServerConfig):
+    async def _connect_sse(self, server_id: str, config: MCPServerConfig):
         """Connect to an SSE-based MCP server"""
         headers = config.headers.copy()
         if config.api_key:
@@ -239,39 +277,31 @@ class MCPClientManager:
         async with sse_client(config.url, headers=headers, auth=auth) as (read, write):
             async with ClientSession(read, write) as session:
                 await session.initialize()
-                self.sessions[config.name] = session
-                await self._discover_capabilities(config.name, session)
+                self.sessions[server_id] = session
+                await self._discover_capabilities(server_id, session)
 
-    async def _connect_stdio(self, config: MCPServerConfig):
+    async def _connect_stdio(self, server_id: str, config: MCPServerConfig):
         """Connect to a STDIO-based MCP server"""
-        # For STDIO, url is the command, headers can contain args
-        command = config.url
-        # Handle args gently (could be list or string)
-        args_raw = config.headers.get("args")
-        if isinstance(args_raw, list):
-            args = [str(a) for a in args_raw]
-        elif isinstance(args_raw, str):
-            args = args_raw.split()
-        else:
-            args = []
+        command = config.command
+        if not command:
+            raise ValueError(f"STDIO server '{config.name}' requires a 'command' field")
 
-        # Handle env gently (could be dict)
-        env_raw = config.headers.get("env")
-        if isinstance(env_raw, dict):
+        args = config.args or []
+
+        env = None
+        if config.env:
             env = os.environ.copy()
-            env.update({str(k): str(v) for k, v in env_raw.items()})
-        else:
-            env = None
+            env.update({str(k): str(v) for k, v in config.env.items()})
 
         server_params = StdioServerParameters(command=command, args=args, env=env)
 
         async with stdio_client(server_params) as (read, write):
             async with ClientSession(read, write) as session:
                 await session.initialize()
-                self.sessions[config.name] = session
-                await self._discover_capabilities(config.name, session)
+                self.sessions[server_id] = session
+                await self._discover_capabilities(server_id, session)
 
-    async def _connect_http(self, config: MCPServerConfig):
+    async def _connect_http(self, server_id: str, config: MCPServerConfig):
         """Connect to an HTTP-based MCP server"""
         headers = config.headers.copy()
 
@@ -287,8 +317,8 @@ class MCPClientManager:
         async with streamable_http_client(config.url, http_client=http_client) as (read, write, _get_session_id):
             async with ClientSession(read, write) as session:
                 await session.initialize()
-                self.sessions[config.name] = session
-                await self._discover_capabilities(config.name, session)
+                self.sessions[server_id] = session
+                await self._discover_capabilities(server_id, session)
 
     async def _discover_capabilities(self, server_name: str, session: ClientSession):
         """Discover tools, resources, and prompts from a connected server"""

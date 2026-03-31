@@ -74,6 +74,8 @@ stable-diffusion-cpp-python
 tipo-kgen
 nexaai
 a2a-sdk[http-server]>=0.3.0
+huggingface-hub-search @ git+https://github.com/hysts/gradio-huggingface-hub-search.git
+gradio-gpu-monitor
 
 setuptools
 wheel

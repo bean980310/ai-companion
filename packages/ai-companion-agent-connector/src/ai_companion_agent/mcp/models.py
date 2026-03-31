@@ -15,13 +15,18 @@ class MCPTransportType(str, Enum):
 class MCPServerConfig:
     """Configuration for an MCP server connection"""
     name: str
-    url: str
     transport: MCPTransportType = MCPTransportType.SSE
-    api_key: Optional[str] = None
-    headers: Dict[str, str] = field(default_factory=dict)
-    timeout: float = 30.0
     enabled: bool = True
     description: str = ""
+    timeout: float = 30.0
+    # SSE / HTTP fields
+    url: Optional[str] = None
+    api_key: Optional[str] = None
+    headers: Dict[str, str] = field(default_factory=dict)
+    # STDIO fields
+    command: Optional[str] = None
+    args: List[str] = field(default_factory=list)
+    env: Optional[Dict[str, str]] = None
     # OAuth 2.1 settings
     oauth_enabled: bool = False
     oauth_client_name: Optional[str] = None
@@ -29,36 +34,50 @@ class MCPServerConfig:
     oauth_redirect_port: int = 3000
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        base = {
             "name": self.name,
-            "url": self.url,
             "transport": self.transport.value,
-            "api_key": self.api_key,
-            "headers": self.headers,
-            "timeout": self.timeout,
             "enabled": self.enabled,
             "description": self.description,
-            "oauth_enabled": self.oauth_enabled,
-            "oauth_client_name": self.oauth_client_name,
-            "oauth_scopes": self.oauth_scopes,
-            "oauth_redirect_port": self.oauth_redirect_port
+            "timeout": self.timeout,
         }
+        if self.transport == MCPTransportType.STDIO:
+            base["command"] = self.command
+            base["args"] = self.args
+            if self.env is not None:
+                base["env"] = self.env
+        else:
+            base["url"] = self.url
+            base["api_key"] = self.api_key
+            base["headers"] = self.headers
+            base["oauth_enabled"] = self.oauth_enabled
+            base["oauth_client_name"] = self.oauth_client_name
+            base["oauth_scopes"] = self.oauth_scopes
+            base["oauth_redirect_port"] = self.oauth_redirect_port
+        return base
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "MCPServerConfig":
+        transport = MCPTransportType(data.get("transport", "sse"))
         return cls(
-            name=data["name"],
-            url=data["url"],
-            transport=MCPTransportType(data.get("transport", "sse")),
-            api_key=data.get("api_key"),
-            headers=data.get("headers", {}),
-            timeout=data.get("timeout", 30.0),
+            name=data.get("name", ""),
+            transport=transport,
             enabled=data.get("enabled", True),
             description=data.get("description", ""),
+            timeout=data.get("timeout", 30.0),
+            # SSE / HTTP fields
+            url=data.get("url"),
+            api_key=data.get("api_key"),
+            headers=data.get("headers", {}),
+            # STDIO fields
+            command=data.get("command"),
+            args=data.get("args", []),
+            env=data.get("env"),
+            # OAuth
             oauth_enabled=data.get("oauth_enabled", False),
             oauth_client_name=data.get("oauth_client_name"),
             oauth_scopes=data.get("oauth_scopes"),
-            oauth_redirect_port=data.get("oauth_redirect_port", 3000)
+            oauth_redirect_port=data.get("oauth_redirect_port", 3000),
         )
 
 

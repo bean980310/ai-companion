@@ -14,27 +14,21 @@ class MCPTransportType(str, Enum):
 
 @dataclass
 class MCPServerStreamableHTTPConfig:
-    transport: MCPTransportType = MCPTransportType.HTTP
     url: str
     headers: Dict[str, str] = field(default_factory=dict)
-    description: Optional[str] = ""
 
 
 @dataclass
 class MCPServerSSEConfig:
-    transport: MCPTransportType = MCPTransportType.SSE
     url: str
     headers: Dict[str, str] = field(default_factory=dict)
-    description: Optional[str] = ""
 
 
 @dataclass
 class MCPServerSTDIOConfig:
-    transport: MCPTransportType = MCPTransportType.STDIO
     command: str
     args: List[str] = field(default_factory=list)
     env: Optional[Dict[str, str]] = None
-    description: Optional[str] = ""
 
 
 @dataclass
@@ -42,13 +36,18 @@ class MCPServerConfig:
     """Configuration for an MCP server connection"""
 
     name: str
-    url: str
     transport: MCPTransportType = MCPTransportType.SSE
-    api_key: Optional[str] = None
-    headers: Dict[str, str] = field(default_factory=dict)
-    timeout: float = 30.0
     enabled: bool = True
     description: str = ""
+    timeout: float = 30.0
+    # SSE / HTTP fields
+    url: Optional[str] = None
+    api_key: Optional[str] = None
+    headers: Dict[str, str] = field(default_factory=dict)
+    # STDIO fields
+    command: Optional[str] = None
+    args: List[str] = field(default_factory=list)
+    env: Optional[Dict[str, str]] = None
     # OAuth 2.1 settings
     oauth_enabled: bool = False
     oauth_client_name: Optional[str] = None
@@ -62,37 +61,51 @@ class MCPServerConfig:
     oauth_token_endpoint: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        base = {
             "name": self.name,
-            "url": self.url,
             "transport": self.transport.value,
-            "api_key": self.api_key,
-            "headers": self.headers,
-            "timeout": self.timeout,
             "enabled": self.enabled,
             "description": self.description,
-            "oauth_enabled": self.oauth_enabled,
-            "oauth_client_name": self.oauth_client_name,
-            "oauth_scopes": self.oauth_scopes,
-            "oauth_redirect_port": self.oauth_redirect_port,
-            "oauth_client_id": self.oauth_client_id,
-            "oauth_client_secret": self.oauth_client_secret,
-            "oauth_issuer": self.oauth_issuer,
-            "oauth_authorization_endpoint": self.oauth_authorization_endpoint,
-            "oauth_token_endpoint": self.oauth_token_endpoint,
+            "timeout": self.timeout,
         }
+        if self.transport == MCPTransportType.STDIO:
+            base["command"] = self.command
+            base["args"] = self.args
+            if self.env is not None:
+                base["env"] = self.env
+        else:
+            base["url"] = self.url
+            base["api_key"] = self.api_key
+            base["headers"] = self.headers
+            base["oauth_enabled"] = self.oauth_enabled
+            base["oauth_client_name"] = self.oauth_client_name
+            base["oauth_scopes"] = self.oauth_scopes
+            base["oauth_redirect_port"] = self.oauth_redirect_port
+            base["oauth_client_id"] = self.oauth_client_id
+            base["oauth_client_secret"] = self.oauth_client_secret
+            base["oauth_issuer"] = self.oauth_issuer
+            base["oauth_authorization_endpoint"] = self.oauth_authorization_endpoint
+            base["oauth_token_endpoint"] = self.oauth_token_endpoint
+        return base
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "MCPServerConfig":
+        transport = MCPTransportType(data.get("transport", "sse"))
         return cls(
-            name=data["name"],
-            url=data["url"],
-            transport=MCPTransportType(data.get("transport", "sse")),
-            api_key=data.get("api_key"),
-            headers=data.get("headers", {}),
-            timeout=data.get("timeout", 30.0),
+            name=data.get("name", ""),
+            transport=transport,
             enabled=data.get("enabled", True),
             description=data.get("description", ""),
+            timeout=data.get("timeout", 30.0),
+            # SSE / HTTP fields
+            url=data.get("url"),
+            api_key=data.get("api_key"),
+            headers=data.get("headers", {}),
+            # STDIO fields
+            command=data.get("command"),
+            args=data.get("args", []),
+            env=data.get("env"),
+            # OAuth
             oauth_enabled=data.get("oauth_enabled", False),
             oauth_client_name=data.get("oauth_client_name"),
             oauth_scopes=data.get("oauth_scopes"),

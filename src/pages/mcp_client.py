@@ -39,24 +39,41 @@ def run_async(coro):
 mcp_manager = get_mcp_client_manager()
 
 
-def add_mcp_server(name: str, url: str, transport: str, api_key: str, timeout: float, description: str, oauth_enabled: bool, oauth_client_id: str, oauth_client_secret: str, oauth_issuer: str, oauth_authorization_endpoint: str, oauth_token_endpoint: str, oauth_scopes: str) -> tuple:
+def add_mcp_server(name: str, url: str, transport: str, api_key: str, timeout: float, description: str, command: str, args: str, env: str, oauth_enabled: bool, oauth_client_id: str, oauth_client_secret: str, oauth_issuer: str, oauth_authorization_endpoint: str, oauth_token_endpoint: str, oauth_scopes: str) -> tuple:
     """Add a new MCP server configuration"""
-    if not name or not url:
-        return (
-            gr.update(),  # servers list
-            "Error: Name and URL are required",
-            gr.update(),  # tools list
-        )
+    is_stdio = transport == "stdio"
+
+    if not name:
+        return (gr.update(), "Error: Name is required", gr.update())
+    if is_stdio and not command:
+        return (gr.update(), "Error: Command is required for STDIO transport", gr.update())
+    if not is_stdio and not url:
+        return (gr.update(), "Error: URL is required for SSE/HTTP transport", gr.update())
 
     try:
+        import shlex
+        # Parse args string into list
+        args_list = shlex.split(args) if args else []
+        # Parse env string (KEY=VALUE per line) into dict
+        env_dict = None
+        if env and env.strip():
+            env_dict = {}
+            for line in env.strip().splitlines():
+                if "=" in line:
+                    k, v = line.split("=", 1)
+                    env_dict[k.strip()] = v.strip()
+
         mcp_manager.add_server(
             name=name,
-            url=url,
             transport=transport,
-            api_key=api_key if api_key else None,
+            url=url if not is_stdio else None,
+            api_key=api_key if api_key and not is_stdio else None,
+            command=command if is_stdio else None,
+            args=args_list if is_stdio else None,
+            env=env_dict if is_stdio else None,
             timeout=timeout,
             description=description,
-            oauth_enabled=oauth_enabled,
+            oauth_enabled=oauth_enabled if not is_stdio else False,
             oauth_client_id=oauth_client_id if oauth_client_id else None,
             oauth_client_secret=oauth_client_secret if oauth_client_secret else None,
             oauth_issuer=oauth_issuer if oauth_issuer else None,
@@ -139,12 +156,12 @@ def connect_all_servers() -> tuple:
 
 def get_servers_display() -> List[List[str]]:
     """Get server list for display in DataFrame"""
-    servers = mcp_manager.list_servers()
     data = []
-    for server in servers:
-        status = "Connected" if mcp_manager.is_connected(server.name) else "Disconnected"
-        tool_count = len(mcp_manager.list_tools(server.name)) if mcp_manager.is_connected(server.name) else "-"
-        data.append([server.name, server.url, server.transport.value, status, str(tool_count), server.description])
+    for server_id, server in mcp_manager.servers.items():
+        status = "Connected" if mcp_manager.is_connected(server_id) else "Disconnected"
+        tool_count = len(mcp_manager.list_tools(server_id)) if mcp_manager.is_connected(server_id) else "-"
+        endpoint = server.url if server.url else server.command or ""
+        data.append([server.name, endpoint, server.transport.value, status, str(tool_count), server.description])
     return data
 
 
@@ -161,8 +178,8 @@ def get_tools_display() -> List[List[str]]:
 
 
 def get_server_names() -> List[str]:
-    """Get list of server names for dropdown"""
-    return [s.name for s in mcp_manager.list_servers()]
+    """Get list of server IDs for dropdown"""
+    return list(mcp_manager.servers.keys())
 
 
 def get_tool_names() -> List[str]:
@@ -300,14 +317,21 @@ with gr.Blocks() as demo:
         with gr.Row():
             with gr.Column(scale=2):
                 gr.Markdown("### Configured Servers")
-                servers_table = gr.DataFrame(headers=["Name", "URL", "Transport", "Status", "Tools", "Description"], value=get_servers_display(), interactive=False, wrap=True)
+                servers_table = gr.DataFrame(headers=["Name", "Endpoint", "Transport", "Status", "Tools", "Description"], value=get_servers_display(), interactive=False, wrap=True)
 
             with gr.Column(scale=1):
                 gr.Markdown("### Add Server")
                 server_name_input = gr.Textbox(label="Server Name", placeholder="my-mcp-server")
-                server_url_input = gr.Textbox(label="URL", placeholder="http://localhost:8080/mcp/sse")
                 transport_dropdown = gr.Dropdown(label="Transport", choices=["sse", "streamable-http", "stdio"], value="sse")
-                api_key_input = gr.Textbox(label="API Key (optional)", type="password")
+                # SSE / HTTP fields
+                with gr.Column() as http_fields_column:
+                    server_url_input = gr.Textbox(label="URL", placeholder="http://localhost:8080/mcp/sse")
+                    api_key_input = gr.Textbox(label="API Key (optional)", type="password")
+                # STDIO fields
+                with gr.Column(visible=False) as stdio_fields_column:
+                    command_input = gr.Textbox(label="Command", placeholder="npx")
+                    args_input = gr.Textbox(label="Arguments", placeholder="-y @example/mcp-server", info="Space-separated arguments")
+                    env_input = gr.Textbox(label="Environment Variables", placeholder="API_KEY=your-key\nDEBUG=true", lines=3, info="KEY=VALUE per line")
                 timeout_input = gr.Number(label="Timeout (seconds)", value=30.0)
                 description_input = gr.Textbox(label="Description", placeholder="Description of this server")
                 enable_oauth_checkbox = gr.Checkbox(label="Use OAuth")
@@ -352,25 +376,42 @@ with gr.Blocks() as demo:
         gr.Markdown("""
         You can also configure MCP servers by editing the `mcp_servers.json` file in the project root.
 
-        **Example configuration:**
+        **Example configuration (SSE / HTTP):**
         ```json
         {
-          "servers": [
-            {
-              "name": "example-server",
+          "mcpServers": {
+            "example-server": {
+              "name": "Example Server",
               "url": "http://localhost:8080/mcp/sse",
               "transport": "sse",
               "enabled": true,
               "description": "Example MCP server"
             }
-          ]
+          }
+        }
+        ```
+
+        **Example configuration (STDIO):**
+        ```json
+        {
+          "mcpServers": {
+            "my-local-server": {
+              "name": "My Local Server",
+              "transport": "stdio",
+              "command": "npx",
+              "args": ["-y", "@example/mcp-server"],
+              "env": {"API_KEY": "your-key"},
+              "enabled": true,
+              "description": "Local MCP server via STDIO"
+            }
+          }
         }
         ```
 
         **Transport types:**
-        - `sse` - Server-Sent Events (recommended for remote servers)
-        - `http` - HTTP transport
-        - `stdio` - Standard I/O (for local command-based servers)
+        - `sse` - Server-Sent Events (recommended for remote servers) — uses `url`, `headers`
+        - `streamable-http` - Streamable HTTP transport — uses `url`, `headers`
+        - `stdio` - Standard I/O (for local command-based servers) — uses `command`, `args`, `env`
 
         **Popular MCP Servers:**
         - Hugging Face Hub: Tools for searching models, datasets, and papers
@@ -379,7 +420,23 @@ with gr.Blocks() as demo:
         - Slack: Message and channel management
         """)
 
-        config_display = gr.Code(label="Current Configuration", language="json", value=json.dumps({"servers": [s.to_dict() for s in mcp_manager.list_servers()]}, indent=2), interactive=False)
+        config_display = gr.Code(label="Current Configuration", language="json", value=json.dumps({"mcpServers": {sid: s.to_dict() for sid, s in mcp_manager.servers.items()}}, indent=2), interactive=False)
+
+    # Transport dropdown toggles HTTP vs STDIO fields
+    def on_transport_change(transport_val: str):
+        is_stdio = transport_val == "stdio"
+        return (
+            gr.update(visible=not is_stdio),  # http_fields_column
+            gr.update(visible=is_stdio),       # stdio_fields_column
+            gr.update(visible=not is_stdio),   # oauth checkbox (not for STDIO)
+            gr.update(visible=False),          # oauth details column
+        )
+
+    transport_dropdown.change(
+        fn=on_transport_change,
+        inputs=[transport_dropdown],
+        outputs=[http_fields_column, stdio_fields_column, enable_oauth_checkbox, oauth_details_column],
+    )
 
     # OAuth checkbox toggles visibility of external OAuth fields
     enable_oauth_checkbox.change(fn=lambda enabled: gr.update(visible=enabled), inputs=[enable_oauth_checkbox], outputs=[oauth_details_column])
@@ -401,11 +458,11 @@ with gr.Blocks() as demo:
     # Event handlers
     add_server_btn.click(
         fn=add_mcp_server,
-        inputs=[server_name_input, server_url_input, transport_dropdown, api_key_input, timeout_input, description_input, enable_oauth_checkbox, oauth_client_id_input, oauth_client_secret_input, oauth_issuer_input, oauth_auth_endpoint_input, oauth_token_endpoint_input, oauth_scopes_input],
+        inputs=[server_name_input, server_url_input, transport_dropdown, api_key_input, timeout_input, description_input, command_input, args_input, env_input, enable_oauth_checkbox, oauth_client_id_input, oauth_client_secret_input, oauth_issuer_input, oauth_auth_endpoint_input, oauth_token_endpoint_input, oauth_scopes_input],
         outputs=[servers_table, status_text, server_select],
     ).then(
-        fn=lambda: (gr.update(value=""), gr.update(value=""), gr.update(value="sse"), gr.update(value=""), gr.update(value=30.0), gr.update(value=""), gr.update(value=False), gr.update(value=""), gr.update(value=""), gr.update(value=""), gr.update(value=""), gr.update(value="")),
-        outputs=[server_name_input, server_url_input, transport_dropdown, api_key_input, timeout_input, description_input, enable_oauth_checkbox, oauth_client_id_input, oauth_client_secret_input, oauth_auth_endpoint_input, oauth_token_endpoint_input, oauth_scopes_input],
+        fn=lambda: (gr.update(value=""), gr.update(value=""), gr.update(value="sse"), gr.update(value=""), gr.update(value=30.0), gr.update(value=""), gr.update(value=""), gr.update(value=""), gr.update(value=""), gr.update(value=False), gr.update(value=""), gr.update(value=""), gr.update(value=""), gr.update(value=""), gr.update(value="")),
+        outputs=[server_name_input, server_url_input, transport_dropdown, api_key_input, timeout_input, description_input, command_input, args_input, env_input, enable_oauth_checkbox, oauth_client_id_input, oauth_client_secret_input, oauth_auth_endpoint_input, oauth_token_endpoint_input, oauth_scopes_input],
     ).then(fn=lambda: gr.update(choices=get_server_names()), outputs=[server_select])
 
     remove_server_btn.click(fn=remove_mcp_server, inputs=[server_select], outputs=[servers_table, status_text, server_select])
