@@ -120,12 +120,41 @@ with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True) as demo:
     initialize_global_state()
     header.demo.render()
 
-    interface_list = [chat.demo, image_gen.demo, storyteller.demo, audio.demo, translator.demo, settings.demo, mcp_client.demo, download.demo, mcp_tools.demo]
-    interface_names = ["Chat", "Image Gen", "Storyteller", "Audio", "Translator", "Settings", "MCP Client", "Download", "MCP Tools"]
+    interface_list = [chat.demo, image_gen.demo, storyteller.demo, audio.demo, translator.demo, mcp_client.demo, download.demo, mcp_tools.demo]
+    interface_names = ["Chat", "Image Gen", "Storyteller", "Audio", "Translator", "MCP Client", "Download", "MCP Tools"]
     with gr.Tabs():
         for interface, name in zip(interface_list, interface_names):
             with gr.TabItem(name):
                 interface.render()
+
+    # Settings Popup
+    with gr.Column(visible=False, elem_classes="settings-popup") as settings_popup:
+        with gr.Row(elem_classes="popup-header"):
+            gr.Markdown("## Settings")
+            close_settings_btn = gr.Button("✕", elem_classes="close-button")
+        settings.demo.render()
+        with gr.Row(elem_classes="popup-footer"):
+            close_settings_footer_btn = gr.Button("닫기", variant="secondary")
+
+    # Open settings popup
+    ui_component.settings_button.click(
+        fn=lambda: gr.update(visible=True),
+        inputs=[],
+        outputs=[settings_popup]
+    )
+
+    # Close settings popup
+    close_settings_btn.click(
+        fn=lambda: gr.update(visible=False),
+        inputs=[],
+        outputs=[settings_popup]
+    )
+
+    close_settings_footer_btn.click(
+        fn=lambda: gr.update(visible=False),
+        inputs=[],
+        outputs=[settings_popup]
+    )
 
     header.language_dropdown.change(
         fn=header.on_header_language_change,

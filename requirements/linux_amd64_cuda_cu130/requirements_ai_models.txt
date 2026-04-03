@@ -7,7 +7,7 @@ tokenizers>=0.21.4
 diffusers[docs]>=0.35.0
 peft>=0.17.0
 trl>=0.21.0
-huggingface_hub[cli, hf_transfer, hf_xet, mcp]>=0.34.4,<1.0.0
+huggingface_hub[cli, hf_transfer, hf_xet, mcp]>=1.0.0,<2.0.0
 k_diffusion==0.0.12
 hf_transfer>=0.1.9
 hf_xet<2.0.0
@@ -16,7 +16,7 @@ aiortc>=1.13.0
 modelscope>=1.29.0
 civitai-model-downloader
 evaluate>=0.4.4
-gradio[mcp]>=5.43.1,<6.0
+gradio[mcp]==6.10.0
 gradio_webrtc
 twilio
 mcp[cli]
@@ -44,7 +44,7 @@ perplexityai
 ollama>=0.5.3
 lmstudio>=1.4.1
 unstructured[all-docs]>=0.18.11s
-langchain[community, anthropic, openai, google-genai, ollama, huggingface, perplexity, xai, mistralai]>=0.3.27
+langchain[community, anthropic, openai, google-genai, ollama, huggingface, perplexity, xai, mistralai]>=1.0.0
 langchain-chroma>=0.1.2
 langchain-neo4j>=0.4.0
 langchain-unstructured

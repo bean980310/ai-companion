@@ -566,6 +566,31 @@
     z-index: -1;
 }
 
+.popup-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* 다크 모드 - 설정 팝업 */
+@media (prefers-color-scheme: dark) {
+    .settings-popup {
+        background: #2d2d2d;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .confirm-dialog {
+        background: #2d2d2d;
+    }
+
+    .popup-footer {
+        border-top-color: #404040;
+    }
+}
+
 .confirm-dialog {
     position: fixed;
     top: 50%;

@@ -10,11 +10,12 @@ from ..common.utils import clear_all_model_cache
 from ..main.chatbot.chatbot import Chatbot
 
 
-chat_bot=Chatbot()
+chat_bot = Chatbot()
 
 from .. import logger
 
 from ..main import ChatbotMain
+
 
 def create_cache_tab():
     with gr.Tab(_("cache_tab_title")):
@@ -43,45 +44,17 @@ def create_cache_tab():
             # 반환값:
             logger.info(_("refresh_model_list_button"))
             return gr.update(choices=new_choices), "모델 목록을 새로고침 했습니다."
-            
-        refresh_button.click(
-            fn=refresh_model_list,
-            inputs=[],
-            outputs=[ui_component.model_dropdown, refresh_info]
-        )
-        clear_all_btn.click(
-            fn=clear_all_model_cache,
-            inputs=[],
-            outputs=clear_all_result
-        )
-        
+
+        refresh_button.click(fn=refresh_model_list, inputs=[], outputs=[ui_component.model_dropdown, refresh_info])
+        clear_all_btn.click(fn=clear_all_model_cache, inputs=[], outputs=clear_all_result)
+
         def change_language(selected_lang: str):
             """언어 변경 처리 함수"""
-            lang_map = {
-                "한국어": "ko",
-                "日本語": "ja",
-                "中文(简体)": "zh_CN",
-                "中文(繁體)": "zh_TW",
-                "English": "en"
-            }
+            lang_map = {"한국어": "ko", "日本語": "ja", "中文(简体)": "zh_CN", "中文(繁體)": "zh_TW", "English": "en"}
             lang_code = lang_map.get(selected_lang, "ko")
             translation_manager.set_language(lang_code)
-            
-            return [
-                gr.update(value=_("refresh_model_list_button")),
-                gr.update(label=_("refresh_info_label")),
-                gr.update(value=_("cache_clear_all_button")),
-                gr.update(label=_("clear_all_result_label"))
-            ]
+
+            return [gr.update(value=_("refresh_model_list_button")), gr.update(label=_("refresh_info_label")), gr.update(value=_("cache_clear_all_button")), gr.update(label=_("clear_all_result_label"))]
 
         if ui_component.language_dropdown:
-            ui_component.language_dropdown.change(
-                fn=change_language,
-                inputs=[ui_component.language_dropdown],
-                outputs=[
-                    refresh_button,
-                    refresh_info,
-                    clear_all_btn,
-                    clear_all_result
-                ]
-            )
+            ui_component.language_dropdown.change(fn=change_language, inputs=[ui_component.language_dropdown], outputs=[refresh_button, refresh_info, clear_all_btn, clear_all_result])
