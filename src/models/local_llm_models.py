@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from src.common.utils import get_all_local_models
 
 local_models_data = get_all_local_models()

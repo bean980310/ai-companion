@@ -1,5 +1,6 @@
 # MCP Client Manager
 # Manages connections to external MCP servers and tool execution
+from __future__ import annotations
 
 import asyncio
 import json
@@ -9,7 +10,8 @@ from typing import Any, Dict, List, Optional, Callable
 from pathlib import Path
 from contextlib import AsyncExitStack
 
-from src import logger
+from ai_companion_core import logger
+from ai_companion_core.appdata import APPDATA_PATH
 
 from .models import MCPServerConfig, MCPTool, MCPToolResult, MCPToolParameter, MCPTransportType, MCPResource, MCPPrompt
 
@@ -26,7 +28,7 @@ except ImportError:
     MCP_AVAILABLE = False
     logger.warning("MCP SDK not available. Install with: pip install mcp")
 
-from .oauth import create_oauth_provider, FileTokenStorage
+from .oauth import create_oauth_provider, FileTokenStorage, PKCEOAuthProvider, PKCEAuth
 
 
 class MCPClientManager:
@@ -48,12 +50,13 @@ class MCPClientManager:
             config_path: Path to the MCP servers configuration file.
                         Defaults to 'mcp_servers.json' in the project root.
         """
-        self.config_path = config_path or Path.home() / ".ai-companion" / "mcp_servers.json"
+        self.config_path = config_path or APPDATA_PATH / "mcp_servers.json"
         self.servers: Dict[str, MCPServerConfig] = {}
         self.sessions: Dict[str, ClientSession] = {}
         self.tools: Dict[str, MCPTool] = {}
         self.resources: Dict[str, MCPResource] = {}
         self.prompts: Dict[str, MCPPrompt] = {}
+        self.exit_stack = AsyncExitStack()
         self._connected_servers: set = set()
 
         # Load saved configurations
@@ -93,12 +96,7 @@ class MCPClientManager:
     def _save_config(self):
         """Save server configurations to file"""
         try:
-            data = {
-                "mcpServers": {
-                    server_id: server.to_dict()
-                    for server_id, server in self.servers.items()
-                }
-            }
+            data = {"mcpServers": {server_id: server.to_dict() for server_id, server in self.servers.items()}}
             with open(self.config_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
             logger.info(f"Saved {len(self.servers)} MCP server configurations")
@@ -245,10 +243,7 @@ class MCPClientManager:
 
         storage = FileTokenStorage(server_name=config.name)
         if storage.is_token_expired():
-            logger.warning(
-                f"OAuth token for server '{server_name}' has expired. "
-                f"Clearing tokens — re-authentication will be required."
-            )
+            logger.warning(f"OAuth token for server '{server_name}' has expired. Clearing tokens — re-authentication will be required.")
             storage.clear_tokens()
             return False
 
@@ -309,10 +304,7 @@ class MCPClientManager:
         if config.oauth_enabled:
             token_valid = self.validate_server_token(server_name)
             if not token_valid:
-                logger.info(
-                    f"Expired token cleared for '{server_name}'. "
-                    f"OAuth re-authentication will be triggered."
-                )
+                logger.info(f"Expired token cleared for '{server_name}'. OAuth re-authentication will be triggered.")
 
         try:
             if config.transport == MCPTransportType.SSE:
@@ -339,10 +331,16 @@ class MCPClientManager:
         if config.api_key:
             headers["Authorization"] = f"Bearer {config.api_key}"
 
-        # OAuth 2.1 authentication
+        # OAuth 2.1 authentication (PKCE-based)
         auth = None
         if config.oauth_enabled:
             auth = await create_oauth_provider(config)
+            # For PKCE provider, ensure token is acquired before connecting
+            if isinstance(auth, PKCEAuth):
+                token = await auth._provider.get_valid_token()
+                if not token:
+                    raise RuntimeError(f"PKCE authentication failed for '{config.name}'")
+                logger.info(f"[PKCE] Token acquired for SSE connection to '{config.name}'")
 
         async with sse_client(config.url, headers=headers, auth=auth) as (read, write):
             async with ClientSession(read, write) as session:
@@ -378,10 +376,17 @@ class MCPClientManager:
         if config.api_key:
             headers["Authorization"] = f"Bearer {config.api_key}"
 
-        # OAuth 2.1 authentication
+        # OAuth 2.1 authentication (PKCE-based)
         http_client = None
         if config.oauth_enabled:
             auth = await create_oauth_provider(config)
+            # For PKCE provider, ensure token is acquired before connecting
+            if isinstance(auth, PKCEAuth):
+                token = await auth._provider.get_valid_token()
+                if not token:
+                    raise RuntimeError(f"PKCE authentication failed for '{config.name}'")
+                headers["Authorization"] = f"Bearer {token}"
+                logger.info(f"[PKCE] Token acquired for HTTP connection to '{config.name}'")
             http_client = create_mcp_http_client(headers=headers, auth=auth)
 
         async with streamable_http_client(config.url, http_client=http_client) as (read, write, _get_session_id):

@@ -1,11 +1,20 @@
+from __future__ import annotations
+
 import os
 from typing import List
 import re
-from src import logger
-from ..common.environ_manager import load_env_variables
 
-def get_comfyui_image_models(url: str="127.0.0.1:8188", folder: str = "checkpoints"):
+from ai_companion_core import logger
+from ai_companion_core.environ_manager import load_env_variables
+
+
+class LocalModelNotFound(Exception):
+    pass
+
+
+def get_comfyui_image_models(url: str = "127.0.0.1:8188", folder: str = "checkpoints"):
     from comfy_sdk import ComfyUI
+
     client = ComfyUI(host=url.split(":")[0], port=int(url.split(":")[1]))
     model_list = []
 
@@ -22,6 +31,7 @@ def get_comfyui_image_models(url: str="127.0.0.1:8188", folder: str = "checkpoin
 
     except:
         return ["ComfyUI를 설치하고 서버를 실행해주세요."]
+
 
 def get_sglang_image_models(api_host: str = "http://localhost:30001/v1"):
     import openai
@@ -46,6 +56,7 @@ def get_sglang_image_models(api_host: str = "http://localhost:30001/v1"):
     except:
         logger.error("sglang을 설치하고 서버를 실행해주세요.")
         return ["sglang을 설치하고 서버를 실행해주세요."]
+
 
 def get_openai_image_models(api_key: str = None):
     import openai
@@ -74,6 +85,7 @@ def get_openai_image_models(api_key: str = None):
         model_list.append(f"OpenAI API 오류 발생: {e}")
         return model_list
 
+
 def get_openai_video_models(api_key: str = None):
     import openai
     from openai import OpenAI
@@ -100,6 +112,7 @@ def get_openai_video_models(api_key: str = None):
     except openai.AuthenticationError as e:
         model_list.append(f"OpenAI API 오류 발생: {e}")
         return model_list
+
 
 def get_google_genai_image_models(api_key: str = None):
     from google import genai
@@ -141,6 +154,7 @@ def get_google_genai_image_models(api_key: str = None):
         model_list.append(f"Google AI API 오류 발생: {e}")
         logger.exception(f"Google AI API 오류 발생 (예기치 못한 오류): {e}")
         return model_list
+
 
 def get_google_genai_video_models(api_key: str = None):
     from google import genai
@@ -188,24 +202,24 @@ image_api_models = []
 video_api_models = []
 
 comfyui_models = get_comfyui_image_models(folder="checkpoints")
-comfyui_loras = get_comfyui_image_models(folder='loras')
-comfyui_vae = get_comfyui_image_models(folder='vae')
-comfyui_controlnet = get_comfyui_image_models(folder='controlnet')
-comfyui_clip = get_comfyui_image_models(folder='clip')
-comfyui_clip_vision = get_comfyui_image_models(folder='clip_vision')
-comfyui_text_encoders = get_comfyui_image_models(folder='text_encoders')
-comfyui_embeddings = get_comfyui_image_models(folder='embeddings')
-comfyui_diffusion_models = get_comfyui_image_models(folder='diffusion_models')
-comfyui_pretrained_models = get_comfyui_image_models(folder='diffusers')
-comfyui_inpaint_models = get_comfyui_image_models(folder='inpaint')
-comfyui_ipadapter = get_comfyui_image_models(folder='ipadapter')
-comfyui_unet = get_comfyui_image_models(folder='unet')
+comfyui_loras = get_comfyui_image_models(folder="loras")
+comfyui_vae = get_comfyui_image_models(folder="vae")
+comfyui_controlnet = get_comfyui_image_models(folder="controlnet")
+comfyui_clip = get_comfyui_image_models(folder="clip")
+comfyui_clip_vision = get_comfyui_image_models(folder="clip_vision")
+comfyui_text_encoders = get_comfyui_image_models(folder="text_encoders")
+comfyui_embeddings = get_comfyui_image_models(folder="embeddings")
+comfyui_diffusion_models = get_comfyui_image_models(folder="diffusion_models")
+comfyui_pretrained_models = get_comfyui_image_models(folder="diffusers")
+comfyui_inpaint_models = get_comfyui_image_models(folder="inpaint")
+comfyui_ipadapter = get_comfyui_image_models(folder="ipadapter")
+comfyui_unet = get_comfyui_image_models(folder="unet")
 
-openai_image_api_models = get_openai_image_models(load_env_variables('OPENAI_API_KEY'))
-openai_video_api_models = get_openai_video_models(load_env_variables('OPENAI_API_KEY'))
+openai_image_api_models = get_openai_image_models(load_env_variables("OPENAI_API_KEY"))
+openai_video_api_models = get_openai_video_models(load_env_variables("OPENAI_API_KEY"))
 
-google_genai_image_api_models = get_google_genai_image_models(load_env_variables('GEMINI_API_KEY'))
-google_genai_video_api_models = get_google_genai_video_models(load_env_variables('GEMINI_API_KEY'))
+google_genai_image_api_models = get_google_genai_image_models(load_env_variables("GEMINI_API_KEY"))
+google_genai_video_api_models = get_google_genai_video_models(load_env_variables("GEMINI_API_KEY"))
 
 huggingface_inference_image_api_models = [
     "stabilityai/stable-diffusion-xl-base-1.0",
@@ -221,30 +235,17 @@ huggingface_inference_image_api_models = [
     "Alpha-VLLM/Lumina-Image-2.0",
     "fal/AuraFlow-v0.3",
     "zai-org/CogView4-6B",
-    'zai-org/GLM-Image',
+    "zai-org/GLM-Image",
     "HiDream-ai/HiDream-I1-Fast",
     "HiDream-ai/HiDream-I1-Dev",
-    "HiDream-ai/HiDream-I1-Full"
+    "HiDream-ai/HiDream-I1-Full",
 ]
 
-huggingface_inference_image_edit_api_models = [
-    "stabilityai/stable-diffusion-xl-refiner-1.0",
-    'black-forest-labs/FLUX.2-klein-4B',
-    "black-forest-labs/FLUX.2-dev",
-    "Qwen/Qwen-Image-Edit",
-    "Qwen/Qwen-Image-Edit-2509",
-    "Qwen/Qwen-Image-Edit-2511"
-]
+huggingface_inference_image_edit_api_models = ["stabilityai/stable-diffusion-xl-refiner-1.0", "black-forest-labs/FLUX.2-klein-4B", "black-forest-labs/FLUX.2-dev", "Qwen/Qwen-Image-Edit", "Qwen/Qwen-Image-Edit-2509", "Qwen/Qwen-Image-Edit-2511"]
 
-huggingface_inference_video_api_models = [
-    'Wan-AI/Wan2.2-T2V-A14B-Diffusers',
-    'zai-org/CogVideoX-5b'
-]
+huggingface_inference_video_api_models = ["Wan-AI/Wan2.2-T2V-A14B-Diffusers", "zai-org/CogVideoX-5b"]
 
-huggingface_inference_image_to_video_api_models = [
-    'Wan-AI/Wan2.2-I2V-A14B-Diffusers',
-    'Lightricks/LTX-2'
-]
+huggingface_inference_image_to_video_api_models = ["Wan-AI/Wan2.2-I2V-A14B-Diffusers", "Lightricks/LTX-2"]
 
 image_api_models.extend(openai_image_api_models)
 image_api_models.extend(google_genai_image_api_models)

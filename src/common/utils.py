@@ -12,9 +12,8 @@ from llama_cpp import Llama
 from model_converter import convert_model_bnb_4bit, convert_model_bnb_8bit, convert_model_gptq, convert_model_awq, convert_model_mlx, convert_model_mlx_vlm, convert_model_metal
 import platform
 import gc
+from ai_companion_core import logger
 from src.common.cache import models_cache
-
-from src import logger
 
 LOCAL_MODELS_ROOT = "./models"
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import locale
 from .logging import logger

@@ -1,17 +1,19 @@
 # persona_speech_manager.py
 import logging
 from typing import Dict
-from src.common.database import load_system_presets
-from src.common.translations import TranslationManager
 import sqlite3
-from src import logger
 
 import regex as re
+
+from ai_companion_core import logger
+from src.common.database import load_system_presets
+from src.common.translations import TranslationManager
+
 
 # logging.basicConfig(level=logging.INFO)
 # logger = logging.getLogger(__name__)
 class PersonaSpeechManager:
-    def __init__(self, translation_manager: TranslationManager, characters: Dict[str, Dict[str, str]], db_path='persona_state.db'):
+    def __init__(self, translation_manager: TranslationManager, characters: Dict[str, Dict[str, str]], db_path="persona_state.db"):
         """
         :param characters: 캐릭터 이름을 키로 하고, 각 캐릭터의 설정을 값으로 가지는 딕셔너리
                            예: {
@@ -30,7 +32,6 @@ class PersonaSpeechManager:
         self.db_path = db_path
         self._initialize_db()
 
-    
     def set_character_and_language(self, character_name: str, language: str):
         if character_name in self.characters:
             self.current_character = character_name
@@ -39,9 +40,9 @@ class PersonaSpeechManager:
             else:
                 self.current_language = self.characters[character_name]["default_language"]
                 logger.warning(f"Language '{language}' not supported by '{character_name}'. Using default language '{self.current_language}'.")
-            
+
             self.current_tone = self.characters[character_name].get("default_tone", "존댓말")
-            
+
             # 시스템 메시지 프리셋 불러오기
             presets = load_system_presets(self.current_language)
             preset_name = self.characters[character_name]["preset_name"]
@@ -55,31 +56,31 @@ class PersonaSpeechManager:
             return self.generate_response(initial_response)
         else:
             raise ValueError(f"캐릭터 '{character_name}'이(가) 존재하지 않습니다.")
-    
+
     def get_system_message(self) -> str:
         """현재 캐릭터의 시스템 메시지 프리셋을 반환합니다."""
         if not self.current_character:
             return "당신은 유용한 AI 비서입니다."
-            
+
         try:
             # 현재 언어로 프리셋 불러오기
             presets = load_system_presets(self.current_language)
             preset_name = self.characters[self.current_character]["preset_name"]
-            
+
             if preset_name in presets:
                 logger.info(f"Loaded system message for {self.current_character} in {self.current_language}")
                 return presets[preset_name]
             else:
                 logger.warning(f"Preset {preset_name} not found for language {self.current_language}")
                 return "당신은 유용한 AI 비서입니다."
-                
+
         except Exception as e:
             logger.error(f"Error loading system message: {e}")
             return "당신은 유용한 AI 비서입니다."
 
     def get_available_presets(self, language: str) -> Dict[str, str]:
         return load_system_presets(language)
-    
+
     def update_tone(self, user_input: str):
         """
         사용자 입력을 기반으로 현재 캐릭터의 말투를 업데이트
@@ -100,7 +101,7 @@ class PersonaSpeechManager:
             self.current_tone = "隨便"
         elif "正式一點" in user_input:  # 중국어 번체 포멀 전환
             self.current_tone = "正式"
-    
+
     def generate_response(self, content: str) -> str:
         """
         설정된 말투와 언어에 따라 응답을 생성
@@ -109,7 +110,7 @@ class PersonaSpeechManager:
         if not self.current_character:
             raise ValueError("캐릭터가 설정되지 않았습니다.")
 
-        tone = self.current_tone if hasattr(self, 'current_tone') else self.characters[self.current_character]["default_tone"]
+        tone = self.current_tone if hasattr(self, "current_tone") else self.characters[self.current_character]["default_tone"]
         language = self.current_language
 
         if language == "ko":
@@ -149,36 +150,35 @@ class PersonaSpeechManager:
         # if not isinstance(content, str):
         #     content = str(content)
 
-        content = re.sub(r'안녕하세요\b', '안녕', content)
-        content = re.sub(r'\b합시다\b', '하자', content)
-        content = re.sub(r'\b드려요\b', '줘', content)
-        content = re.sub(r'예\b', '응', content)
-        content = re.sub(r'네\b', '응', content)
-        content = re.sub(r'감사합니다\b', '고마워', content)
-        content = re.sub(r'죄송합니다\b','미안해', content)
-        content = re.sub(r'\b입니다\b', '야', content)
-        content = re.sub(r'\b습니다\b', '어', content)
-        content = re.sub(r'좋습니다\b', '좋아', content)
-        content = re.sub(r'\b합니다\b', '해', content)
-        content = re.sub(r'\b입니까\b', '일까', content)
-        content = re.sub(r'\b인가요\b', '일까', content)
-        content = re.sub(r'\b할겁니까\b', '할까', content)
-        content = re.sub(r'\b할까요\b', '할까', content)
-        content = re.sub(r'\b예요\b', '야', content)
-        content = re.sub(r'\b어요\b', '어', content)
-        content = re.sub(r'\b해요\b', '해', content)
-        content = re.sub(r'\b가요\b', '가', content)
-        content = re.sub(r'\b봐요\b', '봐', content)
-        content = re.sub(r'\b주세요\b', '줘', content)
-        content = re.sub(r'\b줘요\b', '줘', content)
-        content = re.sub(r'\b죠\b', '지', content)
-        content = re.sub(r'\b싶어요\b', '싶어', content)
-        content = re.sub(r'\b요\b', '', content)
-        content = re.sub(r'반가워요\b', '반가워', content)
-        content = re.sub(r'계신가요\b', '있어?', content)
-        content = re.sub(r'있으신가요\b', '있어?', content)
+        content = re.sub(r"안녕하세요\b", "안녕", content)
+        content = re.sub(r"\b합시다\b", "하자", content)
+        content = re.sub(r"\b드려요\b", "줘", content)
+        content = re.sub(r"예\b", "응", content)
+        content = re.sub(r"네\b", "응", content)
+        content = re.sub(r"감사합니다\b", "고마워", content)
+        content = re.sub(r"죄송합니다\b", "미안해", content)
+        content = re.sub(r"\b입니다\b", "야", content)
+        content = re.sub(r"\b습니다\b", "어", content)
+        content = re.sub(r"좋습니다\b", "좋아", content)
+        content = re.sub(r"\b합니다\b", "해", content)
+        content = re.sub(r"\b입니까\b", "일까", content)
+        content = re.sub(r"\b인가요\b", "일까", content)
+        content = re.sub(r"\b할겁니까\b", "할까", content)
+        content = re.sub(r"\b할까요\b", "할까", content)
+        content = re.sub(r"\b예요\b", "야", content)
+        content = re.sub(r"\b어요\b", "어", content)
+        content = re.sub(r"\b해요\b", "해", content)
+        content = re.sub(r"\b가요\b", "가", content)
+        content = re.sub(r"\b봐요\b", "봐", content)
+        content = re.sub(r"\b주세요\b", "줘", content)
+        content = re.sub(r"\b줘요\b", "줘", content)
+        content = re.sub(r"\b죠\b", "지", content)
+        content = re.sub(r"\b싶어요\b", "싶어", content)
+        content = re.sub(r"\b요\b", "", content)
+        content = re.sub(r"반가워요\b", "반가워", content)
+        content = re.sub(r"계신가요\b", "있어?", content)
+        content = re.sub(r"있으신가요\b", "있어?", content)
         return content.strip()
-
 
     def convert_to_formal(self, content: str) -> str:
         """
@@ -188,19 +188,19 @@ class PersonaSpeechManager:
         #     content = str(content)
 
         # 예시: "야"를 "예요"로 변환
-        content = re.sub(r'\b야\b', '예요', content)
-        content = re.sub(r'\b응\b', '예요', content)
-        content = re.sub(r'\b해\b', '합니다', content)
-        content = re.sub(r'\b어\b', '습니다', content)
-        content = re.sub(r'\b지\b', '죠', content)
+        content = re.sub(r"\b야\b", "예요", content)
+        content = re.sub(r"\b응\b", "예요", content)
+        content = re.sub(r"\b해\b", "합니다", content)
+        content = re.sub(r"\b어\b", "습니다", content)
+        content = re.sub(r"\b지\b", "죠", content)
         # 추가적인 변환 규칙을 아래에 추가할 수 있습니다.
         # 예를 들어:
-        content = re.sub(r'\b할까\b', '할까요', content)
-        content = re.sub(r'\b일까\b', '입니까', content)
-        content = re.sub(r'\b왔어\b', '왔어요', content)
-        content = re.sub(r'\b봐\b', '봐요', content)
-        content = re.sub(r'\b줘\b', '주세요', content)
-        content = re.sub(r'\b싶어\b', '싶어요', content)
+        content = re.sub(r"\b할까\b", "할까요", content)
+        content = re.sub(r"\b일까\b", "입니까", content)
+        content = re.sub(r"\b왔어\b", "왔어요", content)
+        content = re.sub(r"\b봐\b", "봐요", content)
+        content = re.sub(r"\b줘\b", "주세요", content)
+        content = re.sub(r"\b싶어\b", "싶어요", content)
         return content.strip()
 
     # 영어 변환 메서드들
@@ -335,11 +335,11 @@ class PersonaSpeechManager:
         """
         self.update_tone(user_input)
         return self.generate_response(base_response)
-    
+
     def _initialize_db(self):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute('''
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS persona_state (
                 session_id TEXT PRIMARY KEY,
                 current_character TEXT,
@@ -347,14 +347,15 @@ class PersonaSpeechManager:
                 current_tone TEXT,
                 current_system_preset TEXT
             )
-        ''')
+        """)
         conn.commit()
         conn.close()
 
     def save_state(self, session_id: str):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute('''
+        cursor.execute(
+            """
             INSERT INTO persona_state (session_id, current_character, current_language, current_tone, current_system_preset)
             VALUES (?, ?, ?, ?, ?)
             ON CONFLICT(session_id) DO UPDATE SET
@@ -362,7 +363,9 @@ class PersonaSpeechManager:
                 current_language=excluded.current_language,
                 current_tone=excluded.current_tone,
                 current_system_preset=excluded.current_system_preset
-        ''', (session_id, self.current_character, self.current_language, self.current_tone, self.current_system_preset))
+        """,
+            (session_id, self.current_character, self.current_language, self.current_tone, self.current_system_preset),
+        )
         conn.commit()
         conn.close()
         logger.info(f"세션 {session_id}의 상태가 데이터베이스에 저장되었습니다.")
@@ -370,7 +373,7 @@ class PersonaSpeechManager:
     def load_state(self, session_id: str):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute('SELECT current_character, current_language, current_tone, current_system_preset FROM persona_state WHERE session_id = ?', (session_id,))
+        cursor.execute("SELECT current_character, current_language, current_tone, current_system_preset FROM persona_state WHERE session_id = ?", (session_id,))
         row = cursor.fetchone()
         conn.close()
         if row:
@@ -378,4 +381,3 @@ class PersonaSpeechManager:
             logger.info(f"세션 {session_id}의 상태가 데이터베이스에서 로드되었습니다.")
         else:
             logger.warning(f"세션 {session_id}의 상태를 데이터베이스에서 찾을 수 없습니다.")
-            

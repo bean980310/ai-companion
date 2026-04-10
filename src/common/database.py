@@ -1,88 +1,112 @@
 from typing import Optional, List, Tuple, Dict, Any
 import sqlite3
-from src import logger
+
 # import logging
 from contextlib import contextmanager
 from dataclasses import dataclass
-import gradio as gr
 import json
 from datetime import datetime
 import csv
 from pathlib import Path
 
+import gradio as gr
 from PIL.Image import Image
 
+from ai_companion_core import logger
+
 from src.common.character_info import characters
-from .translations import TranslationManager
+from src.common.translations import TranslationManager
 
 # logger = logging.getLogger(__name__)
+
 
 @dataclass
 class PresetConfig:
     """프리셋 설정을 위한 데이터 클래스"""
+
     name: str
     character_key: str
-    
+
+
 @dataclass
 class PresetResult:
     """프리셋 작업 결과를 나타내는 데이터 클래스"""
+
     success: bool
     message: str
-    
+
+
 @dataclass
 class ChatMessage:
     """채팅 메시지를 표현하는 데이터 클래스"""
+
     role: str
     content: str | List[Dict[str, str]] | Any
     timestamp: Optional[datetime] = None
 
+
 @dataclass
 class SessionResult:
     """세션 작업 결과를 나타내는 데이터 클래스"""
+
     success: bool
     message: str
     affected_rows: int = 0
-    
+
+
 @dataclass
 class CharacterInfo:
     name: str
     preset_name: str
     character_key: str
-    
+
+
 class DatabaseInitError(Exception):
     """데이터베이스 초기화 관련 커스텀 예외"""
+
     pass
+
 
 class PresetInsertionError(Exception):
     """프리셋 삽입 관련 커스텀 예외"""
+
     pass
+
+
 class PresetManagementError(Exception):
     """프리셋 관리 관련 커스텀 예외"""
+
     pass
+
 
 class SessionManagementError(Exception):
     """세션 관리 관련 커스텀 예외"""
+
     pass
 
 
-DEFAULT_PRESETS = frozenset([
-    'AI 비서 (AI Assistant)',
-    'Image Generator',
-    '미나미 아스카 (南飛鳥, みなみあすか, Minami Asuka)',
-    '마코토노 아오이 (真琴乃葵, まことのあおい, Makotono Aoi)',
-    '아이노 코이토 (愛野小糸, あいのこいと, Aino Koito)'
-    '아리아 프린세스 페이트 (アリア·プリンセス·フェイト, Aria Princess Fate)',
-    '아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)',
-    '왕 메이린 (王美玲, ワン·メイリン, Wang Mei-Ling)',
-    '미스티 레인 (ミスティ·レーン, Misty Lane)',
-    '릴리 엠프레스 (リリー·エンプレス, Lily Empress)',
-    '최유나 (崔有娜, チェ·ユナ, Choi Yuna)',
-    '최유리 (崔有莉, チェ·ユリ, Choi Yuri)',
-])
+DEFAULT_PRESETS = frozenset(
+    [
+        "AI 비서 (AI Assistant)",
+        "Image Generator",
+        "미나미 아스카 (南飛鳥, みなみあすか, Minami Asuka)",
+        "마코토노 아오이 (真琴乃葵, まことのあおい, Makotono Aoi)",
+        "아이노 코이토 (愛野小糸, あいのこいと, Aino Koito)아리아 프린세스 페이트 (アリア·プリンセス·フェイト, Aria Princess Fate)",
+        "아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)",
+        "왕 메이린 (王美玲, ワン·メイリン, Wang Mei-Ling)",
+        "미스티 레인 (ミスティ·レーン, Misty Lane)",
+        "릴리 엠프레스 (リリー·エンプレス, Lily Empress)",
+        "최유나 (崔有娜, チェ·ユナ, Choi Yuna)",
+        "최유리 (崔有莉, チェ·ユリ, Choi Yuri)",
+    ]
+)
+
 
 class DatabaseError(Exception):
     """Custom exception for database operations"""
+
     pass
+
 
 @contextmanager
 def get_db_connection():
@@ -98,6 +122,8 @@ def get_db_connection():
     finally:
         if conn:
             conn.close()
+
+
 def backfill_timestamps():
     try:
         with get_db_connection() as conn:
@@ -113,16 +139,17 @@ def backfill_timestamps():
             logger.info(f"Backfilled timestamps for {affected_rows} chat_history records.")
     except Exception as e:
         logger.error(f"Error backfilling timestamps: {e}")
-        
+
+
 def initialize_database() -> None:
     """데이터베이스와 필요한 테이블들을 초기화합니다.
-    
+
     이 함수는 앱 시작 시 항상 실행되어야 합니다.
     """
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            
+
             # 시스템 프리셋 테이블 생성
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS system_presets (
@@ -135,7 +162,7 @@ def initialize_database() -> None:
                     UNIQUE(name, language)
                 )
             """)
-            
+
             # 채팅 히스토리 테이블 생성
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS chat_history (
@@ -149,7 +176,7 @@ def initialize_database() -> None:
                     FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
                 )
             """)
-            
+
             # 세션 관리 테이블 생성
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS sessions (
@@ -161,30 +188,30 @@ def initialize_database() -> None:
                     last_character TEXT
                 )
             """)
-            
+
             # 인덱스 생성
             cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_chat_history_session
                 ON chat_history(session_id)
             """)
-            
+
             cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_system_presets_lang
                 ON system_presets(language)
             """)
-            
+
             cursor.execute("PRAGMA table_info(chat_history)")
             columns = [info[1] for info in cursor.fetchall()]
-            if 'timestamp' not in columns:
+            if "timestamp" not in columns:
                 cursor.execute("ALTER TABLE chat_history ADD COLUMN timestamp DATETIME DEFAULT (CURRENT_TIMESTAMP)")
                 logger.info("'chat_history' 테이블에 'timestamp' 열 추가 완료.")
                 backfill_timestamps()
             else:
                 logger.info("'chat_history' 테이블에 'timestamp' 열이 이미 존재합니다.")
-                
+
             conn.commit()
             logger.info("Database initialized successfully")
-            
+
     except sqlite3.Error as e:
         logger.error(f"Database initialization error: {e}")
         raise DatabaseInitError(f"Failed to initialize database: {e}")
@@ -192,34 +219,42 @@ def initialize_database() -> None:
         logger.error(f"Unexpected error during database initialization: {e}")
         raise DatabaseInitError(f"Unexpected error: {e}")
 
+
 def ensure_demo_session() -> None:
     """데모 세션이 존재하는지 확인하고 없으면 생성합니다."""
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            
+
             # 데모 세션 존재 여부 확인
             cursor.execute("SELECT id FROM sessions WHERE id = 'demo_session'")
             if not cursor.fetchone():
                 # 데모 세션 생성
                 current_time = datetime.now().isoformat()
-                cursor.execute("""
+                cursor.execute(
+                    """
                     INSERT INTO sessions (id, name, created_at, updated_at, last_activity, last_character)
                     VALUES (?, ?, ?, ?, ?, ?)
-                """, ('demo_session', 'Demo Session', current_time, current_time, current_time, list(characters.keys())[0]))
-                
+                """,
+                    ("demo_session", "Demo Session", current_time, current_time, current_time, list(characters.keys())[0]),
+                )
+
                 # 기본 시스템 메시지 추가
-                cursor.execute("""
+                cursor.execute(
+                    """
                     INSERT INTO chat_history (session_id, role, content)
                     VALUES (?, 'system', '당신은 유용한 AI 비서입니다.')
-                """, ('demo_session',))
-                
+                """,
+                    ("demo_session",),
+                )
+
                 conn.commit()
                 logger.info("Demo session created successfully")
-            
+
     except sqlite3.Error as e:
         logger.error(f"Error ensuring demo session: {e}")
         raise DatabaseInitError(f"Failed to ensure demo session: {e}")
+
 
 def initialize_app(translation_manager: TranslationManager) -> None:
     """애플리케이션 시작 시 필요한 모든 초기화를 수행합니다."""
@@ -231,7 +266,8 @@ def initialize_app(translation_manager: TranslationManager) -> None:
     except Exception as e:
         logger.error(f"Application initialization failed: {e}")
         raise
-    
+
+
 def initialize_presets_db() -> None:
     """Initialize system message presets table"""
     try:
@@ -252,14 +288,16 @@ def initialize_presets_db() -> None:
         logger.error(f"Failed to initialize presets DB: {e}")
         raise
 
+
 # 앱 시작 시 DB 초기화 함수 호출
 initialize_presets_db()
 
 # database.py
 
-def insert_default_presets(translation_manager: TranslationManager, overwrite: bool=True) -> None:
+
+def insert_default_presets(translation_manager: TranslationManager, overwrite: bool = True) -> None:
     """기본 프리셋을 데이터베이스에 삽입 또는 업데이트
-    
+
     Args:
         translation_manager: 번역 관리자 인스턴스
         overwrite (bool): 기존 프리셋을 덮어쓸지 여부
@@ -279,94 +317,94 @@ def insert_default_presets(translation_manager: TranslationManager, overwrite: b
         PresetConfig("최유나 (崔有娜, チェ·ユナ, Choi Yuna)", "choi_yuna"),
         PresetConfig("최유리 (崔有莉, チェ·ユリ, Choi Yuri)", "choi_yuri"),
     ]
-    
+
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             languages = translation_manager.get_available_languages()
-            
+
             for preset_config in preset_configs:
                 for lang in languages:
                     try:
                         # translation_manager에서 프리셋 내용 가져오기
                         content = translation_manager.get_character_setting(preset_config.character_key, lang=lang)
-                        
+
                         if overwrite:
                             # 프리셋 업데이트
-                            cursor.execute("""
+                            cursor.execute(
+                                """
                                 UPDATE system_presets 
                                 SET content = ?
                                 WHERE name = ? AND language = ?
-                            """, (content, preset_config.name, lang))
+                            """,
+                                (content, preset_config.name, lang),
+                            )
                             if cursor.rowcount == 0:
                                 # 존재하지 않으면 삽입
-                                cursor.execute("""
+                                cursor.execute(
+                                    """
                                     INSERT INTO system_presets (name, language, content)
                                     VALUES (?, ?, ?)
-                                """, (preset_config.name, lang, content))
+                                """,
+                                    (preset_config.name, lang, content),
+                                )
                                 logger.info(f"Inserted default preset: {preset_config.name} (language: {lang})")
                             else:
                                 logger.info(f"Updated default preset: {preset_config.name} (language: {lang})")
                         else:
                             # 덮어쓰기 없이 삽입
-                            cursor.execute("""
+                            cursor.execute(
+                                """
                                 INSERT INTO system_presets (name, language, content) 
                                 VALUES (?, ?, ?)
-                            """, (preset_config.name, lang, content))
+                            """,
+                                (preset_config.name, lang, content),
+                            )
                             logger.info(f"Inserted default preset: {preset_config.name} (language: {lang})")
-                    
+
                     except sqlite3.IntegrityError as e:
-                        logger.warning(
-                            f"Preset already exists: {preset_config.name} "
-                            f"(language: {lang}): {e}"
-                        )
+                        logger.warning(f"Preset already exists: {preset_config.name} (language: {lang}): {e}")
                         continue
-                    
+
                     except Exception as e:
-                        logger.error(
-                            f"Error inserting preset {preset_config.name} "
-                            f"for language {lang}: {e}"
-                        )
-                        raise PresetInsertionError(
-                            f"Failed to insert preset {preset_config.name}: {e}"
-                        )
-            
+                        logger.error(f"Error inserting preset {preset_config.name} for language {lang}: {e}")
+                        raise PresetInsertionError(f"Failed to insert preset {preset_config.name}: {e}")
+
             conn.commit()
             logger.info("All default presets inserted/updated successfully")
-            
+
     except PresetInsertionError:
         raise
     except Exception as e:
         logger.error(f"Unexpected error during preset insertion: {e}")
         raise PresetInsertionError(f"Failed to insert/update default presets: {e}")
-    
+
+
 def load_system_presets(language: str) -> Dict[str, str]:
     """시스템 메시지 프리셋을 불러옵니다."""
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT name, content 
                 FROM system_presets 
                 WHERE language = ? 
                 ORDER BY name ASC
-            """, (language,))
+            """,
+                (language,),
+            )
             results = cursor.fetchall()
             presets = {name: content for name, content in results} if results else {}
             logger.debug(f"Loaded presets for language {language}: {list(presets.keys())}")
             return presets
-            
+
     except sqlite3.Error as e:
         logger.error(f"Error loading presets for language {language}: {e}")
         return {}
 
 
-def add_system_preset(
-    name: str,
-    language: str,
-    content: str,
-    overwrite: bool = False
-) -> PresetResult:
+def add_system_preset(name: str, language: str, content: str, overwrite: bool = False) -> PresetResult:
     """새로운 시스템 메시지 프리셋을 추가하거나 업데이트합니다.
 
     Args:
@@ -384,25 +422,31 @@ def add_system_preset(
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            
+
             if overwrite:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     UPDATE system_presets 
                     SET content = ?
                     WHERE name = ? AND language = ?
-                """, (content, name, language))
+                """,
+                    (content, name, language),
+                )
                 operation = "updated"
             else:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     INSERT INTO system_presets (name, language, content) 
                     VALUES (?, ?, ?)
-                """, (name, language, content))
+                """,
+                    (name, language, content),
+                )
                 operation = "added"
-            
+
             conn.commit()
             logger.info(f"Preset {name} ({language}) successfully {operation}")
             return PresetResult(True, f"프리셋이 성공적으로 {operation}되었습니다.")
-            
+
     except sqlite3.IntegrityError:
         message = "프리셋이 이미 존재합니다."
         logger.warning(f"Preset '{name}' ({language}) already exists")
@@ -413,6 +457,7 @@ def add_system_preset(
     except Exception as e:
         logger.error(f"Unexpected error handling preset {name}: {e}")
         return PresetResult(False, f"오류 발생: {e}")
+
 
 def delete_system_preset(name: str, language: str) -> PresetResult:
     """시스템 메시지 프리셋을 삭제합니다.
@@ -435,26 +480,30 @@ def delete_system_preset(name: str, language: str) -> PresetResult:
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 DELETE FROM system_presets 
                 WHERE name = ? AND language = ?
-            """, (name, language))
-            
+            """,
+                (name, language),
+            )
+
             if cursor.rowcount == 0:
                 message = "삭제할 프리셋을 찾을 수 없습니다."
                 logger.warning(f"Preset {name} ({language}) not found for deletion")
                 return PresetResult(False, message)
-            
+
             conn.commit()
             logger.info(f"Preset {name} ({language}) successfully deleted")
             return PresetResult(True, "프리셋이 성공적으로 삭제되었습니다.")
-            
+
     except sqlite3.Error as e:
         logger.error(f"Database error while deleting preset {name}: {e}")
         raise PresetManagementError(f"Failed to delete preset: {e}")
     except Exception as e:
         logger.error(f"Unexpected error deleting preset {name}: {e}")
         return PresetResult(False, f"오류 발생: {e}")
+
 
 def preset_exists(name: str, language: str) -> bool:
     """프리셋의 존재 여부를 확인합니다.
@@ -469,50 +518,58 @@ def preset_exists(name: str, language: str) -> bool:
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT COUNT(*) 
                 FROM system_presets 
                 WHERE name = ? AND language = ?
-            """, (name, language))
+            """,
+                (name, language),
+            )
             return cursor.fetchone()[0] > 0
-            
+
     except sqlite3.Error as e:
         logger.error(f"Database error checking preset existence: {e}")
         return False
     except Exception as e:
         logger.error(f"Unexpected error checking preset existence: {e}")
         return False
-    
+
+
 def get_preset_choices(language: str) -> List[str]:
     """프리셋 선택 목록을 가져옵니다."""
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT name 
                 FROM system_presets 
                 WHERE language = ? 
                 ORDER BY name ASC
-            """, (language,))
+            """,
+                (language,),
+            )
             results = cursor.fetchall()
             # 이름 목록만 반환
             return [name[0] for name in results] if results else []
-            
+
     except sqlite3.Error as e:
         logger.error(f"Error getting preset choices for language {language}: {e}")
         return []
+
 
 # 프리셋 추가 핸들러
 def handle_add_preset(name: str, language: str, content: str, confirm_overwrite: bool = False):
     if not name.strip() or not content.strip():
         return "❌ 프리셋 이름과 내용을 모두 입력해주세요.", gr.update(choices=get_preset_choices(language)), False
-    
+
     exists = preset_exists(name.strip(), language)
-    
+
     if exists and not confirm_overwrite:
         # 프리셋이 존재하지만 덮어쓰기 확인이 이루어지지 않은 경우
         return "⚠️ 해당 프리셋이 이미 존재합니다. 덮어쓰시겠습니까?", gr.update(choices=get_preset_choices(language)), True  # 추가 출력: 덮어쓰기 필요
-    
+
     success, message = add_system_preset(name.strip(), language, content.strip(), overwrite=exists)
     if success:
         presets = get_preset_choices(language)
@@ -531,7 +588,8 @@ def handle_delete_preset(name: str, language: str):
         return message, gr.update(choices=presets)
     else:
         return message, gr.update(choices=get_preset_choices(language))
-    
+
+
 def get_existing_sessions() -> List[str]:
     """Get list of existing session IDs from sessions table, ordered by last_activity DESC"""
     try:
@@ -547,6 +605,7 @@ def get_existing_sessions() -> List[str]:
     except DatabaseError as e:
         logger.error(f"Error retrieving sessions: {e}")
         return []
+
 
 def get_existing_sessions_with_names() -> List[Tuple[str, str]]:
     """Get list of (session_id, display_name) tuples from sessions table, ordered by last_activity DESC"""
@@ -564,22 +623,27 @@ def get_existing_sessions_with_names() -> List[Tuple[str, str]]:
         logger.error(f"Error retrieving sessions with names: {e}")
         return []
 
+
 def update_session_name(session_id: str, name: str) -> bool:
     """Update the name of a session"""
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 UPDATE sessions SET name = ?, updated_at = ?
                 WHERE id = ?
-            """, (name, datetime.now().isoformat(), session_id))
+            """,
+                (name, datetime.now().isoformat(), session_id),
+            )
             conn.commit()
             return cursor.rowcount > 0
     except Exception as e:
         logger.error(f"Error updating session name: {e}")
         return False
-    
-def save_chat_history_db(history: list[dict[str, str | list[dict[str, str]] | Any]], session_id: str="demo_session", selected_character: str=None) -> bool:
+
+
+def save_chat_history_db(history: list[dict[str, str | list[dict[str, str]] | Any]], session_id: str = "demo_session", selected_character: str = None) -> bool:
     """Save chat history to SQLite database"""
     if selected_character is None:
         selected_character = list(characters.keys())[0]
@@ -606,42 +670,50 @@ def save_chat_history_db(history: list[dict[str, str | list[dict[str, str]] | An
                     last_character TEXT
                 )
             """)
-            
+
             # 세션 존재 여부 확인
             cursor.execute("SELECT COUNT(*) FROM sessions WHERE id = ?", (session_id,))
             current_time = datetime.now().isoformat()
             if cursor.fetchone()[0] == 0:
                 # 세션이 존재하지 않으면 생성
-                cursor.execute("""
+                cursor.execute(
+                    """
                     INSERT INTO sessions (id, name, created_at, updated_at, last_activity, last_character)
                     VALUES (?, ?, ?, ?, ?, ?)
-                """, (session_id, f"Session {session_id}", current_time, current_time, current_time, selected_character))
+                """,
+                    (session_id, f"Session {session_id}", current_time, current_time, current_time, selected_character),
+                )
                 logger.info(f"Created new session: {session_id}")
             else:
                 # 세션이 이미 존재하면 last_activity 업데이트
-                cursor.execute("""
+                cursor.execute(
+                    """
                     UPDATE sessions SET last_activity = ?, updated_at = ?
                     WHERE id = ?
-                """, (current_time, current_time, session_id))
-            
+                """,
+                    (current_time, current_time, session_id),
+                )
+
             for msg in history:
                 raw_content = msg.get("content")
-                content_serialized = (
-                    json.dumps(raw_content, ensure_ascii=False)
-                    if isinstance(raw_content, (list, dict))
-                    else str(raw_content)
-                )
-                cursor.execute("""
+                content_serialized = json.dumps(raw_content, ensure_ascii=False) if isinstance(raw_content, (list, dict)) else str(raw_content)
+                cursor.execute(
+                    """
                     SELECT COUNT(*) FROM chat_history
                     WHERE session_id = ? AND role = ? AND content = ?
-                """, (session_id, msg.get("role"), content_serialized))
+                """,
+                    (session_id, msg.get("role"), content_serialized),
+                )
                 count = cursor.fetchone()[0]
 
                 if count == 0:
-                    cursor.execute("""
+                    cursor.execute(
+                        """
                         INSERT INTO chat_history (session_id, role, content)
                         VALUES (?, ?, ?)
-                    """, (session_id, msg.get("role"), content_serialized))
+                    """,
+                        (session_id, msg.get("role"), content_serialized),
+                    )
 
             conn.commit()
             logger.info(f"DB에 채팅 히스토리 저장 완료 (session_id={session_id})")
@@ -653,6 +725,7 @@ def save_chat_history_db(history: list[dict[str, str | list[dict[str, str]] | An
         logger.error(f"Error saving chat history to DB: {e}")
         return False
 
+
 def update_last_character_in_db(session_id: str, character: str):
     try:
         with sqlite3.connect("chat_history.db") as conn:
@@ -661,6 +734,7 @@ def update_last_character_in_db(session_id: str, character: str):
             conn.commit()
     except Exception as e:
         logger.error(f"Error updating last character: {e}")
+
 
 def save_chat_history(history: List[Dict[str, str]]) -> Optional[str]:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -673,6 +747,7 @@ def save_chat_history(history: List[Dict[str, str]]) -> Optional[str]:
     except Exception as e:
         logger.error(f"채팅 히스토리 저장 중 오류: {e}")
         return None
+
 
 def save_chat_history_csv(history: List[Dict[str, str]]) -> Optional[str]:
     """
@@ -695,6 +770,7 @@ def save_chat_history_csv(history: List[Dict[str, str]]) -> Optional[str]:
         logger.error(f"채팅 히스토리 CSV 저장 중 오류: {e}")
         return None
 
+
 def save_chat_button_click(history: List[Dict[str, str]]) -> str:
     if not history:
         return "채팅 이력이 없습니다."
@@ -703,7 +779,8 @@ def save_chat_button_click(history: List[Dict[str, str]]) -> str:
         return "❌ 채팅 기록 저장 실패"
     else:
         return f"✅ 채팅 기록이 저장되었습니다: {saved_path}"
-    
+
+
 def load_chat_from_db(session_id: str) -> List[Dict[str, str]]:
     """특정 세션의 채팅 기록을 데이터베이스에서 불러옵니다.
 
@@ -719,13 +796,16 @@ def load_chat_from_db(session_id: str) -> List[Dict[str, str]]:
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT role, content, timestamp 
                 FROM chat_history 
                 WHERE session_id = ? 
                 ORDER BY id ASC
-            """, (session_id,))
-            
+            """,
+                (session_id,),
+            )
+
             history = []
             for row in cursor.fetchall():
                 role, content, timestamp = row
@@ -733,22 +813,19 @@ def load_chat_from_db(session_id: str) -> List[Dict[str, str]]:
                     content_parsed = json.loads(content)
                 except (json.JSONDecodeError, TypeError):
                     content_parsed = content
-                message = ChatMessage(
-                    role=role,
-                    content=content_parsed,
-                    timestamp=datetime.fromisoformat(timestamp) if timestamp else None
-                )
+                message = ChatMessage(role=role, content=content_parsed, timestamp=datetime.fromisoformat(timestamp) if timestamp else None)
                 history.append({"role": message.role, "content": message.content})
-            
+
             logger.info(f"Successfully loaded {len(history)} messages from session '{session_id}'")
             return history
-            
+
     except sqlite3.Error as e:
         logger.error(f"Database error loading session '{session_id}': {e}")
         raise SessionManagementError(f"Failed to load session history: {e}")
     except Exception as e:
         logger.error(f"Unexpected error loading session '{session_id}': {e}")
         return []
+
 
 def delete_session_history(session_id: str) -> SessionResult:
     """특정 세션의 모든 채팅 기록을 삭제합니다.
@@ -765,33 +842,39 @@ def delete_session_history(session_id: str) -> SessionResult:
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            
+
             # 세션 존재 여부 확인
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT COUNT(*) 
                 FROM chat_history 
                 WHERE session_id = ?
-            """, (session_id,))
-            
+            """,
+                (session_id,),
+            )
+
             count = cursor.fetchone()[0]
             if count == 0:
                 message = f"Session '{session_id}' not found"
                 logger.warning(message)
                 return SessionResult(False, message, 0)
-            
+
             # 세션 삭제
-            cursor.execute("""
+            cursor.execute(
+                """
                 DELETE FROM chat_history 
                 WHERE session_id = ?
-            """, (session_id,))
-            
+            """,
+                (session_id,),
+            )
+
             affected_rows = cursor.rowcount
             conn.commit()
-            
+
             message = f"Successfully deleted session '{session_id}' ({affected_rows} messages)"
             logger.info(message)
             return SessionResult(True, message, affected_rows)
-            
+
     except sqlite3.Error as e:
         error_msg = f"Database error deleting session '{session_id}': {e}"
         logger.error(error_msg)
@@ -800,6 +883,7 @@ def delete_session_history(session_id: str) -> SessionResult:
         error_msg = f"Unexpected error deleting session '{session_id}': {e}"
         logger.error(error_msg)
         return SessionResult(False, error_msg, 0)
+
 
 def delete_all_sessions() -> SessionResult:
     """데이터베이스의 모든 세션과 채팅 기록을 삭제합니다.
@@ -840,7 +924,8 @@ def delete_all_sessions() -> SessionResult:
         error_msg = f"Unexpected error deleting all sessions: {e}"
         logger.error(error_msg)
         return SessionResult(False, error_msg, 0)
-    
+
+
 def update_system_message_in_db(session_id: str, new_system_message: str):
     """
     지정된 session_id의 system 메시지를 new_system_message로 교체합니다.
@@ -849,17 +934,23 @@ def update_system_message_in_db(session_id: str, new_system_message: str):
         with sqlite3.connect("chat_history.db") as conn:
             cursor = conn.cursor()
             # 우선 해당 세션의 기존 system 메시지를 모두 삭제
-            cursor.execute("""
+            cursor.execute(
+                """
                 DELETE FROM chat_history 
                 WHERE session_id = ? AND role = 'system'
-            """, (session_id,))
-            
+            """,
+                (session_id,),
+            )
+
             # 새 system 메시지 삽입
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO chat_history (session_id, role, content, timestamp)
                 VALUES (?, 'system', ?, CURRENT_TIMESTAMP)
-            """, (session_id, new_system_message))
-            
+            """,
+                (session_id, new_system_message),
+            )
+
             conn.commit()
         logger.info(f"[update_system_message_in_db] 세션 {session_id}의 system 메시지가 업데이트되었습니다.")
     except Exception as e:

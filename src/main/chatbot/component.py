@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import List
 
@@ -17,6 +19,7 @@ from ...common.file_types import COMMON_FILE_TYPES
 
 # Maximum number of sessions to display in the sidebar
 MAX_VISIBLE_SESSIONS = 20
+
 
 @dataclass
 class ChatbotComponent:
@@ -76,26 +79,14 @@ class ChatbotComponent:
             gr.Markdown("### Chat Sessions")
 
             # New Chat button at the top
-            add_session_icon_btn = gr.Button(
-                "+ New Chat",
-                elem_classes="new-chat-button",
-                variant="primary"
-            )
+            add_session_icon_btn = gr.Button("+ New Chat", elem_classes="new-chat-button", variant="primary")
 
             # Session list container
             with gr.Column(elem_classes="session-list-container"):
                 for i in range(MAX_VISIBLE_SESSIONS):
                     with gr.Row(visible=False, elem_classes="session-item") as row:
-                        session_btn = gr.Button(
-                            "",
-                            elem_classes="session-title-button",
-                            scale=8
-                        )
-                        delete_btn = gr.Button(
-                            "🗑️",
-                            elem_classes="session-delete-button",
-                            scale=1
-                        )
+                        session_btn = gr.Button("", elem_classes="session-title-button", scale=8)
+                        delete_btn = gr.Button("🗑️", elem_classes="session-delete-button", scale=1)
                         session_rows.append(row)
                         session_buttons.append(session_btn)
                         delete_buttons.append(delete_btn)
@@ -105,14 +96,7 @@ class ChatbotComponent:
             chat_title_box = gr.Textbox(value="", interactive=False, visible=False)
 
             # Keep session_select_dropdown for backward compatibility (hidden)
-            session_select_dropdown = gr.Dropdown(
-                label="세션 선택",
-                choices=[],
-                value=None,
-                interactive=True,
-                visible=False,
-                elem_classes="session-dropdown"
-            )
+            session_select_dropdown = gr.Dropdown(label="세션 선택", choices=[], value=None, interactive=True, visible=False, elem_classes="session-dropdown")
             delete_session_icon_btn = gr.Button("🗑️", visible=False)
 
         # Store references in ui_component
@@ -133,7 +117,7 @@ class ChatbotComponent:
             session_rows=session_rows,
             session_buttons=session_buttons,
             session_delete_buttons=delete_buttons,
-            selected_session_id=selected_session_id
+            selected_session_id=selected_session_id,
         )
 
     @classmethod
@@ -141,42 +125,14 @@ class ChatbotComponent:
         with gr.Row(elem_classes="model-container"):
             with gr.Column():
                 gr.Markdown("### Model Selection")
-                model_provider_dropdown = gr.Dropdown(
-                    label=_("model_provider_label"),
-                    choices=PROVIDER_LIST,
-                    value=PROVIDER_LIST[0],
-                    interactive=True,
-                    elem_classes="model-dropdown"
-                )
-                model_type_dropdown = gr.Radio(
-                    label=_("model_type_label"),
-                    choices=app_state.llm_type_choices,
-                    value=app_state.llm_type_choices[0],
-                    elem_classes="model-dropdown"
-                )
-                model_dropdown = gr.Dropdown(
-                    label=_("model_select_label"),
-                    choices=app_state.initial_choices,
-                    value=app_state.initial_choices[0] if len(app_state.initial_choices) > 0 else None,
-                    elem_classes="model-dropdown"
-                )
-                api_key_text = gr.Textbox(
-                    label=_("api_key_label"),
-                    placeholder="sk-...",
-                    visible=False,
-                    elem_classes="api-key-input"
-                )
-                lora_dropdown = gr.Dropdown(
-                    label=_("lora_select_label"),
-                    choices=get_all_loras(),
-                    value="None",
-                    interactive=True,
-                    visible=False,
-                    elem_classes="model-dropdown"
-                )
+                model_provider_dropdown = gr.Dropdown(label=_("model_provider_label"), choices=PROVIDER_LIST, value=PROVIDER_LIST[0], interactive=True, elem_classes="model-dropdown")
+                model_type_dropdown = gr.Radio(label=_("model_type_label"), choices=app_state.llm_type_choices, value=app_state.llm_type_choices[0], elem_classes="model-dropdown")
+                model_dropdown = gr.Dropdown(label=_("model_select_label"), choices=app_state.initial_choices, value=app_state.initial_choices[0] if len(app_state.initial_choices) > 0 else None, elem_classes="model-dropdown")
+                api_key_text = gr.Textbox(label=_("api_key_label"), placeholder="sk-...", visible=False, elem_classes="api-key-input")
+                lora_dropdown = gr.Dropdown(label=_("lora_select_label"), choices=get_all_loras(), value="None", interactive=True, visible=False, elem_classes="model-dropdown")
                 refresh_button = gr.Button(_("refresh_model_list_button"))
                 clear_all_btn = gr.Button(_("cache_clear_all_button"))
-                
+
         ui_component.model_provider_dropdown = model_provider_dropdown
         ui_component.model_type_dropdown = model_type_dropdown
         ui_component.model_dropdown = model_dropdown
@@ -185,7 +141,7 @@ class ChatbotComponent:
         ui_component.refresh_button = refresh_button
         ui_component.clear_all_btn = clear_all_btn
 
-        return cls(model_provider_dropdown = model_provider_dropdown, model_type_dropdown=model_type_dropdown, model_dropdown=model_dropdown, api_key_text=api_key_text, lora_dropdown=lora_dropdown, refresh_button = refresh_button, clear_all_btn=clear_all_btn)
+        return cls(model_provider_dropdown=model_provider_dropdown, model_type_dropdown=model_type_dropdown, model_dropdown=model_dropdown, api_key_text=api_key_text, lora_dropdown=lora_dropdown, refresh_button=refresh_button, clear_all_btn=clear_all_btn)
 
     @classmethod
     def create_chat_container_main_panel(cls, chat_wrapper_fn, additional_inputs):
@@ -196,33 +152,33 @@ class ChatbotComponent:
                     value=app_state.initial_system_message,
                     # placeholder=_("system_message_placeholder"),
                     elem_classes="system-message",
-                    autofocus=True
+                    autofocus=True,
                 )
-            
+
             # system_message_box is the 4th argument in chat_wrapper (after message, history, session_id)
             # We need to prepend session_id_state and append system_message_box to the inputs list?
             # chat_wrapper args: message, history, session_id, system_msg, ...
             # ChatInterface passes message, history automatically.
             # additional_inputs should start with session_id.
-            
+
             # additional_inputs passed from __init__.py will contain:
             # [session_id_state, (system_msg will be inserted here), selected_character, ...]
-            
+
             # Actually, let's construct the full list here.
             # The caller will pass [session_id_state, selected_character, ...]
             # We insert system_message_box at index 1.
-            
+
             real_additional_inputs = list(additional_inputs)
             real_additional_inputs.insert(1, system_message_box)
-            
+
             chatbot = gr.Chatbot(
                 elem_classes=["chat-window"],
-                avatar_images = [None, characters[app_state.initial_last_character]["profile_image"]],
-                height = 600,
-                label = "Chatbot",
-                show_label = True,
+                avatar_images=[None, characters[app_state.initial_last_character]["profile_image"]],
+                height=600,
+                label="Chatbot",
+                show_label=True,
                 # type = "messages"
-                reasoning_tags = [("<think>","</think>"), ("<thinking>","</thinking>")]
+                reasoning_tags=[("<think>", "</think>"), ("<thinking>", "</thinking>")],
             )
 
             chat_interface = gr.ChatInterface(
@@ -230,7 +186,7 @@ class ChatbotComponent:
                 # type='messages',
                 chatbot=chatbot,
                 multimodal=True,
-                textbox=gr.MultimodalTextbox(file_count="multiple", sources=['upload'], file_types=COMMON_FILE_TYPES),
+                textbox=gr.MultimodalTextbox(file_count="multiple", sources=["upload"], file_types=COMMON_FILE_TYPES),
                 additional_inputs=real_additional_inputs,
                 additional_outputs=[
                     app_state.history_state,
@@ -241,10 +197,9 @@ class ChatbotComponent:
                 ],
                 autofocus=True,
                 fill_height=True,
-                save_history=False, # We handle history manually
-                api_name="chat"
+                save_history=False,  # We handle history manually
+                api_name="chat",
             )
-
 
             # Access the textbox. In multimodal mode, it's a MultimodalTextbox.
             msg = chat_interface.textbox
@@ -256,7 +211,7 @@ class ChatbotComponent:
 
             # For compatibility with existing code that expects multimodal_msg
             multimodal_msg = msg
-        
+
         ui_component.system_message_accordion = system_message_accordion
         ui_component.system_message_box = system_message_box
         ui_component.chatbot = chatbot
@@ -268,101 +223,29 @@ class ChatbotComponent:
     @classmethod
     def create_chat_container_side_panel(cls):
         with gr.Column(scale=3, elem_classes="side-panel"):
-            profile_image = gr.Image(
-                label=_('profile_image_label'),
-                visible=True,
-                interactive=False,
-                show_label=True,
-                width="auto",
-                height="auto",
-                value=characters[app_state.initial_last_character]["profile_image"],
-                elem_classes="profile-image"
-            )
-            character_dropdown = gr.Dropdown(
-                label=_('character_select_label'),
-                choices=list(characters.keys()),
-                value=app_state.initial_last_character,
-                interactive=True,
-                info=_('character_select_info'),
-                elem_classes='character-dropdown'
-            )
-            with gr.Accordion(_("advanced_setting"), open=False, elem_classes="accordion-container") as advanced_setting:                        
-                seed_input = gr.Number(
-                    label=_("seed_label"),
-                    value=42,
-                    precision=0,
-                    step=1,
-                    interactive=True,
-                    info=_("seed_info"),
-                    elem_classes="seed-input"
-                )
-                max_length_input = gr.Slider(
-                    label="Max Length",
-                    minimum=-1,
-                    maximum=4096,
-                    value=-1,
-                    step=1,
-                    interactive=True,
-                    info="Set the maximum length of the generated response.",
-                    elem_classes="max-length-input"
-                )
-                temperature_slider=gr.Slider(
-                    label=_("temperature_label"),
-                    minimum=0.0,
-                    maximum=1.0,
-                    value=0.6,
-                    step=0.1,
-                    interactive=True
-                )
-                top_k_slider=gr.Slider(
-                    label=_("top_k_label"),
-                    minimum=0,
-                    maximum=100,
-                    value=20,
-                    step=1,
-                    interactive=True
-                )
-                top_p_slider=gr.Slider(
-                    label=_("top_p_label"),
-                    minimum=0.0,
-                    maximum=1.0,
-                    value=0.9,
-                    step=0.1,
-                    interactive=True
-                )
-                repetition_penalty_slider=gr.Slider(
-                    label=_("repetition_penalty_label"),
-                    minimum=0.0,
-                    maximum=2.0,
-                    value=1.1,
-                    step=0.1,
-                    interactive=True
-                )
-                enable_thinking_checkbox = gr.Checkbox(
-                    label="Enable Thinking",
-                    value=False,
-                    info="Enable thinking for Qwen models.",
-                    elem_classes="enable-thinking-checkbox"
-                )
-                preset_dropdown = gr.Dropdown(
-                    label="프리셋 선택",
-                    choices=get_preset_choices(default_language),
-                    value=app_state.last_preset,
-                    interactive=True,
-                    elem_classes="preset-dropdown"
-                )
+            profile_image = gr.Image(label=_("profile_image_label"), visible=True, interactive=False, show_label=True, width="auto", height="auto", value=characters[app_state.initial_last_character]["profile_image"], elem_classes="profile-image")
+            character_dropdown = gr.Dropdown(label=_("character_select_label"), choices=list(characters.keys()), value=app_state.initial_last_character, interactive=True, info=_("character_select_info"), elem_classes="character-dropdown")
+            with gr.Accordion(_("advanced_setting"), open=False, elem_classes="accordion-container") as advanced_setting:
+                seed_input = gr.Number(label=_("seed_label"), value=42, precision=0, step=1, interactive=True, info=_("seed_info"), elem_classes="seed-input")
+                max_length_input = gr.Slider(label="Max Length", minimum=-1, maximum=4096, value=-1, step=1, interactive=True, info="Set the maximum length of the generated response.", elem_classes="max-length-input")
+                temperature_slider = gr.Slider(label=_("temperature_label"), minimum=0.0, maximum=1.0, value=0.6, step=0.1, interactive=True)
+                top_k_slider = gr.Slider(label=_("top_k_label"), minimum=0, maximum=100, value=20, step=1, interactive=True)
+                top_p_slider = gr.Slider(label=_("top_p_label"), minimum=0.0, maximum=1.0, value=0.9, step=0.1, interactive=True)
+                repetition_penalty_slider = gr.Slider(label=_("repetition_penalty_label"), minimum=0.0, maximum=2.0, value=1.1, step=0.1, interactive=True)
+                enable_thinking_checkbox = gr.Checkbox(label="Enable Thinking", value=False, info="Enable thinking for Qwen models.", elem_classes="enable-thinking-checkbox")
+                preset_dropdown = gr.Dropdown(label="프리셋 선택", choices=get_preset_choices(default_language), value=app_state.last_preset, interactive=True, elem_classes="preset-dropdown")
                 change_preset_button = gr.Button("프리셋 변경")
                 reset_btn = gr.Button(
                     value=_("reset_session_button"),  # "세션 초기화"에 해당하는 번역 키
                     variant="secondary",
-                    scale=1
+                    scale=1,
                 )
                 reset_all_btn = gr.Button(
                     value=_("reset_all_sessions_button"),  # "모든 세션 초기화"에 해당하는 번역 키
                     variant="secondary",
-                    scale=1
+                    scale=1,
                 )
-        
+
         ui_component.profile_image = profile_image
         ui_component.character_dropdown = character_dropdown
         ui_component.text_advanced_settings = advanced_setting
@@ -378,13 +261,28 @@ class ChatbotComponent:
         ui_component.text_reset_btn = reset_btn
         ui_component.text_reset_all_btn = reset_all_btn
 
-        return cls(profile_image=profile_image, character_dropdown=character_dropdown, advanced_setting=advanced_setting, seed_input=seed_input, max_length_input=max_length_input, temperature_slider=temperature_slider, top_k_slider=top_k_slider, top_p_slider=top_p_slider, repetition_penalty_slider=repetition_penalty_slider, enable_thinking_checkbox=enable_thinking_checkbox, preset_dropdown=preset_dropdown, change_preset_button=change_preset_button, reset_btn=reset_btn, reset_all_btn=reset_all_btn)
-    
+        return cls(
+            profile_image=profile_image,
+            character_dropdown=character_dropdown,
+            advanced_setting=advanced_setting,
+            seed_input=seed_input,
+            max_length_input=max_length_input,
+            temperature_slider=temperature_slider,
+            top_k_slider=top_k_slider,
+            top_p_slider=top_p_slider,
+            repetition_penalty_slider=repetition_penalty_slider,
+            enable_thinking_checkbox=enable_thinking_checkbox,
+            preset_dropdown=preset_dropdown,
+            change_preset_button=change_preset_button,
+            reset_btn=reset_btn,
+            reset_all_btn=reset_all_btn,
+        )
+
     @classmethod
     def create_chat_container_status_bar(cls, render=True):
         status_text = gr.Markdown("Ready", elem_id="status_text", render=render)
         image_info = gr.Markdown("", visible=False, render=render)
-        session_select_info = gr.Markdown(_('select_session_info'), render=render)
+        session_select_info = gr.Markdown(_("select_session_info"), render=render)
 
         ui_component.status_text = status_text
         ui_component.image_info = image_info

@@ -3,6 +3,8 @@ ComfyUI Image Upload module using comfy_sdk library.
 Provides image and mask upload functionality for ComfyUI.
 """
 
+from __future__ import annotations
+
 import os
 import datetime
 from io import BytesIO
@@ -37,12 +39,7 @@ class ComfyUIImageUpload:
         """Get the server address."""
         return f"{self.host}:{self.port}"
 
-    def upload_image(
-        self,
-        input_img: Union[str, Image.Image, None],
-        subfolder: str = "",
-        overwrite: bool = False
-    ) -> Optional[str]:
+    def upload_image(self, input_img: Union[str, Image.Image, None], subfolder: str = "", overwrite: bool = False) -> Optional[str]:
         """
         Upload an image to ComfyUI input folder.
 
@@ -68,13 +65,7 @@ class ComfyUIImageUpload:
             print(f"Error uploading image: {e}")
             return None
 
-    def upload_mask(
-        self,
-        original_img: Union[str, Image.Image],
-        mask_img: Dict[str, Any],
-        subfolder: str = "clipspace",
-        overwrite: bool = False
-    ) -> Optional[str]:
+    def upload_mask(self, original_img: Union[str, Image.Image], mask_img: Dict[str, Any], subfolder: str = "clipspace", overwrite: bool = False) -> Optional[str]:
         """
         Upload a mask image for inpainting.
 
@@ -92,10 +83,10 @@ class ComfyUIImageUpload:
         else:
             original_file_name = f"original_{datetime.datetime.now().strftime('%y%m%d_%H%M%S')}.png"
 
-        with Image.open(mask_img['layers'][0]) as mask_pil:
-            mask_temp = mask_pil.getchannel('A')
+        with Image.open(mask_img["layers"][0]) as mask_pil:
+            mask_temp = mask_pil.getchannel("A")
             new_alpha = ImageOps.invert(mask_temp)
-            new_mask = Image.new('L', mask_pil.size)
+            new_mask = Image.new("L", mask_pil.size)
             new_mask.putalpha(new_alpha)
 
             buffer = BytesIO()
@@ -105,20 +96,10 @@ class ComfyUIImageUpload:
         suffix = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
         new_file_name = f"clipspace-mask_{suffix}.png"
 
-        original_ref = {
-            "filename": original_file_name,
-            "subfolder": "",
-            "type": "input"
-        }
+        original_ref = {"filename": original_file_name, "subfolder": "", "type": "input"}
 
         try:
-            result = self._comfy.images.upload_mask(
-                file_data,
-                new_file_name,
-                original_ref,
-                overwrite,
-                "input"
-            )
+            result = self._comfy.images.upload_mask(file_data, new_file_name, original_ref, overwrite, "input")
             mask_name = result.get("name", new_file_name)
             print(f"inpaint upload: {mask_name}")
             return mask_name

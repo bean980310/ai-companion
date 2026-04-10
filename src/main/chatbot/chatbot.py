@@ -1,12 +1,19 @@
-# import logging
+# chatbot.py
+from __future__ import annotations
 from typing import Any, Generator, Literal, Callable
-import gradio as gr
+
 # from gradio_i18n import gettext as _, translate_blocks
 import os
 import secrets
 import sqlite3
+import traceback
+import requests
+import base64
 
 from transformers import AutoConfig
+import gradio as gr
+
+from ai_companion_core import logger
 
 from src.models import IS_MULTIMODAL_API, IS_MULTIMODAL_LOCAL, IS_ANY_TO_ANY, IS_IMAGE_TEXT_TO_TEXT, IS_OMNI_API
 from src.models.models import get_all_local_models, generate_answer, generate_chat_title
@@ -14,21 +21,30 @@ from src.common.database import save_chat_history_db, delete_session_history, de
 from src.common.translations import TranslationManager, translation_manager, _
 
 from src.characters.preset_images import PRESET_IMAGES
-from src.models import llm_api_models, openai_llm_api_models, anthropic_llm_api_models, google_genai_llm_api_models, perplexity_llm_api_models, xai_llm_api_models, mistralai_llm_api_models, openrouter_llm_api_models, huggingface_inference_llm_api_models, ollama_llm_models, lmstudio_llm_models, oobabooga_llm_models, vllm_llm_api_models,REASONING_CONTROLABLE, REASONING_KWD, REASONING_BAN, transformers_local, vllm_local, gguf_local, mlx_local
-from src.common.default_language import default_language
-from src.common.utils import detect_platform
-from src.common.file_types import COMMON_FILE_TYPES, MULTIMODAL_VISION_FILE_TYPES, MULTIMODAL_OMNI_FILE_TYPES
+from src.models import (
+    llm_api_models,
+    openai_llm_api_models,
+    anthropic_llm_api_models,
+    google_genai_llm_api_models,
+    perplexity_llm_api_models,
+    xai_llm_api_models,
+    mistralai_llm_api_models,
+    openrouter_llm_api_models,
+    huggingface_inference_llm_api_models,
+    ollama_llm_models,
+    lmstudio_llm_models,
+    oobabooga_llm_models,
+    vllm_llm_api_models,
+    REASONING_CONTROLABLE,
+    REASONING_KWD,
+    REASONING_BAN,
+    transformers_local,
+    vllm_local,
+    gguf_local,
+    mlx_local,
+)
 
-import traceback
-from src.characters.persona_speech_manager import PersonaSpeechManager
-from src.common.character_info import characters
-from src.common.args import parse_args
-# from src.common.translations import _
-from ...start_app import ui_component
-# from translations import i18n as _
 
-import requests
-import base64
 from io import BytesIO
 from PIL import Image, ImageOps, ImageFile
 import pandas as pd
@@ -37,8 +53,17 @@ import soundfile as sf
 import sounddevice as sd
 from scipy.io import wavfile as wav
 
-from src import logger
+from src.common.default_language import default_language
+from src.common.utils import detect_platform
+from src.common.file_types import COMMON_FILE_TYPES, MULTIMODAL_VISION_FILE_TYPES, MULTIMODAL_OMNI_FILE_TYPES
 
+from src.characters.persona_speech_manager import PersonaSpeechManager
+from src.common.character_info import characters
+from src.common.args import parse_args
+
+# from src.common.translations import _
+from ...start_app import ui_component
+# from translations import i18n as _
 # 로깅 설정
 
 # logging.basicConfig(level=logging.INFO)
@@ -51,14 +76,15 @@ DEFAULT_PROFILE_IMAGE = None
 
 # speech_manager = PersonaSpeechManager(translation_manager=translation_manager, characters=characters)
 
+
 class Chatbot:
     def __init__(self):
-        self.default_language=default_language
-        self.preset_images=PRESET_IMAGES
-        self.default_profile_image=DEFAULT_PROFILE_IMAGE
-        self.characters=characters
+        self.default_language = default_language
+        self.preset_images = PRESET_IMAGES
+        self.default_profile_image = DEFAULT_PROFILE_IMAGE
+        self.characters = characters
         self.reset_type = None
-        self.chat_titles={}
+        self.chat_titles = {}
 
         self.vision_model = False
 
@@ -69,13 +95,8 @@ class Chatbot:
         if session_id not in self.session_speech_managers:
             self.session_speech_managers[session_id] = PersonaSpeechManager(translation_manager=translation_manager, characters=self.characters)
         return self.session_speech_managers[session_id]
-    
-    def update_system_message_and_profile(
-        self,
-        character_name: str, 
-        language_display_name: str, 
-        session_id: str
-    ):
+
+    def update_system_message_and_profile(self, character_name: str, language_display_name: str, session_id: str):
         """
         캐릭터와 언어 선택 시 호출되는 함수.
         - 캐릭터와 언어 설정 적용
@@ -90,7 +111,7 @@ class Chatbot:
             # 실제 프리셋 로딩은 speech_manager 내부에서 처리
             system_message = speech_manager.get_system_message()
             selected_profile_image = speech_manager.characters[character_name]["profile_image"]
-            
+
             # -- DB 업데이트 로직 추가 --
             # session_id가 유효하다면, 새 시스템 메시지를 DB에 반영
             if session_id:
@@ -101,7 +122,7 @@ class Chatbot:
         except ValueError as ve:
             logger.error(f"Character setting error: {ve}")
             return "시스템 메시지 로딩 중 오류가 발생했습니다.", None, gr.update(), gr.update()
-        
+
     def handle_change_preset(self, new_preset_name: str, history: list[dict[str, str | Any]], language: str):
         """
         프리셋을 변경하고, 새로운 시스템 메시지를 히스토리에 추가하며, 프로필 이미지를 변경합니다.
@@ -116,15 +137,12 @@ class Chatbot:
         """
         # 새로운 프리셋 내용 로드
         presets = load_system_presets(language=language)
-        
+
         if new_preset_name not in presets:
             logger.warning(f"선택한 프리셋 '{new_preset_name}'이 존재하지 않습니다.")
             return history, self.default_profile_image  # 프리셋이 없을 경우 기본 이미지 반환
 
-        new_system_message = {
-            "role": "system",
-            "content": presets[new_preset_name]
-        }
+        new_system_message = {"role": "system", "content": presets[new_preset_name]}
         content = presets.get(new_preset_name, "")
 
         # 기존 히스토리에 새로운 시스템 메시지 추가
@@ -133,7 +151,7 @@ class Chatbot:
 
         # 프로필 이미지 변경
         image_path = self.preset_images.get(new_preset_name)
-        
+
         if image_path and os.path.isfile(image_path):
             return history, gr.update(value=content), image_path, gr.update(avatar_images=[None, image_path])
         else:
@@ -171,13 +189,10 @@ class Chatbot:
         if selected_character and selected_character not in self.characters:
             logger.warning(f"Invalid character selected: {selected_character}")
             selected_character = None
-            
+
         if not history:
             # 히스토리가 없을 경우 시스템 메시지로 초기화
-            system_message = {
-                "role": "system",
-                "content": system_msg
-            }
+            system_message = {"role": "system", "content": system_msg}
             history = [system_message]
 
         speech_manager = self.get_speech_manager(session_id)
@@ -191,20 +206,20 @@ class Chatbot:
 
         user_contents = [{"type": "text", "text": text}]
         if files:
-            if files.rsplit('.')[-1] in ["jpg", "jpeg", "png", "webp", "gif"]:
+            if files.rsplit(".")[-1] in ["jpg", "jpeg", "png", "webp", "gif"]:
                 with open(files, "rb") as f:
-                    if files.rsplit('.')[-1] == "jpg" or "jpeg":
-                        mime_type="image/jpeg"
-                    elif files.rsplit('.')[-1] == "png":
-                        mime_type="image/png"
-                    elif files.rsplit('.')[-1] == "webp":
-                        mime_type="image/webp"
-                    elif files.rsplit('.')[-1] == "gif":
-                        mime_type="image/gif"
-                    image = base64.b64encode(f.read()).decode('utf-8')
+                    if files.rsplit(".")[-1] == "jpg" or "jpeg":
+                        mime_type = "image/jpeg"
+                    elif files.rsplit(".")[-1] == "png":
+                        mime_type = "image/png"
+                    elif files.rsplit(".")[-1] == "webp":
+                        mime_type = "image/webp"
+                    elif files.rsplit(".")[-1] == "gif":
+                        mime_type = "image/gif"
+                    image = base64.b64encode(f.read()).decode("utf-8")
                 user_contents.append({"type": "image", "url": f"data:{mime_type};base64,{image}"})
             # elif files.rsplit('.')[-1] == "txt":
-                
+
         new_message = {
             "role": "user",
             "content": user_contents,
@@ -212,10 +227,29 @@ class Chatbot:
 
         history.append(new_message)
         speech_manager.update_tone(text)
-        
+
         return "", history, self.filter_messages_for_chatbot(history)
 
-    def process_message_bot(self, session_id: str, history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]], selected_model: str | gr.Dropdown, provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"] | gr.Dropdown, selected_lora: str | gr.Dropdown, custom_path: str, user_input: str | dict[str, str | Image.Image | Any] | Any, api_key: str, device: str, seed: int, max_length: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float, enable_thinking: bool, language: str):
+    def process_message_bot(
+        self,
+        session_id: str,
+        history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]],
+        selected_model: str | gr.Dropdown,
+        provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"] | gr.Dropdown,
+        selected_lora: str | gr.Dropdown,
+        custom_path: str,
+        user_input: str | dict[str, str | Image.Image | Any] | Any,
+        api_key: str,
+        device: str,
+        seed: int,
+        max_length: int,
+        temperature: float,
+        top_k: int,
+        top_p: float,
+        repetition_penalty: float,
+        enable_thinking: bool,
+        language: str,
+    ):
         image = None
         if isinstance(user_input, dict):
             files = user_input.get("files", [])
@@ -225,13 +259,13 @@ class Chatbot:
                     image.append(files[f])
             else:
                 image = files
-            
-        chat_title=self.chat_titles.get(session_id)
+
+        chat_title = self.chat_titles.get(session_id)
 
         if provider == "self-provided":
-            model_type=self.determine_model_type(selected_model)
+            model_type = self.determine_model_type(selected_model)
         else:
-            model_type=None
+            model_type = None
         try:
             # 봇 응답 생성
             answer = generate_answer(
@@ -252,19 +286,18 @@ class Chatbot:
                 top_p=top_p,
                 repetition_penalty=repetition_penalty,
                 enable_thinking=enable_thinking,
-                character_language=language
+                character_language=language,
             )
-            
+
             speech_manager = self.get_speech_manager(session_id)
             styled_answer = speech_manager.generate_response(answer)
-            
+
             # 응답을 히스토리에 추가
             history.append({"role": "assistant", "content": styled_answer})
-            
 
             # 데이터베이스에 히스토리 저장
             save_chat_history_db(history, session_id=session_id)
-            
+
             # 상태 메시지 초기화
             status = ""
 
@@ -275,9 +308,9 @@ class Chatbot:
 
         # 업데이트된 히스토리를 Chatbot 형식으로 변환
         chatbot_history = self.filter_messages_for_chatbot(history)
-        
-        if chat_title is None and len(history)==2:
-            chat_title=generate_chat_title(
+
+        if chat_title is None and len(history) == 2:
+            chat_title = generate_chat_title(
                 first_message=history[1]["content"],
                 selected_model=selected_model,
                 model_type=model_type,
@@ -291,10 +324,29 @@ class Chatbot:
 
         return history, chatbot_history, status, chat_title
 
-    def chat_wrapper(self, message: str | dict[str, str | dict] | list[dict[str, str | Image.Image | Any]] | Callable | Any, history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]], session_id: str, system_msg: str | gr.Textbox, selected_character: str, language: str,
-                     selected_model: str, provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"], selected_lora: str, custom_path: str, api_key: str, device: str, seed: int,
-                     max_length: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float, enable_thinking: bool,
-                     is_temp_session=False):
+    def chat_wrapper(
+        self,
+        message: str | dict[str, str | dict] | list[dict[str, str | Image.Image | Any]] | Callable | Any,
+        history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]],
+        session_id: str,
+        system_msg: str | gr.Textbox,
+        selected_character: str,
+        language: str,
+        selected_model: str,
+        provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"],
+        selected_lora: str,
+        custom_path: str,
+        api_key: str,
+        device: str,
+        seed: int,
+        max_length: int,
+        temperature: float,
+        top_k: int,
+        top_p: float,
+        repetition_penalty: float,
+        enable_thinking: bool,
+        is_temp_session=False,
+    ):
         """
         gr.ChatInterface를 위한 래퍼 함수
         """
@@ -314,7 +366,7 @@ class Chatbot:
         speech_manager = self.get_speech_manager(session_id)
         try:
             speech_manager.set_character_and_language(selected_character, language)
-            
+
         except ValueError as e:
             tb = traceback.format_exc()
             logger.error(f"캐릭터 설정 오류: {str(e)}\n{tb}")
@@ -338,23 +390,14 @@ class Chatbot:
                 model_type = None
 
             new_session_id, title = self.confirm_temp_session(
-                temp_history=current_history,
-                first_message_content=user_content,
-                selected_character=selected_character,
-                selected_model=selected_model,
-                model_type=model_type,
-                provider=provider,
-                selected_lora=selected_lora if selected_lora != "None" else None,
-                custom_path=custom_path,
-                device=device,
-                image_input=None
+                temp_history=current_history, first_message_content=user_content, selected_character=selected_character, selected_model=selected_model, model_type=model_type, provider=provider, selected_lora=selected_lora if selected_lora != "None" else None, custom_path=custom_path, device=device, image_input=None
             )
             is_temp_after = False  # 더 이상 임시 세션이 아님
             session_id = new_session_id
             self.chat_titles[session_id] = title
 
         is_multimodal = AutoConfig.from_pretrained(os.path.join("./models/llm", selected_model)).architectures[0] in IS_MULTIMODAL_LOCAL or any(x in selected_model.lower() for x in IS_MULTIMODAL_API)
-        
+
         # 사용자 메시지 구성
         if is_multimodal:
             user_content = message.get("text", "")
@@ -368,62 +411,61 @@ class Chatbot:
         if user_files:
             # 멀티모달 메시지 처리
             for file_path in user_files:
-                if file_path.rsplit('.')[-1] == "jpg" or "jpeg" or "png" or "webp" or "gif" or "bmp" or "avif" or "tiff" or "svg":
+                if file_path.rsplit(".")[-1] == "jpg" or "jpeg" or "png" or "webp" or "gif" or "bmp" or "avif" or "tiff" or "svg":
                     with open(file_path, "rb") as f:
-                        if file_path.rsplit('.')[-1] == "jpg" or "jpeg":
-                            mime_type="image/jpeg"
-                        elif file_path.rsplit('.')[-1] == "png":
-                            mime_type="image/png"
-                        elif file_path.rsplit('.')[-1] == "webp":
-                            mime_type="image/webp"
-                        elif file_path.rsplit('.')[-1] == "gif":
-                            mime_type="image/gif"
-                        elif file_path.rsplit('.')[-1] == "bmp":
-                            mime_type="image/bmp"
-                        elif file_path.rsplit('.')[-1] == "avif":
-                            mime_type="image/avif"
-                        elif file_path.rsplit('.')[-1] == "tiff":
-                            mime_type="image/tiff"
-                        elif file_path.rsplit('.')[-1] == "svg":
-                            mime_type="image/svg+xml"
-                        image = base64.b64encode(f.read()).decode('utf-8')
+                        if file_path.rsplit(".")[-1] == "jpg" or "jpeg":
+                            mime_type = "image/jpeg"
+                        elif file_path.rsplit(".")[-1] == "png":
+                            mime_type = "image/png"
+                        elif file_path.rsplit(".")[-1] == "webp":
+                            mime_type = "image/webp"
+                        elif file_path.rsplit(".")[-1] == "gif":
+                            mime_type = "image/gif"
+                        elif file_path.rsplit(".")[-1] == "bmp":
+                            mime_type = "image/bmp"
+                        elif file_path.rsplit(".")[-1] == "avif":
+                            mime_type = "image/avif"
+                        elif file_path.rsplit(".")[-1] == "tiff":
+                            mime_type = "image/tiff"
+                        elif file_path.rsplit(".")[-1] == "svg":
+                            mime_type = "image/svg+xml"
+                        image = base64.b64encode(f.read()).decode("utf-8")
 
                         image_url = f"data:{mime_type};base64,{image}"
                     # 이미지 파일을 base64로 변환하거나 경로를 사용
                     # 여기서는 기존 process_message_user 로직을 참고하여 처리
                     # 다만 ChatInterface는 로컬 경로를 넘겨줌
                     content_list.append({"type": "image", "url": image_url})
-                if file_path.rsplit('.')[-1] == "wav" or "mp3" or "aac" or "flac" or "ogg" or "webm":
+                if file_path.rsplit(".")[-1] == "wav" or "mp3" or "aac" or "flac" or "ogg" or "webm":
                     with open(file_path, "rb") as f:
                         pass
-                        
-                
-        current_history.append({"role": "user", "content": content_list})
 
+        current_history.append({"role": "user", "content": content_list})
 
         # 2. 봇 응답 생성
         # process_message_bot 로직 활용
-        
+
         # process_message_bot은 history를 인자로 받아 봇 응답을 추가하고 반환함
-        # user_input은 이미 history에 추가했으므로 process_message_bot 호출 시 user_input 인자는 
+        # user_input은 이미 history에 추가했으므로 process_message_bot 호출 시 user_input 인자는
         # generate_answer 내부에서 이미지 처리를 위해 필요할 수 있음.
-        
+
         # generate_answer를 직접 호출하는 것이 더 깔끔할 수 있음.
-        
+
         # 이미지 입력 준비
         image_input = None
         audio_input = None
         if user_files:
             for file_path in user_files:
-                if file_path.rsplit('.')[-1] == "jpg" or "jpeg" or "png" or "webp" or "gif": image_input = file_path # 리스트 전달
-        
+                if file_path.rsplit(".")[-1] == "jpg" or "jpeg" or "png" or "webp" or "gif":
+                    image_input = file_path  # 리스트 전달
+
         chat_title = self.chat_titles.get(session_id)
-        
+
         if provider == "self-provided":
             model_type = self.determine_model_type(selected_model)
         else:
             model_type = None
-        
+
         try:
             answer = generate_answer(
                 history=current_history,
@@ -443,21 +485,21 @@ class Chatbot:
                 top_p=top_p,
                 repetition_penalty=repetition_penalty,
                 enable_thinking=enable_thinking,
-                character_language=language
+                character_language=language,
             )
-            
+
             styled_answer = speech_manager.generate_response(answer)
-            
+
             # 응답을 히스토리에 추가
             # gr.ChatInterface는 리턴된 문자열을 봇의 응답으로 처리하여 히스토리에 추가함
             # 하지만 우리는 DB 저장을 위해 전체 히스토리를 업데이트해야 함
             current_history.append({"role": "assistant", "content": styled_answer})
-            
+
             # 데이터베이스에 히스토리 저장
             save_chat_history_db(current_history, session_id=session_id)
-            
+
             status = ""
-            
+
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}", exc_info=True)
             styled_answer = f"❌ 오류 발생: {str(e)}"
@@ -465,8 +507,8 @@ class Chatbot:
             status = "❌ 오류가 발생했습니다."
 
         # 채팅 제목 생성 (필요 시)
-        if chat_title is None and len(current_history) >= 2: # 시스템 메시지 포함 최소 2개 이상일 때
-             # 첫 번째 사용자 메시지 찾기
+        if chat_title is None and len(current_history) >= 2:  # 시스템 메시지 포함 최소 2개 이상일 때
+            # 첫 번째 사용자 메시지 찾기
             first_user_msg = next((msg for msg in current_history if msg["role"] == "user"), None)
             if first_user_msg:
                 # Determine model type for self-provided models
@@ -511,7 +553,7 @@ class Chatbot:
             return "mlx"
         else:
             return "transformers"
-    
+
     @staticmethod
     def filter_messages_for_chatbot(history: list[dict[str, str | Any]]) -> list[dict[str, str | Any]]:
         """
@@ -553,18 +595,15 @@ class Chatbot:
                     gr.update(visible=False),  # reset_modal
                     gr.update(visible=False),  # single_content
                     gr.update(visible=False),  # all_content
-                    gr.update(),               # msg
-                    history,                   # history 유지
-                    chatbot,                   # chatbot 유지
+                    gr.update(),  # msg
+                    history,  # history 유지
+                    chatbot,  # chatbot 유지
                     "❌ 세션 초기화에 실패했습니다.",  # status
                     gr.update(choices=sessions, value=session_id),  # session_dropdown
                 )
 
             # 새로운 시스템 메시지로 히스토리 초기화
-            default_system = {
-                "role": "system",
-                "content": system_message_default
-            }
+            default_system = {"role": "system", "content": system_message_default}
             new_history = [default_system]
 
             # 새 히스토리 저장 (선택된 캐릭터도 함께 저장)
@@ -578,9 +617,9 @@ class Chatbot:
                 gr.update(visible=False),  # reset_modal
                 gr.update(visible=False),  # single_content
                 gr.update(visible=False),  # all_content
-                "",                        # msg
-                new_history,               # new_history
-                chatbot_history,           # filtered chatbot messages
+                "",  # msg
+                new_history,  # new_history
+                chatbot_history,  # filtered chatbot messages
                 "✅ 세션이 초기화되었습니다.",  # status
                 gr.update(choices=sessions, value=session_id),  # session_dropdown
             )
@@ -592,9 +631,9 @@ class Chatbot:
                 gr.update(visible=False),  # reset_modal
                 gr.update(visible=False),  # single_content
                 gr.update(visible=False),  # all_content
-                "",                        # msg
-                history,                   # history 유지
-                chatbot,                   # chatbot 유지
+                "",  # msg
+                history,  # history 유지
+                chatbot,  # chatbot 유지
                 f"❌ 세션 초기화 중 오류가 발생했습니다: {str(e)}",  # status
                 gr.update(choices=sessions, value=session_id),  # session_dropdown
             )
@@ -621,19 +660,16 @@ class Chatbot:
                     gr.update(visible=False),  # reset_modal
                     gr.update(visible=False),  # single_content
                     gr.update(visible=False),  # all_content
-                    gr.update(),               # msg
-                    history,                   # history 유지
-                    chatbot,                   # chatbot 유지
+                    gr.update(),  # msg
+                    history,  # history 유지
+                    chatbot,  # chatbot 유지
                     "❌ 모든 세션 초기화에 실패했습니다.",  # status
                     gr.update(choices=sessions, value="demo_session"),  # session_dropdown
-                    "demo_session",            # session_id
+                    "demo_session",  # session_id
                 )
 
             # 새로운 시스템 메시지로 히스토리 초기화
-            default_system = {
-                "role": "system",
-                "content": system_message_default
-            }
+            default_system = {"role": "system", "content": system_message_default}
             new_history = [default_system]
 
             # demo_session에 대해 새 히스토리 저장 (기본 캐릭터로)
@@ -647,12 +683,12 @@ class Chatbot:
                 gr.update(visible=False),  # reset_modal
                 gr.update(visible=False),  # single_content
                 gr.update(visible=False),  # all_content
-                "",                        # msg
-                new_history,               # new_history
-                chatbot_history,           # filtered chatbot messages
+                "",  # msg
+                new_history,  # new_history
+                chatbot_history,  # filtered chatbot messages
                 "✅ 모든 세션이 초기화되었습니다.",  # status
                 gr.update(choices=sessions, value="demo_session"),  # session_dropdown
-                "demo_session",            # session_id
+                "demo_session",  # session_id
             )
 
         except Exception as e:
@@ -662,12 +698,12 @@ class Chatbot:
                 gr.update(visible=False),  # reset_modal
                 gr.update(visible=False),  # single_content
                 gr.update(visible=False),  # all_content
-                "",                        # msg
-                history,                   # history 유지
-                chatbot,                   # chatbot 유지
+                "",  # msg
+                history,  # history 유지
+                chatbot,  # chatbot 유지
                 f"❌ 모든 세션 초기화 중 오류가 발생했습니다: {str(e)}",  # status
                 gr.update(choices=sessions, value="demo_session"),  # session_dropdown
-                "demo_session",            # session_id
+                "demo_session",  # session_id
             )
 
     def refresh_preset_list(self, language: str | None = None):
@@ -700,10 +736,7 @@ class Chatbot:
         새 세션을 생성하고 DB에 기본 system_message를 저장합니다.
         """
         new_sid = secrets.token_hex(8)
-        system_message = {
-            "role": "system",
-            "content": system_message_box_value
-        }
+        system_message = {"role": "system", "content": system_message_box_value}
 
         new_history = [system_message]
         # DB에 저장
@@ -726,7 +759,7 @@ class Chatbot:
             system_message,  # temp_system_message
             selected_character,  # temp_character
             [],  # empty chatbot display
-            "New Chat - 메시지를 입력하면 새 세션이 생성됩니다."  # status
+            "New Chat - 메시지를 입력하면 새 세션이 생성됩니다.",  # status
         )
 
     @staticmethod
@@ -740,7 +773,7 @@ class Chatbot:
         selected_lora: str,
         custom_path: str,
         device: str,
-        image_input=None
+        image_input=None,
     ):
         """
         임시 세션을 실제 세션으로 변환합니다.
@@ -756,15 +789,7 @@ class Chatbot:
         title = None
         try:
             title = generate_chat_title(
-                first_message=first_message_content,
-                selected_model=selected_model,
-                model_type=model_type,
-                provider=provider,
-                selected_lora=selected_lora,
-                local_model_path=custom_path if selected_model == "사용자 지정 모델 경로 변경" else None,
-                lora_path=None,
-                device=device,
-                image_input=image_input
+                first_message=first_message_content, selected_model=selected_model, model_type=model_type, provider=provider, selected_lora=selected_lora, local_model_path=custom_path if selected_model == "사용자 지정 모델 경로 변경" else None, lora_path=None, device=device, image_input=image_input
             )
         except Exception as e:
             logger.warning(f"Failed to generate chat title: {e}")
@@ -804,19 +829,25 @@ class Chatbot:
         with sqlite3.connect("chat_history.db") as conn:
             cursor = conn.cursor()
             # 먼저 last_character 조회
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT last_character FROM sessions WHERE id = ?
-            """, (chosen_sid,))
+            """,
+                (chosen_sid,),
+            )
             row = cursor.fetchone()
             if row and row[0]:
                 last_character = row[0]
 
             # last_activity 갱신
-            cursor.execute("""
+            cursor.execute(
+                """
                 UPDATE sessions
                 SET last_activity = CURRENT_TIMESTAMP
                 WHERE id = ?
-            """, (chosen_sid,))
+            """,
+                (chosen_sid,),
+            )
             conn.commit()
 
         return loaded_history, chosen_sid, last_character, f"세션 {chosen_sid}이 적용되었습니다."
@@ -833,14 +864,14 @@ class Chatbot:
             return (
                 gr.update(visible=True),  # modal visible
                 "삭제할 세션을 선택하세요.",  # error message
-                gr.update()  # no dropdown update
+                gr.update(),  # no dropdown update
             )
 
         if chosen_sid == current_sid:
             return (
                 gr.update(visible=True),  # modal visible
                 f"현재 활성 세션 '{chosen_sid}'은(는) 삭제할 수 없습니다.",  # error message
-                gr.update()  # no dropdown update
+                gr.update(),  # no dropdown update
             )
 
         try:
@@ -857,14 +888,14 @@ class Chatbot:
             return (
                 gr.update(visible=False),  # hide modal
                 f"세션 '{chosen_sid}'이(가) 삭제되었습니다.",  # success message
-                gr.update(choices=sessions, value=sessions[0] if sessions else None)  # update dropdown
+                gr.update(choices=sessions, value=sessions[0] if sessions else None),  # update dropdown
             )
         except Exception as e:
             logger.error(f"세션 삭제 오류: {e}")
             return (
                 gr.update(visible=True),  # keep modal visible
                 f"세션 삭제 실패: {e}",  # error message
-                gr.update()  # no dropdown update
+                gr.update(),  # no dropdown update
             )
 
     def initial_load_presets(self, language: str | None = None):
@@ -874,17 +905,13 @@ class Chatbot:
         presets = get_preset_choices(language)
         return gr.update(choices=presets, value=presets[0] if presets else None)
 
-
     def process_character_conversation(self, history: list[dict[str, str | Any]], selected_characters: str, model_type: str, selected_model: str, custom_path: str, image, api_key: str, device: str, seed: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float):
         try:
             for i, character in enumerate(selected_characters):
                 # 각 캐릭터의 시스템 메시지 설정
-                system_message = {
-                    "role": "system",
-                    "content": translation_manager.get_character_setting(character)
-                }
+                system_message = {"role": "system", "content": translation_manager.get_character_setting(character)}
                 history.append(system_message)
-                
+
                 # 캐릭터의 응답 생성
                 answer = generate_answer(
                     history=history,
@@ -899,18 +926,14 @@ class Chatbot:
                     top_k=top_k,
                     top_p=top_p,
                     repetition_penalty=repetition_penalty,
-                    character_language=translation_manager.current_language
+                    character_language=translation_manager.current_language,
                 )
-                
-                history.append({
-                    "role": "assistant",
-                    "content": answer,
-                    "character": character
-                })
-            
+
+                history.append({"role": "assistant", "content": answer, "character": character})
+
             # 데이터베이스에 히스토리 저장
             save_chat_history_db(history, session_id="character_conversation")
-            
+
             # 프로필 이미지는 None으로 반환
             return history, None  # 여기서 None을 반환하도록 수정
 
@@ -918,7 +941,7 @@ class Chatbot:
             logger.error(f"Error generating character conversation: {str(e)}", exc_info=True)
             history.append({"role": "assistant", "content": f"❌ 오류 발생: {str(e)}", "character": "System"})
             return history, None  # 오류 발생시에도 None 반환
-    
+
     @staticmethod
     def toggle_api_key_visibility(provider: str | gr.Dropdown) -> bool:
         """
@@ -932,18 +955,18 @@ class Chatbot:
         LOCAL_PROVIDERS = {"ollama", "lmstudio", "vllm-api", "oobabooga", "local-ai"}
 
         file_types = COMMON_FILE_TYPES
-        sources = ['upload']
+        sources = ["upload"]
 
         model_name_lower = selected_model.lower() if selected_model else ""
         if any(x in model_name_lower for x in IS_OMNI_API):
             file_types = MULTIMODAL_OMNI_FILE_TYPES
-            sources = ['upload', 'microphone']
+            sources = ["upload", "microphone"]
         elif any(x in model_name_lower for x in IS_MULTIMODAL_API):
             file_types = MULTIMODAL_VISION_FILE_TYPES
 
         # elif provider == "self-provided":
         #     # 로컬 모델: AutoConfig로 아키텍처 확인
-        #     model_name_lower = 
+        #     model_name_lower =
         #     try:
         #         arch = AutoConfig.from_pretrained(
         #             os.path.join("./models/llm", selected_model)
@@ -959,7 +982,9 @@ class Chatbot:
         return gr.update(file_types=file_types, sources=sources)
 
     def toggle_standard_msg_input_visibility(self, selected_model: str | gr.Dropdown) -> bool:
-        msg_visible = all(x not in selected_model.lower() for x in [
+        msg_visible = all(
+            x not in selected_model.lower()
+            for x in [
                 "claude",
                 "gpt-4o",
                 "gpt-4.1",
@@ -987,7 +1012,9 @@ class Chatbot:
         return gr.update(visible=msg_visible)
 
     def toggle_multimodal_msg_input_visibility(self, selected_model: str | gr.Dropdown) -> bool:
-        msg_visible = any(x in selected_model.lower() for x in [
+        msg_visible = any(
+            x in selected_model.lower()
+            for x in [
                 "claude",
                 "gpt-4o",
                 "gpt-4.1",
@@ -1038,7 +1065,7 @@ class Chatbot:
         """
         lora_visible = "self-provided" in provider.lower()
         return gr.update(visible=lora_visible)
-    
+
     @staticmethod
     def toggle_enable_thinking_visibility(selected_model: str | gr.Dropdown) -> bool:
         """
@@ -1055,7 +1082,7 @@ class Chatbot:
         transformers_local = local_models_data["transformers"]
         gguf_local = local_models_data["gguf"]
         mlx_local = local_models_data["mlx"]
-        
+
         if provider != "self-provided":
             if provider == "openai":
                 updated_list = openai_llm_api_models
@@ -1083,16 +1110,16 @@ class Chatbot:
             #     updated_list = oobabooga_llm_models
 
             updated_list = sorted(list(dict.fromkeys(updated_list)))
-            return gr.update(visible='hidden'), gr.update(choices=updated_list, value=updated_list[0] if updated_list else None)
-        
-        else: # elif provider == "self-provided"
+            return gr.update(visible="hidden"), gr.update(choices=updated_list, value=updated_list[0] if updated_list else None)
+
+        else:  # elif provider == "self-provided"
             # "전체 목록"이면 => API 모델 + 모든 로컬 모델 + "사용자 지정 모델 경로 변경"
             if selected_type == "all":
                 all_models = self.update_allowed_models()
                 all_models = sorted(list(dict.fromkeys(all_models)))
                 # 중복 제거 후 정렬
                 return gr.update(visible=True), gr.update(choices=all_models, value=all_models[0] if all_models else None)
-            
+
             # 개별 로컬 모델 유형 선택
             elif selected_type == "transformers":
                 updated_list = transformers_local
@@ -1104,10 +1131,10 @@ class Chatbot:
                 updated_list = mlx_local
             else:
                 updated_list = transformers_local
-            
+
             updated_list = sorted(list(dict.fromkeys(updated_list)))
             return gr.update(visible=True), gr.update(choices=updated_list, value=updated_list[0] if updated_list else None)
-    
+
     def update_allowed_models(self):
         if self.os_name == "Darwin":
             return transformers_local + vllm_local + gguf_local + mlx_local
@@ -1144,22 +1171,9 @@ class Chatbot:
         """
         try:
             if self.reset_type == "single":
-                result = self.reset_session(
-                    history=history,
-                    chatbot=self.filter_messages_for_chatbot(history),
-                    system_message_default=system_msg,
-                    selected_character=selected_character,
-                    language=language,
-                    session_id=session_id
-                )
+                result = self.reset_session(history=history, chatbot=self.filter_messages_for_chatbot(history), system_message_default=system_msg, selected_character=selected_character, language=language, session_id=session_id)
             else:  # reset_type == "all"
-                result = self.reset_all_sessions(
-                    history=history,
-                    chatbot=self.filter_messages_for_chatbot(history),
-                    system_message_default=system_msg,
-                    selected_character=selected_character,
-                    language=language
-                )
+                result = self.reset_all_sessions(history=history, chatbot=self.filter_messages_for_chatbot(history), system_message_default=system_msg, selected_character=selected_character, language=language)
 
             # 모달 업데이트와 결과를 함께 반환
             return result
@@ -1172,31 +1186,28 @@ class Chatbot:
                 gr.update(visible=False),  # reset_modal
                 gr.update(visible=False),  # single_content
                 gr.update(visible=False),  # all_content
-                "",                        # msg
-                history,                   # 현재 history 유지
+                "",  # msg
+                history,  # 현재 history 유지
                 self.filter_messages_for_chatbot(history),  # 현재 chatbot 상태 유지
                 f"❌ 초기화 중 오류가 발생했습니다: {str(e)}",  # status
                 gr.update(choices=sessions, value=session_id),  # session_dropdown
             )
-        
+
     @staticmethod
     def create_reset_confirm_modal():
         """초기화 확인 모달 생성"""
         with gr.Column(visible=False, elem_classes="reset-confirm-modal") as reset_modal:
-            gr.Markdown(f"# {_("reset_confirm_title")}", elem_classes="reset-confirm-title")
+            gr.Markdown(f"# {_('reset_confirm_title')}", elem_classes="reset-confirm-title")
             with gr.Column() as single_reset_content:
-                gr.Markdown(_("reset_confirm_current_message"), 
-                        elem_classes="reset-confirm-message")
+                gr.Markdown(_("reset_confirm_current_message"), elem_classes="reset-confirm-message")
             with gr.Column(visible=False) as all_reset_content:
-                gr.Markdown(_("reset_confirm_all_message"), 
-                        elem_classes="reset-confirm-message")
+                gr.Markdown(_("reset_confirm_all_message"), elem_classes="reset-confirm-message")
             with gr.Row(elem_classes="reset-confirm-buttons"):
                 cancel_btn = gr.Button(_("cancel"), variant="secondary")
                 confirm_btn = gr.Button(_("ok"), variant="primary")
-                
-        return (reset_modal, single_reset_content, all_reset_content, 
-                cancel_btn, confirm_btn)
-    
+
+        return (reset_modal, single_reset_content, all_reset_content, cancel_btn, confirm_btn)
+
     @staticmethod
     def create_delete_session_modal():
         """삭제 확인 모달 생성"""
@@ -1206,9 +1217,9 @@ class Chatbot:
             with gr.Row(elem_classes="delete-session-buttons"):
                 cancel_btn = gr.Button("취소", variant="secondary")
                 confirm_btn = gr.Button("삭제", variant="stop")
-                    
+
         return delete_modal, message, cancel_btn, confirm_btn
-    
+
     def get_allowed_llm_models(self) -> tuple[list[str], list[str]]:
         if self.os_name == "Darwin":
             allowed = transformers_local + vllm_local + gguf_local + mlx_local
@@ -1219,7 +1230,7 @@ class Chatbot:
         else:
             allowed = transformers_local + vllm_local + gguf_local
             allowed_type = ["all", "transformers", "vllm-local", "gguf"]
-            
+
         allowed = list(dict.fromkeys(allowed))
-        
+
         return sorted(allowed), allowed_type

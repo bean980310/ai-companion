@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import gradio as gr
 # from gradio_i18n import gettext as _
 
@@ -5,38 +6,31 @@ import gradio as gr
 
 from ..common.translations import translation_manager, _
 from ..common.default_language import default_language
-from dataclasses import dataclass
 from ..start_app import ui_component
+
 
 @dataclass
 class HeaderUIComponent:
     title: gr.Markdown = gr.Markdown(f"## {_('main_title')}", elem_classes="title", render=False)
     settings_button: gr.Button = gr.Button("⚙️", elem_classes="settings-button", render=False)
     language_dropdown: gr.Dropdown = gr.Dropdown(
-                    label=_('language_select'),
-                    choices=["한국어", "日本語", "中文(简体)", "中文(繁體)", "English"],
-                    value=translation_manager.get_language_display_name(default_language),
-                    interactive=True,
-                    info=_('language_info'),
-                    container=False,
-                    elem_classes="language-selector",
-                    render=False
-                )
+        label=_("language_select"), choices=["한국어", "日本語", "中文(简体)", "中文(繁體)", "English"], value=translation_manager.get_language_display_name(default_language), interactive=True, info=_("language_info"), container=False, elem_classes="language-selector", render=False
+    )
     navbar: gr.Navbar = None
 
     @classmethod
     def create_header_container(cls, render=True):
         with gr.Row(elem_classes="header-container", scale=1, render=render) as head:
-            with gr.Column(scale=3, render=render, variant='panel'):
+            with gr.Column(scale=3, render=render, variant="panel"):
                 title = cls.title.render()
                 gr.Markdown("### Beta Release", render=render)
             with gr.Column(scale=1):
                 settings_button = cls.settings_button.render()
             with gr.Column(scale=1):
                 language_dropdown = cls.language_dropdown.render()
-        
+
         # navbar = gr.Navbar(main_page_name="Chat")
-        
+
         if title.is_rendered:
             if ui_component.title is not None:
                 pass
@@ -54,7 +48,7 @@ class HeaderUIComponent:
                 pass
             else:
                 ui_component.language_dropdown = language_dropdown
-        
+
         return cls(title, settings_button, language_dropdown)
 
     @classmethod

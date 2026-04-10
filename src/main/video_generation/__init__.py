@@ -1,1 +1,1 @@
-from ... import logger
+from ai_companion_core import logger

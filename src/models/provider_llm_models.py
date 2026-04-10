@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import os
 from typing import List
 import re
-from src import logger
-from ..common.environ_manager import load_env_variables
+
+from ai_companion_core import logger
+from ai_companion_core.environ_manager import load_env_variables
 
 
 class LocalModelNotFound(Exception):

@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 from typing import Any
 import torch
 from transformers import VitsTokenizer, VitsModel, set_seed, AutoModelForTextToWaveform
 import os
 import scipy
+
 
 def text_to_speech(model_id: str, inputs: str) -> Any:
     if model_id == "Put Your Models":
@@ -16,11 +19,11 @@ def text_to_speech(model_id: str, inputs: str) -> Any:
     inputs = tokenizer(text=inputs, return_tensors="pt")
 
     set_seed(555)
-    
+
     with torch.no_grad():
         outputs = model(**inputs)
-        
+
     waveform = outputs.waveform[0]
     scipy.io.wavfile.write("./tts_outputs/output.wav", rate=model.config.sampling_rate, data=waveform)
-    
+
     return waveform

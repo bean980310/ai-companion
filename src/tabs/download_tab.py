@@ -6,7 +6,7 @@ from huggingface_hub import HfApi
 from huggingface_hub_search import HuggingFaceHubSearch
 # from gradio_huggingfacehub_search import HuggingfaceHubSearch
 
-from .. import logger
+from ai_companion_core import logger
 
 from ..hub import TASKS, LIBRARIES, LANGUAGES_HUB
 

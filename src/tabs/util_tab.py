@@ -1,6 +1,6 @@
 import gradio as gr
 
-from ..common.utils import convert_and_save
+from ..utils.convert import convert_and_save
 
 
 def create_util_tab() -> None:

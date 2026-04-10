@@ -6,9 +6,11 @@ import asyncio
 import json
 from typing import Any, Dict, List, Optional
 
+from ai_companion_core import logger
+
 from src.common.translations import translation_manager, _
 from src.common_blocks import create_page_header, get_language_code
-from src import logger
+
 
 # Import MCP client components
 from src.mcp.client import MCPClientManager, MCPServerConfig, MCPTool, MCPToolResult
@@ -52,6 +54,7 @@ def add_mcp_server(name: str, url: str, transport: str, api_key: str, timeout: f
 
     try:
         import shlex
+
         # Parse args string into list
         args_list = shlex.split(args) if args else []
         # Parse env string (KEY=VALUE per line) into dict
@@ -125,9 +128,7 @@ def connect_to_server(server_name: str) -> tuple:
             tools = get_tools_display()
             servers = get_servers_display()
             return (
-                f"Connected to {server_name}. "
-                f"Discovered {len(mcp_manager.list_tools(server_name))} tools."
-                + (f"{reauth_msg}" if reauth_msg else ""),
+                f"Connected to {server_name}. Discovered {len(mcp_manager.list_tools(server_name))} tools." + (f"{reauth_msg}" if reauth_msg else ""),
                 gr.update(value=servers),
                 gr.update(value=tools),
             )
@@ -363,9 +364,10 @@ with gr.Blocks() as demo:
                 description_input = gr.Textbox(label="Description", placeholder="Description of this server")
                 enable_oauth_checkbox = gr.Checkbox(label="Use OAuth")
                 with gr.Column(visible=False) as oauth_details_column:
+                    gr.Markdown("**PKCE (Proof Key for Code Exchange)** is used for all OAuth flows. Public clients (no secret) rely on PKCE alone.")
                     oauth_provider_preset = gr.Dropdown(label="OAuth Provider Preset", choices=["(Custom)"] + list(OAUTH_PRESETS.keys()), value="(Custom)", interactive=True)
                     oauth_client_id_input = gr.Textbox(label="OAuth Client ID", placeholder="your-client-id")
-                    oauth_client_secret_input = gr.Textbox(label="OAuth Client Secret", type="password", placeholder="your-client-secret")
+                    oauth_client_secret_input = gr.Textbox(label="OAuth Client Secret (optional for public clients)", type="password", placeholder="Leave empty for public client (PKCE only)")
                     oauth_issuer_input = gr.Textbox(label="Issuer", placeholder="https://github.com")
                     oauth_auth_endpoint_input = gr.Textbox(label="Authorization Endpoint", placeholder="https://github.com/login/oauth/authorize")
                     oauth_token_endpoint_input = gr.Textbox(label="Token Endpoint", placeholder="https://github.com/login/oauth/access_token")
@@ -454,9 +456,9 @@ with gr.Blocks() as demo:
         is_stdio = transport_val == "stdio"
         return (
             gr.update(visible=not is_stdio),  # http_fields_column
-            gr.update(visible=is_stdio),       # stdio_fields_column
-            gr.update(visible=not is_stdio),   # oauth checkbox (not for STDIO)
-            gr.update(visible=False),          # oauth details column
+            gr.update(visible=is_stdio),  # stdio_fields_column
+            gr.update(visible=not is_stdio),  # oauth checkbox (not for STDIO)
+            gr.update(visible=False),  # oauth details column
         )
 
     transport_dropdown.change(
@@ -485,10 +487,43 @@ with gr.Blocks() as demo:
     # Event handlers
     add_server_btn.click(
         fn=add_mcp_server,
-        inputs=[server_name_input, server_url_input, transport_dropdown, api_key_input, timeout_input, description_input, command_input, args_input, env_input, enable_oauth_checkbox, oauth_client_id_input, oauth_client_secret_input, oauth_issuer_input, oauth_auth_endpoint_input, oauth_token_endpoint_input, oauth_scopes_input],
+        inputs=[
+            server_name_input,
+            server_url_input,
+            transport_dropdown,
+            api_key_input,
+            timeout_input,
+            description_input,
+            command_input,
+            args_input,
+            env_input,
+            enable_oauth_checkbox,
+            oauth_client_id_input,
+            oauth_client_secret_input,
+            oauth_issuer_input,
+            oauth_auth_endpoint_input,
+            oauth_token_endpoint_input,
+            oauth_scopes_input,
+        ],
         outputs=[servers_table, status_text, server_select],
     ).then(
-        fn=lambda: (gr.update(value=""), gr.update(value=""), gr.update(value="sse"), gr.update(value=""), gr.update(value=30.0), gr.update(value=""), gr.update(value=""), gr.update(value=""), gr.update(value=""), gr.update(value=False), gr.update(value=""), gr.update(value=""), gr.update(value=""), gr.update(value=""), gr.update(value="")),
+        fn=lambda: (
+            gr.update(value=""),
+            gr.update(value=""),
+            gr.update(value="sse"),
+            gr.update(value=""),
+            gr.update(value=30.0),
+            gr.update(value=""),
+            gr.update(value=""),
+            gr.update(value=""),
+            gr.update(value=""),
+            gr.update(value=False),
+            gr.update(value=""),
+            gr.update(value=""),
+            gr.update(value=""),
+            gr.update(value=""),
+            gr.update(value=""),
+        ),
         outputs=[server_name_input, server_url_input, transport_dropdown, api_key_input, timeout_input, description_input, command_input, args_input, env_input, enable_oauth_checkbox, oauth_client_id_input, oauth_client_secret_input, oauth_auth_endpoint_input, oauth_token_endpoint_input, oauth_scopes_input],
     ).then(fn=lambda: gr.update(choices=get_server_names()), outputs=[server_select])
 

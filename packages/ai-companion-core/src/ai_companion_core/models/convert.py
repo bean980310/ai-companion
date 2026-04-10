@@ -2,36 +2,12 @@
 
 import os
 import traceback
-from ..logging import logger
+
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, MetalConfig, AwqConfig, GPTQConfig
 
-import gguf
 
-ftype_map: dict[str, gguf.LlamaFileType] = {
-    "f32": gguf.LlamaFileType.ALL_F32,
-    "f16": gguf.LlamaFileType.MOSTLY_F16,
-    "bf16": gguf.LlamaFileType.MOSTLY_BF16,
-    "q8_0": gguf.LlamaFileType.MOSTLY_Q8_0,
-    "q4_K_M": gguf.LlamaFileType.MOSTLY_Q4_K_M,
-    "q4_K_S": gguf.LlamaFileType.MOSTLY_Q4_K_S,
-    "q4_1": gguf.LlamaFileType.MOSTLY_Q4_1,
-    "q4_0": gguf.LlamaFileType.MOSTLY_Q4_0,
-    "q5_K_M": gguf.LlamaFileType.MOSTLY_Q5_K_M,
-    "q5_K_S": gguf.LlamaFileType.MOSTLY_Q5_K_S,
-    "q6_K": gguf.LlamaFileType.MOSTLY_Q6_K,
-    "iq3_M": gguf.LlamaFileType.MOSTLY_IQ3_M,
-    "iq3_S": gguf.LlamaFileType.MOSTLY_IQ3_S,
-    "iq3_XS": gguf.LlamaFileType.MOSTLY_IQ3_XS,
-    "iq3_XXS": gguf.LlamaFileType.MOSTLY_IQ3_XXS,
-    "iq2_M": gguf.LlamaFileType.MOSTLY_IQ2_M,
-    "iq2_S": gguf.LlamaFileType.MOSTLY_IQ2_S,
-    "iq2_XS": gguf.LlamaFileType.MOSTLY_IQ2_XS,
-    "iq2_XXS": gguf.LlamaFileType.MOSTLY_IQ2_XXS,
-    "tq1_0": gguf.LlamaFileType.MOSTLY_TQ1_0,
-    "tq2_0": gguf.LlamaFileType.MOSTLY_TQ2_0,
-    "auto": gguf.LlamaFileType.GUESSED,
-}
+from ..logging import logger
 
 
 def convert_model_bnb_4bit(model_id: str, output_dir: str, push_to_hub: float = False, qbit=4):

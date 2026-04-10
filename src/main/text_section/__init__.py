@@ -1,4 +1,5 @@
-import gradio as gr
+from __future__ import annotations
+from gradio as gr
 
 from ..chatbot import (
     Chatbot, 

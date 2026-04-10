@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import gradio as gr
 # from gradio_i18n import gettext as _
 
@@ -6,12 +8,12 @@ import gradio as gr
 
 from ..common.translations import translation_manager, _
 from ..common.default_language import default_language
-from dataclasses import dataclass
 from ..start_app import ui_component
 from .. import __version__
 
+
 @dataclass
-class NavbarUIComponent():
+class NavbarUIComponent:
     navbar: gr.Navbar = gr.Navbar(value=[("Chat", "chat"), ("Image Gen", "image"), ("Storyteller", "story"), ("TTS", "tts"), ("Translator", "translate"), ("Download", "download"), ("Settings", "settings")], render=False)
 
     @classmethod

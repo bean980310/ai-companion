@@ -1,8 +1,12 @@
+from __future__ import annotations
+
 import os
 from typing import List
 import re
-from src import logger
-from ..common.environ_manager import load_env_variables
+
+from ai_companion_core import logger
+from ai_companion_core.environ_manager import load_env_variables
+
 
 def get_openai_asr_models(api_key: str = None):
     import openai
@@ -31,6 +35,7 @@ def get_openai_asr_models(api_key: str = None):
         model_list.append(f"OpenAI API 오류 발생: {e}")
         return model_list
 
+
 def get_openai_tts_models(api_key: str = None):
     import openai
     from openai import OpenAI
@@ -57,6 +62,7 @@ def get_openai_tts_models(api_key: str = None):
     except openai.AuthenticationError as e:
         model_list.append(f"OpenAI API 오류 발생: {e}")
         return model_list
+
 
 def get_openai_audio_models(api_key: str = None):
     import openai
@@ -85,6 +91,7 @@ def get_openai_audio_models(api_key: str = None):
         model_list.append(f"OpenAI API 오류 발생: {e}")
         return model_list
 
+
 def get_openai_realtime_models(api_key: str = None):
     import openai
     from openai import OpenAI
@@ -111,6 +118,7 @@ def get_openai_realtime_models(api_key: str = None):
     except openai.AuthenticationError as e:
         model_list.append(f"OpenAI API 오류 발생: {e}")
         return model_list
+
 
 def get_google_genai_tts_models(api_key: str = None):
     from google import genai

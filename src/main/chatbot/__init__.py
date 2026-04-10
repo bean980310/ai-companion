@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+
 import gradio as gr
 
 from .chatbot import Chatbot
@@ -7,10 +11,10 @@ from .component import ChatbotComponent
 
 from ... import os_name, arch
 from ...start_app import app_state, ui_component
-from dataclasses import dataclass
 
 chat_bot = Chatbot()
 chat_component = ChatbotComponent()
+
 
 @dataclass
 class ChatbotMain:
@@ -29,12 +33,12 @@ class ChatbotMain:
     @classmethod
     def share_allowed_llm_models(cls):
         initial_choices, llm_type_choices = chat_bot.get_allowed_llm_models()
-        
+
         app_state.initial_choices = initial_choices
         app_state.llm_type_choices = llm_type_choices
 
         return cls(initial_choices=initial_choices, llm_type_choices=llm_type_choices)
-        
+
         # return initial_choices, llm_type_choices
 
     @classmethod
@@ -47,27 +51,27 @@ class ChatbotMain:
 
     @staticmethod
     def apply_session_immediately(chosen_sid):
-            """
-            메인탭에서 세션이 선택되면 바로 main_tab.apply_session을 호출해 세션 적용.
-            """
-            return chat_bot.apply_session(chosen_sid)
+        """
+        메인탭에서 세션이 선택되면 바로 main_tab.apply_session을 호출해 세션 적용.
+        """
+        return chat_bot.apply_session(chosen_sid)
 
     @classmethod
     def create_chat_container(cls):
-        with gr.Column(elem_classes='tab-container') as chat_container:
+        with gr.Column(elem_classes="tab-container") as chat_container:
             with gr.Row(elem_classes="model-container"):
                 gr.Markdown("### Chat")
-            
+
             # Create status bar components (not rendered)
             chat_body_status = chat_component.create_chat_container_status_bar(render=False)
 
             with gr.Row(elem_classes="chat-interface"):
                 col_main = gr.Column(scale=7)
                 col_side = gr.Column(scale=3, elem_classes="side-panel")
-            
+
             with col_side:
                 chat_body_side = chat_component.create_chat_container_side_panel()
-            
+
             additional_inputs = [
                 app_state.session_id_state,
                 ui_component.character_dropdown,
@@ -89,10 +93,7 @@ class ChatbotMain:
             ]
 
             with col_main:
-                chat_body_main = chat_component.create_chat_container_main_panel(
-                    chat_wrapper_fn=chat_bot.chat_wrapper,
-                    additional_inputs=additional_inputs
-                )
+                chat_body_main = chat_component.create_chat_container_main_panel(chat_wrapper_fn=chat_bot.chat_wrapper, additional_inputs=additional_inputs)
 
             with gr.Row(elem_classes="status-bar"):
                 chat_body_status.status_text.render()
@@ -103,20 +104,20 @@ class ChatbotMain:
 
     @classmethod
     def create_chat_container_2(cls):
-        with gr.Tab("Chat", elem_classes='tab-container') as chat_tab:
+        with gr.Tab("Chat", elem_classes="tab-container") as chat_tab:
             with gr.Row(elem_classes="model-container"):
                 gr.Markdown("### Chat")
-            
+
             # Create status bar components (not rendered)
             chat_body_status = chat_component.create_chat_container_status_bar()
 
             with gr.Row(elem_classes="chat-interface"):
                 col_main = gr.Column(scale=7)
                 col_side = gr.Column(scale=3, elem_classes="side-panel")
-            
+
             with col_side:
                 chat_body_side = chat_component.create_chat_container_side_panel()
-            
+
             additional_inputs = [
                 app_state.session_id_state,
                 ui_component.character_dropdown,
@@ -138,10 +139,7 @@ class ChatbotMain:
             ]
 
             with col_main:
-                chat_body_main = chat_component.create_chat_container_main_panel(
-                    chat_wrapper_fn=Chatbot().chat_wrapper,
-                    additional_inputs=additional_inputs
-                )
+                chat_body_main = chat_component.create_chat_container_main_panel(chat_wrapper_fn=Chatbot().chat_wrapper, additional_inputs=additional_inputs)
 
             with gr.Row(elem_classes="status-bar"):
                 chat_body_status.status_text.render()

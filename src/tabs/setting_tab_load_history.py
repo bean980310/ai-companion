@@ -1,14 +1,16 @@
 import json
 import gradio as gr
 
-from .. import logger
+from ai_companion_core import logger
+
 from ..start_app import app_state
+
 
 def create_load_history_tab():
     with gr.Tab("채팅 히스토리 재로드"):
         upload_json = gr.File(label="대화 JSON 업로드", file_types=[".json"])
         load_info = gr.Textbox(label="로딩 결과", interactive=False)
-                        
+
         def load_chat_from_json(json_file):
             """
             업로드된 JSON 파일을 파싱하여 history_state에 주입
@@ -26,8 +28,4 @@ def create_load_history_tab():
                 logger.error(f"JSON 로드 오류: {e}")
                 return [], f"❌ 로딩 실패: {e}"
 
-        upload_json.change(
-            fn=load_chat_from_json,
-            inputs=[upload_json],
-            outputs=[app_state.history_state, load_info]
-        )
+        upload_json.change(fn=load_chat_from_json, inputs=[upload_json], outputs=[app_state.history_state, load_info])

@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 from io import BytesIO
 import numpy as np
 import torch
 import PIL
+
 # import tensorflow as tf
 # import tf_keras as keras
 # import keras
@@ -9,6 +12,7 @@ from typing import Callable, Any
 from PIL import Image, ImageOps, ImageFilter, ImageFile, ImageSequence, UnidentifiedImageError
 import datetime
 import os
+
 
 class ImageProcessor:
     def __init__(self):
@@ -28,7 +32,6 @@ class ImageProcessor:
     # @classmethod
     # def read_image_for_inpaint(cls, img_list, original_img):
 
-        
     @staticmethod
     def read_image_from_pil(img: Image.Image) -> tuple[str, bytes]:
         fp = BytesIO()
@@ -40,7 +43,7 @@ class ImageProcessor:
     @staticmethod
     def read_image_from_bytes(img_bytes: bytes | bytearray):
         return Image.open(BytesIO(img_bytes))
-    
+
     def read_image_from_str(self, img_path: str) -> tuple[str, bytes]:
         im = self.open_image(img_path)
         im.filename = os.path.basename(img_path)
@@ -52,17 +55,17 @@ class ImageProcessor:
         if isinstance(img_array, torch.Tensor):
             img_array = img_array.detach().cuda().numpy() if torch.cuda.is_available() else img_array.detach().cpu().numpy()
         return Image.fromarray(np.uint8(img_array))
-    
+
     @staticmethod
     def get_mask(img: Image.Image) -> Image.Image:
         if not isinstance(img, Image.Image):
             raise ValueError("Input must be a PIL Image")
         return img.getchannel("A")
-    
+
     @staticmethod
     def get_data(im: ImageFile.ImageFile):
         return im.fp, im.filename
-    
+
     @staticmethod
     def open_image(img_path: str) -> ImageFile.ImageFile:
         return Image.open(img_path)
@@ -76,12 +79,12 @@ class ImageProcessor:
         output_masks = []
         w, h = None, None
 
-        excluded_formats = ['MPO']
+        excluded_formats = ["MPO"]
 
         for i in ImageSequence.Iterator(img):
             i = ImageOps.exif_transpose(i)
 
-            if i.mode == 'I':
+            if i.mode == "I":
                 i = i.point(lambda i: i * (1 / 255))
             image = i.convert("RGB")
 
@@ -94,14 +97,14 @@ class ImageProcessor:
 
             image = np.array(image).astype(np.float32) / 255.0
             image = torch.from_numpy(image)[None,]
-            if 'A' in i.getbands():
-                mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
-                mask = 1. - torch.from_numpy(mask)
-            elif i.mode == 'P' and 'transparency' in i.info:
-                mask = np.array(i.convert('RGBA').getchannel('A')).astype(np.float32) / 255.0
-                mask = 1. - torch.from_numpy(mask)
+            if "A" in i.getbands():
+                mask = np.array(i.getchannel("A")).astype(np.float32) / 255.0
+                mask = 1.0 - torch.from_numpy(mask)
+            elif i.mode == "P" and "transparency" in i.info:
+                mask = np.array(i.convert("RGBA").getchannel("A")).astype(np.float32) / 255.0
+                mask = 1.0 - torch.from_numpy(mask)
             else:
-                mask = torch.zeros((64,64), dtype=torch.float32, device="cpu")
+                mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
             output_images.append(image)
             output_masks.append(mask.unsqueeze(0))
 

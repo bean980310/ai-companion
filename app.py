@@ -7,26 +7,29 @@ from pathlib import Path
 warnings.filterwarnings("ignore", module="gradio")
 warnings.filterwarnings("ignore", module="torchao")
 warnings.filterwarnings("ignore", module="torch")
-warnings.filterwarnings('ignore', module='pydantic')
+warnings.filterwarnings("ignore", module="pydantic")
 
 config_dir = Path.home() / ".ai-companion"
-env_file = config_dir  / ".env"
+env_file = config_dir / ".env"
 
 if not env_file.exists():
     config_dir.mkdir(exists_ok=True)
-    with open(env_file, 'w') as f:
-        f.write('')
+    with open(env_file, "w") as f:
+        f.write("")
 
 import gradio as gr
+
 # from gradio_i18n import Translate, translate_blocks, gettext as _
 # from src.common.html import css
+from gradio_sidebar_menu import SidebarMenu
 
+from ai_companion_core import logger
 
 from translations import i18n
 
 # gr.I18n(lang_store)
 
-from src import os_name, arch, is_wsl, args, __version__, logger
+from src import os_name, arch, is_wsl, args, __version__
 # from src.start_app import initialize_app
 # from src import app
 
@@ -39,20 +42,11 @@ from src.start_app import (
     # register_speech_manager_state, # moved to register_global_state
     # shared_on_app_start,
     register_global_state,
-    load_initial_data
+    load_initial_data,
 )
 
 # Import MCP tools
-from src.mcp.tools import (
-    chat_completion,
-    list_available_models,
-    list_chat_sessions,
-    get_chat_history,
-    translate_text,
-    summarize_text,
-    analyze_image,
-    generate_title
-)
+from src.mcp.tools import chat_completion, list_available_models, list_chat_sessions, get_chat_history, translate_text, summarize_text, analyze_image, generate_title
 
 # from src.main import header
 from src.main.chatbot import chat_main
@@ -77,13 +71,15 @@ from src.pages import audio, chat, image_gen, storyteller, translator, download,
 import importlib
 
 # Global Initialization
-# Creating a dummy block to run initialization if needed, 
+# Creating a dummy block to run initialization if needed,
 # or just running functions that don't require Gradio context (some might).
 # However, register_speech_manager_state() creates gr.State(), so it MUST be inside a Blocks context.
 # Since app.py is the main Blocks context, we should do it there.
 
+
 def initialize_global_state():
     register_global_state()
+
 
 # def render_page_layout(demo: gr.Blocks):
 #     """
@@ -106,11 +102,13 @@ def _reload_page_modules():
     from src.pages import header as _h, chat as _c, image_gen as _ig, storyteller as _s
     from src.pages import audio as _a, translator as _t, settings as _st, mcp_client as _mc
     from src.pages import download as _d, mcp_tools as _mt
+
     for mod in [_h, _c, _ig, _s, _a, _t, _st, _mc, _d, _mt]:
         importlib.reload(mod)
     header, chat, image_gen, storyteller = _h, _c, _ig, _s
     audio, translator, settings, mcp_client = _a, _t, _st, _mc
     download, mcp_tools = _d, _mt
+
 
 _reload_page_modules()
 
@@ -122,6 +120,9 @@ with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True) as demo:
 
     interface_list = [chat.demo, image_gen.demo, storyteller.demo, audio.demo, translator.demo, mcp_client.demo, download.demo, mcp_tools.demo]
     interface_names = ["Chat", "Image Gen", "Storyteller", "Audio", "Translator", "MCP Client", "Download", "MCP Tools"]
+    interface_ids = ["chat", "image_gen", "story", "audio", "translate", "mcp_client", "download", "mcp_tools"]
+    menu_data = [{"type": "item", "id": id, "label": name} for id, name in zip(interface_ids, interface_names)]
+    menu = SidebarMenu(menu_data=menu_data, value=interface_ids[0], open=True, position="left")
     with gr.Tabs():
         for interface, name in zip(interface_list, interface_names):
             with gr.TabItem(name):
@@ -137,33 +138,14 @@ with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True) as demo:
             close_settings_footer_btn = gr.Button("닫기", variant="secondary")
 
     # Open settings popup
-    ui_component.settings_button.click(
-        fn=lambda: gr.update(visible=True),
-        inputs=[],
-        outputs=[settings_popup]
-    )
+    ui_component.settings_button.click(fn=lambda: gr.update(visible=True), inputs=[], outputs=[settings_popup])
 
     # Close settings popup
-    close_settings_btn.click(
-        fn=lambda: gr.update(visible=False),
-        inputs=[],
-        outputs=[settings_popup]
-    )
+    close_settings_btn.click(fn=lambda: gr.update(visible=False), inputs=[], outputs=[settings_popup])
 
-    close_settings_footer_btn.click(
-        fn=lambda: gr.update(visible=False),
-        inputs=[],
-        outputs=[settings_popup]
-    )
+    close_settings_footer_btn.click(fn=lambda: gr.update(visible=False), inputs=[], outputs=[settings_popup])
 
-    header.language_dropdown.change(
-        fn=header.on_header_language_change,
-        inputs=[header.language_dropdown],
-        outputs=[
-            header.page_header.title,
-            header.language_dropdown
-        ]
-    ).then(
+    header.language_dropdown.change(fn=header.on_header_language_change, inputs=[header.language_dropdown], outputs=[header.page_header.title, header.language_dropdown]).then(
         fn=chat.on_chat_language_change,
         inputs=[header.language_dropdown, chat.character_dropdown],
         outputs=[
@@ -182,8 +164,8 @@ with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True) as demo:
             chat.text_repetition_penalty_slider,
             chat.reset_btn,
             chat.reset_all_btn,
-            app_state.selected_language_state
-        ]
+            app_state.selected_language_state,
+        ],
     ).then(
         fn=image_gen.on_image_gen_language_change,
         inputs=[header.language_dropdown],
@@ -193,7 +175,7 @@ with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True) as demo:
             image_gen.diffusion_model_dropdown,
             image_gen.diffusion_api_key_text,
             image_gen.diffusion_lora_multiselect,
-        ]
+        ],
     )
 
 # if __name__ == "__main__":
@@ -210,27 +192,35 @@ with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True) as demo:
 #     # initialize_app()
 #     app.demo.render()
 
-if __name__=="__main__":
+if __name__ == "__main__":
     if os_name == "Darwin" and arch == "x86_64":
-        raise EnvironmentError("ERROR: AI Companion for Local Machines no longer supports Intel CPU-based Macs.\nIf you are using an Intel CPU-based Macs, we recommend that you consider migrating to an Apple Silicon Based Macs or a Windows PC or Linux machine with an Nvidia GPU environment. If you have difficulty migrating from an Intel CPU-based Macs, you can use a companion application that supports Intel CPU-based Macs instead.")
+        raise EnvironmentError(
+            "ERROR: AI Companion for Local Machines no longer supports Intel CPU-based Macs.\nIf you are using an Intel CPU-based Macs, we recommend that you consider migrating to an Apple Silicon Based Macs or a Windows PC or Linux machine with an Nvidia GPU environment. If you have difficulty migrating from an Intel CPU-based Macs, you can use a companion application that supports Intel CPU-based Macs instead."
+        )
     if os_name == "Windows" and not is_wsl:
-        warnings.warn("AI Companion for Local Machines is optimized for UNIX/Linux kernel-based operating systems. While it can be used on Windows, GPU acceleration is unavailable when running directly on Windows. To properly use AI Companion for Local Machines on Windows, we recommend using it within a WSL2 environment.")
+        warnings.warn(
+            "AI Companion for Local Machines is optimized for UNIX/Linux kernel-based operating systems. While it can be used on Windows, GPU acceleration is unavailable when running directly on Windows. To properly use AI Companion for Local Machines on Windows, we recommend using it within a WSL2 environment."
+        )
     if args.listen:
-        host="0.0.0.0"
+        host = "0.0.0.0"
     else:
-        host="127.0.0.1"
-    
+        host = "127.0.0.1"
+
     # demo.queue().launch(debug=args.debug, share=args.share, inbrowser=args.inbrowser, server_name=host, server_port=args.port, mcp_server=args.mcp_server, pwa=args.pwa, i18n=i18n)
 
     demo.queue().launch(debug=args.debug, share=args.share, inbrowser=args.inbrowser, server_name=host, server_port=args.gradio_server_port, mcp_server=args.mcp_server, pwa=args.pwa, css_paths="html/css/style.css", i18n=i18n)
 else:
     if os_name == "Darwin" and arch == "x86_64":
-        raise EnvironmentError("ERROR: AI Companion for Local Machines no longer supports Intel CPU-based Macs.\nIf you are using an Intel CPU-based Macs, we recommend that you consider migrating to an Apple Silicon Based Macs or a Windows PC or Linux machine with an Nvidia GPU environment. If you have difficulty migrating from an Intel CPU-based Macs, you can use a companion application that supports Intel CPU-based Macs instead.")
+        raise EnvironmentError(
+            "ERROR: AI Companion for Local Machines no longer supports Intel CPU-based Macs.\nIf you are using an Intel CPU-based Macs, we recommend that you consider migrating to an Apple Silicon Based Macs or a Windows PC or Linux machine with an Nvidia GPU environment. If you have difficulty migrating from an Intel CPU-based Macs, you can use a companion application that supports Intel CPU-based Macs instead."
+        )
     if os_name == "Windows" and not is_wsl:
-        warnings.warn("AI Companion for Local Machines is optimized for UNIX/Linux kernel-based operating systems. While it can be used on Windows, GPU acceleration is unavailable when running directly on Windows. To properly use AI Companion for Local Machines on Windows, we recommend using it within a WSL2 environment.")
+        warnings.warn(
+            "AI Companion for Local Machines is optimized for UNIX/Linux kernel-based operating systems. While it can be used on Windows, GPU acceleration is unavailable when running directly on Windows. To properly use AI Companion for Local Machines on Windows, we recommend using it within a WSL2 environment."
+        )
     if args.listen:
-        host="0.0.0.0"
+        host = "0.0.0.0"
     else:
-        host="127.0.0.1"
+        host = "127.0.0.1"
 
     app = gr.mount_gradio_app(app, demo, path="/gradio", server_name=host, server_port=args.gradio_server_port, mcp_server=args.mcp_server, pwa=args.pwa, css_paths="html/css/style.css")

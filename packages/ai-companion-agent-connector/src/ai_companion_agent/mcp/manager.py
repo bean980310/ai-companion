@@ -5,21 +5,14 @@ import asyncio
 import json
 import os
 import traceback
-import glob
-from typing import Any, Dict, List, Optional, Callable, Union
+from typing import Any, Dict, List, Optional, Callable
 from pathlib import Path
+from contextlib import AsyncExitStack
 
 from src import logger
+from ai_companion_core.appdata import APPDATA_PATH
 
-from .models import (
-    MCPServerConfig,
-    MCPTool,
-    MCPToolResult,
-    MCPToolParameter,
-    MCPTransportType,
-    MCPResource,
-    MCPPrompt
-)
+from .models import MCPServerConfig, MCPTool, MCPToolResult, MCPToolParameter, MCPTransportType, MCPResource, MCPPrompt
 
 # MCP SDK imports
 try:
@@ -27,12 +20,15 @@ try:
     from mcp.client.sse import sse_client
     from mcp.client.stdio import stdio_client, StdioServerParameters
     from mcp.client.streamable_http import streamable_http_client
+    from mcp.shared._httpx_utils import create_mcp_http_client
+
     MCP_AVAILABLE = True
 except ImportError:
     MCP_AVAILABLE = False
     logger.warning("MCP SDK not available. Install with: pip install mcp")
 
-StrPath = Union[str, "os.PathLike[str]"]
+from .oauth import create_oauth_provider, FileTokenStorage, PKCEOAuthProvider, PKCEAuth
+
 
 class MCPClientManager:
     """
@@ -45,7 +41,7 @@ class MCPClientManager:
     - Managing server configurations
     """
 
-    def __init__(self, config_path: Optional[StrPath] = os.getenv('AI_COMPANION_MCP_CONFIG')):
+    def __init__(self, config_path: Optional[str] = None):
         """
         Initialize the MCP Client Manager.
 
@@ -53,12 +49,13 @@ class MCPClientManager:
             config_path: Path to the MCP servers configuration file.
                         Defaults to 'mcp_servers.json' in the project root.
         """
-        self.config_path = config_path
+        self.config_path = config_path or APPDATA_PATH / "mcp_servers.json"
         self.servers: Dict[str, MCPServerConfig] = {}
         self.sessions: Dict[str, ClientSession] = {}
         self.tools: Dict[str, MCPTool] = {}
         self.resources: Dict[str, MCPResource] = {}
         self.prompts: Dict[str, MCPPrompt] = {}
+        self.exit_stack = AsyncExitStack()
         self._connected_servers: set = set()
 
         # Load saved configurations
@@ -98,12 +95,7 @@ class MCPClientManager:
     def _save_config(self):
         """Save server configurations to file"""
         try:
-            data = {
-                "mcpServers": {
-                    server_id: server.to_dict()
-                    for server_id, server in self.servers.items()
-                }
-            }
+            data = {"mcpServers": {server_id: server.to_dict() for server_id, server in self.servers.items()}}
             with open(self.config_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
             logger.info(f"Saved {len(self.servers)} MCP server configurations")
@@ -125,6 +117,13 @@ class MCPClientManager:
         # Common fields
         timeout: float = 30.0,
         description: str = "",
+        oauth_enabled: bool = True,
+        oauth_client_id: Optional[str] = None,
+        oauth_client_secret: Optional[str] = None,
+        oauth_issuer: Optional[str] = None,
+        oauth_authorization_endpoint: Optional[str] = None,
+        oauth_token_endpoint: Optional[str] = None,
+        oauth_scopes: Optional[str] = None,
         save: bool = True,
         server_id: Optional[str] = None,
     ) -> MCPServerConfig:
@@ -142,6 +141,13 @@ class MCPClientManager:
             env: Environment variables (for STDIO transport)
             timeout: Connection timeout in seconds
             description: Human-readable description
+            oauth_enabled: Whether to use OAuth authentication
+            oauth_client_id: Pre-registered OAuth client ID (for GitHub, Google, etc.)
+            oauth_client_secret: Pre-registered OAuth client secret
+            oauth_issuer: OAuth issuer URL
+            oauth_authorization_endpoint: OAuth authorization endpoint URL
+            oauth_token_endpoint: OAuth token endpoint URL
+            oauth_scopes: Space-separated OAuth scopes
             save: Whether to persist the configuration
             server_id: Optional explicit server ID (defaults to kebab-case of name)
 
@@ -159,6 +165,14 @@ class MCPClientManager:
             env=env,
             timeout=timeout,
             description=description,
+            oauth_enabled=oauth_enabled,
+            oauth_client_name="AI Companion MCP Client",
+            oauth_client_id=oauth_client_id,
+            oauth_client_secret=oauth_client_secret,
+            oauth_issuer=oauth_issuer,
+            oauth_authorization_endpoint=oauth_authorization_endpoint,
+            oauth_token_endpoint=oauth_token_endpoint,
+            oauth_scopes=oauth_scopes,
         )
         sid = server_id or self._name_to_server_id(name)
         self.servers[sid] = config
@@ -187,10 +201,7 @@ class MCPClientManager:
 
             del self.servers[name]
             # Remove associated tools
-            self.tools = {
-                k: v for k, v in self.tools.items()
-                if v.server_name != name
-            }
+            self.tools = {k: v for k, v in self.tools.items() if v.server_name != name}
 
             if save:
                 self._save_config()
@@ -207,9 +218,67 @@ class MCPClientManager:
         """List all configured servers"""
         return list(self.servers.values())
 
+    def validate_server_token(self, server_name: str) -> bool:
+        """
+        Validate the stored OAuth token for a server.
+
+        Checks the token file in ~/.mcp/tokens/<server_name>/ for expiry.
+        If expired, the token files are deleted so the next connection
+        will trigger a fresh OAuth authentication flow.
+
+        Args:
+            server_name: Server ID to validate
+
+        Returns:
+            True if token is valid or no OAuth is used, False if expired (and cleared)
+        """
+        config = self.servers.get(server_name)
+        if not config:
+            return True
+
+        # Only relevant for OAuth-enabled servers
+        if not config.oauth_enabled:
+            return True
+
+        storage = FileTokenStorage(server_name=config.name)
+        if storage.is_token_expired():
+            logger.warning(f"OAuth token for server '{server_name}' has expired. Clearing tokens — re-authentication will be required.")
+            storage.clear_tokens()
+            return False
+
+        return True
+
+    def get_token_status(self, server_name: str) -> dict:
+        """
+        Get the token status for a server.
+
+        Returns:
+            Dict with keys: has_token, is_expired, server_name, oauth_enabled
+        """
+        config = self.servers.get(server_name)
+        if not config:
+            return {"server_name": server_name, "oauth_enabled": False, "has_token": False, "is_expired": False}
+
+        if not config.oauth_enabled:
+            return {"server_name": server_name, "oauth_enabled": False, "has_token": False, "is_expired": False}
+
+        storage = FileTokenStorage(server_name=config.name)
+        has_token = storage._tokens_path.exists()
+        is_expired = storage.is_token_expired() if has_token else False
+
+        return {
+            "server_name": server_name,
+            "oauth_enabled": True,
+            "has_token": has_token,
+            "is_expired": is_expired,
+        }
+
     async def connect(self, server_name: str) -> bool:
         """
         Connect to an MCP server and discover its tools.
+
+        Validates OAuth tokens before connecting. If a stored token
+        has expired, it is deleted so the OAuth flow can re-authenticate.
 
         Args:
             server_name: Name of the server to connect to
@@ -229,6 +298,12 @@ class MCPClientManager:
         if not config.enabled:
             logger.warning(f"Server {server_name} is disabled")
             return False
+
+        # Validate OAuth token before attempting connection
+        if config.oauth_enabled:
+            token_valid = self.validate_server_token(server_name)
+            if not token_valid:
+                logger.info(f"Expired token cleared for '{server_name}'. OAuth re-authentication will be triggered.")
 
         try:
             if config.transport == MCPTransportType.SSE:
@@ -255,11 +330,16 @@ class MCPClientManager:
         if config.api_key:
             headers["Authorization"] = f"Bearer {config.api_key}"
 
-        # OAuth 2.1 authentication
+        # OAuth 2.1 authentication (PKCE-based)
         auth = None
         if config.oauth_enabled:
-            from .oauth import create_oauth_provider
             auth = await create_oauth_provider(config)
+            # For PKCE provider, ensure token is acquired before connecting
+            if isinstance(auth, PKCEAuth):
+                token = await auth._provider.get_valid_token()
+                if not token:
+                    raise RuntimeError(f"PKCE authentication failed for '{config.name}'")
+                logger.info(f"[PKCE] Token acquired for SSE connection to '{config.name}'")
 
         async with sse_client(config.url, headers=headers, auth=auth) as (read, write):
             async with ClientSession(read, write) as session:
@@ -280,11 +360,7 @@ class MCPClientManager:
             env = os.environ.copy()
             env.update({str(k): str(v) for k, v in config.env.items()})
 
-        server_params = StdioServerParameters(
-            command=command,
-            args=args,
-            env=env,
-        )
+        server_params = StdioServerParameters(command=command, args=args, env=env)
 
         async with stdio_client(server_params) as (read, write):
             async with ClientSession(read, write) as session:
@@ -299,17 +375,20 @@ class MCPClientManager:
         if config.api_key:
             headers["Authorization"] = f"Bearer {config.api_key}"
 
-        # OAuth 2.1 authentication
+        # OAuth 2.1 authentication (PKCE-based)
         http_client = None
         if config.oauth_enabled:
-            from .oauth import create_oauth_provider
             auth = await create_oauth_provider(config)
-            from mcp.shared._httpx_utils import create_mcp_http_client
+            # For PKCE provider, ensure token is acquired before connecting
+            if isinstance(auth, PKCEAuth):
+                token = await auth._provider.get_valid_token()
+                if not token:
+                    raise RuntimeError(f"PKCE authentication failed for '{config.name}'")
+                headers["Authorization"] = f"Bearer {token}"
+                logger.info(f"[PKCE] Token acquired for HTTP connection to '{config.name}'")
             http_client = create_mcp_http_client(headers=headers, auth=auth)
 
-        async with streamable_http_client(config.url, http_client=http_client) as (
-            read, write, _get_session_id
-        ):
+        async with streamable_http_client(config.url, http_client=http_client) as (read, write, _get_session_id):
             async with ClientSession(read, write) as session:
                 await session.initialize()
                 self.sessions[server_id] = session
@@ -329,22 +408,9 @@ class MCPClientManager:
                 required = input_schema.get("required", [])
 
                 for param_name, param_info in properties.items():
-                    params.append(MCPToolParameter(
-                        name=param_name,
-                        type=param_info.get("type", "string"),
-                        description=param_info.get("description", ""),
-                        required=param_name in required,
-                        default=param_info.get("default"),
-                        enum=param_info.get("enum")
-                    ))
+                    params.append(MCPToolParameter(name=param_name, type=param_info.get("type", "string"), description=param_info.get("description", ""), required=param_name in required, default=param_info.get("default"), enum=param_info.get("enum")))
 
-                mcp_tool = MCPTool(
-                    name=tool.name,
-                    description=tool.description or "",
-                    server_name=server_name,
-                    parameters=params,
-                    input_schema=input_schema
-                )
+                mcp_tool = MCPTool(name=tool.name, description=tool.description or "", server_name=server_name, parameters=params, input_schema=input_schema)
                 self.tools[mcp_tool.full_name] = mcp_tool
                 logger.debug(f"Discovered tool: {mcp_tool.full_name}")
 
@@ -356,13 +422,7 @@ class MCPClientManager:
         try:
             resources_result = await session.list_resources()
             for resource in resources_result.resources:
-                mcp_resource = MCPResource(
-                    uri=str(resource.uri),
-                    name=resource.name,
-                    description=resource.description or "",
-                    mime_type=resource.mimeType or "application/json",
-                    server_name=server_name
-                )
+                mcp_resource = MCPResource(uri=str(resource.uri), name=resource.name, description=resource.description or "", mime_type=resource.mimeType or "application/json", server_name=server_name)
                 self.resources[f"{server_name}__{resource.name}"] = mcp_resource
             logger.info(f"Discovered {len(resources_result.resources)} resources from {server_name}")
         except Exception as e:
@@ -374,18 +434,8 @@ class MCPClientManager:
             for prompt in prompts_result.prompts:
                 args = []
                 for arg in prompt.arguments or []:
-                    args.append(MCPToolParameter(
-                        name=arg.name,
-                        type="string",
-                        description=arg.description or "",
-                        required=arg.required or False
-                    ))
-                mcp_prompt = MCPPrompt(
-                    name=prompt.name,
-                    description=prompt.description or "",
-                    arguments=args,
-                    server_name=server_name
-                )
+                    args.append(MCPToolParameter(name=arg.name, type="string", description=arg.description or "", required=arg.required or False))
+                mcp_prompt = MCPPrompt(name=prompt.name, description=prompt.description or "", arguments=args, server_name=server_name)
                 self.prompts[f"{server_name}__{prompt.name}"] = mcp_prompt
             logger.info(f"Discovered {len(prompts_result.prompts)} prompts from {server_name}")
         except Exception as e:
@@ -403,10 +453,7 @@ class MCPClientManager:
         self._connected_servers.discard(server_name)
 
         # Remove associated tools
-        self.tools = {
-            k: v for k, v in self.tools.items()
-            if v.server_name != server_name
-        }
+        self.tools = {k: v for k, v in self.tools.items() if v.server_name != server_name}
 
         logger.info(f"Disconnected from MCP server: {server_name}")
 
@@ -463,12 +510,7 @@ class MCPClientManager:
 
         return None
 
-    async def call_tool(
-        self,
-        tool_name: str,
-        arguments: Dict[str, Any],
-        server_name: Optional[str] = None
-    ) -> MCPToolResult:
+    async def call_tool(self, tool_name: str, arguments: Dict[str, Any], server_name: Optional[str] = None) -> MCPToolResult:
         """
         Call an MCP tool with the given arguments.
 
@@ -481,12 +523,7 @@ class MCPClientManager:
             MCPToolResult containing the result or error
         """
         if not MCP_AVAILABLE:
-            return MCPToolResult(
-                tool_name=tool_name,
-                server_name=server_name or "unknown",
-                success=False,
-                error="MCP SDK not available"
-            )
+            return MCPToolResult(tool_name=tool_name, server_name=server_name or "unknown", success=False, error="MCP SDK not available")
 
         # Find the tool
         tool = None
@@ -497,23 +534,13 @@ class MCPClientManager:
             tool = self.get_tool(tool_name)
 
         if not tool:
-            return MCPToolResult(
-                tool_name=tool_name,
-                server_name=server_name or "unknown",
-                success=False,
-                error=f"Tool not found: {tool_name}"
-            )
+            return MCPToolResult(tool_name=tool_name, server_name=server_name or "unknown", success=False, error=f"Tool not found: {tool_name}")
 
         # Check if server is connected
         if tool.server_name not in self.sessions:
             # Try to connect
             if not await self.connect(tool.server_name):
-                return MCPToolResult(
-                    tool_name=tool_name,
-                    server_name=tool.server_name,
-                    success=False,
-                    error=f"Cannot connect to server: {tool.server_name}"
-                )
+                return MCPToolResult(tool_name=tool_name, server_name=tool.server_name, success=False, error=f"Cannot connect to server: {tool.server_name}")
 
         session = self.sessions[tool.server_name]
 
@@ -537,22 +564,11 @@ class MCPClientManager:
             # Join text content or return first item for non-text
             final_content = "\n".join(content) if content_type == "text" else content[0] if content else None
 
-            return MCPToolResult(
-                tool_name=tool.name,
-                server_name=tool.server_name,
-                success=not result.isError if hasattr(result, "isError") else True,
-                content=final_content,
-                content_type=content_type
-            )
+            return MCPToolResult(tool_name=tool.name, server_name=tool.server_name, success=not result.isError if hasattr(result, "isError") else True, content=final_content, content_type=content_type)
 
         except Exception as e:
             logger.error(f"Error calling tool {tool_name}: {e}")
-            return MCPToolResult(
-                tool_name=tool.name,
-                server_name=tool.server_name,
-                success=False,
-                error=str(e)
-            )
+            return MCPToolResult(tool_name=tool.name, server_name=tool.server_name, success=False, error=str(e))
 
     async def read_resource(self, uri: str, server_name: str) -> Optional[str]:
         """
@@ -579,12 +595,7 @@ class MCPClientManager:
             logger.error(f"Error reading resource {uri}: {e}")
             return None
 
-    async def get_prompt(
-        self,
-        prompt_name: str,
-        arguments: Dict[str, str],
-        server_name: str
-    ) -> Optional[str]:
+    async def get_prompt(self, prompt_name: str, arguments: Dict[str, str], server_name: str) -> Optional[str]:
         """
         Get a prompt from an MCP server.
 
@@ -623,14 +634,7 @@ class MCPClientManager:
         """
         tools = []
         for tool in self.tools.values():
-            tools.append({
-                "type": "function",
-                "function": {
-                    "name": tool.full_name,
-                    "description": tool.description,
-                    "parameters": tool.input_schema
-                }
-            })
+            tools.append({"type": "function", "function": {"name": tool.full_name, "description": tool.description, "parameters": tool.input_schema}})
         return tools
 
 

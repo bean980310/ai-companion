@@ -1,5 +1,7 @@
 import gradio as gr
 
+from ai_companion_core import logger
+
 from ..start_app import ui_component
 
 from ..common.translations import _, translation_manager
@@ -12,7 +14,6 @@ from ..main.chatbot.chatbot import Chatbot
 
 chat_bot = Chatbot()
 
-from .. import logger
 
 from ..main import ChatbotMain
 

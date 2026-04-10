@@ -1,7 +1,7 @@
+from ai_companion_core.detect_language import detect_system_language
 from src.common.args import parse_args
-from src.common.detect_language import detect_system_language
 
-args=parse_args()
+args = parse_args()
 
 if args.language:
     default_language = args.language

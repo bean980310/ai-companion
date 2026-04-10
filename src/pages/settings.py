@@ -12,6 +12,9 @@ from src.tabs.device_setting import create_device_setting_tab
 from src.main.chatbot import chat_bot
 from src.common.translations import translation_manager, _
 from src.common_blocks import create_page_header, get_language_code
+from src.tabs.setting_tab_info import create_custom_gpu_monitor
+
+head_html = """<script src="https://unpkg.com/lucide@latest"></script>"""
 
 with gr.Blocks() as demo:
     # Page Header with Language Selector
@@ -19,23 +22,19 @@ with gr.Blocks() as demo:
     # language_dropdown = page_header.language_dropdown
 
     with gr.Tabs():
+        create_custom_gpu_monitor()
         create_cache_tab()
         create_util_tab()
-    
+
         with gr.Tab("Configuration"):
             with gr.Tabs():
                 # 사용자 지정 모델 경로 설정 섹션
                 create_custom_model_tab()
                 create_system_preset_management_tab()
-                
+
                 # 프리셋 Dropdown 초기화 (Wire this event here)
-                demo.load(
-                    fn=chat_bot.initial_load_presets,
-                    inputs=[],
-                    outputs=[ui_component.text_preset_dropdown],
-                    queue=False
-                )                        
-                
+                demo.load(fn=chat_bot.initial_load_presets, inputs=[], outputs=[ui_component.text_preset_dropdown], queue=False)
+
                 create_save_history_tab()
                 create_load_history_tab()
                 create_session_management_tab()
@@ -57,4 +56,4 @@ with gr.Blocks() as demo:
     # )
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(head=head_html)

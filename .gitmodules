@@ -7,3 +7,6 @@
 [submodule "vllm"]
 	path = vllm
 	url = https://github.com/vllm-project/vllm.git
+[submodule "packages/ai-companion-llm-backend"]
+	path = packages/ai-companion-llm-backend
+	url = https://github.com/bean980310/ai-companion-llm-backend.git
