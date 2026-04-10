@@ -7,9 +7,9 @@
 [submodule "vllm"]
 	path = vllm
 	url = https://github.com/vllm-project/vllm.git
-[submodule "packages/ai-companion-llm-backend"]
-	path = packages/ai-companion-llm-backend
-	url = https://github.com/bean980310/ai-companion-llm-backend.git
 [submodule "packages/ai-companion-image-backend"]
 	path = packages/ai-companion-image-backend
 	url = https://github.com/bean980310/ai-companion-image-backend.git
+[submodule "packages/ai-companion-llm-backend"]
+	path = packages/ai-companion-llm-backend
+	url = https://github.com/bean980310/ai-companion-llm-backend.git
