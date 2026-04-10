@@ -13,3 +13,6 @@
 [submodule "packages/ai-companion-llm-backend"]
 	path = packages/ai-companion-llm-backend
 	url = https://github.com/bean980310/ai-companion-llm-backend.git
+[submodule "packages/ai-companion-langchain-integrator"]
+	path = packages/ai-companion-langchain-integrator
+	url = https://github.com/bean980310/ai-companion-langchain-integrator.git
