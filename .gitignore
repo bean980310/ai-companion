@@ -39,3 +39,7 @@ pixi.*
 main.py
 pyproject.toml
 uv.lock
+
+# pixi environments
+.pixi/*
+!.pixi/config.toml

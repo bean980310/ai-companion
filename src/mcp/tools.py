@@ -1,6 +1,5 @@
 # MCP Tools for AI Companion
 # These functions are exposed as MCP tools when mcp_server=True in Gradio launch
-from __future__ import annotations
 from typing import Literal, List, Optional, Any
 
 import gradio as gr
@@ -9,7 +8,7 @@ from PIL import Image
 from src.models.models import generate_answer, generate_chat_title, get_all_local_models
 from src.common.database import get_existing_sessions, get_existing_sessions_with_names, load_chat_from_db, save_chat_history_db
 from src.models import openai_llm_api_models, anthropic_llm_api_models, google_genai_llm_api_models, openai_image_api_models, google_genai_image_models, comfyui_image_models
-from src import logger
+from ai_companion_core import logger
 
 
 def chat_completion(

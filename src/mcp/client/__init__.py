@@ -1,6 +1,5 @@
 # MCP Client Module
 # Provides functionality to connect to external MCP servers and use their tools
-from __future__ import annotations
 
 from .manager import MCPClientManager
 from .models import MCPServerConfig, MCPTool, MCPToolResult

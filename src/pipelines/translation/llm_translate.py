@@ -2,8 +2,7 @@
 Module providing a Translate Using LLM
 """
 
-from __future__ import annotations
-
+import os
 import platform
 import warnings
 from typing import Any

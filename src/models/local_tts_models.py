@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from src.common.utils import get_all_tts_models
 
 tts_models_data = get_all_tts_models()

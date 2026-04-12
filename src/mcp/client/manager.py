@@ -1,6 +1,5 @@
 # MCP Client Manager
 # Manages connections to external MCP servers and tool execution
-from __future__ import annotations
 
 import asyncio
 import json

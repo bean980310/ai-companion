@@ -5,7 +5,6 @@
 #   2. Send code_challenge in authorization request
 #   3. Send code_verifier in token exchange
 #   4. Support both public clients (PKCE only) and confidential clients (PKCE + secret)
-from __future__ import annotations
 
 import asyncio
 import base64
