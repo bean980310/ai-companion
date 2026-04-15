@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import gradio as gr
 from .chatbot import chat_main
 from .image_generation import diff_main

@@ -1,5 +1,4 @@
 # chatbot.py
-from __future__ import annotations
 from typing import Any, Generator, Literal, Callable
 
 # from gradio_i18n import gettext as _, translate_blocks

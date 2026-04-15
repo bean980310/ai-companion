@@ -1,16 +1,8 @@
 from __future__ import annotations
-from gradio as gr
+import gradio as gr
 
-from ..chatbot import (
-    Chatbot, 
-    ChatbotComponent,
-    ChatbotMain
-)
+from ..chatbot import Chatbot, ChatbotComponent, ChatbotMain
 
-from ..storyteller import (
-    create_story_side, 
-    create_story_container_main_panel, 
-    create_story_container_side_panel
-)
+from ..storyteller import create_story_side, create_story_container_main_panel, create_story_container_side_panel
 
 from ...common.translations import _

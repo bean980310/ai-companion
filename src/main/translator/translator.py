@@ -1,4 +1,3 @@
-from __future__ import annotations
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, PreTrainedModel, GenerationMixin, PreTrainedTokenizerBase, TokenizersBackend
 from ai_companion_core import logger
 

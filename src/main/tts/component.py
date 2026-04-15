@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import gradio as gr
 # from gradio_i18n import translate_blocks, gettext as _
 

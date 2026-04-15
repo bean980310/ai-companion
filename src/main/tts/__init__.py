@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from .tts import text_to_speech
 from .component import create_tts_side
 

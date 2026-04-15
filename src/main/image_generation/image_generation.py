@@ -1,7 +1,5 @@
 # This is an example that uses the websockets api and the SaveImageWebsocket node to get images directly without
 # them being saved to disk
-from __future__ import annotations
-
 import websocket  # NOTE: websocket-client (https://github.com/websocket-client/websocket-client)
 import uuid
 import json

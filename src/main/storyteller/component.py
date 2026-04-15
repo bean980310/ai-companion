@@ -1,4 +1,3 @@
-from __future__ import annotations
 from dataclasses import dataclass
 import gradio as gr
 # from gradio_i18n import gettext as _

@@ -1,4 +1,3 @@
-from __future__ import annotations
 from .translator import translate_interface
 from .upload import upload_handler
 import gradio as gr

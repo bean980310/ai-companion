@@ -3,8 +3,6 @@ ComfyUI Image Upload module using comfy_sdk library.
 Provides image and mask upload functionality for ComfyUI.
 """
 
-from __future__ import annotations
-
 import os
 import datetime
 from io import BytesIO

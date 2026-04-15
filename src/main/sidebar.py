@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import gradio as gr
 
 from ..start_app import create_tab_side
