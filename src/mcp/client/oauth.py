@@ -1,3 +1,6 @@
+"""
+MCP OAuth 2.1 Authentication Support — PKCE (Proof Key for Code Exchange) Based
+"""
 # MCP OAuth 2.1 Authentication Support — PKCE (Proof Key for Code Exchange) Based
 #
 # Implements RFC 7636 PKCE flow explicitly:
@@ -16,24 +19,22 @@ import string
 import time
 import webbrowser
 from pathlib import Path
-from typing import Optional
+from typing import Optional, override
 
-from authlib.integrations.requests_client import OAuth2Session
-from authlib.oauth2 import OAuth2Client
+from authlib.integrations.httpx_client import AsyncOAuth2Client, AsyncAssertionClient
+from authlib.oauth2.rfc7636 import create_s256_code_challenge
+from pydantic import Field
+
 import secrets
 
 import httpx
 
-from src import logger
+from ai_companion_core import logger
 
 # MCP SDK OAuth imports
 try:
     from mcp.client.auth import OAuthClientProvider, TokenStorage
-    from mcp.client.auth.oauth2 import (
-        OAuthClientMetadata,
-        OAuthToken,
-        OAuthClientInformationFull,
-    )
+    from mcp.client.auth.oauth2 import OAuthClientMetadata, OAuthToken, OAuthClientInformationFull, PKCEParameters
     from mcp.shared.auth import OAuthMetadata
 
     OAUTH_AVAILABLE = True
@@ -82,7 +83,7 @@ OAUTH_PRESETS = {
 # ---------------------------------------------------------------------------
 
 
-class PKCEParams:
+class PKCEParams(PKCEParameters):
     """
     Generate and hold PKCE parameters.
 
@@ -91,15 +92,9 @@ class PKCEParams:
     """
 
     def __init__(self, code_verifier: Optional[str] = None):
-        if code_verifier:
-            self.code_verifier = code_verifier
-        else:
-            # RFC 7636 §4.1 — 43–128 unreserved characters
-            unreserved = string.ascii_letters + string.digits + "-._~"
-            self.code_verifier = "".join(secrets.choice(unreserved) for _ in range(128))
-
-        digest = hashlib.sha256(self.code_verifier.encode("ascii")).digest()
-        self.code_challenge = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
+        pkce = self.generate()
+        self.code_verifier = pkce.code_verifier
+        self.code_challenge = pkce.code_challenge
         self.code_challenge_method = "S256"
 
     def to_dict(self) -> dict:
@@ -119,7 +114,7 @@ class PKCEParams:
 # ---------------------------------------------------------------------------
 
 
-class FileTokenStorage:
+class FileTokenStorage(TokenStorage):
     """
     File-based token storage implementing MCP SDK's TokenStorage protocol.
 
@@ -231,7 +226,8 @@ class FileTokenStorage:
 
     # -- TokenStorage protocol (MCP SDK) --
 
-    async def get_tokens(self) -> "OAuthToken | None":
+    @override
+    async def get_tokens(self) -> OAuthToken | None:
         if not self._tokens_path.exists():
             return None
         if self.is_token_expired():
@@ -245,7 +241,8 @@ class FileTokenStorage:
             logger.warning(f"Failed to load OAuth tokens: {e}")
             return None
 
-    async def set_tokens(self, tokens: "OAuthToken") -> None:
+    @override
+    async def set_tokens(self, tokens: OAuthToken) -> None:
         try:
             self._tokens_path.write_text(tokens.model_dump_json(indent=2), encoding="utf-8")
             expires_in = getattr(tokens, "expires_in", None)
@@ -254,7 +251,8 @@ class FileTokenStorage:
         except Exception as e:
             logger.error(f"Failed to save OAuth tokens: {e}")
 
-    async def get_client_info(self) -> "OAuthClientInformationFull | None":
+    @override
+    async def get_client_info(self) -> OAuthClientInformationFull | None:
         if not self._client_info_path.exists():
             return None
         try:
@@ -263,7 +261,8 @@ class FileTokenStorage:
         except Exception:
             return None
 
-    async def set_client_info(self, client_info: "OAuthClientInformationFull") -> None:
+    @override
+    async def set_client_info(self, client_info: OAuthClientInformationFull) -> None:
         try:
             self._client_info_path.write_text(client_info.model_dump_json(indent=2), encoding="utf-8")
         except Exception as e:
@@ -361,6 +360,7 @@ class PKCEOAuthProvider:
         issuer: Optional[str] = None,
         redirect_port: int = 3000,
         timeout: float = 300.0,
+        use_pkce: bool = True,
     ):
         self.server_name = server_name
         self.authorization_endpoint = authorization_endpoint
@@ -373,6 +373,8 @@ class PKCEOAuthProvider:
         self.storage = storage
         self.redirect_port = redirect_port
         self.timeout = timeout
+        self.use_pkce = use_pkce
+        self.pkce = PKCEParams() if self.use_pkce else None
 
         self._callback_handler = _build_callback_handler(redirect_port)
 
@@ -410,69 +412,96 @@ class PKCEOAuthProvider:
 
     async def _authorize(self) -> Optional["OAuthToken"]:
         """
-        Run the full PKCE authorization code flow.
+        Run the authorization code flow, optionally with PKCE.
 
-        1. Generate PKCE params (code_verifier, code_challenge)
-        2. Build authorization URL with code_challenge
-        3. Open browser, start local callback server
-        4. Exchange auth code + code_verifier for tokens
+        When ``use_pkce`` is False (auth server does not support RFC 7636), skip
+        code_verifier/code_challenge generation and fall back to a plain OAuth 2.0
+        Authorization Code flow. A confidential client (client_secret) should be
+        used in that case to preserve security.
         """
-        pkce = PKCEParams()
+
+        code_challenge = self.pkce.code_challenge
+
+        # pkce: Optional[PKCEParams] = PKCEParams() if self.use_pkce else None
         state = secrets.token_urlsafe(32)
 
-        # Persist PKCE state in case the process restarts between auth and callback
-        self.storage.save_pkce_state(pkce, state)
+        if self.pkce is not None:
+            # Persist PKCE state in case the process restarts between auth and callback
+            self.storage.save_pkce_state(self.pkce, state)
+        else:
+            if self.is_public_client:
+                logger.warning(f"[OAuth] '{self.server_name}' is a public client without PKCE — this is insecure. Prefer enabling PKCE or using a confidential client.")
 
         # Build authorization URL
         params = {
             "response_type": "code",
-            "client_id": self.client_id,
+            "owner": "user",
             "redirect_uri": self.redirect_uri,
-            "code_challenge": pkce.code_challenge,
-            "code_challenge_method": pkce.code_challenge_method,
+            "client_id": self.client_id,
             "state": state,
         }
+        if self.pkce is not None:
+            params["code_challenge"] = code_challenge
+            params["code_challenge_method"] = self.pkce.code_challenge_method
         if self.scopes:
             params["scope"] = self.scopes
 
-        if self.server_name.lower() == "notion":
-            params["owner"] = "user"
-
         auth_url = f"{self.authorization_endpoint}?{_urlencode(params)}"
-        logger.info(f"[PKCE] Opening browser for authorization: {auth_url}")
+        log_prefix = "[PKCE]" if self.pkce is not None else "[OAuth]"
+        logger.info(f"{log_prefix} Opening browser for authorization: {auth_url}")
         webbrowser.open(auth_url)
 
         # Wait for callback
         auth_code, returned_state = await self._callback_handler()
 
         # Validate state to prevent CSRF
-        if returned_state != state:
-            logger.error(f"[PKCE] State mismatch: expected={state}, got={returned_state}")
-            self.storage.clear_pkce_state()
-            raise RuntimeError("OAuth state mismatch — possible CSRF attack")
+        if self.pkce is not None:
+            if returned_state != state:
+                logger.error(f"{log_prefix} State mismatch: expected={state}, got={returned_state}")
+                if self.pkce is not None:
+                    self.storage.clear_pkce_state()
+                raise RuntimeError("OAuth state mismatch — possible CSRF attack")
 
-        # Exchange code + code_verifier for tokens
-        tokens = await self._exchange_code(auth_code, pkce.code_verifier)
-        self.storage.clear_pkce_state()
+        # Exchange code (+ optional code_verifier) for tokens
+        code_verifier = self.pkce.code_verifier
+        tokens = await self._exchange_code(auth_code, code_verifier)
+        if self.pkce is not None:
+            self.storage.clear_pkce_state()
         return tokens
 
-    async def _exchange_code(self, auth_code: str, code_verifier: str) -> Optional["OAuthToken"]:
+    async def _exchange_code(self, auth_code: str, code_verifier: Optional[str]) -> Optional["OAuthToken"]:
         """
-        Exchange authorization code for tokens, including code_verifier (PKCE §4.5).
+        Exchange authorization code for tokens.
+
+        Includes ``code_verifier`` only when PKCE is in use (RFC 7636 §4.5).
         """
+
         data = {
             "grant_type": "authorization_code",
             "code": auth_code,
             "redirect_uri": self.redirect_uri,
             "client_id": self.client_id,
-            "code_verifier": code_verifier,
         }
 
-        # Confidential clients include client_secret
-        if self.client_secret:
-            data["client_secret"] = self.client_secret
+        auth_string = f"{self.client_id}:{self.client_secret}" if self.client_secret else None
+        encoded_auth = base64.b64encode(auth_string.encode("utf-8")).decode("utf-8") if auth_string else None
 
-        headers = {"Accept": "application/json"}
+        if code_verifier is not None:
+            data["code_verifier"] = code_verifier
+
+        if encoded_auth:
+            headers = {
+                "Authorization": f"Basic {encoded_auth}",
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            }
+        else:
+            headers = {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            }
+
+        log_prefix = "[PKCE]" if code_verifier is not None else "[OAuth]"
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -483,19 +512,19 @@ class PKCEOAuthProvider:
 
                 # GitHub returns token in non-standard format sometimes
                 if "access_token" not in token_data:
-                    logger.error(f"[PKCE] Token response missing access_token: {token_data}")
+                    logger.error(f"{log_prefix} Token response missing access_token: {token_data}")
                     return None
 
                 token = OAuthToken.model_validate(token_data)
                 await self.storage.set_tokens(token)
-                logger.info(f"[PKCE] Token exchange successful for {self.server_name}")
+                logger.info(f"{log_prefix} Token exchange successful for {self.server_name}")
                 return token
 
         except httpx.HTTPStatusError as e:
-            logger.error(f"[PKCE] Token exchange failed ({e.response.status_code}): {e.response.text}")
+            logger.error(f"{log_prefix} Token exchange failed ({e.response.status_code}): {e.response.text}")
             return None
         except Exception as e:
-            logger.error(f"[PKCE] Token exchange error: {e}")
+            logger.error(f"{log_prefix} Token exchange error: {e}")
             return None
 
     async def _refresh_token(self, refresh_token: str) -> Optional["OAuthToken"]:
@@ -636,7 +665,9 @@ async def create_oauth_provider(config) -> "httpx.Auth":
     # --- Explicit PKCE flow for pre-registered clients ---
     if config.oauth_client_id:
         client_type = "public" if not config.oauth_client_secret else "confidential"
-        logger.info(f"[PKCE] Creating {client_type} OAuth provider for '{config.name}' (client_id={config.oauth_client_id[:8]}...)")
+        use_pkce = getattr(config, "oauth_use_pkce", True)
+        pkce_label = "PKCE" if use_pkce else "no-PKCE"
+        logger.info(f"[OAuth] Creating {client_type} {pkce_label} provider for '{config.name}' (client_id={config.oauth_client_id[:8]}...)")
 
         provider = PKCEOAuthProvider(
             server_name=config.name,
@@ -650,6 +681,7 @@ async def create_oauth_provider(config) -> "httpx.Auth":
             storage=storage,
             redirect_port=redirect_port,
             timeout=config.timeout,
+            use_pkce=use_pkce,
         )
 
         return PKCEAuth(provider)

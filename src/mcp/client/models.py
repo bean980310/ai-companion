@@ -60,6 +60,8 @@ class MCPServerConfig:
     oauth_issuer: Optional[str] = None
     oauth_authorization_endpoint: Optional[str] = None
     oauth_token_endpoint: Optional[str] = None
+    # Set to False when the authorization server does not support PKCE (RFC 7636).
+    oauth_use_pkce: bool = True
 
     def to_dict(self) -> Dict[str, Any]:
         base = {
@@ -87,6 +89,7 @@ class MCPServerConfig:
             base["oauth_issuer"] = self.oauth_issuer
             base["oauth_authorization_endpoint"] = self.oauth_authorization_endpoint
             base["oauth_token_endpoint"] = self.oauth_token_endpoint
+            base["oauth_use_pkce"] = self.oauth_use_pkce
         return base
 
     @classmethod
@@ -116,6 +119,7 @@ class MCPServerConfig:
             oauth_issuer=data.get("oauth_issuer"),
             oauth_authorization_endpoint=data.get("oauth_authorization_endpoint"),
             oauth_token_endpoint=data.get("oauth_token_endpoint"),
+            oauth_use_pkce=data.get("oauth_use_pkce", True),
         )
 
 

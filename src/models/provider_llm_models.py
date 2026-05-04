@@ -11,7 +11,11 @@ class LocalModelNotFound(Exception):
 
 
 def get_lmstudio_models(api_host: str = "localhost:1234"):
-    import lmstudio as lms
+    try:
+        import lmstudio as lms
+    except ImportError:
+        logger.error("lmstudio가 설치되지 않았습니다.")
+        return ["lmstudio가 설치되지 않았습니다."]
 
     llm = []
     client = lms.Client(api_host=api_host)
@@ -34,7 +38,11 @@ def get_lmstudio_models(api_host: str = "localhost:1234"):
 
 
 def get_lmstudio_embedding_models(api_host: str = "localhost:1234"):
-    import lmstudio as lms
+    try:
+        import lmstudio as lms
+    except ImportError:
+        logger.error("lmstudio가 설치되지 않았습니다.")
+        return ["lmstudio가 설치되지 않았습니다."]
 
     embedding = []
     client = lms.Client(api_host=api_host)
@@ -57,7 +65,11 @@ def get_lmstudio_embedding_models(api_host: str = "localhost:1234"):
 
 
 def get_ollama_models(host: str = "http://localhost:11434"):
-    import ollama
+    try:
+        import ollama
+    except ImportError:
+        logger.error("ollama가 설치되지 않았습니다.")
+        return ["ollama가 설치되지 않았습니다."]
 
     llm = []
     try:
@@ -80,8 +92,12 @@ def get_ollama_models(host: str = "http://localhost:11434"):
 
 
 def get_oobabooga_models(host: str = "http://localhost:5000/v1"):
-    import openai
-    from openai import OpenAI
+    try:
+        import openai
+        from openai import OpenAI
+    except ImportError:
+        logger.error("openai가 설치되지 않았습니다.")
+        return ["openai가 설치되지 않았습니다."]
 
     llm = []
     client = OpenAI(api_key="not-needed", base_url=host)
@@ -105,8 +121,12 @@ def get_oobabooga_models(host: str = "http://localhost:5000/v1"):
 
 
 def get_vllm_models(host: str = "http://localhost:8000/v1"):
-    import openai
-    from openai import OpenAI
+    try:
+        import openai
+        from openai import OpenAI
+    except ImportError:
+        logger.error("openai가 설치되지 않았습니다.")
+        return ["openai가 설치되지 않았습니다."]
 
     llm = []
     client = OpenAI(api_key="not-needed", base_url=host)
@@ -130,8 +150,12 @@ def get_vllm_models(host: str = "http://localhost:8000/v1"):
 
 
 def get_sglang_llm_models(host: str = "http://localhost:30001/v1"):
-    import openai
-    from openai import OpenAI
+    try:
+        import openai
+        from openai import OpenAI
+    except ImportError:
+        logger.error("openai가 설치되지 않았습니다.")
+        return ["openai가 설치되지 않았습니다."]
 
     llm = []
     client = OpenAI(api_key="not-needed", base_url=host)
@@ -155,8 +179,15 @@ def get_sglang_llm_models(host: str = "http://localhost:30001/v1"):
 
 
 def get_openai_llm_models(api_key: str = None):
-    import openai
-    from openai import OpenAI
+    try:
+        import openai
+        from openai import OpenAI
+    except ImportError:
+        logger.error("openai가 설치되지 않았습니다.")
+        return ["openai가 설치되지 않았습니다."]
+    except Exception as e:
+        logger.exception(f"OpenAI API 오류 발생 (예기치 못한 오류): {e}")
+        return [f"OpenAI API 오류 발생: {e}"]
 
     model_list = []
 
@@ -221,8 +252,15 @@ def get_openai_llm_models(api_key: str = None):
 
 
 def get_anthropic_llm_models(api_key: str = None):
-    import anthropic
-    from anthropic import Anthropic
+    try:
+        import anthropic
+        from anthropic import Anthropic
+    except ImportError:
+        logger.error("anthropic가 설치되지 않았습니다.")
+        return ["anthropic가 설치되지 않았습니다."]
+    except Exception as e:
+        logger.exception(f"Anthropic API 오류 발생 (예기치 못한 오류): {e}")
+        return [f"Anthropic API 오류 발생: {e}"]
 
     model_list = []
 
@@ -280,9 +318,16 @@ def get_anthropic_llm_models(api_key: str = None):
 
 
 def get_google_genai_llm_models(api_key: str = None):
-    from google import genai
-    from google.genai import errors
-    from google.api_core import exceptions
+    try:
+        from google import genai
+        from google.genai import errors
+        from google.api_core import exceptions
+    except ImportError:
+        logger.error("google-genai가 설치되지 않았습니다.")
+        return ["google-genai가 설치되지 않았습니다."]
+    except Exception as e:
+        logger.exception(f"Google AI API 오류 발생 (예기치 못한 오류): {e}")
+        return [f"Google AI API 오류 발생: {e}"]
 
     model_list = []
 
@@ -324,8 +369,15 @@ def get_google_genai_llm_models(api_key: str = None):
 
 
 def get_perplexity_llm_models(api_key: str = None):
-    import perplexity
-    from perplexity import Perplexity
+    try:
+        import perplexity
+        from perplexity import Perplexity
+    except ImportError:
+        logger.error("perplexity가 설치되지 않았습니다.")
+        return ["perplexity가 설치되지 않았습니다."]
+    except Exception as e:
+        logger.exception(f"Perplexity API 오류 발생 (예기치 못한 오류): {e}")
+        return [f"Perplexity API 오류 발생: {e}"]
 
     model_list = []
 
@@ -366,7 +418,14 @@ def get_perplexity_llm_models(api_key: str = None):
 
 
 def get_xai_llm_models(api_key: str = None):
-    import xai_sdk
+    try:
+        import xai_sdk
+    except ImportError:
+        logger.error("xai_sdk가 설치되지 않았습니다.")
+        return ["xai_sdk가 설치되지 않았습니다."]
+    except Exception as e:
+        logger.exception(f"XAI API 오류 발생 (예기치 못한 오류): {e}")
+        return [f"XAI API 오류 발생: {e}"]
 
     model_list = []
 
@@ -390,8 +449,15 @@ def get_xai_llm_models(api_key: str = None):
 
 
 def get_mistralai_llm_models(api_key: str = None):
-    import mistralai
-    from mistralai.client import Mistral
+    try:
+        import mistralai
+        from mistralai.client import Mistral
+    except ImportError:
+        logger.error("mistralai가 설치되지 않았습니다.")
+        return ["mistralai가 설치되지 않았습니다."]
+    except Exception as e:
+        logger.exception(f"Mistral AI API 오류 발생 (예기치 못한 오류): {e}")
+        return [f"Mistral AI API 오류 발생: {e}"]
 
     model_list = []
 

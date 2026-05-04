@@ -407,6 +407,8 @@ class Chatbot:
 
         content_list = [{"type": "text", "text": user_content}] if user_files else user_content
 
+        mime_type = None
+
         if user_files:
             # 멀티모달 메시지 처리
             for file_path in user_files:
@@ -903,43 +905,6 @@ class Chatbot:
             language = self.default_language
         presets = get_preset_choices(language)
         return gr.update(choices=presets, value=presets[0] if presets else None)
-
-    def process_character_conversation(self, history: list[dict[str, str | Any]], selected_characters: str, model_type: str, selected_model: str, custom_path: str, image, api_key: str, device: str, seed: int, temperature: float, top_k: int, top_p: float, repetition_penalty: float):
-        try:
-            for i, character in enumerate(selected_characters):
-                # 각 캐릭터의 시스템 메시지 설정
-                system_message = {"role": "system", "content": translation_manager.get_character_setting(character)}
-                history.append(system_message)
-
-                # 캐릭터의 응답 생성
-                answer = generate_answer(
-                    history=history,
-                    selected_model=selected_model,
-                    model_type=model_type,
-                    local_model_path=custom_path if selected_model == "사용자 지정 모델 경로 변경" else None,
-                    image_input=image,
-                    api_key=api_key,
-                    device=device,
-                    seed=seed,
-                    temperature=temperature,
-                    top_k=top_k,
-                    top_p=top_p,
-                    repetition_penalty=repetition_penalty,
-                    character_language=translation_manager.current_language,
-                )
-
-                history.append({"role": "assistant", "content": answer, "character": character})
-
-            # 데이터베이스에 히스토리 저장
-            save_chat_history_db(history, session_id="character_conversation")
-
-            # 프로필 이미지는 None으로 반환
-            return history, None  # 여기서 None을 반환하도록 수정
-
-        except Exception as e:
-            logger.error(f"Error generating character conversation: {str(e)}", exc_info=True)
-            history.append({"role": "assistant", "content": f"❌ 오류 발생: {str(e)}", "character": "System"})
-            return history, None  # 오류 발생시에도 None 반환
 
     @staticmethod
     def toggle_api_key_visibility(provider: str | gr.Dropdown) -> bool:

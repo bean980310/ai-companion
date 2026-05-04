@@ -27,6 +27,10 @@ except ImportError:
     MCP_AVAILABLE = False
     logger.warning("MCP SDK not available. Install with: pip install mcp")
 
+from authlib.integrations.requests_client import OAuth2Session
+from authlib.integrations.httpx_client import OAuth2Client
+from authlib.oauth2.rfc7636 import create_s256_code_challenge
+
 from .oauth import create_oauth_provider, FileTokenStorage, PKCEOAuthProvider, PKCEAuth
 
 
