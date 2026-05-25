@@ -11,6 +11,7 @@ import base64
 
 from transformers import AutoConfig
 import gradio as gr
+from mem0 import Memory
 
 from ai_companion_core import logger
 

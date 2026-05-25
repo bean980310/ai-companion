@@ -12,8 +12,10 @@ warnings.filterwarnings("ignore", module="pydantic")
 config_dir = Path.home() / ".ai-companion"
 env_file = config_dir / ".env"
 
+# Create directory if it doesn't exist
 if not env_file.exists():
-    config_dir.mkdir(exists_ok=True)
+    config_dir.mkdir()
+    # Create .env file
     with open(env_file, "w") as f:
         f.write("")
 
