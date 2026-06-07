@@ -30,14 +30,16 @@ class DownloadTracker:
         """다운로드된 청크 크기만큼 진행률 업데이트"""
         self.current_size += chunk_size
         if self.progress_callback:
-            progress = (self.current_size / self.total_size) if self.total_size > 0 else 0
+            progress = (self.current_size /
+                        self.total_size) if self.total_size > 0 else 0
             self.progress_callback(min(progress, 1.0))
 
 
 def detect_platform():
     os_name = platform.system()
     arch = platform.machine()
-    is_wsl = "microsoft" in platform.uname().release.lower() and platform.system() == "Windows"
+    is_wsl = "microsoft" in platform.uname(
+    ).release.lower() and platform.system() == "Windows"
     return os_name, arch, is_wsl
 
 
@@ -98,7 +100,8 @@ def scan_diffusion_models(root="./models/diffusion"):
 
     local_models = []
     # 모델 타입 디렉토리 목록
-    model_types = ["checkpoints", "clip", "configs", "controlnet", "diffusers", "embeddings", "loras", "unet", "vae", "vae_approx"]
+    model_types = ["checkpoints", "clip", "configs", "controlnet",
+                   "diffusers", "embeddings", "loras", "unet", "vae", "vae_approx"]
     allowed_exts = {".safetensors", ".ckpt", ".pt", ".pth"}
 
     for mtype in model_types:
@@ -111,15 +114,18 @@ def scan_diffusion_models(root="./models/diffusion"):
             for dirpath, _, filenames in os.walk(mtype_path):
                 if has_required_files(filenames):
                     rel_path = os.path.relpath(dirpath, mtype_path)
-                    model_id = mtype if rel_path == "." else os.path.join(mtype, rel_path)
-                    local_models.append({"model_id": model_id, "model_type": mtype})
+                    model_id = mtype if rel_path == "." else os.path.join(
+                        mtype, rel_path)
+                    local_models.append(
+                        {"model_id": model_id, "model_type": mtype})
         else:
             # diffusers를 제외한 나머지는 파일 단위로 스캔하여 모델 파일 자체를 목록에 표시
             files = scan_files_with_extension(mtype_path, allowed_exts)
             for f in files:
                 # 모델 아이디에 mtype 디렉토리 이름을 접두어로 붙임
                 model_id = os.path.join(mtype, f)
-                local_models.append({"model_id": model_id, "model_type": mtype})
+                local_models.append(
+                    {"model_id": model_id, "model_type": mtype})
 
     return local_models
 
@@ -135,7 +141,8 @@ def scan_local_models(root="./models/llm", model_type=None):
 
     local_models = []
     # model_type이 지정되지 않았다면, 세부 폴더 목록: transformers, gguf, mlx
-    subdirs = ["transformers", "gguf", "mlx", "vllm"] if model_type is None else [model_type]
+    subdirs = ["transformers", "gguf", "mlx",
+               "vllm"] if model_type is None else [model_type]
 
     for subdir in subdirs:
         subdir_path = os.path.join(root, subdir)
@@ -147,14 +154,17 @@ def scan_local_models(root="./models/llm", model_type=None):
             files = scan_files_with_extension(subdir_path, {".gguf"})
             for f in files:
                 model_id = os.path.join(subdir, f)
-                local_models.append({"model_id": model_id, "model_type": subdir})
+                local_models.append(
+                    {"model_id": model_id, "model_type": subdir})
         else:
             # transformers와 mlx는 기존대로, 해당 폴더 내에 필요한 파일이 있으면 디렉토리 단위로 등록
             for dirpath, _, filenames in os.walk(subdir_path):
                 if has_required_files(filenames, required_extensions={".safetensors", ".ckpt", ".pt", ".pth"}):
                     rel_path = os.path.relpath(dirpath, subdir_path)
-                    model_id = subdir if rel_path == "." else os.path.join(subdir, rel_path)
-                    local_models.append({"model_id": model_id, "model_type": subdir})
+                    model_id = subdir if rel_path == "." else os.path.join(
+                        subdir, rel_path)
+                    local_models.append(
+                        {"model_id": model_id, "model_type": subdir})
 
     logger.info(f"Scanned local models: {local_models}")
     return local_models
@@ -166,7 +176,8 @@ def scan_tts_models(root="./models/audio/tts", model_type=None):
 
     local_models = []
 
-    subdirs = ["vits", "onnx", "gguf", "mlx"] if model_type is None else [model_type]
+    subdirs = ["vits", "onnx", "gguf",
+               "mlx"] if model_type is None else [model_type]
     allowed_extensions = {".safetensors", ".bin", ".pt", ".pth"}
     required_names = {"config.json"}
 
@@ -178,8 +189,10 @@ def scan_tts_models(root="./models/audio/tts", model_type=None):
         for dirpath, _, filenames in os.walk(subdir_path):
             if has_required_files(filenames, required_names=required_names, required_extensions=allowed_extensions):
                 rel_path = os.path.relpath(dirpath, subdir_path)
-                model_id = subdir if rel_path == "." else os.path.join(subdir, rel_path)
-                local_models.append({"model_id": model_id, "model_type": "tts"})
+                model_id = subdir if rel_path == "." else os.path.join(
+                    subdir, rel_path)
+                local_models.append(
+                    {"model_id": model_id, "model_type": "tts"})
 
     return local_models
 
@@ -190,7 +203,8 @@ def scan_asr_models(root="./models/audio/asr", model_type=None):
 
     local_models = []
 
-    subdirs = ["onnx", "gguf", "mlx", "transformers"] if model_type is None else [model_type]
+    subdirs = ["onnx", "gguf", "mlx",
+               "transformers"] if model_type is None else [model_type]
     allowed_extensions = {".safetensors", ".bin", ".pt", ".pth"}
     required_names = {"config.json"}
 
@@ -202,8 +216,10 @@ def scan_asr_models(root="./models/audio/asr", model_type=None):
         for dirpath, _, filenames in os.walk(subdir_path):
             if has_required_files(filenames, required_names=required_names, required_extensions=allowed_extensions):
                 rel_path = os.path.relpath(dirpath, subdir_path)
-                model_id = subdir if rel_path == "." else os.path.join(subdir, rel_path)
-                local_models.append({"model_id": model_id, "model_type": "tts"})
+                model_id = subdir if rel_path == "." else os.path.join(
+                    subdir, rel_path)
+                local_models.append(
+                    {"model_id": model_id, "model_type": "tts"})
 
     return local_models
 
@@ -223,7 +239,8 @@ def get_all_loras(lora_root="./models/llm/loras"):
         if has_required_files(filenames, required_names=required_names, required_extensions=allowed_extensions):
             rel_path = os.path.relpath(dirpath, lora_root)
             # 상대경로가 '.'이면 현재 폴더의 이름를 사용
-            model_id = os.path.basename(dirpath) if rel_path == "." else rel_path
+            model_id = os.path.basename(
+                dirpath) if rel_path == "." else rel_path
             lora_models.append(model_id)
     return lora_models
 
@@ -235,7 +252,8 @@ def get_diffusion_vae(vae_root="./models/diffusion/vae"):
     """
     models = scan_diffusion_models()
     all_models = models
-    vae_models = [m["model_id"] for m in all_models if m["model_type"] == "vae"]
+    vae_models = [m["model_id"]
+                  for m in all_models if m["model_type"] == "vae"]
     return vae_models
 
 
@@ -246,7 +264,8 @@ def get_diffusion_loras(lora_root="./models/diffusion/loras"):
     """
     models = scan_diffusion_models()
     all_models = models
-    lora_models = [m["model_id"] for m in all_models if m["model_type"] == "loras"]
+    lora_models = [m["model_id"]
+                   for m in all_models if m["model_type"] == "loras"]
     return lora_models
 
 
@@ -254,7 +273,8 @@ def get_diffusion_loras(lora_root="./models/diffusion/loras"):
 def get_all_local_models():
     """모든 모델 유형별 로컬 모델 목록을 가져옴"""
     models = scan_local_models()  # 모든 유형 스캔
-    transformers = [m["model_id"] for m in models if m["model_type"] == "transformers"]
+    transformers = [m["model_id"]
+                    for m in models if m["model_type"] == "transformers"]
     vllm = [m["model_id"] for m in models if m["model_type"] == "vllm"]
     gguf = [m["model_id"] for m in models if m["model_type"] == "gguf"]
     mlx = [m["model_id"] for m in models if m["model_type"] == "mlx"]
@@ -266,19 +286,32 @@ def get_all_diffusion_models():
     models = scan_diffusion_models()
     # comfyui_models = client.get_models_list('checkpoints')
     all_models = models
-    diffusers = [m["model_id"] for m in all_models if m["model_type"] == "diffusers"]
-    checkpoints = [m["model_id"] for m in all_models if m["model_type"] == "checkpoints"]
+    diffusers = [m["model_id"]
+                 for m in all_models if m["model_type"] == "diffusers"]
+    checkpoints = [m["model_id"]
+                   for m in all_models if m["model_type"] == "checkpoints"]
     return {"diffusers": diffusers, "checkpoints": checkpoints}
 
 
 # Get Local Text To Speech Models
 def get_all_tts_models():
     models = scan_tts_models()
-    transformers = [m["model_id"] for m in models if m["model_type"] == "transformers"]
+    transformers = [m["model_id"]
+                    for m in models if m["model_type"] == "transformers"]
     mlx = [m["model_id"] for m in models if m["model_type"] == "mlx"]
     vits = [m["model_id"] for m in models if m["model_type"] == "vits"]
     outetts = [m["model_id"] for m in models if m["model_type"] == "outetts"]
-    return {"transformers": transformers, "mlx": mlx, "vits": vits, "outetts": outetts}
+    onnx = [m["model_id"] for m in models if m["model_type"] == "onnx"]
+    gguf = [m["model_id"] for m in models if m["model_type"] == "gguf"]
+    piper = [m["model_id"] for m in models if m["model_type"] == "piper"]
+    coqui = [m["model_id"] for m in models if m["model_type"] == "coqui"]
+    xtts = [m["model_id"] for m in models if m["model_type"] == "xtts"]
+    omnivoice = [m["model_id"]
+                 for m in models if m["model_type"] == "omnivoice"]
+    supertonic = [m["model_id"]
+                  for m in models if m["model_type"] == "supertonic"]
+    bertvits = [m["model_id"] for m in models if m["model_type"] == "bertvits"]
+    return {"transformers": transformers, "mlx": mlx, "vits": vits, "outetts": outetts, "onnx": onnx, "gguf": gguf, "piper": piper, "coqui": coqui, "xtts": xtts, "omnivoice": omnivoice, "supertonic": supertonic, "bertvits": bertvits}
 
 
 def remove_hf_cache(model_id):
@@ -340,7 +373,8 @@ def download_model_from_hf(hf_repo_id: str, target_dir: str, model_type: str = "
                 filename=f"*{quantization_bit}.gguf",
             )
         else:
-            snapshot_download(repo_id=hf_repo_id, local_dir=target_dir, ignore_patterns=["*.md", ".gitattributes", "original/", "LICENSE.txt", "LICENSE"])
+            snapshot_download(repo_id=hf_repo_id, local_dir=target_dir, ignore_patterns=[
+                              "*.md", ".gitattributes", "original/", "LICENSE.txt", "LICENSE"])
         remove_hf_cache(hf_repo_id)
         msg = f"[+] 다운로드 & 저장 완료: {target_dir}"
         logger.info(msg)
@@ -358,7 +392,8 @@ async def download_model_from_hf_async(repo_id: str, target_dir: str = None, tok
     try:
         # 기본 저장 경로 설정
         if not target_dir:
-            target_dir = os.path.join("./models/llm", make_local_dir_name(repo_id))
+            target_dir = os.path.join(
+                "./models/llm", make_local_dir_name(repo_id))
 
         # 이미 다운로드된 경우 확인
         if os.path.exists(target_dir) and any(os.scandir(target_dir)):
@@ -383,7 +418,8 @@ async def download_model_from_hf_async(repo_id: str, target_dir: str = None, tok
             token=token,
             local_dir_use_symlinks=False,
             resume_download=True,
-            ignore_patterns=["*.md", ".gitattributes", "original/", "LICENSE.txt", "LICENSE"],
+            ignore_patterns=["*.md", ".gitattributes",
+                             "original/", "LICENSE.txt", "LICENSE"],
         )
 
         # 다운로드 완료 후 정리
@@ -423,9 +459,11 @@ def ensure_model_available(model_id, local_model_path=None, model_type=None):
     """
     # model_type을 사용하여 모델 경로 결정 또는 다운로드 로직 수정
     if model_type:
-        model_dir = os.path.join("./models/llm", model_type, make_local_dir_name(model_id))
+        model_dir = os.path.join(
+            "./models/llm", model_type, make_local_dir_name(model_id))
     else:
-        model_dir = os.path.join("./models/llm", "transformers", make_local_dir_name(model_id))
+        model_dir = os.path.join(
+            "./models/llm", "transformers", make_local_dir_name(model_id))
 
     if not os.path.exists(model_dir):
         try:
@@ -466,7 +504,8 @@ def convert_and_save(model_id, output_dir, push_to_hub, quant_type, qbit, model_
         if qbit:
             print(f"bnb_4bit 이므로 {qbit}는 무시됨.")
         if not output_dir:
-            output_dir = os.path.join(base_output_dir, f"{model_id.replace('/', '__')}-bnb-4bit")
+            output_dir = os.path.join(
+                base_output_dir, f"{model_id.replace('/', '__')}-bnb-4bit")
         else:
             success = convert_model_bnb_4bit(model_id, output_dir, push_to_hub)
             if success:
@@ -477,7 +516,8 @@ def convert_and_save(model_id, output_dir, push_to_hub, quant_type, qbit, model_
         if qbit:
             print(f"bnb_8bit 이므로 {qbit}는 무시됨.")
         if not output_dir:
-            output_dir = os.path.join(base_output_dir, f"{model_id.replace('/', '__')}-bnb-8bit")
+            output_dir = os.path.join(
+                base_output_dir, f"{model_id.replace('/', '__')}-bnb-8bit")
         success = convert_model_bnb_8bit(model_id, output_dir, push_to_hub)
         if success:
             return f"모델이 성공적으로 8비트로 변환되었습니다: {output_dir}"
@@ -485,7 +525,8 @@ def convert_and_save(model_id, output_dir, push_to_hub, quant_type, qbit, model_
             return "모델 변환에 실패했습니다."
     elif quant_type == "gptq":
         if not output_dir:
-            output_dir = os.path.join(base_output_dir, f"{model_id.replace('/', '__')}-gptq-{qbit}bit")
+            output_dir = os.path.join(
+                base_output_dir, f"{model_id.replace('/', '__')}-gptq-{qbit}bit")
         success = convert_model_gptq(model_id, output_dir, push_to_hub, qbit)
         if success:
             return f"모델이 성공적으로 변환되었습니다: {output_dir}"
@@ -493,7 +534,8 @@ def convert_and_save(model_id, output_dir, push_to_hub, quant_type, qbit, model_
             return "모델 변환에 실패했습니다."
     elif quant_type == "awq":
         if not output_dir:
-            output_dir = os.path.join(base_output_dir, f"{model_id.replace('/', '__')}-awq-{qbit}bit")
+            output_dir = os.path.join(
+                base_output_dir, f"{model_id.replace('/', '__')}-awq-{qbit}bit")
         success = convert_model_awq(model_id, output_dir, push_to_hub, qbit)
         if success:
             return f"모델이 성공적으로 변환되었습니다: {output_dir}"
@@ -501,7 +543,8 @@ def convert_and_save(model_id, output_dir, push_to_hub, quant_type, qbit, model_
             return "모델 변환에 실패했습니다."
     elif quant_type == "mlx":
         if not output_dir:
-            output_dir = os.path.join(base_output_dir, f"{model_id.replace('/', '__')}-mlx-{qbit}bit")
+            output_dir = os.path.join(
+                base_output_dir, f"{model_id.replace('/', '__')}-mlx-{qbit}bit")
         success = convert_model_mlx(model_id, output_dir, push_to_hub, qbit)
         if success:
             return f"모델이 성공적으로 변환되었습니다: {output_dir}"
@@ -509,15 +552,18 @@ def convert_and_save(model_id, output_dir, push_to_hub, quant_type, qbit, model_
             return "모델 변환에 실패했습니다."
     elif quant_type == "mlx_vlm":
         if not output_dir:
-            output_dir = os.path.join(base_output_dir, f"{model_id.replace('/', '__')}-mlx_vlm-{qbit}bit")
-        success = convert_model_mlx_vlm(model_id, output_dir, push_to_hub, qbit)
+            output_dir = os.path.join(
+                base_output_dir, f"{model_id.replace('/', '__')}-mlx_vlm-{qbit}bit")
+        success = convert_model_mlx_vlm(
+            model_id, output_dir, push_to_hub, qbit)
         if success:
             return f"모델이 성공적으로 변환되었습니다: {output_dir}"
         else:
             return "모델 변환에 실패했습니다."
     elif quant_type == "metal":
         if not output_dir:
-            output_dir = os.path.join(base_output_dir, f"{model_id.replace('/', '__')}-metal-{qbit}bit")
+            output_dir = os.path.join(
+                base_output_dir, f"{model_id.replace('/', '__')}-metal-{qbit}bit")
         success = convert_model_metal(model_id, output_dir, push_to_hub, qbit)
         if success:
             return f"모델이 성공적으로 변환되었습니다: {output_dir}"
@@ -538,7 +584,8 @@ def build_model_cache_key(model_id: str, model_type: str, model_provider: str, l
             return f"local::{local_path}"
         else:
             local_dirname = make_local_dir_name(model_id)
-            local_dirpath = os.path.join("./models/llm", model_type, local_dirname)
+            local_dirpath = os.path.join(
+                "./models/llm", model_type, local_dirname)
             if lora_model_id:
                 lora_dirname = make_local_dir_name(lora_model_id)
                 lora_dirpath = os.path.join("./models/llm/loras", lora_dirname)

@@ -45,11 +45,13 @@ google_genai_video_models = provider_vision_models.google_genai_video_api_models
 openai_image_api_models = provider_vision_models.openai_image_api_models
 openai_video_api_models = provider_vision_models.openai_video_api_models
 
-__all__ = ["default_device", "api_models", "transformers_local", "vllm_local", "gguf_local", "mlx_local", "known_hf_models", "diffusion_api_models", "diffusers_local", "checkpoints_local", "tts_api_models", "vits_local"]
+__all__ = ["default_device", "api_models", "transformers_local", "vllm_local", "gguf_local", "mlx_local",
+           "known_hf_models", "diffusion_api_models", "diffusers_local", "checkpoints_local", "tts_api_models", "vits_local"]
 
 # PROVIDER_LIST = ["openai", "anthropic", "google-genai", "perplexity", "xai", 'mistralai', "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"]
 
-PROVIDER_LIST = ["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "vllm-api", "oobabooga", "local-ai", "self-provided"]
+PROVIDER_LIST = ["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter",
+                 "hf-inference", "ollama", "lmstudio", "vllm-api", "oobabooga", "local-ai", "self-provided"]
 
 # IMAGE_PROVIDER_LIST = ["openai", 'google-genai', 'xai', 'hf-inference', 'comfyui', 'invokeai', 'drawthings', 'sd-webui', 'self-provided']
 
@@ -60,12 +62,16 @@ IMAGE_PROVIDER_LIST = ["openai", "google-genai", "comfyui", "self-provided"]
 TTS_PROVIDER_LIST = ["gtts", "edgetts"]
 
 REASONING_BAN = ["non-reasoning"]
-REASONING_CONTROLABLE = ["qwen3", "qwen3.5", "cogito", "gpt-oss", "gpt-5", "claude-sonnet-4", "claude-opus-4", "claude-haiku-4", "gemini-2.5-flash", "gemini-3"]
-REASONING_KWD = ["reasoning", "qwq", "r1", "deepseek-r1", "think", "thinking", "deephermes", "hermes-4", "magistral", "o1", "o3", "o4", "gemini-2.5-pro"] + REASONING_CONTROLABLE
+REASONING_CONTROLABLE = ["qwen3", "qwen3.5", "cogito", "gpt-oss", "gpt-5",
+                         "claude-sonnet-4", "claude-opus-4", "claude-haiku-4", "gemini-2.5-flash", "gemini-3"]
+REASONING_KWD = ["reasoning", "qwq", "r1", "deepseek-r1", "think", "thinking", "deephermes",
+                 "hermes-4", "magistral", "o1", "o3", "o4", "gemini-2.5-pro"] + REASONING_CONTROLABLE
 
 IS_MULTIMODAL_LOCAL = list(MODEL_FOR_MULTIMODAL_LM_MAPPING_NAMES.values())
-IS_ANY_TO_ANY = list(set(IS_MULTIMODAL_LOCAL) - set(list(MODEL_FOR_IMAGE_TEXT_TO_TEXT_MAPPING_NAMES.values())))
-IS_IMAGE_TEXT_TO_TEXT = list(MODEL_FOR_IMAGE_TEXT_TO_TEXT_MAPPING_NAMES.values())
+IS_ANY_TO_ANY = list(set(IS_MULTIMODAL_LOCAL) -
+                     set(list(MODEL_FOR_IMAGE_TEXT_TO_TEXT_MAPPING_NAMES.values())))
+IS_IMAGE_TEXT_TO_TEXT = list(
+    MODEL_FOR_IMAGE_TEXT_TO_TEXT_MAPPING_NAMES.values())
 IS_MULTIMODAL_API = [
     "gpt-4o",
     "gpt-4.1",
@@ -124,4 +130,5 @@ IS_MULTIMODAL_API = [
     "llava",
     "smolvlm",
 ]
-IS_OMNI_API = ["gpt-realtime", "gemini-2.5", "gemini-3", "grok-4", "voxtral-mini-4b-realtime-2602qwen2.5-omni", "qwen3-omniphi-4-multimodal"]
+IS_OMNI_API = ["gpt-realtime", "gemini-2.5", "gemini-3", "grok-4",
+               "voxtral-mini-4b-realtime-2602qwen2.5-omni", "qwen3-omniphi-4-multimodal"]

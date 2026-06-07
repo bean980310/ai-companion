@@ -6,6 +6,37 @@ from ai_companion_core import logger
 from ai_companion_core.environ_manager import load_env_variables
 
 
+class LocalModelNotFound(Exception):
+    pass
+
+
+def get_omnivoice_models(api_host: str = "http://localhost:8880/v1"):
+    import openai
+    from openai import OpenAI
+
+    model_list = []
+
+    client = OpenAI(api_key="not-needed", base_url=api_host)
+
+    try:
+        model = client.models.list()
+
+        if len(model.data) == 0:
+            raise LocalModelNotFound("모델이 존재하지 않습니다.")
+
+        for m in model.data:
+            model_list.append(m.id)
+
+        return model_list
+
+    except LocalModelNotFound:
+        logger.error("모델이 존재하지 않습니다.")
+        return ["모델이 존재하지 않습니다."]
+    except Exception as e:
+        logger.error(f"Omnivoice 오류 발생: {e}")
+        return ["Omnivoice 서버를 설치하고 실행해주세요."]
+
+
 def get_openai_asr_models(api_key: str = None):
     import openai
     from openai import OpenAI

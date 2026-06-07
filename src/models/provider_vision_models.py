@@ -20,14 +20,18 @@ def get_comfyui_image_models(url: str = "127.0.0.1:8188", folder: str = "checkpo
         model = client.models.list(folder=folder)
 
         if len(model) == 0:
-            return ["모델이 존재하지 않습니다."]
+            raise LocalModelNotFound("모델이 존재하지 않습니다.")
 
         for m in model:
             model_list.append(m)
 
         return model_list
 
+    except LocalModelNotFound:
+        logger.error("모델이 존재하지 않습니다.")
+        return ["모델이 존재하지 않습니다."]
     except:
+        logger.error("ComfyUI를 설치하고 서버를 실행해주세요.")
         return ["ComfyUI를 설치하고 서버를 실행해주세요."]
 
 
@@ -213,11 +217,15 @@ comfyui_inpaint_models = get_comfyui_image_models(folder="inpaint")
 comfyui_ipadapter = get_comfyui_image_models(folder="ipadapter")
 comfyui_unet = get_comfyui_image_models(folder="unet")
 
-openai_image_api_models = get_openai_image_models(load_env_variables("OPENAI_API_KEY"))
-openai_video_api_models = get_openai_video_models(load_env_variables("OPENAI_API_KEY"))
+openai_image_api_models = get_openai_image_models(
+    load_env_variables("OPENAI_API_KEY"))
+openai_video_api_models = get_openai_video_models(
+    load_env_variables("OPENAI_API_KEY"))
 
-google_genai_image_api_models = get_google_genai_image_models(load_env_variables("GEMINI_API_KEY"))
-google_genai_video_api_models = get_google_genai_video_models(load_env_variables("GEMINI_API_KEY"))
+google_genai_image_api_models = get_google_genai_image_models(
+    load_env_variables("GEMINI_API_KEY"))
+google_genai_video_api_models = get_google_genai_video_models(
+    load_env_variables("GEMINI_API_KEY"))
 
 huggingface_inference_image_api_models = [
     "stabilityai/stable-diffusion-xl-base-1.0",
@@ -239,11 +247,14 @@ huggingface_inference_image_api_models = [
     "HiDream-ai/HiDream-I1-Full",
 ]
 
-huggingface_inference_image_edit_api_models = ["stabilityai/stable-diffusion-xl-refiner-1.0", "black-forest-labs/FLUX.2-klein-4B", "black-forest-labs/FLUX.2-dev", "Qwen/Qwen-Image-Edit", "Qwen/Qwen-Image-Edit-2509", "Qwen/Qwen-Image-Edit-2511"]
+huggingface_inference_image_edit_api_models = ["stabilityai/stable-diffusion-xl-refiner-1.0", "black-forest-labs/FLUX.2-klein-4B",
+                                               "black-forest-labs/FLUX.2-dev", "Qwen/Qwen-Image-Edit", "Qwen/Qwen-Image-Edit-2509", "Qwen/Qwen-Image-Edit-2511"]
 
-huggingface_inference_video_api_models = ["Wan-AI/Wan2.2-T2V-A14B-Diffusers", "zai-org/CogVideoX-5b"]
+huggingface_inference_video_api_models = [
+    "Wan-AI/Wan2.2-T2V-A14B-Diffusers", "zai-org/CogVideoX-5b"]
 
-huggingface_inference_image_to_video_api_models = ["Wan-AI/Wan2.2-I2V-A14B-Diffusers", "Lightricks/LTX-2"]
+huggingface_inference_image_to_video_api_models = [
+    "Wan-AI/Wan2.2-I2V-A14B-Diffusers", "Lightricks/LTX-2"]
 
 image_api_models.extend(openai_image_api_models)
 image_api_models.extend(google_genai_image_api_models)

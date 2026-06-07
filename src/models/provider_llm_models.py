@@ -206,8 +206,10 @@ def get_openai_llm_models(api_key: str = None):
             model_id = m.id
 
             include = any(k in model_id.lower() for k in gpt_pattern)
-            exclude_type = all(k not in model_id.lower() for k in ["image", "realtime", "tts", "audio", "transcribe", "codex", "search", "preview"])
-            exclude_model = all(k not in model_id.lower() for k in ["gpt-4.1-mini", "gpt-4.1-nano", "gpt-4o-mini", "chatgpt-4o-latest"])
+            exclude_type = all(k not in model_id.lower() for k in [
+                               "image", "realtime", "tts", "audio", "transcribe", "codex", "search", "preview"])
+            exclude_model = all(k not in model_id.lower() for k in [
+                                "gpt-4.1-mini", "gpt-4.1-nano", "gpt-4o-mini", "chatgpt-4o-latest"])
             if include and exclude_type and exclude_model:
                 model_list.append(model_id)
 
@@ -342,8 +344,10 @@ def get_google_genai_llm_models(api_key: str = None):
 
         for m in model.page:
             include = any(k in m.name.lower() for k in ["gemini", "gemma"])
-            exclude_type = all(k not in m.name.lower() for k in ["embedding", "tts", "exp"])
-            exclude_model = all(k not in m.name.lower() for k in ["gemini-2.0"])
+            exclude_type = all(k not in m.name.lower()
+                               for k in ["embedding", "tts", "exp"])
+            exclude_model = all(k not in m.name.lower()
+                                for k in ["gemini-2.0"])
 
             if "generateContent" in m.supported_actions and include and exclude_type and exclude_model:
                 model_list.append(m.name)
@@ -461,7 +465,8 @@ def get_mistralai_llm_models(api_key: str = None):
 
     model_list = []
 
-    LLM_ALIASES = ["mistral-large-pixtral-2411", "mistral-medium", "mistral-tiny", "mistral-tiny-2312", "mistral-tiny-2407", "open-mistral-7b", "open-mistral-nemo", "voxtral-mini-transcribe", "latest"]
+    LLM_ALIASES = ["mistral-large-pixtral-2411", "mistral-medium", "mistral-tiny", "mistral-tiny-2312",
+                   "mistral-tiny-2407", "open-mistral-7b", "open-mistral-nemo", "voxtral-mini-transcribe", "latest"]
 
     if not api_key:
         model_list.append("Mistral AI API Key가 필요합니다.")
@@ -489,11 +494,15 @@ ollama_models = get_ollama_models()
 oobabooga_models = get_oobabooga_models()
 vllm_api_models = get_vllm_models()
 openai_api_models = get_openai_llm_models(load_env_variables("OPENAI_API_KEY"))
-anthropic_api_models = get_anthropic_llm_models(load_env_variables("ANTHROPIC_API_KEY"))
-google_genai_api_models = get_google_genai_llm_models(load_env_variables("GEMINI_API_KEY"))
-perplexity_api_models = get_perplexity_llm_models(load_env_variables("PERPLEXITY_API_KEY"))
+anthropic_api_models = get_anthropic_llm_models(
+    load_env_variables("ANTHROPIC_API_KEY"))
+google_genai_api_models = get_google_genai_llm_models(
+    load_env_variables("GEMINI_API_KEY"))
+perplexity_api_models = get_perplexity_llm_models(
+    load_env_variables("PERPLEXITY_API_KEY"))
 xai_api_models = get_xai_llm_models(load_env_variables("XAI_API_KEY"))
-mistralai_api_models = get_mistralai_llm_models(load_env_variables("MISTRAL_API_KEY"))
+mistralai_api_models = get_mistralai_llm_models(
+    load_env_variables("MISTRAL_API_KEY"))
 
 openrouter_api_models = [
     "meta-llama/llama-3.3-70b-instruct",
