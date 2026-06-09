@@ -12,6 +12,8 @@ from contextlib import AsyncExitStack
 from ai_companion_core import logger
 from ai_companion_core.appdata import APPDATA_PATH
 
+import httpx
+
 from .models import MCPServerConfig, MCPTool, MCPToolResult, MCPToolParameter, MCPTransportType, MCPResource, MCPPrompt
 
 # MCP SDK imports
@@ -32,6 +34,86 @@ from authlib.integrations.httpx_client import OAuth2Client
 from authlib.oauth2.rfc7636 import create_s256_code_challenge
 
 from .oauth import create_oauth_provider, FileTokenStorage, PKCEOAuthProvider, PKCEAuth
+
+
+def _iter_exception_tree(exc: BaseException):
+    """Yield all leaf exceptions, unwrapping ExceptionGroup instances."""
+    if isinstance(exc, BaseExceptionGroup):
+        for child in exc.exceptions:
+            yield from _iter_exception_tree(child)
+        return
+    yield exc
+
+
+async def _read_response_body(response: httpx.Response) -> str:
+    try:
+        if not response.is_closed:
+            await response.aread()
+        response_text = response.text.strip()
+    except httpx.ResponseNotRead:
+        response_text = "<streaming response body not read>"
+    except Exception as body_error:
+        response_text = f"<response body unavailable: {body_error}>"
+
+    if len(response_text) > 2000:
+        response_text = response_text[:2000] + "... [truncated]"
+    return response_text
+
+
+def _format_response_headers(response: httpx.Response) -> str:
+    useful_headers = [
+        "content-type",
+        "www-authenticate",
+        "x-goog-api-client",
+        "x-goog-request-info",
+        "x-guploader-uploadid",
+    ]
+    values = []
+    for header in useful_headers:
+        value = response.headers.get(header)
+        if value:
+            values.append(f"{header}={value}")
+    return "; ".join(values)
+
+
+async def _format_http_status_error(exc: httpx.HTTPStatusError) -> str:
+    response = exc.response
+    request = exc.request
+    response_text = await _read_response_body(response)
+    response_headers = _format_response_headers(response)
+
+    parts = [
+        f"HTTP {response.status_code} {response.reason_phrase}",
+        f"request={request.method} {request.url}",
+    ]
+    if response_headers:
+        parts.append(f"response_headers={response_headers}")
+    if response_text:
+        parts.append(f"response_body={response_text}")
+    return "; ".join(parts)
+
+
+async def _format_connection_error(exc: BaseException) -> str:
+    details = []
+    for leaf in _iter_exception_tree(exc):
+        if isinstance(leaf, httpx.HTTPStatusError):
+            details.append(await _format_http_status_error(leaf))
+        elif isinstance(leaf, httpx.HTTPError):
+            request = getattr(leaf, "request", None)
+            request_detail = f" request={request.method} {request.url}" if request else ""
+            details.append(f"{leaf.__class__.__name__}:{request_detail} {leaf}")
+
+    if not details:
+        return str(exc)
+
+    return f"{exc}; " + " | ".join(details)
+
+
+def _has_server_capability(initialize_result: Any, capability_name: str) -> bool:
+    capabilities = getattr(initialize_result, "capabilities", None)
+    if capabilities is None:
+        return True
+    return getattr(capabilities, capability_name, None) is not None
 
 
 class MCPClientManager:
@@ -60,6 +142,7 @@ class MCPClientManager:
         self.resources: Dict[str, MCPResource] = {}
         self.prompts: Dict[str, MCPPrompt] = {}
         self.exit_stack = AsyncExitStack()
+        self._session_stacks: Dict[str, AsyncExitStack] = {}
         self._connected_servers: set = set()
 
         # Load saved configurations
@@ -303,6 +386,10 @@ class MCPClientManager:
             logger.warning(f"Server {server_name} is disabled")
             return False
 
+        if server_name in self.sessions:
+            logger.info(f"MCP server already connected: {server_name}")
+            return True
+
         # Validate OAuth token before attempting connection
         if config.oauth_enabled:
             token_valid = self.validate_server_token(server_name)
@@ -325,7 +412,7 @@ class MCPClientManager:
             return True
 
         except Exception as e:
-            logger.error(f"Error connecting to {server_name}: {e}\n\n{traceback.format_exc()}")
+            logger.error(f"Error connecting to {server_name}: {await _format_connection_error(e)}\n\n{traceback.format_exc()}")
             return False
 
     async def _connect_sse(self, server_id: str, config: MCPServerConfig):
@@ -345,11 +432,17 @@ class MCPClientManager:
                     raise RuntimeError(f"PKCE authentication failed for '{config.name}'")
                 logger.info(f"[PKCE] Token acquired for SSE connection to '{config.name}'")
 
-        async with sse_client(config.url, headers=headers, auth=auth) as (read, write):
-            async with ClientSession(read, write) as session:
-                await session.initialize()
-                self.sessions[server_id] = session
-                await self._discover_capabilities(server_id, session)
+        stack = AsyncExitStack()
+        try:
+            read, write = await stack.enter_async_context(sse_client(config.url, headers=headers, auth=auth))
+            session = await stack.enter_async_context(ClientSession(read, write))
+            initialize_result = await session.initialize()
+            self.sessions[server_id] = session
+            self._session_stacks[server_id] = stack
+            await self._discover_capabilities(server_id, session, initialize_result)
+        except Exception:
+            await stack.aclose()
+            raise
 
     async def _connect_stdio(self, server_id: str, config: MCPServerConfig):
         """Connect to a STDIO-based MCP server"""
@@ -366,11 +459,17 @@ class MCPClientManager:
 
         server_params = StdioServerParameters(command=command, args=args, env=env)
 
-        async with stdio_client(server_params) as (read, write):
-            async with ClientSession(read, write) as session:
-                await session.initialize()
-                self.sessions[server_id] = session
-                await self._discover_capabilities(server_id, session)
+        stack = AsyncExitStack()
+        try:
+            read, write = await stack.enter_async_context(stdio_client(server_params))
+            session = await stack.enter_async_context(ClientSession(read, write))
+            initialize_result = await session.initialize()
+            self.sessions[server_id] = session
+            self._session_stacks[server_id] = stack
+            await self._discover_capabilities(server_id, session, initialize_result)
+        except Exception:
+            await stack.aclose()
+            raise
 
     async def _connect_http(self, server_id: str, config: MCPServerConfig):
         """Connect to an HTTP-based MCP server"""
@@ -380,6 +479,7 @@ class MCPClientManager:
             headers["Authorization"] = f"Bearer {config.api_key}"
 
         # OAuth 2.1 authentication (PKCE-based)
+        auth = None
         http_client = None
         if config.oauth_enabled:
             auth = await create_oauth_provider(config)
@@ -390,67 +490,82 @@ class MCPClientManager:
                     raise RuntimeError(f"PKCE authentication failed for '{config.name}'")
                 headers["Authorization"] = f"Bearer {token}"
                 logger.info(f"[PKCE] Token acquired for HTTP connection to '{config.name}'")
+
+        if headers or auth:
             http_client = create_mcp_http_client(headers=headers, auth=auth)
 
-        async with streamable_http_client(config.url, http_client=http_client) as (read, write, _get_session_id):
-            async with ClientSession(read, write) as session:
-                await session.initialize()
-                self.sessions[server_id] = session
-                await self._discover_capabilities(server_id, session)
+        stack = AsyncExitStack()
+        try:
+            if http_client:
+                await stack.enter_async_context(http_client)
+            read, write, _get_session_id = await stack.enter_async_context(streamable_http_client(config.url, http_client=http_client))
+            session = await stack.enter_async_context(ClientSession(read, write))
+            initialize_result = await session.initialize()
+            self.sessions[server_id] = session
+            self._session_stacks[server_id] = stack
+            await self._discover_capabilities(server_id, session, initialize_result)
+        except Exception:
+            await stack.aclose()
+            raise
 
-    async def _discover_capabilities(self, server_name: str, session: ClientSession):
+    async def _discover_capabilities(self, server_name: str, session: ClientSession, initialize_result: Any = None):
         """Discover tools, resources, and prompts from a connected server"""
         # Discover tools
-        try:
-            tools_result = await session.list_tools()
-            for tool in tools_result.tools:
-                params = []
-                input_schema = tool.inputSchema or {}
+        if _has_server_capability(initialize_result, "tools"):
+            try:
+                tools_result = await session.list_tools()
+                for tool in tools_result.tools:
+                    params = []
+                    input_schema = tool.inputSchema or {}
 
-                # Parse parameters from input schema
-                properties = input_schema.get("properties", {})
-                required = input_schema.get("required", [])
+                    # Parse parameters from input schema
+                    properties = input_schema.get("properties", {})
+                    required = input_schema.get("required", [])
 
-                for param_name, param_info in properties.items():
-                    params.append(MCPToolParameter(name=param_name, type=param_info.get("type", "string"), description=param_info.get("description", ""), required=param_name in required, default=param_info.get("default"), enum=param_info.get("enum")))
+                    for param_name, param_info in properties.items():
+                        params.append(MCPToolParameter(name=param_name, type=param_info.get("type", "string"), description=param_info.get("description", ""), required=param_name in required, default=param_info.get("default"), enum=param_info.get("enum")))
 
-                mcp_tool = MCPTool(name=tool.name, description=tool.description or "", server_name=server_name, parameters=params, input_schema=input_schema)
-                self.tools[mcp_tool.full_name] = mcp_tool
-                logger.debug(f"Discovered tool: {mcp_tool.full_name}")
+                    mcp_tool = MCPTool(name=tool.name, description=tool.description or "", server_name=server_name, parameters=params, input_schema=input_schema)
+                    self.tools[mcp_tool.full_name] = mcp_tool
+                    logger.debug(f"Discovered tool: {mcp_tool.full_name}")
 
-            logger.info(f"Discovered {len(tools_result.tools)} tools from {server_name}")
-        except Exception as e:
-            logger.warning(f"Error discovering tools from {server_name}: {e}")
+                logger.info(f"Discovered {len(tools_result.tools)} tools from {server_name}")
+            except Exception as e:
+                logger.warning(f"Error discovering tools from {server_name}: {e}")
 
         # Discover resources
-        try:
-            resources_result = await session.list_resources()
-            for resource in resources_result.resources:
-                mcp_resource = MCPResource(uri=str(resource.uri), name=resource.name, description=resource.description or "", mime_type=resource.mimeType or "application/json", server_name=server_name)
-                self.resources[f"{server_name}__{resource.name}"] = mcp_resource
-            logger.info(f"Discovered {len(resources_result.resources)} resources from {server_name}")
-        except Exception as e:
-            logger.debug(f"No resources available from {server_name}: {e}")
+        if _has_server_capability(initialize_result, "resources"):
+            try:
+                resources_result = await session.list_resources()
+                for resource in resources_result.resources:
+                    mcp_resource = MCPResource(uri=str(resource.uri), name=resource.name, description=resource.description or "", mime_type=resource.mimeType or "application/json", server_name=server_name)
+                    self.resources[f"{server_name}__{resource.name}"] = mcp_resource
+                logger.info(f"Discovered {len(resources_result.resources)} resources from {server_name}")
+            except Exception as e:
+                logger.debug(f"No resources available from {server_name}: {e}")
 
         # Discover prompts
-        try:
-            prompts_result = await session.list_prompts()
-            for prompt in prompts_result.prompts:
-                args = []
-                for arg in prompt.arguments or []:
-                    args.append(MCPToolParameter(name=arg.name, type="string", description=arg.description or "", required=arg.required or False))
-                mcp_prompt = MCPPrompt(name=prompt.name, description=prompt.description or "", arguments=args, server_name=server_name)
-                self.prompts[f"{server_name}__{prompt.name}"] = mcp_prompt
-            logger.info(f"Discovered {len(prompts_result.prompts)} prompts from {server_name}")
-        except Exception as e:
-            logger.debug(f"No prompts available from {server_name}: {e}")
+        if _has_server_capability(initialize_result, "prompts"):
+            try:
+                prompts_result = await session.list_prompts()
+                for prompt in prompts_result.prompts:
+                    args = []
+                    for arg in prompt.arguments or []:
+                        args.append(MCPToolParameter(name=arg.name, type="string", description=arg.description or "", required=arg.required or False))
+                    mcp_prompt = MCPPrompt(name=prompt.name, description=prompt.description or "", arguments=args, server_name=server_name)
+                    self.prompts[f"{server_name}__{prompt.name}"] = mcp_prompt
+                logger.info(f"Discovered {len(prompts_result.prompts)} prompts from {server_name}")
+            except Exception as e:
+                logger.debug(f"No prompts available from {server_name}: {e}")
 
     async def disconnect(self, server_name: str):
         """Disconnect from an MCP server"""
         if server_name in self.sessions:
             try:
-                # Session cleanup
                 del self.sessions[server_name]
+                stack = self._session_stacks.pop(server_name, None)
+                if stack:
+                    await stack.aclose()
             except Exception as e:
                 logger.warning(f"Error disconnecting from {server_name}: {e}")
 

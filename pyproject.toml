@@ -21,3 +21,8 @@ ai-companion = { path = ".", editable = true }
 
 [tool.pixi.dependencies]
 python = "3.12.*"
+
+[tool.uv.workspace]
+members = [
+    "packages/ai-companion-audio-backend",
+]

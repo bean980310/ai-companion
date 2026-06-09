@@ -8,6 +8,7 @@ warnings.filterwarnings("ignore", module="gradio")
 warnings.filterwarnings("ignore", module="torchao")
 warnings.filterwarnings("ignore", module="torch")
 warnings.filterwarnings("ignore", module="pydantic")
+warnings.filterwarnings("ignore", module="contextlib")
 
 config_dir = Path.home() / ".ai-companion"
 env_file = config_dir / ".env"

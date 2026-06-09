@@ -25,7 +25,7 @@ from authlib.integrations.httpx_client import AsyncOAuth2Client, AsyncAssertionC
 from authlib.oauth2.rfc7636 import create_s256_code_challenge
 from pydantic import Field
 
-import secrets
+import jwt
 
 import httpx
 
