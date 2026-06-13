@@ -24,5 +24,9 @@ python = "3.12.*"
 
 [tool.uv.workspace]
 members = [
+    "packages/ai-companion-core",
+    "packages/ai-companion-llm-backend",
+    "packages/ai-companion-image-backend",
     "packages/ai-companion-audio-backend",
+    "packages/ai-companion-langchain-integator",
 ]

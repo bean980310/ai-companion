@@ -489,6 +489,9 @@ class MCPClientManager:
                 if not token:
                     raise RuntimeError(f"PKCE authentication failed for '{config.name}'")
                 headers["Authorization"] = f"Bearer {token}"
+                headers["content-type"] = "application/json"
+                if config.name.lower() == "notion":
+                    headers["Notion-Version"] = "2026-03-11"
                 logger.info(f"[PKCE] Token acquired for HTTP connection to '{config.name}'")
 
         if headers or auth:

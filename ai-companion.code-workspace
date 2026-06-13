@@ -1,0 +1,29 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "packages/ai-companion-llm-backend"
+		},
+		{
+			"path": "packages/ai-companion-image-backend"
+		},
+		{
+			"path": "packages/ai-companion-core"
+		},
+		{
+			"path": "packages/ai-companion-audio-backend"
+		},
+		{
+			"path": "packages/ai-companion-langchain-integrator"
+		}
+	],
+	"settings": {
+		"python-envs.defaultEnvManager": "ms-python.python:conda",
+		"python-envs.defaultPackageManager": "ms-python.python:conda",
+		"extensions.experimental.deferredStartupFinishedActivation": true,
+		"terminal.integrated.bellDuration": 1000,
+		"python.languageServer": "None"
+	}
+}
