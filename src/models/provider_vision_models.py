@@ -2,6 +2,8 @@ import os
 from typing import List
 import re
 
+import httpx
+
 from ai_companion_core import logger
 from ai_companion_core.environ_manager import load_env_variables
 
@@ -10,34 +12,43 @@ class LocalModelNotFound(Exception):
     pass
 
 
-def get_comfyui_image_models(url: str = "127.0.0.1:8188", folder: str = "checkpoints"):
+class ServerNotRunning(Exception):
+    pass
+
+
+def get_comfyui_image_models(url: str = "localhost:8188", folder: str = "checkpoints"):
     from comfy_sdk import ComfyUI
 
-    client = ComfyUI(host=url.split(":")[0], port=int(url.split(":")[1]))
     model_list = []
+    client = ComfyUI(server_url=url)
 
     try:
         model = client.models.list(folder=folder)
 
         if len(model) == 0:
-            raise LocalModelNotFound("모델이 존재하지 않습니다.")
+            raise LocalModelNotFound(f"{folder} 모델이 존재하지 않습니다.")
 
         for m in model:
             model_list.append(m)
 
-        return model_list
+        logger.info(f"ComfyUI {folder} 모델 목록: {model_list}")
 
+        return model_list
     except LocalModelNotFound:
-        logger.error("모델이 존재하지 않습니다.")
-        return ["모델이 존재하지 않습니다."]
-    except:
+        logger.error(f"{folder} 모델이 존재하지 않습니다.")
+        return [f"{folder} 모델이 존재하지 않습니다."]
+    except ServerNotRunning:
         logger.error("ComfyUI를 설치하고 서버를 실행해주세요.")
         return ["ComfyUI를 설치하고 서버를 실행해주세요."]
 
 
 def get_sglang_image_models(api_host: str = "http://localhost:30001/v1"):
-    import openai
-    from openai import OpenAI
+    try:
+        import openai
+        from openai import OpenAI
+    except ImportError:
+        logger.error("openai가 설치되지 않았습니다.")
+        return ["openai가 설치되지 않았습니다."]
 
     model_list = []
     client = OpenAI(api_key="not-needed", base_url=api_host)
@@ -51,11 +62,19 @@ def get_sglang_image_models(api_host: str = "http://localhost:30001/v1"):
         for m in model.data:
             model_list.append(m.id)
 
+        logger.info(f"sglang 이미지 모델 목록: {model_list}")
+
         return model_list
     except LocalModelNotFound:
         logger.error("모델이 존재하지 않습니다.")
         return ["모델이 존재하지 않습니다."]
-    except:
+    except openai.PermissionDeniedError:
+        logger.error("sglang을 설치하고 서버를 실행해주세요.")
+        return ["sglang을 설치하고 서버를 실행해주세요."]
+    except openai.APIConnectionError:
+        logger.error("sglang을 설치하고 서버를 실행해주세요.")
+        return ["sglang을 설치하고 서버를 실행해주세요."]
+    except ServerNotRunning:
         logger.error("sglang을 설치하고 서버를 실행해주세요.")
         return ["sglang을 설치하고 서버를 실행해주세요."]
 
@@ -81,39 +100,41 @@ def get_openai_image_models(api_key: str = None):
             if "image" in model_id.lower():
                 model_list.append(model_id)
 
-        return model_list
-
-    except openai.AuthenticationError as e:
-        model_list.append(f"OpenAI API 오류 발생: {e}")
-        return model_list
-
-
-def get_openai_video_models(api_key: str = None):
-    import openai
-    from openai import OpenAI
-
-    model_list = []
-
-    if not api_key:
-        model_list.append("OpenAI API Key가 필요합니다.")
-        return model_list
-
-    client = OpenAI(api_key=api_key)
-
-    try:
-        model = client.models.list()
-
-        for m in model.data:
-            model_id = m.id
-
-            if "sora" in model_id.lower():
-                model_list.append(model_id)
+        logger.info(f"openai 이미지 모델 목록: {model_list}")
 
         return model_list
 
     except openai.AuthenticationError as e:
         model_list.append(f"OpenAI API 오류 발생: {e}")
         return model_list
+
+
+# def get_openai_video_models(api_key: str = None):
+#     import openai
+#     from openai import OpenAI
+
+#     model_list = []
+
+#     if not api_key:
+#         model_list.append("OpenAI API Key가 필요합니다.")
+#         return model_list
+
+#     client = OpenAI(api_key=api_key)
+
+#     try:
+#         model = client.models.list()
+
+#         for m in model.data:
+#             model_id = m.id
+
+#             if "sora" in model_id.lower():
+#                 model_list.append(model_id)
+
+#         return model_list
+
+#     except openai.AuthenticationError as e:
+#         model_list.append(f"OpenAI API 오류 발생: {e}")
+#         return model_list
 
 
 def get_google_genai_image_models(api_key: str = None):
@@ -137,6 +158,8 @@ def get_google_genai_image_models(api_key: str = None):
 
             if include:
                 model_list.append(m.name)
+
+        logger.info(f"google genai 이미지 모델 목록: {model_list}")
 
         return model_list
 
@@ -180,6 +203,8 @@ def get_google_genai_video_models(api_key: str = None):
             if include:
                 model_list.append(m.name)
 
+        logger.info(f"google genai 비디오 모델 목록: {model_list}")
+
         return model_list
 
     except errors.ClientError as e:
@@ -207,7 +232,7 @@ comfyui_models = get_comfyui_image_models(folder="checkpoints")
 comfyui_loras = get_comfyui_image_models(folder="loras")
 comfyui_vae = get_comfyui_image_models(folder="vae")
 comfyui_controlnet = get_comfyui_image_models(folder="controlnet")
-comfyui_clip = get_comfyui_image_models(folder="clip")
+comfyui_clip = get_comfyui_image_models(folder="clip_gguf")
 comfyui_clip_vision = get_comfyui_image_models(folder="clip_vision")
 comfyui_text_encoders = get_comfyui_image_models(folder="text_encoders")
 comfyui_embeddings = get_comfyui_image_models(folder="embeddings")
@@ -215,17 +240,18 @@ comfyui_diffusion_models = get_comfyui_image_models(folder="diffusion_models")
 comfyui_pretrained_models = get_comfyui_image_models(folder="diffusers")
 comfyui_inpaint_models = get_comfyui_image_models(folder="inpaint")
 comfyui_ipadapter = get_comfyui_image_models(folder="ipadapter")
-comfyui_unet = get_comfyui_image_models(folder="unet")
+comfyui_unet = get_comfyui_image_models(folder="unet_gguf")
 
-openai_image_api_models = get_openai_image_models(
-    load_env_variables("OPENAI_API_KEY"))
-openai_video_api_models = get_openai_video_models(
-    load_env_variables("OPENAI_API_KEY"))
+openai_image_api_models = get_openai_image_models(load_env_variables("OPENAI_API_KEY"))
+# openai_video_api_models = get_openai_video_models(
+#     load_env_variables("OPENAI_API_KEY"))
 
 google_genai_image_api_models = get_google_genai_image_models(
-    load_env_variables("GEMINI_API_KEY"))
+    load_env_variables("GEMINI_API_KEY")
+)
 google_genai_video_api_models = get_google_genai_video_models(
-    load_env_variables("GEMINI_API_KEY"))
+    load_env_variables("GEMINI_API_KEY")
+)
 
 huggingface_inference_image_api_models = [
     "stabilityai/stable-diffusion-xl-base-1.0",
@@ -247,16 +273,27 @@ huggingface_inference_image_api_models = [
     "HiDream-ai/HiDream-I1-Full",
 ]
 
-huggingface_inference_image_edit_api_models = ["stabilityai/stable-diffusion-xl-refiner-1.0", "black-forest-labs/FLUX.2-klein-4B",
-                                               "black-forest-labs/FLUX.2-dev", "Qwen/Qwen-Image-Edit", "Qwen/Qwen-Image-Edit-2509", "Qwen/Qwen-Image-Edit-2511"]
+huggingface_inference_image_edit_api_models = [
+    "stabilityai/stable-diffusion-xl-refiner-1.0",
+    "black-forest-labs/FLUX.2-klein-4B",
+    "black-forest-labs/FLUX.2-dev",
+    "Qwen/Qwen-Image-Edit",
+    "Qwen/Qwen-Image-Edit-2509",
+    "Qwen/Qwen-Image-Edit-2511",
+]
 
 huggingface_inference_video_api_models = [
-    "Wan-AI/Wan2.2-T2V-A14B-Diffusers", "zai-org/CogVideoX-5b"]
+    "Wan-AI/Wan2.2-T2V-A14B-Diffusers",
+    "zai-org/CogVideoX-5b",
+]
 
 huggingface_inference_image_to_video_api_models = [
-    "Wan-AI/Wan2.2-I2V-A14B-Diffusers", "Lightricks/LTX-2"]
+    "Wan-AI/Wan2.2-I2V-A14B-Diffusers",
+    "Lightricks/LTX-2",
+]
 
 image_api_models.extend(openai_image_api_models)
 image_api_models.extend(google_genai_image_api_models)
-video_api_models.extend(openai_video_api_models)
+image_api_models.extend(comfyui_models)
+# video_api_models.extend(openai_video_api_models)
 video_api_models.extend(google_genai_video_api_models)

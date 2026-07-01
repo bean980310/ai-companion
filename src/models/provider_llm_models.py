@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Any
 import re
 
 from ai_companion_core import logger
@@ -7,6 +7,10 @@ from ai_companion_core.environ_manager import load_env_variables
 
 
 class LocalModelNotFound(Exception):
+    pass
+
+
+class ServerNotRunning(Exception):
     pass
 
 
@@ -28,11 +32,13 @@ def get_lmstudio_models(api_host: str = "localhost:1234"):
         for m in downloaded_llm:
             llm.append(m.model_key)
 
+        logger.info(f"lmstudio 모델 목록: {llm}")
+
         return llm
     except LocalModelNotFound:
         logger.error("모델이 존재하지 않습니다.")
         return ["모델이 존재하지 않습니다."]
-    except:
+    except ServerNotRunning:
         logger.error("LM Studio를 설치하고 서버를 실행해주세요.")
         return ["LM Studio를 설치하고 서버를 실행해주세요."]
 
@@ -55,11 +61,13 @@ def get_lmstudio_embedding_models(api_host: str = "localhost:1234"):
         for m in downloaded_embedding:
             embedding.append(m.model_key)
 
+        logger.info(f"lmstudio embedding 모델 목록: {embedding}")
+
         return embedding
     except LocalModelNotFound:
         logger.error("모델이 존재하지 않습니다.")
         return ["모델이 존재하지 않습니다."]
-    except:
+    except ServerNotRunning:
         logger.error("LM Studio를 설치하고 서버를 실행해주세요.")
         return ["LM Studio를 설치하고 서버를 실행해주세요."]
 
@@ -82,11 +90,13 @@ def get_ollama_models(host: str = "http://localhost:11434"):
         for m in models:
             llm.append(m.model)
 
+        logger.info(f"ollama 모델 목록: {llm}")
+
         return llm
     except LocalModelNotFound:
         logger.error("모델이 존재하지 않습니다.")
         return ["모델이 존재하지 않습니다."]
-    except:
+    except ServerNotRunning:
         logger.error("Ollama를 설치하고 서버를 실행해주세요.")
         return ["Ollama를 설치하고 서버를 실행해주세요."]
 
@@ -111,11 +121,19 @@ def get_oobabooga_models(host: str = "http://localhost:5000/v1"):
         for m in model.data:
             llm.append(m.id)
 
+        logger.info(f"oobabooga 모델 목록: {llm}")
+
         return llm
     except LocalModelNotFound:
         logger.error("모델이 존재하지 않습니다.")
         return ["모델이 존재하지 않습니다."]
-    except:
+    except openai.PermissionDeniedError:
+        logger.error("Oobabooga를 설치하고 서버를 실행해주세요.")
+        return ["Oobabooga를 설치하고 서버를 실행해주세요."]
+    except openai.APIConnectionError:
+        logger.error("Oobabooga를 설치하고 서버를 실행해주세요.")
+        return ["Oobabooga를 설치하고 서버를 실행해주세요."]
+    except ServerNotRunning:
         logger.error("Oobabooga를 설치하고 서버를 실행해주세요.")
         return ["Oobabooga를 설치하고 서버를 실행해주세요."]
 
@@ -140,11 +158,19 @@ def get_vllm_models(host: str = "http://localhost:8000/v1"):
         for m in model.data:
             llm.append(m.id)
 
+        logger.info(f"vllm 모델 목록: {llm}")
+
         return llm
     except LocalModelNotFound:
         logger.error("모델이 존재하지 않습니다.")
         return ["모델이 존재하지 않습니다."]
-    except:
+    except openai.PermissionDeniedError:
+        logger.error("vllm을 설치하고 서버를 실행해주세요.")
+        return ["vllm을 설치하고 서버를 실행해주세요."]
+    except openai.APIConnectionError:
+        logger.error("vllm을 설치하고 서버를 실행해주세요.")
+        return ["vllm을 설치하고 서버를 실행해주세요."]
+    except ServerNotRunning:
         logger.error("vllm을 설치하고 서버를 실행해주세요.")
         return ["vllm을 설치하고 서버를 실행해주세요."]
 
@@ -169,11 +195,19 @@ def get_sglang_llm_models(host: str = "http://localhost:30001/v1"):
         for m in model.data:
             llm.append(m.id)
 
+        logger.info(f"sglang 모델 목록: {llm}")
+
         return llm
     except LocalModelNotFound:
         logger.error("모델이 존재하지 않습니다.")
         return ["모델이 존재하지 않습니다."]
-    except:
+    except openai.PermissionDeniedError:
+        logger.error("sglang을 설치하고 서버를 실행해주세요.")
+        return ["sglang을 설치하고 서버를 실행해주세요."]
+    except openai.APIConnectionError:
+        logger.error("sglang을 설치하고 서버를 실행해주세요.")
+        return ["sglang을 설치하고 서버를 실행해주세요."]
+    except ServerNotRunning:
         logger.error("sglang을 설치하고 서버를 실행해주세요.")
         return ["sglang을 설치하고 서버를 실행해주세요."]
 
@@ -206,12 +240,32 @@ def get_openai_llm_models(api_key: str = None):
             model_id = m.id
 
             include = any(k in model_id.lower() for k in gpt_pattern)
-            exclude_type = all(k not in model_id.lower() for k in [
-                               "image", "realtime", "tts", "audio", "transcribe", "codex", "search", "preview"])
-            exclude_model = all(k not in model_id.lower() for k in [
-                                "gpt-4.1-mini", "gpt-4.1-nano", "gpt-4o-mini", "chatgpt-4o-latest"])
+            exclude_type = all(
+                k not in model_id.lower()
+                for k in [
+                    "image",
+                    "realtime",
+                    "tts",
+                    "audio",
+                    "transcribe",
+                    "codex",
+                    "search",
+                    "preview",
+                ]
+            )
+            exclude_model = all(
+                k not in model_id.lower()
+                for k in [
+                    "gpt-4.1-mini",
+                    "gpt-4.1-nano",
+                    "gpt-4o-mini",
+                    "chatgpt-4o-latest",
+                ]
+            )
             if include and exclude_type and exclude_model:
                 model_list.append(model_id)
+
+        logger.info(f"openai 모델 목록: {model_list}")
 
         return model_list
 
@@ -279,6 +333,8 @@ def get_anthropic_llm_models(api_key: str = None):
             model_id = m.id
             model_list.append(model_id)
 
+        logger.info(f"anthropic 모델 목록: {model_list}")
+
         return model_list
 
     except anthropic.BadRequestError as e:
@@ -344,13 +400,20 @@ def get_google_genai_llm_models(api_key: str = None):
 
         for m in model.page:
             include = any(k in m.name.lower() for k in ["gemini", "gemma"])
-            exclude_type = all(k not in m.name.lower()
-                               for k in ["embedding", "tts", "exp"])
-            exclude_model = all(k not in m.name.lower()
-                                for k in ["gemini-2.0"])
+            exclude_type = all(
+                k not in m.name.lower() for k in ["embedding", "tts", "exp"]
+            )
+            exclude_model = all(k not in m.name.lower() for k in ["gemini-2.0"])
 
-            if "generateContent" in m.supported_actions and include and exclude_type and exclude_model:
+            if (
+                "generateContent" in m.supported_actions
+                and include
+                and exclude_type
+                and exclude_model
+            ):
                 model_list.append(m.name)
+
+        logger.info(f"google genai 모델 목록: {model_list}")
 
         return model_list
 
@@ -397,13 +460,14 @@ def get_perplexity_llm_models(api_key: str = None):
         model_list.append("Perplexity API Key가 필요합니다.")
         return model_list
 
-    client = Perplexity(api_key=api_key)
+    # unused
+    # client = Perplexity(api_key=api_key)
 
     try:
-        # test = client.search.create(query="test")
-
         for m in api_models:
             model_list.append(m)
+
+        logger.info(f"perplexity 모델 목록: {model_list}")
 
         return model_list
 
@@ -444,6 +508,8 @@ def get_xai_llm_models(api_key: str = None):
         for m in model:
             model_list.append(m.name)
 
+        logger.info(f"XAI 모델 목록: {model_list}")
+
         return model_list
 
     except Exception as e:
@@ -465,8 +531,17 @@ def get_mistralai_llm_models(api_key: str = None):
 
     model_list = []
 
-    LLM_ALIASES = ["mistral-large-pixtral-2411", "mistral-medium", "mistral-tiny", "mistral-tiny-2312",
-                   "mistral-tiny-2407", "open-mistral-7b", "open-mistral-nemo", "voxtral-mini-transcribe", "latest"]
+    LLM_ALIASES = [
+        "mistral-large-pixtral-2411",
+        "mistral-medium",
+        "mistral-tiny",
+        "mistral-tiny-2312",
+        "mistral-tiny-2407",
+        "open-mistral-7b",
+        "open-mistral-nemo",
+        "voxtral-mini-transcribe",
+        "latest",
+    ]
 
     if not api_key:
         model_list.append("Mistral AI API Key가 필요합니다.")
@@ -477,8 +552,14 @@ def get_mistralai_llm_models(api_key: str = None):
     try:
         model = client.models.list()
         for m in model.data:
-            if m.capabilities.completion_chat and not m.deprecation and all(x not in m.id for x in LLM_ALIASES):
+            if (
+                m.capabilities.completion_chat
+                and not m.deprecation
+                and all(x not in m.id for x in LLM_ALIASES)
+            ):
                 model_list.append(m.id)
+
+        logger.info(f"Mistral AI 모델 목록: {model_list}")
 
         return model_list
 
@@ -494,15 +575,15 @@ ollama_models = get_ollama_models()
 oobabooga_models = get_oobabooga_models()
 vllm_api_models = get_vllm_models()
 openai_api_models = get_openai_llm_models(load_env_variables("OPENAI_API_KEY"))
-anthropic_api_models = get_anthropic_llm_models(
-    load_env_variables("ANTHROPIC_API_KEY"))
+anthropic_api_models = get_anthropic_llm_models(load_env_variables("ANTHROPIC_API_KEY"))
 google_genai_api_models = get_google_genai_llm_models(
-    load_env_variables("GEMINI_API_KEY"))
+    load_env_variables("GEMINI_API_KEY")
+)
 perplexity_api_models = get_perplexity_llm_models(
-    load_env_variables("PERPLEXITY_API_KEY"))
+    load_env_variables("PERPLEXITY_API_KEY")
+)
 xai_api_models = get_xai_llm_models(load_env_variables("XAI_API_KEY"))
-mistralai_api_models = get_mistralai_llm_models(
-    load_env_variables("MISTRAL_API_KEY"))
+mistralai_api_models = get_mistralai_llm_models(load_env_variables("MISTRAL_API_KEY"))
 
 openrouter_api_models = [
     "meta-llama/llama-3.3-70b-instruct",
@@ -535,58 +616,32 @@ openrouter_api_models = [
 ]
 
 huggingface_inference_api_models = [
-    "meta-llama/Llama-3.3-70B-Instruct:fastest",
-    "meta-llama/Llama-3.3-70B-Instruct:cheapest",
     "meta-llama/Llama-4-Scout-17B-16E-Instruct:fastest",
     "meta-llama/Llama-4-Scout-17B-16E-Instruct:cheapest",
-    "meta-llama/Llama-4-Scout-17B-16E-Instruct:groq",
-    "meta-llama/Llama-4-Scout-17B-16E-Instruct:novita",
-    "meta-llama/Llama-4-Scout-17B-16E-Instruct:nscale",
-    "meta-llama/Llama-4-Scout-17B-16E-Instruct:together",
     "meta-llama/Llama-4-Maverick-17B-128E-Instruct:fastest",
     "meta-llama/Llama-4-Maverick-17B-128E-Instruct:cheapest",
-    "meta-llama/Llama-4-Maverick-17B-128E-Instruct:groq",
     "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8:fastest",
     "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8:cheapest",
-    "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8:novita",
-    "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8:together",
-    "Qwen/Qwen3-VL-30B-A3B-Instruct:fastest",
-    "Qwen/Qwen3-VL-30B-A3B-Instruct:cheapest",
-    "Qwen/Qwen3-VL-30B-A3B-Thinking:fastest",
-    "Qwen/Qwen3-VL-30B-A3B-Thinking:cheapest",
-    "Qwen/Qwen3-VL-235B-A22B-Instruct:fastest",
-    "Qwen/Qwen3-VL-235B-A22B-Instruct:cheapest",
-    "Qwen/Qwen3-VL-235B-A22B-Thinking:fastest",
-    "Qwen/Qwen3-VL-235B-A22B-Thinking:cheapest",
-    "Qwen/Qwen3-Next-80B-A3B-Instruct:fastest",
-    "Qwen/Qwen3-Next-80B-A3B-Instruct:cheapest",
-    "Qwen/Qwen3-Next-80B-A3B-Instruct:novita",
-    "Qwen/Qwen3-Next-80B-A3B-Instruct:hyperbolic",
-    "Qwen/Qwen3-Next-80B-A3B-Instruct:together",
-    "Qwen/Qwen3-Next-80B-A3B-Thinking:fastest",
-    "Qwen/Qwen3-Next-80B-A3B-Thinking:cheapest",
-    "Qwen/Qwen3-Next-80B-A3B-Thinking:novita",
-    "Qwen/Qwen3-Next-80B-A3B-Thinking:hyperbolic",
-    "Qwen/Qwen3-Next-80B-A3B-Thinking:together",
     "Qwen/Qwen3.5-397B-A17B:fastest",
     "Qwen/Qwen3.5-397B-A17B:cheapest",
-    "Qwen/Qwen3.5-397B-A17B:novita",
-    "Qwen/Qwen3.5-397B-A17B:together",
+    "Qwen/Qwen3.5-122B-A10B:fastest",
+    "Qwen/Qwen3.5-122B-A10B:cheapest",
+    "Qwen/Qwen3.6-35B-A3B:fastest",
+    "Qwen/Qwen3.6-35B-A3B:cheapest",
+    "Qwen/Qwen3.6-27B:fastest",
+    "Qwen/Qwen3.6-27B:cheapest",
     "deepcogito/cogito-v2-preview-llama-109B-MoE:fastest",
     "deepcogito/cogito-v2-preview-llama-109B-MoE:cheapest",
-    "deepcogito/cogito-v2-preview-llama-109B-MoE:together",
-    "moonshotai/Kimi-K2-Instruct:fastest",
-    "moonshotai/Kimi-K2-Instruct:cheapest",
-    "moonshotai/Kimi-K2-Instruct-0905:fastest",
-    "moonshotai/Kimi-K2-Instruct-0905:cheapest",
-    "moonshotai/Kimi-K2-Thinking:fastest",
-    "moonshotai/Kimi-K2-Thinking:cheapest",
     "moonshotai/Kimi-K2.5:fastest",
     "moonshotai/Kimi-K2.5:cheapest",
-    "google/gemma-3-27b-it:fastest",
-    "google/gemma-3-27b-it:cheapest",
-    "google/gemma-3-27b-it:nebius",
-    "zai-org/GLM-4.6:fastest",
+    "moonshotai/Kimi-K2.6:fastest",
+    "moonshotai/Kimi-K2.6:cheapest",
+    "moonshotai/Kimi-K2.7-Code:fastest",
+    "moonshotai/Kimi-K2.7-Code:cheapest",
+    "google/gemma-4-31B-it:fastest",
+    "google/gemma-4-31B-it:cheapest",
+    "google/gemma-4-26B-A4B-it:fastest",
+    "google/gemma-4-26B-A4B-it:cheapestzai-org/GLM-4.6:fastest",
     "zai-org/GLM-4.6:cheapest",
     "zai-org/GLM-4.6:zai-org",
     "zai-org/GLM-4.6V:fastest",
@@ -604,30 +659,25 @@ huggingface_inference_api_models = [
     "zai-org/GLM-5:fastest",
     "zai-org/GLM-5:cheapest",
     "zai-org/GLM-5:zai-org",
-    "deepseek-ai/DeepSeek-V3:fastest",
-    "deepseek-ai/DeepSeek-V3:cheapest",
-    "deepseek-ai/DeepSeek-V3-0324:fastest",
-    "deepseek-ai/DeepSeek-V3-0324:cheapest",
-    "deepseek-ai/DeepSeek-R1:fastest",
-    "deepseek-ai/DeepSeek-R1:cheapest",
-    "deepseek-ai/DeepSeek-R1-0528:fastest",
-    "deepseek-ai/DeepSeek-R1-0528:cheapest",
-    "deepseek-ai/DeepSeek-V3.1:fastest",
-    "deepseek-ai/DeepSeek-V3.1:cheapest",
-    "deepseek-ai/DeepSeek-V3.1-Terminus:fastest",
-    "deepseek-ai/DeepSeek-V3.1-Terminus:cheapest",
-    "deepseek-ai/DeepSeek-V3.2:fastest",
-    "deepseek-ai/DeepSeek-V3.2:cheapest",
-    "MiniMaxAI/MiniMax-M1-80k:fastest",
-    "MiniMaxAI/MiniMax-M1-80k:cheapest",
-    "MiniMaxAI/MiniMax-M2:fastest",
-    "MiniMaxAI/MiniMax-M2:cheapest",
-    "MiniMaxAI/MiniMax-M2.1:fastest",
-    "MiniMaxAI/MiniMax-M2.1:cheapest",
+    "zai-org/GLM-5.1:fastest",
+    "zai-org/GLM-5.1:cheapest",
+    "zai-org/GLM-5.1:zai-org",
+    "zai-org/GLM-5.2:fastest",
+    "zai-org/GLM-5.2:cheapest",
+    "zai-org/GLM-5.2:zai-org",
+    "deepseek-ai/DeepSeek-V4-Pro:fastest",
+    "deepseek-ai/DeepSeek-V4-Pro:cheapest",
+    "deepseek-ai/DeepSeek-V4-Flash:fastest",
+    "deepseek-ai/DeepSeek-V4-Flash:cheapest",
     "MiniMaxAI/MiniMax-M2.5:fastest",
     "MiniMaxAI/MiniMax-M2.5:cheapest",
-    "CohereLabs/command-a-vision-07-2025:cohere",
-    "CohereLabs/command-a-reasoning-08-2025:cohere",
+    "MiniMaxAI/MiniMax-M2.7:fastest",
+    "MiniMaxAI/MiniMax-M2.7:cheapest",
+    "MiniMaxAI/MiniMax-M3:fastest",
+    "MiniMaxAI/MiniMax-M3:cheapest",
+    "CohereLabs/command-a-plus-05-2026-bf16:cohere",
+    "CohereLabs/command-a-plus-05-2026-fp8:cohere",
+    "CohereLabs/command-a-plus-05-2026-w4a4:cohere",
     "openai/gpt-oss-20b:fastest",
     "openai/gpt-oss-20b:cheapest",
     "openai/gpt-oss-120b:fastest",

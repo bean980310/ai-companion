@@ -10,6 +10,10 @@ class LocalModelNotFound(Exception):
     pass
 
 
+class ServerNotRunning(Exception):
+    pass
+
+
 def get_omnivoice_models(api_host: str = "http://localhost:8880/v1"):
     import openai
     from openai import OpenAI
@@ -26,6 +30,8 @@ def get_omnivoice_models(api_host: str = "http://localhost:8880/v1"):
 
         for m in model.data:
             model_list.append(m.id)
+
+        logger.info(f"omnivoice 모델 목록: {model_list}")
 
         return model_list
 
@@ -58,6 +64,8 @@ def get_openai_asr_models(api_key: str = None):
             if any(k in model_id.lower() for k in ["whisper", "transcribe"]):
                 model_list.append(model_id)
 
+        logger.info(f"openai asr 모델 목록: {model_list}")
+
         return model_list
 
     except openai.AuthenticationError as e:
@@ -85,6 +93,8 @@ def get_openai_tts_models(api_key: str = None):
 
             if any(k in model_id.lower() for k in ["tts"]):
                 model_list.append(model_id)
+
+        logger.info(f"openai tts 모델 목록: {model_list}")
 
         return model_list
 
@@ -114,6 +124,8 @@ def get_openai_audio_models(api_key: str = None):
             if any(k in model_id.lower() for k in ["audio"]):
                 model_list.append(model_id)
 
+        logger.info(f"openai audio 모델 목록: {model_list}")
+
         return model_list
 
     except openai.AuthenticationError as e:
@@ -142,6 +154,8 @@ def get_openai_realtime_models(api_key: str = None):
             if any(k in model_id.lower() for k in ["realtime"]):
                 model_list.append(model_id)
 
+        logger.info(f"openai realtime 모델 목록: {model_list}")
+
         return model_list
 
     except openai.AuthenticationError as e:
@@ -169,6 +183,8 @@ def get_google_genai_tts_models(api_key: str = None):
 
             if include:
                 model_list.append(m.name)
+
+        logger.info(f"google genai tts 모델 목록: {model_list}")
 
         return model_list
 

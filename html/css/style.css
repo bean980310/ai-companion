@@ -189,13 +189,13 @@
 }
 
 /* ===== Gradio 내장 탭 오버라이드 ===== */
-.gradio-container .tabs > .tab-nav {
+.gradio-container .tabs>.tab-nav {
     border-bottom: 2px solid #e5e7eb;
     gap: 0.25rem;
     padding: 0 0.5rem;
 }
 
-.gradio-container .tabs > .tab-nav > button {
+.gradio-container .tabs>.tab-nav>button {
     padding: 0.6rem 1.2rem;
     border-radius: 8px 8px 0 0;
     border: none;
@@ -208,12 +208,12 @@
     margin-bottom: -2px;
 }
 
-.gradio-container .tabs > .tab-nav > button:hover {
+.gradio-container .tabs>.tab-nav>button:hover {
     background-color: #f0f4ff;
     color: #3b82f6;
 }
 
-.gradio-container .tabs > .tab-nav > button.selected {
+.gradio-container .tabs>.tab-nav>button.selected {
     background-color: #eff6ff;
     color: #2563eb;
     font-weight: 600;
@@ -499,20 +499,20 @@
     }
 
     /* Gradio 내장 탭 다크모드 */
-    .gradio-container .tabs > .tab-nav {
+    .gradio-container .tabs>.tab-nav {
         border-bottom-color: #404040;
     }
 
-    .gradio-container .tabs > .tab-nav > button {
+    .gradio-container .tabs>.tab-nav>button {
         color: #9ca3af;
     }
 
-    .gradio-container .tabs > .tab-nav > button:hover {
+    .gradio-container .tabs>.tab-nav>button:hover {
         background-color: rgba(59, 130, 246, 0.15);
         color: #60a5fa;
     }
 
-    .gradio-container .tabs > .tab-nav > button.selected {
+    .gradio-container .tabs>.tab-nav>button.selected {
         background-color: rgba(59, 130, 246, 0.2);
         color: #60a5fa;
         border-bottom-color: #3b82f6;

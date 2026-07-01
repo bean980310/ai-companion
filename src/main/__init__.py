@@ -10,7 +10,13 @@ from PIL import Image
 
 from ..start_app import app_state, ui_component
 from .chatbot import Chatbot, ChatbotComponent, ChatbotMain, chat_bot, chat_main
-from .image_generation import diff_main, ImageGeneration, image_gen, DiffusionComponent, DiffusionMain
+from .image_generation import (
+    diff_main,
+    ImageGeneration,
+    image_gen,
+    DiffusionComponent,
+    DiffusionMain,
+)
 from .sidebar import create_sidebar
 from .container import create_body_container
 from ..common.database import get_existing_sessions
@@ -24,9 +30,22 @@ from ..common.utils import clear_all_model_cache
 
 from .. import __version__
 
-client = ComfyUI(port=8188)
+client = ComfyUI()
 
-from presets import AI_ASSISTANT_PRESET, SD_IMAGE_GENERATOR_PRESET, MINAMI_ASUKA_PRESET, MAKOTONO_AOI_PRESET, AINO_KOITO_PRESET, ARIA_PRINCESS_FATE_PRESET, ARIA_PRINCE_FATE_PRESET, WANG_MEI_LING_PRESET, MISTY_LANE_PRESET, LILY_EMPRESS_PRESET, CHOI_YUNA_PRESET, CHOI_YURI_PRESET
+from presets import (
+    AI_ASSISTANT_PRESET,
+    SD_IMAGE_GENERATOR_PRESET,
+    MINAMI_ASUKA_PRESET,
+    MAKOTONO_AOI_PRESET,
+    AINO_KOITO_PRESET,
+    ARIA_PRINCESS_FATE_PRESET,
+    ARIA_PRINCE_FATE_PRESET,
+    WANG_MEI_LING_PRESET,
+    MISTY_LANE_PRESET,
+    LILY_EMPRESS_PRESET,
+    CHOI_YUNA_PRESET,
+    CHOI_YURI_PRESET,
+)
 
 
 def init_system_message_accordion():
@@ -80,8 +99,16 @@ def create_main_container(demo: gr.Blocks):
         with gr.Row():
             gr.Markdown(f"Version: {__version__}")
 
-        reset_modal, single_reset_content, all_reset_content, cancel_btn, confirm_btn = chat_bot.create_reset_confirm_modal()
-        delete_modal, delete_message, delete_cancel_btn, delete_confirm_btn = chat_bot.create_delete_session_modal()
+        (
+            reset_modal,
+            single_reset_content,
+            all_reset_content,
+            cancel_btn,
+            confirm_btn,
+        ) = chat_bot.create_reset_confirm_modal()
+        delete_modal, delete_message, delete_cancel_btn, delete_confirm_btn = (
+            chat_bot.create_delete_session_modal()
+        )
 
     title = header_ui_component.title
     settings_button = header_ui_component.settings_button
@@ -134,7 +161,9 @@ def create_main_container(demo: gr.Blocks):
 
     diffusion_refiner_model_dropdown = diff_side.refiner.refiner_model_dropdown
     diffusion_refiner_start = diff_side.refiner.refiner_start
-    diffusion_with_refiner_image_to_image_start = diff_side.refiner.with_refiner_image_to_image_start
+    diffusion_with_refiner_image_to_image_start = (
+        diff_side.refiner.with_refiner_image_to_image_start
+    )
 
     diffusion_lora_multiselect = diff_side.lora.lora_multiselect
     diffusion_lora_text_encoder_sliders = diff_side.lora.lora_text_encoder_sliders
@@ -146,7 +175,9 @@ def create_main_container(demo: gr.Blocks):
     image_inpaint_masking = diff_container.image_panel.image_inpaint_masking
 
     blur_radius_slider = diff_container.image_panel.blur_radius_slider
-    blur_expansion_radius_slider = diff_container.image_panel.blur_expansion_radius_slider
+    blur_expansion_radius_slider = (
+        diff_container.image_panel.blur_expansion_radius_slider
+    )
     denoise_strength_slider = diff_container.image_panel.denoise_strength_slider
 
     positive_prompt_input = diff_container.main_panel.positive_prompt_input
@@ -184,7 +215,9 @@ def create_main_container(demo: gr.Blocks):
         """
         세션 변경 시 히스토리와 캐릭터 정보를 함께 로드하고 UI 업데이트.
         """
-        loaded_history, session_id, last_character, status_msg = chat_bot.apply_session(chosen_sid)
+        loaded_history, session_id, last_character, status_msg = chat_bot.apply_session(
+            chosen_sid
+        )
 
         # 캐릭터 정보가 없으면 기본값 사용
         if not last_character or last_character not in characters:
@@ -223,65 +256,169 @@ def create_main_container(demo: gr.Blocks):
             return gr.update(choices=[], value=None)
         return gr.update(choices=sessions, value=sessions[0])
 
-    @add_session_icon_btn.click(inputs=[character_dropdown, app_state.selected_language_state, app_state.speech_manager_state, app_state.history_state], outputs=[app_state.session_id_state, app_state.history_state, session_select_dropdown, session_select_info, chatbot])
-    def create_and_apply_session(chosen_character: str, chosen_language: str, speech_manager_state: PersonaSpeechManager, history_state):
+    @add_session_icon_btn.click(
+        inputs=[
+            character_dropdown,
+            app_state.selected_language_state,
+            app_state.speech_manager_state,
+            app_state.history_state,
+        ],
+        outputs=[
+            app_state.session_id_state,
+            app_state.history_state,
+            session_select_dropdown,
+            session_select_info,
+            chatbot,
+        ],
+    )
+    def create_and_apply_session(
+        chosen_character: str,
+        chosen_language: str,
+        speech_manager_state: PersonaSpeechManager,
+        history_state,
+    ):
         """
         현재 캐릭터/언어에 맞춰 시스템 메시지를 가져온 뒤,
         새 세션을 생성합니다.
         """
         # 1) SpeechManager 인스턴스 획득
-        speech_manager = speech_manager_state  # 전역 gr.State로 관리 중인 persona_speech_manager
+        speech_manager = (
+            speech_manager_state  # 전역 gr.State로 관리 중인 persona_speech_manager
+        )
 
         # 2) 캐릭터+언어를 설정하고 시스템 메시지 가져오기
         speech_manager.set_character_and_language(chosen_character, chosen_language)
         new_system_msg = speech_manager.get_system_message()
 
         # 3) DB에 기록할 새 세션 만들기
-        new_sid, info, new_history = chat_bot.create_new_session(new_system_msg, chosen_character)
+        new_sid, info, new_history = chat_bot.create_new_session(
+            new_system_msg, chosen_character
+        )
 
         sessions = get_existing_sessions()
-        return [new_sid, new_history, gr.update(choices=sessions, value=new_sid), info, chat_bot.filter_messages_for_chatbot(new_history)]
+        return [
+            new_sid,
+            new_history,
+            gr.update(choices=sessions, value=new_sid),
+            info,
+            chat_bot.filter_messages_for_chatbot(new_history),
+        ]
 
     # 이벤트 핸들러
-    @delete_session_icon_btn.click(inputs=[session_select_dropdown, app_state.session_id_state], outputs=[delete_modal, delete_message])
+    @delete_session_icon_btn.click(
+        inputs=[session_select_dropdown, app_state.session_id_state],
+        outputs=[delete_modal, delete_message],
+    )
     def show_delete_confirm(selected_sid: str, current_sid: str):
         """삭제 확인 모달 표시"""
         if not selected_sid:
             return gr.update(visible=True), "삭제할 세션을 선택하세요."
         if selected_sid == current_sid:
-            return gr.update(visible=True), f"현재 활성 세션 '{selected_sid}'은(는) 삭제할 수 없습니다."
+            return gr.update(
+                visible=True
+            ), f"현재 활성 세션 '{selected_sid}'은(는) 삭제할 수 없습니다."
         return gr.update(visible=True), f"세션 '{selected_sid}'을(를) 삭제하시겠습니까?"
 
     def delete_selected_session(chosen_sid: str):
         # 선택된 세션을 삭제 (주의: None 또는 ""인 경우 처리)
-        result_msg, _, updated_dropdown = chat_bot.delete_session(chosen_sid, "demo_session")
+        result_msg, _, updated_dropdown = chat_bot.delete_session(
+            chosen_sid, "demo_session"
+        )
         return result_msg, updated_dropdown
 
     # 취소 버튼
-    delete_cancel_btn.click(fn=lambda: (gr.update(visible=False), ""), outputs=[delete_modal, delete_message])
+    delete_cancel_btn.click(
+        fn=lambda: (gr.update(visible=False), ""),
+        outputs=[delete_modal, delete_message],
+    )
 
     # 삭제 확인 버튼
-    delete_confirm_btn.click(fn=chat_bot.delete_session, inputs=[session_select_dropdown, app_state.session_id_state], outputs=[delete_modal, delete_message, session_select_dropdown]).then(fn=chat_bot.refresh_sessions, inputs=[], outputs=[session_select_dropdown])
+    delete_confirm_btn.click(
+        fn=chat_bot.delete_session,
+        inputs=[session_select_dropdown, app_state.session_id_state],
+        outputs=[delete_modal, delete_message, session_select_dropdown],
+    ).then(fn=chat_bot.refresh_sessions, inputs=[], outputs=[session_select_dropdown])
 
-    demo.load(None, None, None).then(fn=lambda evt: (gr.update(visible=False), "") if evt.key == "Escape" else (gr.update(), ""), inputs=[], outputs=[delete_modal, delete_message])
+    demo.load(None, None, None).then(
+        fn=lambda evt: (
+            (gr.update(visible=False), "") if evt.key == "Escape" else (gr.update(), "")
+        ),
+        inputs=[],
+        outputs=[delete_modal, delete_message],
+    )
 
     # 시드 입력과 상태 연결
-    text_seed_input.change(fn=lambda seed: seed if seed is not None else 42, inputs=[text_seed_input], outputs=[app_state.seed_state])
-    text_max_length_input.change(fn=lambda max_length: max_length if max_length is not None else -1, inputs=[text_max_length_input], outputs=[app_state.max_length_state])
-    text_temperature_slider.change(fn=lambda temp: temp if temp is not None else 0.6, inputs=[text_temperature_slider], outputs=[app_state.temperature_state])
-    text_top_k_slider.change(fn=lambda top_k: top_k if top_k is not None else 20, inputs=[text_top_k_slider], outputs=[app_state.top_k_state])
-    text_top_p_slider.change(fn=lambda top_p: top_p if top_p is not None else 0.9, inputs=[text_top_p_slider], outputs=[app_state.top_p_state])
-    text_repetition_penalty_slider.change(fn=lambda repetition_penalty: repetition_penalty if repetition_penalty is not None else 1.1, inputs=[text_repetition_penalty_slider], outputs=[app_state.repetition_penalty_state])
-    text_enable_thinking_checkbox.change(fn=lambda enable: enable if enable is True else False, inputs=[text_enable_thinking_checkbox], outputs=[app_state.enable_thinking_state])
+    text_seed_input.change(
+        fn=lambda seed: seed if seed is not None else 42,
+        inputs=[text_seed_input],
+        outputs=[app_state.seed_state],
+    )
+    text_max_length_input.change(
+        fn=lambda max_length: max_length if max_length is not None else -1,
+        inputs=[text_max_length_input],
+        outputs=[app_state.max_length_state],
+    )
+    text_temperature_slider.change(
+        fn=lambda temp: temp if temp is not None else 0.6,
+        inputs=[text_temperature_slider],
+        outputs=[app_state.temperature_state],
+    )
+    text_top_k_slider.change(
+        fn=lambda top_k: top_k if top_k is not None else 20,
+        inputs=[text_top_k_slider],
+        outputs=[app_state.top_k_state],
+    )
+    text_top_p_slider.change(
+        fn=lambda top_p: top_p if top_p is not None else 0.9,
+        inputs=[text_top_p_slider],
+        outputs=[app_state.top_p_state],
+    )
+    text_repetition_penalty_slider.change(
+        fn=lambda repetition_penalty: (
+            repetition_penalty if repetition_penalty is not None else 1.1
+        ),
+        inputs=[text_repetition_penalty_slider],
+        outputs=[app_state.repetition_penalty_state],
+    )
+    text_enable_thinking_checkbox.change(
+        fn=lambda enable: enable if enable is True else False,
+        inputs=[text_enable_thinking_checkbox],
+        outputs=[app_state.enable_thinking_state],
+    )
 
-    gr.on(triggers=[character_dropdown.change, change_preset_button.click], fn=chat_bot.handle_change_preset, inputs=[preset_dropdown, app_state.history_state, app_state.selected_language_state], outputs=[app_state.history_state, system_message_box, profile_image])
+    gr.on(
+        triggers=[character_dropdown.change, change_preset_button.click],
+        fn=chat_bot.handle_change_preset,
+        inputs=[
+            preset_dropdown,
+            app_state.history_state,
+            app_state.selected_language_state,
+        ],
+        outputs=[app_state.history_state, system_message_box, profile_image],
+    )
 
-    character_dropdown.change(fn=chat_bot.update_system_message_and_profile, inputs=[character_dropdown, language_dropdown, app_state.session_id_state], outputs=[system_message_box, profile_image, preset_dropdown])
+    character_dropdown.change(
+        fn=chat_bot.update_system_message_and_profile,
+        inputs=[character_dropdown, language_dropdown, app_state.session_id_state],
+        outputs=[system_message_box, profile_image, preset_dropdown],
+    )
 
-    gr.on(triggers=[diffusion_model_dropdown.change, demo.load], fn=lambda selected_model: (image_gen.toggle_diffusion_api_key_visibility(selected_model)), inputs=[diffusion_model_dropdown], outputs=[diffusion_api_key_text])
+    gr.on(
+        triggers=[diffusion_model_dropdown.change, demo.load],
+        fn=lambda selected_model: image_gen.toggle_diffusion_api_key_visibility(
+            selected_model
+        ),
+        inputs=[diffusion_model_dropdown],
+        outputs=[diffusion_api_key_text],
+    )
 
     # 모델 선택 변경 시 가시성 토글
-    gr.on(triggers=[text_model_dropdown.change, demo.load], fn=chat_bot.toggle_enable_thinking_visibility, inputs=[text_model_dropdown], outputs=[text_enable_thinking_checkbox])
+    gr.on(
+        triggers=[text_model_dropdown.change, demo.load],
+        fn=chat_bot.toggle_enable_thinking_visibility,
+        inputs=[text_model_dropdown],
+        outputs=[text_enable_thinking_checkbox],
+    )
 
     gr.on(
         triggers=[storytelling_model_dropdown.change, demo.load],
@@ -293,9 +430,22 @@ def create_main_container(demo: gr.Blocks):
         outputs=[storytelling_api_key_text, storytelling_lora_dropdown],
     )
 
-    storytelling_model_type_dropdown.change(fn=chat_bot.update_model_list, inputs=[storytelling_model_type_dropdown], outputs=[storytelling_model_dropdown])
+    storytelling_model_type_dropdown.change(
+        fn=chat_bot.update_model_list,
+        inputs=[storytelling_model_type_dropdown],
+        outputs=[storytelling_model_dropdown],
+    )
 
-    gr.on(triggers=[text_model_provider_dropdown.change, text_model_type_dropdown.change, demo.load], fn=chat_bot.update_model_list, inputs=[text_model_provider_dropdown, text_model_type_dropdown], outputs=[text_model_type_dropdown, text_model_dropdown])
+    gr.on(
+        triggers=[
+            text_model_provider_dropdown.change,
+            text_model_type_dropdown.change,
+            demo.load,
+        ],
+        fn=chat_bot.update_model_list,
+        inputs=[text_model_provider_dropdown, text_model_type_dropdown],
+        outputs=[text_model_type_dropdown, text_model_dropdown],
+    )
 
     gr.on(
         triggers=[text_model_provider_dropdown.change, demo.load],
@@ -307,7 +457,11 @@ def create_main_container(demo: gr.Blocks):
         outputs=[text_api_key_text, text_lora_dropdown],
     )
 
-    diffusion_model_type_dropdown.change(fn=image_gen.update_diffusion_model_list, inputs=[diffusion_model_type_dropdown], outputs=[diffusion_model_dropdown])
+    diffusion_model_type_dropdown.change(
+        fn=image_gen.update_diffusion_model_list,
+        inputs=[diffusion_model_type_dropdown],
+        outputs=[diffusion_model_dropdown],
+    )
 
     # def toggle_refiner_start_step(model):
     #     slider_visible = model != "None"
@@ -325,8 +479,14 @@ def create_main_container(demo: gr.Blocks):
     #     slider_visible = model != "None" and mode != "None"
     #     return gr.update(visible=slider_visible)
 
-    diffusion_refiner_model_dropdown.change(fn=lambda model: (image_gen.toggle_refiner_start_step(model)), inputs=[diffusion_refiner_model_dropdown], outputs=[diffusion_refiner_start]).then(
-        fn=image_gen.toggle_diffusion_with_refiner_image_to_image_start, inputs=[diffusion_refiner_model_dropdown, image_to_image_mode], outputs=[diffusion_with_refiner_image_to_image_start]
+    diffusion_refiner_model_dropdown.change(
+        fn=lambda model: image_gen.toggle_refiner_start_step(model),
+        inputs=[diffusion_refiner_model_dropdown],
+        outputs=[diffusion_refiner_start],
+    ).then(
+        fn=image_gen.toggle_diffusion_with_refiner_image_to_image_start,
+        inputs=[diffusion_refiner_model_dropdown, image_to_image_mode],
+        outputs=[diffusion_with_refiner_image_to_image_start],
     )
 
     # def process_uploaded_image(image: str | Image.Image | np.ndarray | Callable | Any):
@@ -340,8 +500,14 @@ def create_main_container(demo: gr.Blocks):
         image = client.upload_image(image, overwrite=True)
         return image, gr.update(value=im)
 
-    @image_inpaint_masking.apply(inputs=[image_inpaint_input, image_inpaint_masking], outputs=app_state.stored_image_inpaint)
-    def process_uploaded_image_inpaint(original_image: str | Image.Image | Any, mask_image: list[str | Image.Image | Any]):
+    @image_inpaint_masking.apply(
+        inputs=[image_inpaint_input, image_inpaint_masking],
+        outputs=app_state.stored_image_inpaint,
+    )
+    def process_uploaded_image_inpaint(
+        original_image: str | Image.Image | Any,
+        mask_image: list[str | Image.Image | Any],
+    ):
         print(original_image)
         print(mask_image)
         mask = client.upload_mask(original_image, mask_image)
@@ -374,21 +540,59 @@ def create_main_container(demo: gr.Blocks):
 
         return gr.update(value=image)
 
-    image_to_image_input.change(fn=image_gen.process_uploaded_image, inputs=image_to_image_input, outputs=app_state.stored_image)
+    image_to_image_input.change(
+        fn=image_gen.process_uploaded_image,
+        inputs=image_to_image_input,
+        outputs=app_state.stored_image,
+    )
 
-    image_inpaint_input.upload(fn=image_gen.process_uploaded_image, inputs=[image_inpaint_input], outputs=app_state.stored_image).then(fn=copy_image_for_inpaint, inputs=[image_inpaint_input, image_inpaint_masking], outputs=image_inpaint_masking).then(
-        fn=image_gen.toggle_image_inpaint_mask_interactive, inputs=image_inpaint_input, outputs=image_inpaint_masking
+    image_inpaint_input.upload(
+        fn=image_gen.process_uploaded_image,
+        inputs=[image_inpaint_input],
+        outputs=app_state.stored_image,
+    ).then(
+        fn=copy_image_for_inpaint,
+        inputs=[image_inpaint_input, image_inpaint_masking],
+        outputs=image_inpaint_masking,
+    ).then(
+        fn=image_gen.toggle_image_inpaint_mask_interactive,
+        inputs=image_inpaint_input,
+        outputs=image_inpaint_masking,
     )
 
     image_to_image_mode.change(
-        fn=lambda mode: (image_gen.toggle_image_to_image_input(mode), image_gen.toggle_image_inpaint_input(mode), image_gen.toggle_image_inpaint_mask(mode), image_gen.toggle_denoise_strength_dropdown(mode)),
+        fn=lambda mode: (
+            image_gen.toggle_image_to_image_input(mode),
+            image_gen.toggle_image_inpaint_input(mode),
+            image_gen.toggle_image_inpaint_mask(mode),
+            image_gen.toggle_denoise_strength_dropdown(mode),
+        ),
         inputs=[image_to_image_mode],
-        outputs=[image_to_image_input, image_inpaint_input, image_inpaint_masking, denoise_strength_slider],
-    ).then(fn=image_gen.toggle_diffusion_with_refiner_image_to_image_start, inputs=[diffusion_refiner_model_dropdown, image_to_image_mode], outputs=[diffusion_with_refiner_image_to_image_start]).then(
-        fn=image_gen.toggle_blur_radius_slider, inputs=[image_to_image_mode], outputs=[blur_radius_slider, blur_expansion_radius_slider]
+        outputs=[
+            image_to_image_input,
+            image_inpaint_input,
+            image_inpaint_masking,
+            denoise_strength_slider,
+        ],
+    ).then(
+        fn=image_gen.toggle_diffusion_with_refiner_image_to_image_start,
+        inputs=[diffusion_refiner_model_dropdown, image_to_image_mode],
+        outputs=[diffusion_with_refiner_image_to_image_start],
+    ).then(
+        fn=image_gen.toggle_blur_radius_slider,
+        inputs=[image_to_image_mode],
+        outputs=[blur_radius_slider, blur_expansion_radius_slider],
     )
 
-    bot_message_inputs = [app_state.session_id_state, app_state.history_state, text_model_dropdown, app_state.custom_model_path_state, text_api_key_text, app_state.selected_device_state, app_state.seed_state]
+    bot_message_inputs = [
+        app_state.session_id_state,
+        app_state.history_state,
+        text_model_dropdown,
+        app_state.custom_model_path_state,
+        text_api_key_text,
+        app_state.selected_device_state,
+        app_state.seed_state,
+    ]
 
     def update_character_languages(selected_language: str, selected_character: str):
         """
@@ -400,7 +604,9 @@ def create_main_container(demo: gr.Blocks):
             speech_manager.current_language = selected_language
         else:
             # 지원하지 않는 언어일 경우 기본 언어로 설정
-            speech_manager.current_language = characters[selected_character]["default_language"]
+            speech_manager.current_language = characters[selected_character][
+                "default_language"
+            ]
         return gr.update()
 
     def generate_diffusion_lora_weight_sliders(selected_loras: List[str]):
@@ -409,8 +615,12 @@ def create_main_container(demo: gr.Blocks):
             if i < len(selected_loras):
                 # 선택된 LoRA가 있으면 해당 행을 보이게 하고 label 업데이트
                 lora_name = selected_loras[i]
-                text_update = gr.update(visible=True, label=f"{lora_name} - Text Encoder Weight")
-                unet_update = gr.update(visible=True, label=f"{lora_name} - U-Net Weight")
+                text_update = gr.update(
+                    visible=True, label=f"{lora_name} - Text Encoder Weight"
+                )
+                unet_update = gr.update(
+                    visible=True, label=f"{lora_name} - U-Net Weight"
+                )
             else:
                 # 선택된 LoRA가 없는 행은 숨김 처리
                 text_update = gr.update(visible=False)
@@ -422,13 +632,23 @@ def create_main_container(demo: gr.Blocks):
     @random_prompt_btn.click(outputs=[positive_prompt_input])
     def get_random_prompt():
         """랜덤 프롬프트 생성 함수"""
-        prompts = ["A serene mountain landscape at sunset", "A futuristic cityscape with flying cars", "A mystical forest with glowing mushrooms"]
+        prompts = [
+            "A serene mountain landscape at sunset",
+            "A futuristic cityscape with flying cars",
+            "A mystical forest with glowing mushrooms",
+        ]
         return random.choice(prompts)
 
     diffusion_lora_slider_outputs = []
-    for te_slider, unet_slider in zip(diffusion_lora_text_encoder_sliders, diffusion_lora_unet_sliders):
+    for te_slider, unet_slider in zip(
+        diffusion_lora_text_encoder_sliders, diffusion_lora_unet_sliders
+    ):
         diffusion_lora_slider_outputs.extend([te_slider, unet_slider])
-    diffusion_lora_multiselect.change(fn=generate_diffusion_lora_weight_sliders, inputs=[diffusion_lora_multiselect], outputs=diffusion_lora_slider_outputs)
+    diffusion_lora_multiselect.change(
+        fn=generate_diffusion_lora_weight_sliders,
+        inputs=[diffusion_lora_multiselect],
+        outputs=diffusion_lora_slider_outputs,
+    )
 
     # 이벤트 핸들러 연결
     generate_btn.click(
@@ -500,7 +720,13 @@ def create_main_container(demo: gr.Blocks):
     )
     def change_language(selected_lang: str, selected_character: str):
         """언어 변경 처리 함수"""
-        lang_map = {"한국어": "ko", "日本語": "ja", "中文(简体)": "zh_CN", "中文(繁體)": "zh_TW", "English": "en"}
+        lang_map = {
+            "한국어": "ko",
+            "日本語": "ja",
+            "中文(简体)": "zh_CN",
+            "中文(繁體)": "zh_TW",
+            "English": "en",
+        }
 
         lang_code = lang_map.get(selected_lang, "ko")
 
@@ -508,7 +734,9 @@ def create_main_container(demo: gr.Blocks):
             if selected_lang in characters[selected_character]["languages"]:
                 app_state.speech_manager_state.current_language = selected_lang
             else:
-                app_state.speech_manager_state.current_language = characters[selected_character]["languages"][0]
+                app_state.speech_manager_state.current_language = characters[
+                    selected_character
+                ]["languages"][0]
 
             system_presets: dict[str, dict[str, str]] = {
                 "AI 비서 (AI Assistant)": AI_ASSISTANT_PRESET,
@@ -533,12 +761,20 @@ def create_main_container(demo: gr.Blocks):
                 gr.update(value=_("select_session_info")),
                 gr.update(label=_("language_select"), info=_("language_info")),
                 gr.update(label=_("system_message")),
-                gr.update(label=_("system_message"), value=system_content, placeholder=_("system_message_placeholder")),
+                gr.update(
+                    label=_("system_message"),
+                    value=system_content,
+                    placeholder=_("system_message_placeholder"),
+                ),
                 gr.update(label=_("model_type_label")),
                 gr.update(label=_("model_select_label")),
-                gr.update(label=_("character_select_label"), info=_("character_select_info")),
+                gr.update(
+                    label=_("character_select_label"), info=_("character_select_info")
+                ),
                 gr.update(label=_("api_key_label")),
-                gr.update(label=_("message_input_label"), placeholder=_("message_placeholder")),
+                gr.update(
+                    label=_("message_input_label"), placeholder=_("message_placeholder")
+                ),
                 # gr.update(
                 #     label=_("message_input_label"),
                 #     placeholder=_("message_placeholder")
@@ -557,7 +793,29 @@ def create_main_container(demo: gr.Blocks):
             ]
         else:
             # 언어 변경 실패 시 아무 것도 하지 않음
-            return gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update(), gr.update()
+            return (
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+                gr.update(),
+            )
 
         # 메시지 전송 시 함수 연결
 
@@ -565,18 +823,41 @@ def create_main_container(demo: gr.Blocks):
     # msg.submit(...)
     # multimodal_msg.submit(...)
 
-    demo.load(fn=chat_bot.refresh_sessions, inputs=[], outputs=[session_select_dropdown], queue=False)
+    demo.load(
+        fn=chat_bot.refresh_sessions,
+        inputs=[],
+        outputs=[session_select_dropdown],
+        queue=False,
+    )
 
-    reset_btn.click(fn=lambda: chat_bot.show_reset_modal("single"), outputs=[reset_modal, single_reset_content, all_reset_content])
-    reset_all_btn.click(fn=lambda: chat_bot.show_reset_modal("all"), outputs=[reset_modal, single_reset_content, all_reset_content])
+    reset_btn.click(
+        fn=lambda: chat_bot.show_reset_modal("single"),
+        outputs=[reset_modal, single_reset_content, all_reset_content],
+    )
+    reset_all_btn.click(
+        fn=lambda: chat_bot.show_reset_modal("all"),
+        outputs=[reset_modal, single_reset_content, all_reset_content],
+    )
 
-    cancel_btn.click(fn=chat_bot.hide_reset_modal, outputs=[reset_modal, single_reset_content, all_reset_content])
+    cancel_btn.click(
+        fn=chat_bot.hide_reset_modal,
+        outputs=[reset_modal, single_reset_content, all_reset_content],
+    )
 
-    def handle_reset_with_session_update(history, chatbot_state, system_msg, selected_character, language, session_id):
+    def handle_reset_with_session_update(
+        history, chatbot_state, system_msg, selected_character, language, session_id
+    ):
         """
         초기화 처리 후 세션 드롭다운과 세션 ID를 업데이트합니다.
         """
-        result = chat_bot.handle_reset_confirm(history=history, chatbot=chatbot_state, system_msg=system_msg, selected_character=selected_character, language=language, session_id=session_id)
+        result = chat_bot.handle_reset_confirm(
+            history=history,
+            chatbot=chatbot_state,
+            system_msg=system_msg,
+            selected_character=selected_character,
+            language=language,
+            session_id=session_id,
+        )
 
         # reset_all_sessions는 9개 값 반환 (session_id 포함)
         # reset_session은 8개 값 반환
@@ -587,8 +868,25 @@ def create_main_container(demo: gr.Blocks):
 
     confirm_btn.click(
         fn=handle_reset_with_session_update,
-        inputs=[app_state.history_state, chatbot, system_message_box, character_dropdown, app_state.selected_language_state, app_state.session_id_state],
-        outputs=[reset_modal, single_reset_content, all_reset_content, msg, app_state.history_state, chatbot, status_text, session_select_dropdown, app_state.session_id_state],
+        inputs=[
+            app_state.history_state,
+            chatbot,
+            system_message_box,
+            character_dropdown,
+            app_state.selected_language_state,
+            app_state.session_id_state,
+        ],
+        outputs=[
+            reset_modal,
+            single_reset_content,
+            all_reset_content,
+            msg,
+            app_state.history_state,
+            chatbot,
+            status_text,
+            session_select_dropdown,
+            app_state.session_id_state,
+        ],
     )
 
     @gr.on(
@@ -872,20 +1170,38 @@ def create_main_container(demo: gr.Blocks):
 
     demo.load(None, None, None).then(
         fn=lambda evt: (
-            gr.update(visible=False),  # reset_modal
-            gr.update(visible=False),  # single_content
-            gr.update(visible=False),  # all_content
-            None,  # msg (변경 없음)
-            None,  # history (변경 없음)
-            None,  # chatbot (변경 없음)
-            None,  # status (변경 없음)
-        )
-        if evt.key == "Escape"
-        else (gr.update(), gr.update(), gr.update(), None, None, None, None),
+            (
+                gr.update(visible=False),  # reset_modal
+                gr.update(visible=False),  # single_content
+                gr.update(visible=False),  # all_content
+                None,  # msg (변경 없음)
+                None,  # history (변경 없음)
+                None,  # chatbot (변경 없음)
+                None,  # status (변경 없음)
+            )
+            if evt.key == "Escape"
+            else (gr.update(), gr.update(), gr.update(), None, None, None, None)
+        ),
         inputs=[],
-        outputs=[reset_modal, single_reset_content, all_reset_content, msg, app_state.history_state, chatbot, status_text],
+        outputs=[
+            reset_modal,
+            single_reset_content,
+            all_reset_content,
+            msg,
+            app_state.history_state,
+            chatbot,
+            status_text,
+        ],
     )
 
-    demo.load(fn=init_system_message_accordion, inputs=[], outputs=[system_message_accordion])
+    demo.load(
+        fn=init_system_message_accordion, inputs=[], outputs=[system_message_accordion]
+    )
 
-    return settings_button, text_model_type_dropdown, text_model_dropdown, system_message_box, preset_dropdown
+    return (
+        settings_button,
+        text_model_type_dropdown,
+        text_model_dropdown,
+        system_message_box,
+        preset_dropdown,
+    )

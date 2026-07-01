@@ -24,7 +24,6 @@ import gradio as gr
 
 # from gradio_i18n import Translate, translate_blocks, gettext as _
 # from src.common.html import css
-from gradio_sidebar_menu import SidebarMenu
 
 from ai_companion_core import logger
 
@@ -49,14 +48,19 @@ from src.start_app import (
 )
 
 # Import MCP tools
-from src.mcp.tools import chat_completion, list_available_models, list_chat_sessions, get_chat_history, translate_text, summarize_text, analyze_image, generate_title
+from src.mcp.tools import (
+    chat_completion,
+    list_available_models,
+    list_chat_sessions,
+    get_chat_history,
+    translate_text,
+    summarize_text,
+    analyze_image,
+    generate_title,
+)
 
 # from src.main import header
-from src.main.chatbot import chat_main
-from src.main.image_generation import diff_main
-from src.main.tts import get_tts_models
-
-from src.common_blocks import create_page_header, get_language_code
+from gradio_sidebar_menu import SidebarMenu
 # from src.main.header import HeaderUIComponent
 # from src.common_blocks import HeaderUIComponent, NavbarUIComponent, BottomNavUIComponent
 
@@ -69,7 +73,17 @@ load_initial_data()
 
 # Import Pages
 from src.pages import header
-from src.pages import audio, chat, image_gen, storyteller, translator, download, settings, mcp_client, mcp_tools
+from src.pages import (
+    audio,
+    chat,
+    image_gen,
+    storyteller,
+    translator,
+    download,
+    settings,
+    mcp_client,
+    mcp_tools,
+)
 
 import importlib
 
@@ -101,9 +115,24 @@ def initialize_global_state():
 # with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True, css_paths="html/css/style.css") as demo:
 def _reload_page_modules():
     """Force reload page modules to get fresh demo objects during hot-reload."""
-    global header, chat, image_gen, storyteller, audio, translator, settings, mcp_client, download, mcp_tools
+    global \
+        header, \
+        chat, \
+        image_gen, \
+        storyteller, \
+        audio, \
+        translator, \
+        settings, \
+        mcp_client, \
+        download, \
+        mcp_tools
     from src.pages import header as _h, chat as _c, image_gen as _ig, storyteller as _s
-    from src.pages import audio as _a, translator as _t, settings as _st, mcp_client as _mc
+    from src.pages import (
+        audio as _a,
+        translator as _t,
+        settings as _st,
+        mcp_client as _mc,
+    )
     from src.pages import download as _d, mcp_tools as _mt
 
     for mod in [_h, _c, _ig, _s, _a, _t, _st, _mc, _d, _mt]:
@@ -115,17 +144,50 @@ def _reload_page_modules():
 
 _reload_page_modules()
 
+
 with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True) as demo:
     # demo.route("Chat", "/chat")
     # 1. Global State Registration
     initialize_global_state()
     header.demo.render()
 
-    interface_list = [chat.demo, image_gen.demo, storyteller.demo, audio.demo, translator.demo, mcp_client.demo, download.demo, mcp_tools.demo]
-    interface_names = ["Chat", "Image Gen", "Storyteller", "Audio", "Translator", "MCP Client", "Download", "MCP Tools"]
-    interface_ids = ["chat", "image_gen", "story", "audio", "translate", "mcp_client", "download", "mcp_tools"]
-    menu_data = [{"type": "item", "id": id, "label": name} for id, name in zip(interface_ids, interface_names)]
-    menu = SidebarMenu(menu_data=menu_data, value=interface_ids[0], open=True, position="left")
+    interface_list = [
+        chat.demo,
+        image_gen.demo,
+        storyteller.demo,
+        audio.demo,
+        translator.demo,
+        mcp_client.demo,
+        download.demo,
+        mcp_tools.demo,
+    ]
+    interface_names = [
+        "Chat",
+        "Image Gen",
+        "Storyteller",
+        "Audio",
+        "Translator",
+        "MCP Client",
+        "Download",
+        "MCP Tools",
+    ]
+    interface_ids = [
+        "chat",
+        "image_gen",
+        "story",
+        "audio",
+        "translate",
+        "mcp_client",
+        "download",
+        "mcp_tools",
+    ]
+    menu_data = [
+        {"type": "item", "id": id, "label": name}
+        for id, name in zip(interface_ids, interface_names)
+    ]
+    menu = SidebarMenu(
+        menu_data=menu_data, value=interface_ids[0], open=True, position="left"
+    )
     with gr.Tabs():
         for interface, name in zip(interface_list, interface_names):
             with gr.TabItem(name):
@@ -141,14 +203,24 @@ with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True) as demo:
             close_settings_footer_btn = gr.Button("닫기", variant="secondary")
 
     # Open settings popup
-    ui_component.settings_button.click(fn=lambda: gr.update(visible=True), inputs=[], outputs=[settings_popup])
+    ui_component.settings_button.click(
+        fn=lambda: gr.update(visible=True), inputs=[], outputs=[settings_popup]
+    )
 
     # Close settings popup
-    close_settings_btn.click(fn=lambda: gr.update(visible=False), inputs=[], outputs=[settings_popup])
+    close_settings_btn.click(
+        fn=lambda: gr.update(visible=False), inputs=[], outputs=[settings_popup]
+    )
 
-    close_settings_footer_btn.click(fn=lambda: gr.update(visible=False), inputs=[], outputs=[settings_popup])
+    close_settings_footer_btn.click(
+        fn=lambda: gr.update(visible=False), inputs=[], outputs=[settings_popup]
+    )
 
-    header.language_dropdown.change(fn=header.on_header_language_change, inputs=[header.language_dropdown], outputs=[header.page_header.title, header.language_dropdown]).then(
+    header.language_dropdown.change(
+        fn=header.on_header_language_change,
+        inputs=[header.language_dropdown],
+        outputs=[header.page_header.title, header.language_dropdown],
+    ).then(
         fn=chat.on_chat_language_change,
         inputs=[header.language_dropdown, chat.character_dropdown],
         outputs=[
@@ -211,7 +283,17 @@ if __name__ == "__main__":
 
     # demo.queue().launch(debug=args.debug, share=args.share, inbrowser=args.inbrowser, server_name=host, server_port=args.port, mcp_server=args.mcp_server, pwa=args.pwa, i18n=i18n)
 
-    demo.queue().launch(debug=args.debug, share=args.share, inbrowser=args.inbrowser, server_name=host, server_port=args.gradio_server_port, mcp_server=args.mcp_server, pwa=args.pwa, css_paths="html/css/style.css", i18n=i18n)
+    demo.queue().launch(
+        debug=args.debug,
+        share=args.share,
+        inbrowser=args.inbrowser,
+        server_name=host,
+        server_port=args.gradio_server_port,
+        mcp_server=args.mcp_server,
+        pwa=args.pwa,
+        css_paths="html/css/style.css",
+        i18n=i18n,
+    )
 else:
     if os_name == "Darwin" and arch == "x86_64":
         raise EnvironmentError(
@@ -226,4 +308,13 @@ else:
     else:
         host = "127.0.0.1"
 
-    app = gr.mount_gradio_app(app, demo, path="/gradio", server_name=host, server_port=args.gradio_server_port, mcp_server=args.mcp_server, pwa=args.pwa, css_paths="html/css/style.css")
+    app = gr.mount_gradio_app(
+        app,
+        demo,
+        path="/gradio",
+        server_name=host,
+        server_port=args.gradio_server_port,
+        mcp_server=args.mcp_server,
+        pwa=args.pwa,
+        css_paths="html/css/style.css",
+    )
