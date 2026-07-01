@@ -19,6 +19,3 @@
 [submodule "packages/ai-companion-audio-backend"]
 	path = packages/ai-companion-audio-backend
 	url = https://github.com/bean980310/ai-companion-audio-backend.git
-[submodule "packages/ai-companion-agent-connector"]
-	path = packages/ai-companion-agent-connector
-	url = https://github.com/bean980310/ai-companion-agent-connector.git

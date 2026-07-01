@@ -17,9 +17,6 @@
 		},
 		{
 			"path": "packages/ai-companion-langchain-integrator"
-		},
-		{
-			"path": "packages/ai-companion-agent-connector"
 		}
 	],
 	"settings": {
