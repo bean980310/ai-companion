@@ -64,7 +64,7 @@ from gradio_sidebar_menu import SidebarMenu
 # from src.main.header import HeaderUIComponent
 # from src.common_blocks import HeaderUIComponent, NavbarUIComponent, BottomNavUIComponent
 
-logger.info(f"AI Companion Version: {__version__}")
+logger.info(f"Super AI Agent Companion Version: {__version__}")
 logger.info(f"Detected OS: {os_name}, Architecture: {arch}")
 
 # CRITICAL: app_state primitives must be loaded BEFORE importing pages,
@@ -147,7 +147,9 @@ def _reload_page_modules():
 _reload_page_modules()
 
 
-with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True) as demo:
+with gr.Blocks(
+    title="Super AI Agent Companion", fill_height=True, fill_width=True
+) as demo:
     # demo.route("Chat", "/chat")
     # 1. Global State Registration
     initialize_global_state()

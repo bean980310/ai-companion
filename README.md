@@ -1,4 +1,6 @@
-# AI Companion for Local Machines
+# Super AI Agent Companion
+
+AI Companion for Local Machines is now Super AI Agent Companion!
 
 ![AI Companion](assets/images/ai-companion-2.png)
 

@@ -1,4 +1,6 @@
-# 面向本地环境的AI伴侣
+# 超能AI代理伴侣
+
+AI Companion for Local Machines is now Super AI Agent Companion!
 
 ![AI Companion](assets/images/ai-companion-2.png)
 

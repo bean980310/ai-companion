@@ -1,4 +1,6 @@
-# 로컬 머신을 위한 AI 컴패니언
+# 초능 AI 에이전트 컴패니언
+
+AI Companion for Local Machines is now Super AI Agent Companion!
 
 ![AI Companion](assets/images/ai-companion-2.png)
 
