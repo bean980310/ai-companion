@@ -2,8 +2,10 @@
   "dependencies": {
     "@anthropic-ai/claude-code": "^2.1.144",
     "@openai/codex": "^0.131.0",
-    "electron": "^43.1.0",
     "typescript": "^7.0.2",
     "vite": "^8.1.4"
+  },
+  "devDependencies": {
+    "electron": "^43.1.0"
   }
 }
