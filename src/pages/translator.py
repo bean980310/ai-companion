@@ -14,13 +14,13 @@ with gr.Blocks() as demo:
     translate_container = create_translate_container()
 
     # Language Change Event
-    def on_translator_language_change(selected_lang: str):
-        lang_code = get_language_code(selected_lang)
-        translation_manager.set_language(lang_code)
-        return [
-            gr.update(value=f"## {_('translator_title')}"),
-            gr.update(label=_('language_select'), info=_('language_info'))
-        ]
+    # def on_translator_language_change(selected_lang: str):
+    #     lang_code = get_language_code(selected_lang)
+    #     translation_manager.set_language(lang_code)
+    #     return [
+    #         gr.update(value=f"## {_('translator_title')}"),
+    #         gr.update(label=_('language_select'), info=_('language_info'))
+    #     ]
 
     # language_dropdown.change(
     #     fn=on_translator_language_change,

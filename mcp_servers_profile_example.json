@@ -12,7 +12,7 @@
             "transport": "streamable-http",
             "description": "GitHub's official MCP Server",
             "oauth_enabled": true,
-            "url": "https://server.smithery.ai/github"
+            "url": "https://api.githubcopilot.com/mcp/"
         },
         "notion": {
             "name": "Notion",
@@ -26,21 +26,21 @@
             "transport": "streamable-http",
             "description": "Access to Google Drive MCP Server",
             "oauth_enabled": true,
-            "url": "https://server.smithery.ai/googledrive"
+            "url": "https://drivemcp.googleapis.com/mcp/v1"
         },
         "gmail": {
             "name": "Gmail",
             "transport": "streamable-http",
             "description": "Access to Gmail MCP Server",
             "oauth_enabled": true,
-            "url": "https://server.smithery.ai/gmail"
+            "url": "https://gmailmcp.googleapis.com/mcp/v1"
         },
         "google-calendar": {
             "name": "Google Calendar",
             "transport": "streamable-http",
             "description": "Access to Google Calendar MCP Server",
             "oauth_enabled": true,
-            "url": "https://server.smithery.ai/googlecalendar"
+            "url": "https://calendarmcp.googleapis.com/mcp/v1"
         }
     }
 }

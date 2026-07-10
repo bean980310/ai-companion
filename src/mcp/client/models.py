@@ -49,6 +49,7 @@ class MCPServerConfig:
     command: Optional[str] = None
     args: List[str] = field(default_factory=list)
     env: Optional[Dict[str, str]] = None
+    oauth: Dict[str, str] = field(default_factory=dict)
     # OAuth 2.1 settings
     oauth_enabled: bool = False
     oauth_client_name: Optional[str] = None
@@ -151,7 +152,23 @@ class MCPTool:
         return f"{self.server_name}__{self.name}"
 
     def to_dict(self) -> Dict[str, Any]:
-        return {"name": self.name, "description": self.description, "server_name": self.server_name, "parameters": [{"name": p.name, "type": p.type, "description": p.description, "required": p.required, "default": p.default, "enum": p.enum} for p in self.parameters], "input_schema": self.input_schema}
+        return {
+            "name": self.name,
+            "description": self.description,
+            "server_name": self.server_name,
+            "parameters": [
+                {
+                    "name": p.name,
+                    "type": p.type,
+                    "description": p.description,
+                    "required": p.required,
+                    "default": p.default,
+                    "enum": p.enum,
+                }
+                for p in self.parameters
+            ],
+            "input_schema": self.input_schema,
+        }
 
 
 @dataclass
@@ -166,7 +183,14 @@ class MCPToolResult:
     content_type: str = "text"  # text, image, json, etc.
 
     def to_dict(self) -> Dict[str, Any]:
-        return {"tool_name": self.tool_name, "server_name": self.server_name, "success": self.success, "content": self.content, "error": self.error, "content_type": self.content_type}
+        return {
+            "tool_name": self.tool_name,
+            "server_name": self.server_name,
+            "success": self.success,
+            "content": self.content,
+            "error": self.error,
+            "content_type": self.content_type,
+        }
 
 
 @dataclass

@@ -12,18 +12,18 @@ with gr.Blocks() as demo:
     with gr.Sidebar():
         tts_side, tts_model_type_dropdown, tts_model_dropdown = create_tts_side()
 
-    with gr.Column(elem_classes='tab-container') as tts_container:
+    with gr.Column(elem_classes="tab-container") as tts_container:
         with gr.Row(elem_classes="chat-interface"):
             gr.Markdown("# Coming Soon!")
 
     # Language Change Event
-    def on_tts_language_change(selected_lang: str):
-        lang_code = get_language_code(selected_lang)
-        translation_manager.set_language(lang_code)
-        return [
-            gr.update(value=f"## {_('tts_title')}"),
-            gr.update(label=_('language_select'), info=_('language_info'))
-        ]
+    # def on_tts_language_change(selected_lang: str):
+    #     lang_code = get_language_code(selected_lang)
+    #     translation_manager.set_language(lang_code)
+    #     return [
+    #         gr.update(value=f"## {_('tts_title')}"),
+    #         gr.update(label=_('language_select'), info=_('language_info'))
+    #     ]
 
     # language_dropdown.change(
     #     fn=on_tts_language_change,
