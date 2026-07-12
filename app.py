@@ -117,9 +117,11 @@ def initialize_global_state():
 # with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True, css_paths="html/css/style.css") as demo:
 def _reload_page_modules():
     """Force reload page modules to get fresh demo objects during hot-reload."""
-    global header, chat, image_gen, storyteller, audio, translator, settings, mcp_client, download, mcp_tools
+    global header, chat, image_gen, storyteller, companion, video_gen, audio, translator, settings, mcp_client, download, mcp_tools
     from src.pages import header as _h, chat as _c, image_gen as _ig, storyteller as _s
     from src.pages import (
+        companion as _cp,
+        video_gen as _vg,
         audio as _a,
         translator as _t,
         settings as _st,
@@ -127,9 +129,10 @@ def _reload_page_modules():
     )
     from src.pages import download as _d, mcp_tools as _mt
 
-    for mod in [_h, _c, _ig, _s, _a, _t, _st, _mc, _d, _mt]:
+    for mod in [_h, _c, _ig, _s, _cp, _vg, _a, _t, _st, _mc, _d, _mt]:
         importlib.reload(mod)
     header, chat, image_gen, storyteller = _h, _c, _ig, _s
+    companion, video_gen = _cp, _vg
     audio, translator, settings, mcp_client = _a, _t, _st, _mc
     download, mcp_tools = _d, _mt
 
