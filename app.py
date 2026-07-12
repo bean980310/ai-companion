@@ -117,17 +117,7 @@ def initialize_global_state():
 # with gr.Blocks(title="AI Companion", fill_height=True, fill_width=True, css_paths="html/css/style.css") as demo:
 def _reload_page_modules():
     """Force reload page modules to get fresh demo objects during hot-reload."""
-    global \
-        header, \
-        chat, \
-        image_gen, \
-        storyteller, \
-        audio, \
-        translator, \
-        settings, \
-        mcp_client, \
-        download, \
-        mcp_tools
+    global header, chat, image_gen, storyteller, audio, translator, settings, mcp_client, download, mcp_tools
     from src.pages import header as _h, chat as _c, image_gen as _ig, storyteller as _s
     from src.pages import (
         audio as _a,
@@ -147,9 +137,7 @@ def _reload_page_modules():
 _reload_page_modules()
 
 
-with gr.Blocks(
-    title="Super AI Agent Companion", fill_height=True, fill_width=True
-) as demo:
+with gr.Blocks(title="Super AI Agent Companion", fill_height=True, fill_width=True) as demo:
     # demo.route("Chat", "/chat")
     # 1. Global State Registration
     initialize_global_state()
@@ -191,13 +179,8 @@ with gr.Blocks(
         "download",
         "mcp_tools",
     ]
-    menu_data = [
-        {"type": "item", "id": id, "label": name}
-        for id, name in zip(interface_ids, interface_names)
-    ]
-    menu = SidebarMenu(
-        menu_data=menu_data, value=interface_ids[0], open=True, position="left"
-    )
+    menu_data = [{"type": "item", "id": id, "label": name} for id, name in zip(interface_ids, interface_names)]
+    menu = SidebarMenu(menu_data=menu_data, value=interface_ids[0], open=True, position="left")
     with gr.Tabs():
         for interface, name in zip(interface_list, interface_names):
             with gr.TabItem(name):
@@ -213,18 +196,12 @@ with gr.Blocks(
             close_settings_footer_btn = gr.Button("닫기", variant="secondary")
 
     # Open settings popup
-    ui_component.settings_button.click(
-        fn=lambda: gr.update(visible=True), inputs=[], outputs=[settings_popup]
-    )
+    ui_component.settings_button.click(fn=lambda: gr.update(visible=True), inputs=[], outputs=[settings_popup])
 
     # Close settings popup
-    close_settings_btn.click(
-        fn=lambda: gr.update(visible=False), inputs=[], outputs=[settings_popup]
-    )
+    close_settings_btn.click(fn=lambda: gr.update(visible=False), inputs=[], outputs=[settings_popup])
 
-    close_settings_footer_btn.click(
-        fn=lambda: gr.update(visible=False), inputs=[], outputs=[settings_popup]
-    )
+    close_settings_footer_btn.click(fn=lambda: gr.update(visible=False), inputs=[], outputs=[settings_popup])
 
     header.language_dropdown.change(
         fn=header.on_header_language_change,

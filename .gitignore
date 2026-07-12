@@ -6,7 +6,7 @@ app.log*
 .vscode
 .idea
 .antigravitycli
-.venv
+.codex
 .claude
 .continue
 venv/
@@ -43,5 +43,8 @@ main.py
 # pixi environments
 .pixi/*
 !.pixi/config.toml
+
+.pytest_cache
+.ruff_cache
 
 node_modules/
