@@ -49,8 +49,8 @@ class MCPServerConfig:
     command: Optional[str] = None
     args: List[str] = field(default_factory=list)
     env: Optional[Dict[str, str]] = None
-    oauth: Dict[str, str] = field(default_factory=dict)
     # OAuth 2.1 settings
+    oauth: Dict[str, str] = field(default_factory=dict)
     oauth_enabled: bool = False
     oauth_client_name: Optional[str] = None
     oauth_scopes: Optional[str] = None
@@ -81,6 +81,7 @@ class MCPServerConfig:
             base["url"] = self.url
             base["api_key"] = self.api_key
             base["headers"] = self.headers
+            base["oauth"] = self.oauth
             base["oauth_enabled"] = self.oauth_enabled
             base["oauth_client_name"] = self.oauth_client_name
             base["oauth_scopes"] = self.oauth_scopes
@@ -111,6 +112,7 @@ class MCPServerConfig:
             args=data.get("args", []),
             env=data.get("env"),
             # OAuth
+            oauth=data.get("oauth", {}),
             oauth_enabled=data.get("oauth_enabled", False),
             oauth_client_name=data.get("oauth_client_name"),
             oauth_scopes=data.get("oauth_scopes"),

@@ -23,7 +23,7 @@ from typing import Optional, override
 
 from authlib.integrations.httpx_client import AsyncOAuth2Client, AsyncAssertionClient
 from authlib.oauth2.rfc7636 import create_s256_code_challenge
-from pydantic import Field
+from pydantic import Field, AnyHttpUrl, AnyUrl
 
 import jwt
 
@@ -40,7 +40,6 @@ try:
         OAuthClientInformationFull,
         PKCEParameters,
     )
-    from mcp.shared.auth import OAuthMetadata
 
     OAUTH_AVAILABLE = True
 except ImportError:
@@ -117,9 +116,7 @@ class PKCEParams:
             self.code_verifier = "".join(secrets.choice(unreserved) for _ in range(128))
 
         digest = hashlib.sha256(self.code_verifier.encode("ascii")).digest()
-        self.code_challenge = (
-            base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
-        )
+        self.code_challenge = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
         self.code_challenge_method = "S256"
 
     def to_dict(self) -> dict:
@@ -154,9 +151,7 @@ class FileTokenStorage(TokenStorage):
 
     def __init__(self, server_name: str, base_dir: Optional[str] = None):
         self.server_name = server_name
-        self.storage_dir = (
-            Path(base_dir or os.path.expanduser("~/.mcp/tokens")) / server_name
-        )
+        self.storage_dir = Path(base_dir or os.path.expanduser("~/.mcp/tokens")) / server_name
         self.storage_dir.mkdir(parents=True, exist_ok=True)
         self._tokens_path = self.storage_dir / "tokens.json"
         self._client_info_path = self.storage_dir / "client_info.json"
@@ -169,9 +164,7 @@ class FileTokenStorage(TokenStorage):
         """Persist PKCE code_verifier + OAuth state between auth request and callback."""
         data = {**pkce.to_dict(), "state": state, "created_at": time.time()}
         try:
-            self._pkce_state_path.write_text(
-                json.dumps(data, indent=2), encoding="utf-8"
-            )
+            self._pkce_state_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
             logger.debug(f"Saved PKCE state for {self.server_name}")
         except Exception as e:
             logger.error(f"Failed to save PKCE state for {self.server_name}: {e}")
@@ -211,9 +204,7 @@ class FileTokenStorage(TokenStorage):
     def _save_metadata(self, expires_in: Optional[int]) -> None:
         metadata = {"saved_at": time.time(), "expires_in": expires_in}
         try:
-            self._metadata_path.write_text(
-                json.dumps(metadata, indent=2), encoding="utf-8"
-            )
+            self._metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
         except Exception as e:
             logger.warning(f"Failed to save token metadata for {self.server_name}: {e}")
 
@@ -226,9 +217,7 @@ class FileTokenStorage(TokenStorage):
         if metadata and metadata.get("saved_at") and metadata.get("expires_in"):
             elapsed = time.time() - metadata["saved_at"]
             if elapsed >= (metadata["expires_in"] - self.EXPIRY_GRACE_SECONDS):
-                logger.info(
-                    f"Token for {self.server_name} has expired (elapsed={elapsed:.0f}s, expires_in={metadata['expires_in']}s)"
-                )
+                logger.info(f"Token for {self.server_name} has expired (elapsed={elapsed:.0f}s, expires_in={metadata['expires_in']}s)")
                 return True
             return False
 
@@ -239,9 +228,7 @@ class FileTokenStorage(TokenStorage):
             if expires_in is not None:
                 elapsed = time.time() - self._tokens_path.stat().st_mtime
                 if elapsed >= (expires_in - self.EXPIRY_GRACE_SECONDS):
-                    logger.info(
-                        f"Token for {self.server_name} has expired (fallback, elapsed={elapsed:.0f}s)"
-                    )
+                    logger.info(f"Token for {self.server_name} has expired (fallback, elapsed={elapsed:.0f}s)")
                     return True
                 return False
         except Exception:
@@ -257,9 +244,7 @@ class FileTokenStorage(TokenStorage):
                     path.unlink()
                     logger.info(f"Deleted {path.name} for {self.server_name}")
                 except Exception as e:
-                    logger.error(
-                        f"Failed to delete {path.name} for {self.server_name}: {e}"
-                    )
+                    logger.error(f"Failed to delete {path.name} for {self.server_name}: {e}")
 
     # -- TokenStorage protocol (MCP SDK) --
 
@@ -268,9 +253,7 @@ class FileTokenStorage(TokenStorage):
         if not self._tokens_path.exists():
             return None
         if self.is_token_expired():
-            logger.warning(
-                f"Stored token for {self.server_name} has expired. Clearing."
-            )
+            logger.warning(f"Stored token for {self.server_name} has expired. Clearing.")
             self.clear_tokens()
             return None
         try:
@@ -283,15 +266,10 @@ class FileTokenStorage(TokenStorage):
     @override
     async def set_tokens(self, tokens: OAuthToken) -> None:
         try:
-            self._tokens_path.write_text(
-                tokens.model_dump_json(indent=2), encoding="utf-8"
-            )
+            self._tokens_path.write_text(tokens.model_dump_json(indent=2), encoding="utf-8")
             expires_in = getattr(tokens, "expires_in", None)
             self._save_metadata(expires_in)
-            logger.info(
-                f"Saved OAuth tokens for {self.server_name}"
-                + (f" (expires_in={expires_in}s)" if expires_in else "")
-            )
+            logger.info(f"Saved OAuth tokens for {self.server_name}" + (f" (expires_in={expires_in}s)" if expires_in else ""))
         except Exception as e:
             logger.error(f"Failed to save OAuth tokens: {e}")
 
@@ -308,9 +286,7 @@ class FileTokenStorage(TokenStorage):
     @override
     async def set_client_info(self, client_info: OAuthClientInformationFull) -> None:
         try:
-            self._client_info_path.write_text(
-                client_info.model_dump_json(indent=2), encoding="utf-8"
-            )
+            self._client_info_path.write_text(client_info.model_dump_json(indent=2), encoding="utf-8")
         except Exception as e:
             logger.error(f"Failed to save client info: {e}")
 
@@ -324,9 +300,7 @@ def _build_callback_handler(redirect_port: int):
     """Build a local HTTP server that captures the OAuth callback."""
 
     async def callback_handler() -> tuple[str, str | None]:
-        auth_code_future: asyncio.Future[tuple[str, str | None]] = (
-            asyncio.get_event_loop().create_future()
-        )
+        auth_code_future: asyncio.Future[tuple[str, str | None]] = asyncio.get_event_loop().create_future()
 
         from aiohttp import web
 
@@ -336,20 +310,14 @@ def _build_callback_handler(redirect_port: int):
             error = request.query.get("error")
 
             if error:
-                auth_code_future.set_exception(
-                    RuntimeError(
-                        f"OAuth error: {error} - {request.query.get('error_description', '')}"
-                    )
-                )
+                auth_code_future.set_exception(RuntimeError(f"OAuth error: {error} - {request.query.get('error_description', '')}"))
                 return web.Response(
                     text=f"<html><body><h1>Authentication Failed</h1><p>Error: {error}</p><p>You can close this window.</p></body></html>",
                     content_type="text/html",
                 )
 
             if not code:
-                auth_code_future.set_exception(
-                    RuntimeError("No authorization code received")
-                )
+                auth_code_future.set_exception(RuntimeError("No authorization code received"))
                 return web.Response(
                     text="<html><body><h1>Error</h1><p>No authorization code received.</p></body></html>",
                     content_type="text/html",
@@ -368,9 +336,7 @@ def _build_callback_handler(redirect_port: int):
         await runner.setup()
         site = web.TCPSite(runner, "localhost", redirect_port)
         await site.start()
-        logger.info(
-            f"OAuth callback server listening on http://localhost:{redirect_port}/callback"
-        )
+        logger.info(f"OAuth callback server listening on http://localhost:{redirect_port}/callback")
 
         try:
             result = await asyncio.wait_for(auth_code_future, timeout=300.0)
@@ -502,9 +468,7 @@ class PKCEOAuthProvider:
 
         # Validate state to prevent CSRF
         if returned_state != state:
-            logger.error(
-                f"[PKCE] State mismatch: expected={state}, got={returned_state}"
-            )
+            logger.error(f"[PKCE] State mismatch: expected={state}, got={returned_state}")
             self.storage.clear_pkce_state()
             raise RuntimeError("OAuth state mismatch — possible CSRF attack")
 
@@ -513,9 +477,7 @@ class PKCEOAuthProvider:
         self.storage.clear_pkce_state()
         return tokens
 
-    async def _exchange_code(
-        self, auth_code: str, code_verifier: str
-    ) -> Optional["OAuthToken"]:
+    async def _exchange_code(self, auth_code: str, code_verifier: str) -> Optional["OAuthToken"]:
         """
         Exchange authorization code for tokens, including code_verifier (PKCE §4.5).
         """
@@ -535,18 +497,14 @@ class PKCEOAuthProvider:
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
-                resp = await client.post(
-                    self.token_endpoint, data=data, headers=headers
-                )
+                resp = await client.post(self.token_endpoint, data=data, headers=headers)
                 resp.raise_for_status()
 
                 token_data = resp.json()
 
                 # GitHub returns token in non-standard format sometimes
                 if "access_token" not in token_data:
-                    logger.error(
-                        f"[PKCE] Token response missing access_token: {token_data}"
-                    )
+                    logger.error(f"[PKCE] Token response missing access_token: {token_data}")
                     return None
 
                 token = OAuthToken.model_validate(token_data)
@@ -555,9 +513,7 @@ class PKCEOAuthProvider:
                 return token
 
         except httpx.HTTPStatusError as e:
-            logger.error(
-                f"[PKCE] Token exchange failed ({e.response.status_code}): {e.response.text}"
-            )
+            logger.error(f"[PKCE] Token exchange failed ({e.response.status_code}): {e.response.text}")
             return None
         except Exception as e:
             logger.error(f"[PKCE] Token exchange error: {e}")
@@ -581,9 +537,7 @@ class PKCEOAuthProvider:
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
-                resp = await client.post(
-                    self.token_endpoint, data=data, headers=headers
-                )
+                resp = await client.post(self.token_endpoint, data=data, headers=headers)
                 resp.raise_for_status()
 
                 token_data = resp.json()
@@ -694,9 +648,7 @@ async def create_oauth_provider(config) -> "httpx.Auth":
         httpx.Auth instance for use with MCP transports
     """
     if not OAUTH_AVAILABLE:
-        raise RuntimeError(
-            "MCP OAuth modules not available. Update mcp SDK: pip install --upgrade mcp"
-        )
+        raise RuntimeError("MCP OAuth modules not available. Update mcp SDK: pip install --upgrade mcp")
 
     redirect_port = config.oauth_redirect_port or 3000
     redirect_uri = f"http://localhost:{redirect_port}/callback"
@@ -705,9 +657,7 @@ async def create_oauth_provider(config) -> "httpx.Auth":
     # --- Explicit PKCE flow for pre-registered clients ---
     if config.oauth_client_id:
         client_type = "public" if not config.oauth_client_secret else "confidential"
-        logger.info(
-            f"[PKCE] Creating {client_type} OAuth provider for '{config.name}' (client_id={config.oauth_client_id[:8]}...)"
-        )
+        logger.info(f"[PKCE] Creating {client_type} OAuth provider for '{config.name}' (client_id={config.oauth_client_id[:8]}...)")
 
         provider = PKCEOAuthProvider(
             server_name=config.name,
@@ -735,7 +685,7 @@ async def create_oauth_provider(config) -> "httpx.Auth":
     callback_handler = _build_callback_handler(redirect_port)
 
     client_metadata = OAuthClientMetadata(
-        redirect_uris=[redirect_uri],
+        redirect_uris=[AnyUrl(redirect_uri)],
         token_endpoint_auth_method="none",
         grant_types=["authorization_code", "refresh_token"],
         response_types=["code"],

@@ -108,9 +108,7 @@ async def _format_connection_error(exc: BaseException) -> str:
             details.append(await _format_http_status_error(leaf))
         elif isinstance(leaf, httpx.HTTPError):
             request = getattr(leaf, "request", None)
-            request_detail = (
-                f" request={request.method} {request.url}" if request else ""
-            )
+            request_detail = f" request={request.method} {request.url}" if request else ""
             details.append(f"{leaf.__class__.__name__}:{request_detail} {leaf}")
 
     if not details:
@@ -183,9 +181,7 @@ class MCPClientManager:
                         self.servers[server_id] = config
                     # Migrate to new format
                     self._save_config()
-                    logger.info(
-                        "Migrated MCP config from legacy format to mcpServers format"
-                    )
+                    logger.info("Migrated MCP config from legacy format to mcpServers format")
 
                 logger.info(f"Loaded {len(self.servers)} MCP server configurations")
             except Exception as e:
@@ -194,12 +190,7 @@ class MCPClientManager:
     def _save_config(self):
         """Save server configurations to file"""
         try:
-            data = {
-                "mcpServers": {
-                    server_id: server.to_dict()
-                    for server_id, server in self.servers.items()
-                }
-            }
+            data = {"mcpServers": {server_id: server.to_dict() for server_id, server in self.servers.items()}}
             with open(self.config_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
             logger.info(f"Saved {len(self.servers)} MCP server configurations")
@@ -348,9 +339,7 @@ class MCPClientManager:
 
         storage = FileTokenStorage(server_name=config.name)
         if storage.is_token_expired():
-            logger.warning(
-                f"OAuth token for server '{server_name}' has expired. Clearing tokens — re-authentication will be required."
-            )
+            logger.warning(f"OAuth token for server '{server_name}' has expired. Clearing tokens — re-authentication will be required.")
             storage.clear_tokens()
             return False
 
@@ -425,9 +414,7 @@ class MCPClientManager:
         if config.oauth_enabled:
             token_valid = self.validate_server_token(server_name)
             if not token_valid:
-                logger.info(
-                    f"Expired token cleared for '{server_name}'. OAuth re-authentication will be triggered."
-                )
+                logger.info(f"Expired token cleared for '{server_name}'. OAuth re-authentication will be triggered.")
 
         try:
             if config.transport == MCPTransportType.SSE:
@@ -445,9 +432,7 @@ class MCPClientManager:
             return True
 
         except Exception as e:
-            logger.error(
-                f"Error connecting to {server_name}: {await _format_connection_error(e)}\n\n{traceback.format_exc()}"
-            )
+            logger.error(f"Error connecting to {server_name}: {await _format_connection_error(e)}\n\n{traceback.format_exc()}")
             return False
 
     async def _connect_sse(self, server_id: str, config: MCPServerConfig):
@@ -464,18 +449,12 @@ class MCPClientManager:
             if isinstance(auth, PKCEAuth):
                 token = await auth._provider.get_valid_token()
                 if not token:
-                    raise RuntimeError(
-                        f"PKCE authentication failed for '{config.name}'"
-                    )
-                logger.info(
-                    f"[PKCE] Token acquired for SSE connection to '{config.name}'"
-                )
+                    raise RuntimeError(f"PKCE authentication failed for '{config.name}'")
+                logger.info(f"[PKCE] Token acquired for SSE connection to '{config.name}'")
 
         stack = AsyncExitStack()
         try:
-            read, write = await stack.enter_async_context(
-                sse_client(config.url, headers=headers, auth=auth)
-            )
+            read, write = await stack.enter_async_context(sse_client(config.url, headers=headers, auth=auth))
             session = await stack.enter_async_context(ClientSession(read, write))
             initialize_result = await session.initialize()
             self.sessions[server_id] = session
@@ -520,24 +499,22 @@ class MCPClientManager:
             headers["Authorization"] = f"Bearer {config.api_key}"
 
         # OAuth 2.1 authentication (PKCE-based)
+        oauth = config.oauth.copy()
         auth = None
         http_client = None
         if config.oauth_enabled:
+            oauth[""]
             auth = await create_oauth_provider(config)
             # For PKCE provider, ensure token is acquired before connecting
             if isinstance(auth, PKCEAuth):
                 token = await auth._provider.get_valid_token()
                 if not token:
-                    raise RuntimeError(
-                        f"PKCE authentication failed for '{config.name}'"
-                    )
+                    raise RuntimeError(f"PKCE authentication failed for '{config.name}'")
                 headers["Authorization"] = f"Bearer {token}"
                 headers["content-type"] = "application/json"
                 if config.name.lower() == "notion":
                     headers["Notion-Version"] = "2026-03-11"
-                logger.info(
-                    f"[PKCE] Token acquired for HTTP connection to '{config.name}'"
-                )
+                logger.info(f"[PKCE] Token acquired for HTTP connection to '{config.name}'")
 
         if headers or auth:
             http_client = create_mcp_http_client(headers=headers, auth=auth)
@@ -546,9 +523,7 @@ class MCPClientManager:
         try:
             if http_client:
                 await stack.enter_async_context(http_client)
-            read, write, _get_session_id = await stack.enter_async_context(
-                streamable_http_client(config.url, http_client=http_client)
-            )
+            read, write, _get_session_id = await stack.enter_async_context(streamable_http_client(config.url, http_client=http_client))
             session = await stack.enter_async_context(ClientSession(read, write))
             initialize_result = await session.initialize()
             self.sessions[server_id] = session
@@ -558,9 +533,7 @@ class MCPClientManager:
             await stack.aclose()
             raise
 
-    async def _discover_capabilities(
-        self, server_name: str, session: ClientSession, initialize_result: Any = None
-    ):
+    async def _discover_capabilities(self, server_name: str, session: ClientSession, initialize_result: Any = None):
         """Discover tools, resources, and prompts from a connected server"""
         # Discover tools
         if _has_server_capability(initialize_result, "tools"):
@@ -596,9 +569,7 @@ class MCPClientManager:
                     self.tools[mcp_tool.full_name] = mcp_tool
                     logger.debug(f"Discovered tool: {mcp_tool.full_name}")
 
-                logger.info(
-                    f"Discovered {len(tools_result.tools)} tools from {server_name}"
-                )
+                logger.info(f"Discovered {len(tools_result.tools)} tools from {server_name}")
             except Exception as e:
                 logger.warning(f"Error discovering tools from {server_name}: {e}")
 
@@ -615,9 +586,7 @@ class MCPClientManager:
                         server_name=server_name,
                     )
                     self.resources[f"{server_name}__{resource.name}"] = mcp_resource
-                logger.info(
-                    f"Discovered {len(resources_result.resources)} resources from {server_name}"
-                )
+                logger.info(f"Discovered {len(resources_result.resources)} resources from {server_name}")
             except Exception as e:
                 logger.debug(f"No resources available from {server_name}: {e}")
 
@@ -643,9 +612,7 @@ class MCPClientManager:
                         server_name=server_name,
                     )
                     self.prompts[f"{server_name}__{prompt.name}"] = mcp_prompt
-                logger.info(
-                    f"Discovered {len(prompts_result.prompts)} prompts from {server_name}"
-                )
+                logger.info(f"Discovered {len(prompts_result.prompts)} prompts from {server_name}")
             except Exception as e:
                 logger.debug(f"No prompts available from {server_name}: {e}")
 
@@ -663,9 +630,7 @@ class MCPClientManager:
         self._connected_servers.discard(server_name)
 
         # Remove associated tools
-        self.tools = {
-            k: v for k, v in self.tools.items() if v.server_name != server_name
-        }
+        self.tools = {k: v for k, v in self.tools.items() if v.server_name != server_name}
 
         logger.info(f"Disconnected from MCP server: {server_name}")
 
@@ -789,22 +754,12 @@ class MCPClientManager:
                 elif hasattr(item, "data"):
                     # Image or binary data
                     content.append(item.data)
-                    content_type = (
-                        "image"
-                        if hasattr(item, "mimeType") and "image" in item.mimeType
-                        else "binary"
-                    )
+                    content_type = "image" if hasattr(item, "mimeType") and "image" in item.mimeType else "binary"
                 else:
                     content.append(str(item))
 
             # Join text content or return first item for non-text
-            final_content = (
-                "\n".join(content)
-                if content_type == "text"
-                else content[0]
-                if content
-                else None
-            )
+            final_content = "\n".join(content) if content_type == "text" else content[0] if content else None
 
             return MCPToolResult(
                 tool_name=tool.name,
@@ -842,19 +797,13 @@ class MCPClientManager:
             session = self.sessions[server_name]
             result = await session.read_resource(uri)
             if result.contents:
-                return (
-                    result.contents[0].text
-                    if hasattr(result.contents[0], "text")
-                    else str(result.contents[0])
-                )
+                return result.contents[0].text if hasattr(result.contents[0], "text") else str(result.contents[0])
             return None
         except Exception as e:
             logger.error(f"Error reading resource {uri}: {e}")
             return None
 
-    async def get_prompt(
-        self, prompt_name: str, arguments: Dict[str, str], server_name: str
-    ) -> Optional[str]:
+    async def get_prompt(self, prompt_name: str, arguments: Dict[str, str], server_name: str) -> Optional[str]:
         """
         Get a prompt from an MCP server.
 
@@ -874,11 +823,7 @@ class MCPClientManager:
             session = self.sessions[server_name]
             result = await session.get_prompt(prompt_name, arguments)
             if result.messages:
-                return (
-                    result.messages[0].content.text
-                    if hasattr(result.messages[0].content, "text")
-                    else str(result.messages[0].content)
-                )
+                return result.messages[0].content.text if hasattr(result.messages[0].content, "text") else str(result.messages[0].content)
             return None
         except Exception as e:
             logger.error(f"Error getting prompt {prompt_name}: {e}")
