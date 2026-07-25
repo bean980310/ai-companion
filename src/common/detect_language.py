@@ -1,4 +1,3 @@
-import logging
 import locale
 from src import logger
 

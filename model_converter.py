@@ -1,8 +1,5 @@
 # model_converter.py
 
-import os
-import traceback
-from src.logging import logger
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, MetalConfig, AwqConfig, GPTQConfig
 

@@ -1,9 +1,7 @@
-import os
 import re
 
 from langchain_core.documents import Document
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
-from langchain_huggingface import HuggingFaceEmbeddings
 
 # 언어 이름과 코드 매핑 딕셔너리
 LANGUAGE_MAP = {"한국어": "ko", "日本語": "ja", "简体中文": "zh_CN", "繁體中文": "zh_TW", "English": "en"}

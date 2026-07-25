@@ -1,4 +1,3 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI
 
 app = FastAPI(title="AI Companion")

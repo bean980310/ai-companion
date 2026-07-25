@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
+from typing import Optional
 import gradio as gr
 # from gradio_i18n import translate_blocks, gettext as _
 
@@ -11,66 +14,66 @@ from ...models import IMAGE_PROVIDER_LIST
 
 @dataclass
 class DiffusionComponent:
-    model_provider_dropdown: gr.Dropdown = None
-    model_type_dropdown: gr.Radio = None
-    model_dropdown: gr.Dropdown = None
-    api_key_text: gr.Textbox = None
+    model_provider_dropdown: Optional[gr.Dropdown] = None
+    model_type_dropdown: Optional[gr.Radio] = None
+    model_dropdown: Optional[gr.Dropdown] = None
+    api_key_text: Optional[gr.Textbox] = None
 
-    refiner_row: gr.Row = None
-    refiner_model_dropdown: gr.Dropdown = None
-    refiner_start: gr.Slider = None
-    with_refiner_image_to_image_start: gr.Slider = None
+    refiner_row: Optional[gr.Row] = None
+    refiner_model_dropdown: Optional[gr.Dropdown] = None
+    refiner_start: Optional[gr.Slider] = None
+    with_refiner_image_to_image_start: Optional[gr.Slider] = None
 
-    lora_row: gr.Row = None
-    lora_multiselect: gr.Dropdown = None
-    lora_text_encoder_sliders: list = None
-    lora_unet_sliders: list = None
+    lora_row: Optional[gr.Row] = None
+    lora_multiselect: Optional[gr.Dropdown] = None
+    lora_text_encoder_sliders: Optional[list] = None
+    lora_unet_sliders: Optional[list] = None
 
-    image_to_image_mode: gr.Radio = None
-    image_to_image_input: gr.Image = None
-    image_inpaint_input: gr.Image = None
-    image_inpaint_masking: gr.ImageMask = None
+    image_to_image_mode: Optional[gr.Radio] = None
+    image_to_image_input: Optional[gr.Image] = None
+    image_inpaint_input: Optional[gr.Image] = None
+    image_inpaint_masking: Optional[gr.ImageMask] = None
 
-    blur_radius_slider: gr.Slider = None
-    blur_expansion_radius_slider: gr.Slider = None
-    denoise_strength_slider: gr.Slider = None
+    blur_radius_slider: Optional[gr.Slider] = None
+    blur_expansion_radius_slider: Optional[gr.Slider] = None
+    denoise_strength_slider: Optional[gr.Slider] = None
 
-    positive_prompt_input: gr.TextArea = None
-    negative_prompt_input: gr.TextArea = None
-    style_dropdown: gr.Dropdown = None
+    positive_prompt_input: Optional[gr.TextArea] = None
+    negative_prompt_input: Optional[gr.TextArea] = None
+    style_dropdown: Optional[gr.Dropdown] = None
 
-    width_slider: gr.Slider = None
-    height_slider: gr.Slider = None
+    width_slider: Optional[gr.Slider] = None
+    height_slider: Optional[gr.Slider] = None
 
-    generation_step_slider: gr.Slider = None
-    random_prompt_btn: gr.Button = None
-    generate_btn: gr.Button = None
+    generation_step_slider: Optional[gr.Slider] = None
+    random_prompt_btn: Optional[gr.Button] = None
+    generate_btn: Optional[gr.Button] = None
 
-    gallery: gr.Gallery = None
+    gallery: Optional[gr.Gallery] = None
 
-    advanced_setting: gr.Accordion = None
-    sampler_dropdown: gr.Dropdown = None
-    scheduler_dropdown: gr.Dropdown = None
-    cfg_scale_slider: gr.Slider = None
-    seed_input: gr.Number = None
-    random_seed_checkbox: gr.Checkbox = None
-    vae_dropdown: gr.Dropdown = None
-    clip_skip_slider: gr.Slider = None
-    enable_clip_skip_checkbox: gr.Checkbox = None
-    clip_g_checkbox: gr.Checkbox = None
-    batch_size_input: gr.Number = None
-    batch_count_input: gr.Number = None
+    advanced_setting: Optional[gr.Accordion] = None
+    sampler_dropdown: Optional[gr.Dropdown] = None
+    scheduler_dropdown: Optional[gr.Dropdown] = None
+    cfg_scale_slider: Optional[gr.Slider] = None
+    seed_input: Optional[gr.Number] = None
+    random_seed_checkbox: Optional[gr.Checkbox] = None
+    vae_dropdown: Optional[gr.Dropdown] = None
+    clip_skip_slider: Optional[gr.Slider] = None
+    enable_clip_skip_checkbox: Optional[gr.Checkbox] = None
+    clip_g_checkbox: Optional[gr.Checkbox] = None
+    batch_size_input: Optional[gr.Number] = None
+    batch_count_input: Optional[gr.Number] = None
 
-    vae_row: gr.Row = None
+    vae_row: Optional[gr.Row] = None
 
-    image_history: gr.Dataframe = None
+    image_history: Optional[gr.Dataframe] = None
 
     @classmethod
     def create_diffusion_side_model_container(cls):
         with gr.Row(elem_classes="model-container"):
             with gr.Column():
                 gr.Markdown("### Model Selection")
-                model_provider_dropdown = gr.Dropdown(label=_("model_provider_label"), choices=IMAGE_PROVIDER_LIST, value=IMAGE_PROVIDER_LIST[0], elem_classes="model-dropdown")
+                model_provider_dropdown = gr.Dropdown(label=_("model_provider_label"), choices=IMAGE_PROVIDER_LIST, value=getattr(app_state, "default_image_provider", IMAGE_PROVIDER_LIST[0]), elem_classes="model-dropdown")
                 model_type_dropdown = gr.Radio(label=_("model_type_label"), choices=app_state.diffusion_type_choices, value=app_state.diffusion_type_choices[0], elem_classes="model-dropdown")
                 model_dropdown = gr.Dropdown(label=_("model_select_label"), choices=app_state.diffusion_choices, value=app_state.diffusion_choices[0] if len(app_state.diffusion_choices) > 0 else None, elem_classes="model-dropdown")
                 api_key_text = gr.Textbox(label=_("api_key_label"), placeholder="sk-...", visible=False, elem_classes="api-key-input")

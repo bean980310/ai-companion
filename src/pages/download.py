@@ -1,7 +1,7 @@
 import gradio as gr
 from src.tabs.download_tab import create_download_tab
 from src.common.translations import translation_manager, _
-from src.common_blocks import create_page_header, get_language_code
+from src.common_blocks import get_language_code
 
 with gr.Blocks() as demo:
     # Page Header with Language Selector

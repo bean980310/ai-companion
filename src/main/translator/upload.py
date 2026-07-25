@@ -1,7 +1,6 @@
 import pytesseract
 from pdf2image import convert_from_path
 from PIL import Image
-from ai_companion_core import logger
 
 languages = {"English": "eng", "한국어(Korean)": "kor", "日本語(Japanese)": "jpn", "简体中文(Simp. Chinese)": "chi_sim", "Français(French)": "fra", "Deutsche(German)": "deu", "Español(Spanish)": "spa"}
 

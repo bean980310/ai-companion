@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
+from typing import Optional
 
 import gradio as gr
 # from gradio_i18n import gettext as _
@@ -64,8 +67,8 @@ from .. import __version__
 
 @dataclass
 class BottomNavUIComponent:
-    version: gr.Markdown = None
-    language_dropdown: gr.Dropdown = None
+    version: Optional[gr.Markdown] = None
+    language_dropdown: Optional[gr.Dropdown] = None
 
     @classmethod
     def create_bottom_bar(cls):

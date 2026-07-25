@@ -5,8 +5,7 @@ import asyncio
 import json
 import os
 import traceback
-from typing import Any, Dict, List, Optional, Callable
-from pathlib import Path
+from typing import Any, Dict, List, Optional
 from contextlib import AsyncExitStack
 
 from ai_companion_core import logger
@@ -37,11 +36,8 @@ except ImportError:
     MCP_AVAILABLE = False
     logger.warning("MCP SDK not available. Install with: pip install mcp")
 
-from authlib.integrations.requests_client import OAuth2Session
-from authlib.integrations.httpx_client import OAuth2Client
-from authlib.oauth2.rfc7636 import create_s256_code_challenge
 
-from .oauth import create_oauth_provider, FileTokenStorage, PKCEOAuthProvider, PKCEAuth
+from .oauth import create_oauth_provider, FileTokenStorage, PKCEAuth
 
 
 def _iter_exception_tree(exc: BaseException):

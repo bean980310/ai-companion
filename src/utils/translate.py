@@ -1,4 +1,3 @@
-import gradio as gr
 from gradio_i18n import translate_blocks
 
 from presets import (

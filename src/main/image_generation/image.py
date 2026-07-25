@@ -3,13 +3,11 @@ from __future__ import annotations
 from io import BytesIO
 import numpy as np
 import torch
-import PIL
 
 # import tensorflow as tf
 # import tf_keras as keras
 # import keras
-from typing import Callable, Any
-from PIL import Image, ImageOps, ImageFilter, ImageFile, ImageSequence, UnidentifiedImageError
+from PIL import Image, ImageOps, ImageFile, ImageSequence
 import datetime
 import os
 

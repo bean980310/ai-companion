@@ -1,8 +1,8 @@
 import gradio as gr
 
 from ..start_app import create_tab_side
-from .chatbot import ChatbotMain, chat_main
-from .image_generation import DiffusionMain, diff_main
+from .chatbot import chat_main
+from .image_generation import diff_main
 from .storyteller import create_story_side
 from .tts import create_tts_side
 

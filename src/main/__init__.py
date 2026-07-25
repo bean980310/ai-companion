@@ -440,7 +440,6 @@ def create_main_container(demo: gr.Blocks):
         triggers=[
             text_model_provider_dropdown.change,
             text_model_type_dropdown.change,
-            demo.load,
         ],
         fn=chat_bot.update_model_list,
         inputs=[text_model_provider_dropdown, text_model_type_dropdown],

@@ -1,27 +1,15 @@
+from typing import Optional
 import gradio as gr
 from src.main.chatbot import chat_main, chat_bot, chat_component
 from src.main.chatbot.component import MAX_VISIBLE_SESSIONS
-from src.start_app import app_state, ui_component, initialize_speech_manager
+from src.start_app import app_state, initialize_speech_manager
 from src.common.character_info import characters
 from src.common.translations import translation_manager, _
-from src.common_blocks import create_page_header, get_language_code
+from src.common_blocks import get_language_code
 from src.pages import header
 from src.characters import PersonaSpeechManager
-from src.common.database import get_existing_sessions, get_existing_sessions_with_names
-from presets import (
-    AI_ASSISTANT_PRESET,
-    SD_IMAGE_GENERATOR_PRESET,
-    MINAMI_ASUKA_PRESET,
-    MAKOTONO_AOI_PRESET,
-    AINO_KOITO_PRESET,
-    ARIA_PRINCESS_FATE_PRESET,
-    ARIA_PRINCE_FATE_PRESET,
-    WANG_MEI_LING_PRESET,
-    MISTY_LANE_PRESET,
-    LILY_EMPRESS_PRESET,
-    CHOI_YUNA_PRESET,
-    CHOI_YURI_PRESET
-    )
+from src.common.database import get_existing_sessions_with_names
+from presets import AI_ASSISTANT_PRESET, SD_IMAGE_GENERATOR_PRESET, MINAMI_ASUKA_PRESET, MAKOTONO_AOI_PRESET, AINO_KOITO_PRESET, ARIA_PRINCESS_FATE_PRESET, ARIA_PRINCE_FATE_PRESET, WANG_MEI_LING_PRESET, MISTY_LANE_PRESET, LILY_EMPRESS_PRESET, CHOI_YUNA_PRESET, CHOI_YURI_PRESET
 
 from src import args
 from src.models import default_device
@@ -38,22 +26,22 @@ with gr.Blocks() as demo:
         app_state.top_p_state = gr.State(0.9)
         app_state.repetition_penalty_state = gr.State(1.1)
         app_state.enable_thinking_state = gr.State(False)
-        
+
         # Session & History
         # loaded_history is set in register_global_state, but we need a gr.State for it in the chat context if we want to mutate it?
         # Actually, create_chat_container usually takes app_state.history_state.
         # old register_app_state: history_state = gr.State(app_state.loaded_history)
         app_state.history_state = gr.State(app_state.loaded_history)
-        
+
         app_state.last_sid_state = gr.State()
         app_state.last_character_state = gr.State()
         app_state.session_list_state = gr.State()
         app_state.overwrite_state = gr.State(False)
-        
+
         app_state.custom_model_path_state = gr.State("")
         app_state.character_state = gr.State(app_state.initial_last_character)
         app_state.system_message_state = gr.State(app_state.initial_system_message)
-        
+
         app_state.reset_confirmation = gr.State(False)
         app_state.reset_all_confirmation = gr.State(False)
 
@@ -63,17 +51,17 @@ with gr.Blocks() as demo:
         # We also need these if they were formerly global
         # selected_language_state is GLOBAL (in app.py)
         # selected_device_state is GLOBAL (in app.py)
-        
+
         # Load Model Lists
         chat_main.share_allowed_llm_models()
-        
+
         # Initialize Shared States Locally for this Page
         # These are needed by create_chat_container's additional_inputs
         app_state.session_id_state = gr.State(getattr(app_state, "initial_session_id", "demo_session"))
         app_state.selected_language_state = gr.State(default_language)
         app_state.selected_device_state = gr.State(default_device)
         app_state.speech_manager_state = gr.State(initialize_speech_manager)
-        
+
     register_chat_state()
 
     # 1. Page Header with Language Selector
@@ -89,11 +77,9 @@ with gr.Blocks() as demo:
     # Main Content
     # chat_main.create_chat_container() creates a Column with tab-container class.
     # We can reuse it.
-    
+
     chat_container_obj = chat_main.create_chat_container()
 
-    
-    
     # Now we need to extract the components for wiring.
     # References from chat_side - Session list components
     session_select_dropdown = chat_side_session.session_select_dropdown
@@ -117,20 +103,20 @@ with gr.Blocks() as demo:
     text_model_clear_all_btn = chat_side_model.clear_all_btn
 
     # References from chat_container
-    # The create_chat_container creates a NEW ChatbotMain instance, 
+    # The create_chat_container creates a NEW ChatbotMain instance,
     # so we need to use the one returned: chat_container_obj
-    
+
     system_message_accordion = chat_container_obj.main_panel.system_message_accordion
     system_message_box = chat_container_obj.main_panel.system_message_box
     chat_interface = chat_container_obj.main_panel.chat_interface
     chatbot = chat_container_obj.main_panel.chatbot
     msg = chat_container_obj.main_panel.msg
-    
+
     profile_image = chat_container_obj.side_panel.profile_image
     character_dropdown = chat_container_obj.side_panel.character_dropdown
-    
+
     text_advanced_settings = chat_container_obj.side_panel.advanced_setting
-    
+
     text_seed_input = chat_container_obj.side_panel.seed_input
     text_max_length_input = chat_container_obj.side_panel.max_length_input
     text_temperature_slider = chat_container_obj.side_panel.temperature_slider
@@ -142,7 +128,7 @@ with gr.Blocks() as demo:
     change_preset_button = chat_container_obj.side_panel.change_preset_button
     reset_btn = chat_container_obj.side_panel.reset_btn
     reset_all_btn = chat_container_obj.side_panel.reset_all_btn
-    
+
     status_text = chat_container_obj.status_bar.status_text
     image_info = chat_container_obj.status_bar.image_info
     session_select_info = chat_container_obj.status_bar.session_select_info
@@ -155,7 +141,7 @@ with gr.Blocks() as demo:
 
     # ===== Session List Helper Functions =====
 
-    def refresh_session_list_ui(current_session_id: str = None):
+    def refresh_session_list_ui(current_session_id: Optional[str] = None):
         """
         세션 목록 UI를 갱신합니다.
         각 세션 row의 visibility와 버튼 텍스트를 업데이트합니다.
@@ -208,15 +194,18 @@ with gr.Blocks() as demo:
 
     def make_session_click_handler(index: int):
         """세션 버튼 클릭 핸들러를 생성합니다."""
+
         def handler():
             sessions = get_existing_sessions_with_names()
             if index < len(sessions):
                 return sessions[index][0]  # Return session ID
             return None
+
         return handler
 
     def make_delete_click_handler(index: int):
         """삭제 버튼 클릭 핸들러를 생성합니다."""
+
         def handler(current_sid: str):
             sessions = get_existing_sessions_with_names()
             if index < len(sessions):
@@ -226,14 +215,12 @@ with gr.Blocks() as demo:
                     return gr.update(visible=True), f"현재 활성 세션 '{selected_name}'은(는) 삭제할 수 없습니다.", selected_sid
                 return gr.update(visible=True), f"세션 '{selected_name}'을(를) 삭제하시겠습니까?", selected_sid
             return gr.update(visible=False), "", ""
+
         return handler
 
     # Wire session button click events
     for i in range(MAX_VISIBLE_SESSIONS):
-        session_buttons[i].click(
-            fn=make_session_click_handler(i),
-            outputs=[selected_session_id]
-        ).then(
+        session_buttons[i].click(fn=make_session_click_handler(i), outputs=[selected_session_id]).then(
             fn=apply_session_with_character,
             inputs=[selected_session_id, app_state.selected_language_state],
             outputs=[
@@ -244,14 +231,10 @@ with gr.Blocks() as demo:
                 character_dropdown,
                 profile_image,
                 app_state.is_temp_session_state,
-            ]
+            ],
         )
 
-        session_delete_buttons[i].click(
-            fn=make_delete_click_handler(i),
-            inputs=[app_state.session_id_state],
-            outputs=[delete_modal, delete_message, selected_session_id]
-        )
+        session_delete_buttons[i].click(fn=make_delete_click_handler(i), inputs=[app_state.session_id_state], outputs=[delete_modal, delete_message, selected_session_id])
 
     # ===== New Chat (Temporary Session) Handler =====
 
@@ -261,9 +244,7 @@ with gr.Blocks() as demo:
         speech_manager.set_character_and_language(chosen_character, chosen_language)
         new_system_msg = speech_manager.get_system_message()
 
-        is_temp, temp_history, temp_sys_msg, temp_char, chatbot_display, status = chat_bot.create_temp_session(
-            new_system_msg, chosen_character
-        )
+        is_temp, temp_history, temp_sys_msg, temp_char, chatbot_display, status = chat_bot.create_temp_session(new_system_msg, chosen_character)
 
         return [
             is_temp,  # is_temp_session_state
@@ -282,7 +263,7 @@ with gr.Blocks() as demo:
             chatbot,
             session_select_info,
             app_state.session_id_state,
-        ]
+        ],
     )
 
     # ===== Legacy dropdown change handler (for backward compatibility) =====
@@ -297,7 +278,7 @@ with gr.Blocks() as demo:
             character_dropdown,
             profile_image,
             app_state.is_temp_session_state,
-        ]
+        ],
     )
 
     # ===== Delete Session Handlers =====
@@ -310,10 +291,7 @@ with gr.Blocks() as demo:
             return gr.update(visible=True), f"현재 활성 세션 '{selected_sid}'은(는) 삭제할 수 없습니다."
         return gr.update(visible=True), f"세션 '{selected_sid}'을(를) 삭제하시겠습니까?"
 
-    delete_cancel_btn.click(
-        fn=lambda: (gr.update(visible=False), ""),
-        outputs=[delete_modal, delete_message]
-    )
+    delete_cancel_btn.click(fn=lambda: (gr.update(visible=False), ""), outputs=[delete_modal, delete_message])
 
     # Build outputs for session list refresh
     session_list_outputs = []
@@ -330,12 +308,8 @@ with gr.Blocks() as demo:
 
         return [modal_visible, message] + list_updates
 
-    delete_confirm_btn.click(
-        fn=delete_and_refresh_session_list,
-        inputs=[selected_session_id, app_state.session_id_state],
-        outputs=[delete_modal, delete_message] + session_list_outputs
-    )
-    
+    delete_confirm_btn.click(fn=delete_and_refresh_session_list, inputs=[selected_session_id, app_state.session_id_state], outputs=[delete_modal, delete_message] + session_list_outputs)
+
     # State synchronization
     text_seed_input.change(lambda seed: seed if seed is not None else 42, inputs=[text_seed_input], outputs=[app_state.seed_state])
     text_max_length_input.change(lambda max_length: max_length if max_length is not None else -1, inputs=[text_max_length_input], outputs=[app_state.max_length_state])
@@ -346,17 +320,9 @@ with gr.Blocks() as demo:
     text_enable_thinking_checkbox.change(lambda enable: enable if enable is True else False, inputs=[text_enable_thinking_checkbox], outputs=[app_state.enable_thinking_state])
 
     # Preset & Character
-    character_dropdown.change(
-        fn=chat_bot.update_system_message_and_profile,
-        inputs=[character_dropdown, header.language_dropdown, app_state.session_id_state],
-        outputs=[system_message_box, profile_image, preset_dropdown]
-    )
+    character_dropdown.change(fn=chat_bot.update_system_message_and_profile, inputs=[character_dropdown, header.language_dropdown, app_state.session_id_state], outputs=[system_message_box, profile_image, preset_dropdown])
 
-    character_dropdown.change(
-        fn=chat_bot.handle_change_preset,
-        inputs=[preset_dropdown, app_state.history_state, app_state.selected_language_state],
-        outputs=[app_state.history_state, system_message_box, profile_image]
-    )
+    character_dropdown.change(fn=chat_bot.handle_change_preset, inputs=[preset_dropdown, app_state.history_state, app_state.selected_language_state], outputs=[app_state.history_state, system_message_box, profile_image])
 
     # character_dropdown.change(
     #     fn=chat_bot.update_system_message_and_profile,
@@ -365,25 +331,15 @@ with gr.Blocks() as demo:
     # )
 
     # Note: language_dropdown is NOT here (it will likely be in the Navbar or Global Header if we keep one).
-    # If we want language support PER PAGE or Global, we need to decide. 
+    # If we want language support PER PAGE or Global, we need to decide.
     # For now, let's assume we might need to inject it or access app_state.selected_language_state properly.
-    # The original code had a global language_dropdown in the Header. 
+    # The original code had a global language_dropdown in the Header.
     # We might need to handle language changes via a shared mechanism or reload.
-    
+
     # Model visibility
-    gr.on(
-        triggers=[text_model_dropdown.change, demo.load],
-        fn=chat_bot.toggle_enable_thinking_visibility,
-        inputs=[text_model_dropdown],
-        outputs=[text_enable_thinking_checkbox]
-    )
-    
-    gr.on(
-        triggers=[text_model_provider_dropdown.change, text_model_type_dropdown.change, demo.load],
-        fn=chat_bot.update_model_list,
-        inputs=[text_model_provider_dropdown, text_model_type_dropdown],
-        outputs=[text_model_type_dropdown, text_model_dropdown]
-    )
+    gr.on(triggers=[text_model_dropdown.change, demo.load], fn=chat_bot.toggle_enable_thinking_visibility, inputs=[text_model_dropdown], outputs=[text_enable_thinking_checkbox])
+
+    gr.on(triggers=[text_model_provider_dropdown.change, text_model_type_dropdown.change], fn=chat_bot.update_model_list, inputs=[text_model_provider_dropdown, text_model_type_dropdown], outputs=[text_model_type_dropdown, text_model_dropdown])
 
     gr.on(
         triggers=[text_model_provider_dropdown.change, demo.load],
@@ -392,16 +348,11 @@ with gr.Blocks() as demo:
             chat_bot.toggle_lora_visibility(provider),
         ),
         inputs=[text_model_provider_dropdown],
-        outputs=[text_api_key_text, text_lora_dropdown]
+        outputs=[text_api_key_text, text_lora_dropdown],
     )
 
-    gr.on(
-        triggers=[text_model_provider_dropdown.change, text_model_type_dropdown.change, text_model_dropdown.change, demo.load],
-        fn=chat_bot.handle_file_upload_type,
-        inputs=[text_model_provider_dropdown, text_model_type_dropdown, text_model_dropdown],
-        outputs=[chat_interface.textbox]
-    )
-    
+    gr.on(triggers=[text_model_provider_dropdown.change, text_model_type_dropdown.change, text_model_dropdown.change, demo.load], fn=chat_bot.handle_file_upload_type, inputs=[text_model_provider_dropdown, text_model_type_dropdown, text_model_dropdown], outputs=[chat_interface.textbox])
+
     # Reset Logic
     reset_btn.click(fn=lambda: chat_bot.show_reset_modal("single"), outputs=[reset_modal, single_reset_content, all_reset_content])
     reset_all_btn.click(fn=lambda: chat_bot.show_reset_modal("all"), outputs=[reset_modal, single_reset_content, all_reset_content])
@@ -412,14 +363,7 @@ with gr.Blocks() as demo:
         초기화 처리 후 세션 드롭다운과 세션 ID를 업데이트합니다.
         단일 세션 초기화와 전체 세션 초기화 모두 동일한 출력 형식을 반환합니다.
         """
-        result = chat_bot.handle_reset_confirm(
-            history=history,
-            chatbot=chatbot_state,
-            system_msg=system_msg,
-            selected_character=selected_character,
-            language=language,
-            session_id=session_id
-        )
+        result = chat_bot.handle_reset_confirm(history=history, chatbot=chatbot_state, system_msg=system_msg, selected_character=selected_character, language=language, session_id=session_id)
 
         # reset_all_sessions는 9개 값 반환 (session_id 포함)
         # reset_session은 8개 값 반환
@@ -433,45 +377,23 @@ with gr.Blocks() as demo:
     confirm_btn.click(
         fn=handle_reset_with_session_update,
         inputs=[app_state.history_state, chatbot, system_message_box, character_dropdown, app_state.selected_language_state, app_state.session_id_state],
-        outputs=[reset_modal, single_reset_content, all_reset_content, msg, app_state.history_state, chatbot, status_text, session_select_dropdown, app_state.session_id_state]
-    ).then(
-        fn=refresh_session_list_ui,
-        inputs=[],
-        outputs=session_list_outputs
-    )
-    
+        outputs=[reset_modal, single_reset_content, all_reset_content, msg, app_state.history_state, chatbot, status_text, session_select_dropdown, app_state.session_id_state],
+    ).then(fn=refresh_session_list_ui, inputs=[], outputs=session_list_outputs)
+
     # Load Init - Refresh session list on page load
-    demo.load(
-        fn=refresh_session_list_ui,
-        inputs=[],
-        outputs=session_list_outputs,
-        queue=False
-    )
+    demo.load(fn=refresh_session_list_ui, inputs=[], outputs=session_list_outputs, queue=False)
 
     # Also keep legacy dropdown updated for backward compatibility
-    demo.load(
-        fn=chat_bot.refresh_sessions,
-        inputs=[],
-        outputs=[session_select_dropdown],
-        queue=False
-    )
+    demo.load(fn=chat_bot.refresh_sessions, inputs=[], outputs=[session_select_dropdown], queue=False)
 
     # Refresh session list when session_id changes (e.g., after temp session becomes permanent)
-    app_state.session_id_state.change(
-        fn=refresh_session_list_ui,
-        inputs=[],
-        outputs=session_list_outputs
-    )
+    app_state.session_id_state.change(fn=refresh_session_list_ui, inputs=[], outputs=session_list_outputs)
 
     # System Message Init
     def init_system_message_accordion():
         return gr.update(open=False)
 
-    demo.load(
-        fn=init_system_message_accordion,
-        inputs=[],
-        outputs=[system_message_accordion]
-    )
+    demo.load(fn=init_system_message_accordion, inputs=[], outputs=[system_message_accordion])
 
     # Language Change Event
     def on_chat_language_change(selected_lang: str, selected_character: str):
@@ -482,8 +404,7 @@ with gr.Blocks() as demo:
             app_state.speech_manager_state.current_language = selected_lang
         else:
             app_state.speech_manager_state.current_language = characters[selected_character]["languages"][0]
-                
-            
+
         system_presets: dict[str, dict[str, str]] = {
             "AI 비서 (AI Assistant)": AI_ASSISTANT_PRESET,
             "Image Generator": SD_IMAGE_GENERATOR_PRESET,
@@ -494,11 +415,11 @@ with gr.Blocks() as demo:
             "아리아 프린스 페이트 (アリア·プリンス·フェイト, Aria Prince Fate)": ARIA_PRINCE_FATE_PRESET,
             "왕 메이린 (王美玲, ワン·メイリン, Wang Mei-Ling)": WANG_MEI_LING_PRESET,
             "미스티 레인 (ミスティ·レーン, Misty Lane)": MISTY_LANE_PRESET,
-            '릴리 엠프레스 (リリー·エンプレス, Lily Empress)': LILY_EMPRESS_PRESET,
+            "릴리 엠프레스 (リリー·エンプレス, Lily Empress)": LILY_EMPRESS_PRESET,
             "최유나 (崔有娜, チェ·ユナ, Choi Yuna)": CHOI_YUNA_PRESET,
-            "최유리 (崔有莉, チェ·ユリ, Choi Yuri)": CHOI_YURI_PRESET
+            "최유리 (崔有莉, チェ·ユリ, Choi Yuri)": CHOI_YURI_PRESET,
         }
-                
+
         preset_name = system_presets.get(selected_character, AI_ASSISTANT_PRESET)
         system_content = preset_name.get(lang_code, "당신은 유용한 AI 비서입니다.")
 
@@ -508,17 +429,17 @@ with gr.Blocks() as demo:
             gr.update(label=_("model_select_label")),
             gr.update(label=_("api_key_label")),
             gr.update(label=_("lora_select_label")),
-            gr.update(label=_('system_message')),
-            gr.update(label=_('system_message'), value=system_content),
-            gr.update(label=_('advanced_setting')),
-            gr.update(label=_('seed_label'), info=_('seed_info')),
-            gr.update(label=_('temperature_label')),
-            gr.update(label=_('top_k_label')),
-            gr.update(label=_('top_p_label')),
-            gr.update(label=_('repetition_penalty_label')),
-            gr.update(value=_('reset_session_button')),
-            gr.update(value=_('reset_all_sessions_button')),
-            lang_code
+            gr.update(label=_("system_message")),
+            gr.update(label=_("system_message"), value=system_content),
+            gr.update(label=_("advanced_setting")),
+            gr.update(label=_("seed_label"), info=_("seed_info")),
+            gr.update(label=_("temperature_label")),
+            gr.update(label=_("top_k_label")),
+            gr.update(label=_("top_p_label")),
+            gr.update(label=_("repetition_penalty_label")),
+            gr.update(value=_("reset_session_button")),
+            gr.update(value=_("reset_all_sessions_button")),
+            lang_code,
         ]
 
     # language_dropdown.change(

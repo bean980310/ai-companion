@@ -1,7 +1,5 @@
 import gradio as gr
 from src.main.tts import create_tts_side, get_tts_models
-from src.common.translations import translation_manager, _
-from src.common_blocks import create_page_header, get_language_code
 
 with gr.Blocks() as demo:
     # Page Header with Language Selector

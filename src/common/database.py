@@ -7,10 +7,8 @@ from dataclasses import dataclass
 import json
 from datetime import datetime
 import csv
-from pathlib import Path
 
 import gradio as gr
-from PIL.Image import Image
 
 from ai_companion_core import logger
 
@@ -570,7 +568,8 @@ def handle_add_preset(name: str, language: str, content: str, confirm_overwrite:
         # 프리셋이 존재하지만 덮어쓰기 확인이 이루어지지 않은 경우
         return "⚠️ 해당 프리셋이 이미 존재합니다. 덮어쓰시겠습니까?", gr.update(choices=get_preset_choices(language)), True  # 추가 출력: 덮어쓰기 필요
 
-    success, message = add_system_preset(name.strip(), language, content.strip(), overwrite=exists)
+    result = add_system_preset(name.strip(), language, content.strip(), overwrite=exists)
+    success, message = result.success, result.message
     if success:
         presets = get_preset_choices(language)
         return message, gr.update(choices=presets), False  # 덮어쓰기 완료
@@ -582,7 +581,8 @@ def handle_add_preset(name: str, language: str, content: str, confirm_overwrite:
 def handle_delete_preset(name: str, language: str):
     if not name:
         return "❌ 삭제할 프리셋을 선택해주세요.", gr.update(choices=get_preset_choices(language))
-    success, message = delete_system_preset(name, language)
+    result = delete_system_preset(name, language)
+    success, message = result.success, result.message
     if success:
         presets = get_preset_choices(language)
         return message, gr.update(choices=presets)
@@ -643,7 +643,7 @@ def update_session_name(session_id: str, name: str) -> bool:
         return False
 
 
-def save_chat_history_db(history: list[dict[str, str | list[dict[str, str]] | Any]], session_id: str = "demo_session", selected_character: str = None) -> bool:
+def save_chat_history_db(history: list[dict[str, str | list[dict[str, str]] | Any]], session_id: str = "demo_session", selected_character: Optional[str] = None) -> bool:
     """Save chat history to SQLite database"""
     if selected_character is None:
         selected_character = list(characters.keys())[0]

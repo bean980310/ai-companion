@@ -1,28 +1,25 @@
 # chatbot.py
-from typing import Any, Generator, Literal, Callable
+from typing import Any, Literal, Callable
 
 # from gradio_i18n import gettext as _, translate_blocks
 import os
 import secrets
 import sqlite3
 import traceback
-import requests
 import base64
 
 from transformers import AutoConfig
 import gradio as gr
-from mem0 import Memory
 
 from ai_companion_core import logger
 
-from src.models import IS_MULTIMODAL_API, IS_MULTIMODAL_LOCAL, IS_ANY_TO_ANY, IS_IMAGE_TEXT_TO_TEXT, IS_OMNI_API
+from src.models import IS_MULTIMODAL_API, IS_MULTIMODAL_LOCAL, IS_OMNI_API
 from src.models.models import get_all_local_models, generate_answer, generate_chat_title
 from src.common.database import save_chat_history_db, delete_session_history, delete_all_sessions, get_preset_choices, load_system_presets, get_existing_sessions, get_existing_sessions_with_names, update_session_name, load_chat_from_db, update_system_message_in_db, update_last_character_in_db
-from src.common.translations import TranslationManager, translation_manager, _
+from src.common.translations import translation_manager, _
 
 from src.characters.preset_images import PRESET_IMAGES
 from src.models import (
-    llm_api_models,
     openai_llm_api_models,
     anthropic_llm_api_models,
     google_genai_llm_api_models,
@@ -33,8 +30,9 @@ from src.models import (
     huggingface_inference_llm_api_models,
     ollama_llm_models,
     lmstudio_llm_models,
-    oobabooga_llm_models,
     vllm_llm_api_models,
+    omlx_llm_models,
+    sglang_llm_models,
     REASONING_CONTROLABLE,
     REASONING_KWD,
     REASONING_BAN,
@@ -45,13 +43,8 @@ from src.models import (
 )
 
 
-from io import BytesIO
-from PIL import Image, ImageOps, ImageFile
-import pandas as pd
+from PIL import Image
 
-import soundfile as sf
-import sounddevice as sd
-from scipy.io import wavfile as wav
 
 from src.common.default_language import default_language
 from src.common.utils import detect_platform
@@ -59,10 +52,8 @@ from src.common.file_types import COMMON_FILE_TYPES, MULTIMODAL_VISION_FILE_TYPE
 
 from src.characters.persona_speech_manager import PersonaSpeechManager
 from src.common.character_info import characters
-from src.common.args import parse_args
 
 # from src.common.translations import _
-from ...start_app import ui_component
 # from translations import i18n as _
 # 로깅 설정
 
@@ -1043,6 +1034,12 @@ class Chatbot:
         return gr.update(value=enable_thinking, visible=thinking_visible, interactive=thinking_visible)
 
     def update_model_list(self, provider: str, selected_type: str | None = None):
+        from src.models.provider_llm_models import initialize_llm_provider
+        import src.models.provider_llm_models as plm
+
+        # On-demand: 아직 초기화되지 않은 provider라면 지금 로딩
+        initialize_llm_provider(provider)
+
         local_models_data = get_all_local_models()
         transformers_local = local_models_data["transformers"]
         gguf_local = local_models_data["gguf"]
@@ -1050,27 +1047,31 @@ class Chatbot:
 
         if provider != "self-provided":
             if provider == "openai":
-                updated_list = openai_llm_api_models
+                updated_list = plm.openai_api_models
             elif provider == "anthropic":
-                updated_list = anthropic_llm_api_models
+                updated_list = plm.anthropic_api_models
             elif provider == "google-genai":
-                updated_list = google_genai_llm_api_models
+                updated_list = plm.google_genai_api_models
             elif provider == "perplexity":
-                updated_list = perplexity_llm_api_models
+                updated_list = plm.perplexity_api_models
             elif provider == "xai":
-                updated_list = xai_llm_api_models
+                updated_list = plm.xai_api_models
             elif provider == "mistralai":
-                updated_list = mistralai_llm_api_models
+                updated_list = plm.mistralai_api_models
             elif provider == "openrouter":
-                updated_list = openrouter_llm_api_models
+                updated_list = plm.openrouter_api_models
             elif provider == "hf-inference":
-                updated_list = huggingface_inference_llm_api_models
+                updated_list = plm.huggingface_inference_api_models
             elif provider == "ollama":
-                updated_list = ollama_llm_models
+                updated_list = plm.ollama_models
             elif provider == "lmstudio":
-                updated_list = lmstudio_llm_models
+                updated_list = plm.lmstudio_models
             elif provider == "vllm-api":
-                updated_list = vllm_llm_api_models
+                updated_list = plm.vllm_api_models
+            elif provider == "sglang":
+                updated_list = plm.sglang_llm_models
+            elif provider == "omlx":
+                updated_list = plm.omlx_models
             # elif provider == "oobabooga":
             #     updated_list = oobabooga_llm_models
 
@@ -1108,7 +1109,7 @@ class Chatbot:
         else:
             return transformers_local + vllm_local + gguf_local
 
-    def show_reset_modal(self, reset_type: bool):
+    def show_reset_modal(self, reset_type: str):
         """초기화 확인 모달 표시"""
         self.reset_type = reset_type
         return (

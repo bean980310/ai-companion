@@ -4,9 +4,38 @@ import gradio as gr
 
 # from translations import i18n as _
 
+from ...start_app import app_state, ui_component
+from ...models import PROVIDER_LIST
 from ...common.translations import _
 from ...common.utils import get_all_loras
-from ...start_app import app_state, ui_component
+
+from ..chatbot import ChatbotComponent
+
+
+@dataclass
+class StoryComponent(ChatbotComponent):
+    @classmethod
+    def create_story_side_model_container(cls):
+        with gr.Row(elem_classes="model-container"):
+            with gr.Column():
+                gr.Markdown("### Model Selection")
+                model_provider_dropdown = gr.Dropdown(label=_("model_provider_label"), choices=PROVIDER_LIST, value=PROVIDER_LIST[0], interactive=True, elem_classes="model-dropdown")
+                model_type_dropdown = gr.Radio(label=_("model_type_label"), choices=app_state.llm_type_choices, value=app_state.llm_type_choices[0], elem_classes="model-dropdown")
+                model_dropdown = gr.Dropdown(label=_("model_select_label"), choices=app_state.initial_choices, value=app_state.initial_choices[0] if len(app_state.initial_choices) > 0 else None, elem_classes="model-dropdown")
+                api_key_text = gr.Textbox(label=_("api_key_label"), placeholder="sk-...", visible=False, elem_classes="api-key-input")
+                lora_dropdown = gr.Dropdown(label=_("lora_select_label"), choices=get_all_loras(), value="None", interactive=True, visible=False, elem_classes="model-dropdown")
+                refresh_button = gr.Button(_("refresh_model_list_button"))
+                clear_all_btn = gr.Button(_("cache_clear_all_button"))
+
+        ui_component.storytelling_model_provider_dropdown = model_provider_dropdown
+        ui_component.storytelling_model_type_dropdown = model_type_dropdown
+        ui_component.storytelling_model_dropdown = model_dropdown
+        ui_component.storytelling_api_key_text = api_key_text
+        ui_component.storytelling_lora_dropdown = lora_dropdown
+        ui_component.storytelling_refresh_button = refresh_button
+        ui_component.story_clear_all_btn = clear_all_btn
+
+        return cls(model_provider_dropdown=model_provider_dropdown, model_type_dropdown=model_type_dropdown, model_dropdown=model_dropdown, api_key_text=api_key_text, lora_dropdown=lora_dropdown, refresh_button=refresh_button, clear_all_btn=clear_all_btn)
 
 
 def create_story_side():

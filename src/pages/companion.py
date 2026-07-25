@@ -1,6 +1,4 @@
 import gradio as gr
-from src.common.translations import translation_manager, _
-from src.common_blocks import create_page_header, get_language_code
 
 with gr.Blocks() as demo:
     with gr.Column(elem_classes="tab-container") as companion_container:

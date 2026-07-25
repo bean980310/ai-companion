@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from typing import List
-import pandas as pd
-import random
 
 from ai_companion_core import logger
 

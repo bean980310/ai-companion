@@ -15,7 +15,6 @@ from ..main.chatbot.chatbot import Chatbot
 chat_bot = Chatbot()
 
 
-from ..main import ChatbotMain
 
 
 def create_cache_tab():

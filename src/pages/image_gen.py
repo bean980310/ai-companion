@@ -1,17 +1,15 @@
 import gradio as gr
-from transformers.pipelines import image_classification
 from src.main.image_generation import diff_main, image_gen, diff_component
-from src.start_app import app_state, ui_component
+from src.start_app import app_state
 from comfy_sdk import ComfyUI
 from src.common.translations import translation_manager, _
-from src.common_blocks import create_page_header, get_language_code
-from src.pages import header
-from typing import Any, List, Sequence, Callable
+from src.common_blocks import get_language_code
+from typing import Any, List
 from PIL import Image
 import numpy as np
 import random
 
-client = ComfyUI()
+client = ComfyUI().client
 
 with gr.Blocks() as demo:
     # 0. Page-Specific State Registration
@@ -33,9 +31,7 @@ with gr.Blocks() as demo:
     with gr.Sidebar():
         # Replicating create_diffusion_side logic within Sidebar
         diff_side_model = diff_component.create_diffusion_side_model_container()
-        diff_side_refiner = (
-            diff_component.create_diffusion_side_refiner_model_container()
-        )
+        diff_side_refiner = diff_component.create_diffusion_side_refiner_model_container()
         diff_side_lora = diff_component.create_diffusion_side_lora_container()
 
     # Main Container
@@ -52,9 +48,7 @@ with gr.Blocks() as demo:
     diffusion_refiner_row = diff_side_refiner.refiner_row
     diffusion_refiner_model_dropdown = diff_side_refiner.refiner_model_dropdown
     diffusion_refiner_start = diff_side_refiner.refiner_start
-    diffusion_with_refiner_image_to_image_start = (
-        diff_side_refiner.with_refiner_image_to_image_start
-    )
+    diffusion_with_refiner_image_to_image_start = diff_side_refiner.with_refiner_image_to_image_start
 
     diffusion_lora_row = diff_side_lora.lora_row
     diffusion_lora_multiselect = diff_side_lora.lora_multiselect
@@ -70,9 +64,7 @@ with gr.Blocks() as demo:
     image_inpaint_masking = diff_container_obj.image_panel.image_inpaint_masking
 
     blur_radius_slider = diff_container_obj.image_panel.blur_radius_slider
-    blur_expansion_radius_slider = (
-        diff_container_obj.image_panel.blur_expansion_radius_slider
-    )
+    blur_expansion_radius_slider = diff_container_obj.image_panel.blur_expansion_radius_slider
     denoise_strength_slider = diff_container_obj.image_panel.denoise_strength_slider
 
     positive_prompt_input = diff_container_obj.main_panel.positive_prompt_input
@@ -118,27 +110,28 @@ with gr.Blocks() as demo:
         triggers=[
             diffusion_model_provider_dropdown.change,
             diffusion_model_type_dropdown.change,
-            demo.load,
         ],
         fn=image_gen.update_diffusion_model_list,
         inputs=[diffusion_model_provider_dropdown, diffusion_model_type_dropdown],
         outputs=[diffusion_model_type_dropdown, diffusion_model_dropdown],
     )
 
-    gr.on(
-        triggers=[diffusion_model_provider_dropdown.change, demo.load],
+    diffusion_model_provider_dropdown.change(
         fn=image_gen.toggle_diffusion_api_key_visibility,
         inputs=[diffusion_model_provider_dropdown],
         outputs=[diffusion_api_key_text],
-    ).then(
+    )
+    diffusion_model_provider_dropdown.change(
         fn=image_gen.toggle_diffusion_lora_visible,
         inputs=[diffusion_model_provider_dropdown],
         outputs=[diffusion_lora_row, diffusion_lora_multiselect],
-    ).then(
+    )
+    diffusion_model_provider_dropdown.change(
         fn=image_gen.toggle_diffusion_vae_visible,
         inputs=[diffusion_model_provider_dropdown],
         outputs=[vae_row, vae_dropdown],
-    ).then(
+    )
+    diffusion_model_provider_dropdown.change(
         fn=image_gen.toggle_diffusion_refiner_visible,
         inputs=[diffusion_model_provider_dropdown],
         outputs=[diffusion_refiner_row, diffusion_refiner_model_dropdown],
@@ -242,12 +235,8 @@ with gr.Blocks() as demo:
         for i in range(app_state.max_diffusion_lora_rows):
             if i < len(selected_loras):
                 lora_name = selected_loras[i]
-                text_update = gr.update(
-                    visible=True, label=f"{lora_name} - Text Encoder Weight"
-                )
-                unet_update = gr.update(
-                    visible=True, label=f"{lora_name} - U-Net Weight"
-                )
+                text_update = gr.update(visible=True, label=f"{lora_name} - Text Encoder Weight")
+                unet_update = gr.update(visible=True, label=f"{lora_name} - U-Net Weight")
             else:
                 text_update = gr.update(visible=False)
                 unet_update = gr.update(visible=False)
@@ -265,9 +254,7 @@ with gr.Blocks() as demo:
         return random.choice(prompts)
 
     diffusion_lora_slider_outputs = []
-    for te_slider, unet_slider in zip(
-        diffusion_lora_text_encoder_sliders, diffusion_lora_unet_sliders
-    ):
+    for te_slider, unet_slider in zip(diffusion_lora_text_encoder_sliders, diffusion_lora_unet_sliders):
         diffusion_lora_slider_outputs.extend([te_slider, unet_slider])
 
     diffusion_lora_multiselect.change(

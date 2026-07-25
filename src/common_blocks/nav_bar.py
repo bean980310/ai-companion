@@ -6,10 +6,7 @@ import gradio as gr
 
 # from translations import i18n
 
-from ..common.translations import translation_manager, _
-from ..common.default_language import default_language
 from ..start_app import ui_component
-from .. import __version__
 
 
 @dataclass

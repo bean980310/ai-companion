@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 import torch
-from transformers import VitsTokenizer, VitsModel, set_seed, AutoModelForTextToWaveform
-from supertonic import TTS
+from transformers import VitsTokenizer, VitsModel, set_seed
 import os
 import scipy
 

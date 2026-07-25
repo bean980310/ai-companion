@@ -1,5 +1,8 @@
 from dataclasses import dataclass
+from typing import Optional
 import gradio as gr
+
+from src.models import loras_local, vae_local
 
 from .image_generation import ImageGeneration
 
@@ -15,6 +18,13 @@ diff_component = DiffusionComponent()
 
 @dataclass
 class DiffusionMain:
+    initial_choices: Optional[list[str]] = None
+    initial_type_choices: Optional[list[str]] = None
+    initial_lora_choices: Optional[list[str]] = None
+    initial_vae_choices: Optional[list[str]] = None
+    initial_refiner_choices: Optional[list[str]] = None
+    initial_refiner_type_choices: Optional[list[str]] = None
+
     sidebar: gr.Column = None
     model: DiffusionComponent = None
     refiner: DiffusionComponent = None
@@ -26,15 +36,24 @@ class DiffusionMain:
     side_panel: DiffusionComponent = None
     history_panel: DiffusionComponent = None
 
-    @staticmethod
-    def share_allowed_diffusion_models():
-        diffusion_choices, diffusion_type_choices = image_gen.get_allowed_diffusion_models(os_name, arch)
+    @classmethod
+    def share_allowed_diffusion_models(cls):
+        from ...common.default_providers import get_default_image_provider
+        from ...models.provider_vision_models import initialize_image_provider
 
-        diffusion_lora_choices = image_gen.get_allowed_diffusion_loras(ui_component.diffusion_model_provider_dropdown)
+        # 설정 파일에서 기본 provider 읽기 및 해당 provider만 초기화
+        default_provider = get_default_image_provider()
+        initialize_image_provider(default_provider)
 
-        vae_choices = image_gen.get_allowed_diffusion_vae(ui_component.diffusion_model_provider_dropdown)
+        app_state.default_image_provider = default_provider
 
-        diffusion_refiner_choices, diffusion_refiner_type_choices = image_gen.get_allowed_diffusion_models(os_name, arch)
+        diffusion_choices, diffusion_type_choices = image_gen.get_allowed_diffusion_models()
+
+        diffusion_lora_choices = loras_local
+
+        vae_choices = vae_local
+
+        diffusion_refiner_choices, diffusion_refiner_type_choices = image_gen.get_allowed_diffusion_models()
 
         if "None" not in diffusion_refiner_choices:
             diffusion_refiner_choices.insert(0, "None")
@@ -45,6 +64,8 @@ class DiffusionMain:
         app_state.vae_choices = vae_choices
         app_state.diffusion_refiner_choices = diffusion_refiner_choices
         app_state.diffusion_refiner_type_choices = diffusion_refiner_type_choices
+
+        return cls(initial_choices=diffusion_choices, initial_type_choices=diffusion_type_choices, initial_lora_choices=diffusion_lora_choices, initial_vae_choices=vae_choices, initial_refiner_choices=diffusion_refiner_choices, initial_refiner_type_choices=diffusion_refiner_type_choices)
 
         # return diffusion_choices, diffusion_type_choices, diffusion_lora_choices, vae_choices, diffusion_refiner_choices, diffusion_refiner_type_choices
 

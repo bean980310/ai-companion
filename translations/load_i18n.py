@@ -1,10 +1,9 @@
 import json
-from typing import Dict, List
+from typing import Dict
 import gradio as gr
 import gradio.i18n
 gr.i18n = gradio.i18n
 # from gradio_i18n import Translate, translate_blocks, gettext as _
-from torch._dynamo.utils import key_is_id
 
 from presets import CHARACTER_LIST, character_key
 

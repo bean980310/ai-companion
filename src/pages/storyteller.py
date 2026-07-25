@@ -1,8 +1,6 @@
 import gradio as gr
 from src.main.storyteller import create_story_side, create_story_container
 from src.main.chatbot import chat_bot
-from src.common.translations import translation_manager, _
-from src.common_blocks import create_page_header, get_language_code
 
 with gr.Blocks() as demo:
     # Page Header with Language Selector

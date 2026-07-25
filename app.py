@@ -1,7 +1,6 @@
 # app.py
-import os
+import importlib
 import warnings
-import json
 from pathlib import Path
 
 warnings.filterwarnings("ignore", module="gradio")
@@ -35,29 +34,16 @@ from src import os_name, arch, is_wsl, args, __version__
 # from src.start_app import initialize_app
 # from src import app
 
-from src.server import app, Request, StreamingResponse
+from src.server import app
 
 from src.start_app import (
     app_state,
     ui_component,
-    on_app_start,
-    # register_speech_manager_state, # moved to register_global_state
-    # shared_on_app_start,
     register_global_state,
     load_initial_data,
 )
 
 # Import MCP tools
-from src.mcp.tools import (
-    chat_completion,
-    list_available_models,
-    list_chat_sessions,
-    get_chat_history,
-    translate_text,
-    summarize_text,
-    analyze_image,
-    generate_title,
-)
 
 # from src.main import header
 from gradio_sidebar_menu import SidebarMenu
@@ -87,7 +73,6 @@ from src.pages import (
     mcp_tools,
 )
 
-import importlib
 
 # Global Initialization
 # Creating a dummy block to run initialization if needed,
@@ -131,7 +116,8 @@ def _reload_page_modules():
 
     for mod in [_h, _c, _ig, _s, _cp, _vg, _a, _t, _st, _mc, _d, _mt]:
         importlib.reload(mod)
-    header, chat, image_gen, storyteller = _h, _c, _ig, _s
+    header, chat = _h, _c
+    image_gen, storyteller = _ig, _s
     companion, video_gen = _cp, _vg
     audio, translator, settings, mcp_client = _a, _t, _st, _mc
     download, mcp_tools = _d, _mt

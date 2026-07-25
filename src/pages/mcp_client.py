@@ -4,16 +4,15 @@
 import gradio as gr
 import asyncio
 import json
-from typing import Any, Dict, List, Optional
+from typing import List
 
 from ai_companion_core import logger
 
 from src.common.translations import translation_manager, _
-from src.common_blocks import create_page_header, get_language_code
+from src.common_blocks import get_language_code
 
 
 # Import MCP client components
-from src.mcp.client import MCPClientManager, MCPServerConfig, MCPTool, MCPToolResult
 from src.mcp.client.manager import get_mcp_client_manager
 from src.mcp.client.oauth import OAUTH_PRESETS
 
@@ -271,7 +270,7 @@ def call_mcp_tool(tool_name: str, arguments_json: str) -> str:
         if result.success:
             output = f"**Tool:** {result.tool_name}\n"
             output += f"**Server:** {result.server_name}\n"
-            output += f"**Status:** Success\n\n"
+            output += "**Status:** Success\n\n"
             output += "**Result:**\n"
 
             if result.content_type == "text":

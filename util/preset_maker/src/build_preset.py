@@ -1,4 +1,3 @@
-import json
 import re
 
 def strip_indent(text: str) -> str:

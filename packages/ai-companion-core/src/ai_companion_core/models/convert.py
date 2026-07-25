@@ -1,13 +1,10 @@
 # model_converter.py
 
-import os
-import traceback
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, MetalConfig, AwqConfig, GPTQConfig
 
 
-from ..logging import logger
 
 
 def convert_model_bnb_4bit(model_id: str, output_dir: str, push_to_hub: float = False, qbit=4):

@@ -1,14 +1,11 @@
 # models.py
-import os
 import random
 import platform
 import traceback
-from typing import Any, Callable, List, Literal
-from dotenv import get_key
+from typing import Any, List, Literal, Optional
 
 import numpy as np
 import torch
-import gradio as gr
 from PIL import Image, ImageFile
 
 import openai
@@ -18,16 +15,18 @@ from google.genai import types
 
 from src.common.cache import models_cache
 
-from ai_companion_llm_backend import TransformersCausalModelHandler, TransformersVisionModelHandler, TransformersUnifiedModelHandler, GGUFCausalModelHandler, MlxCausalModelHandler, MlxVisionModelHandler, MlxUnifiedModelHandler
+from ai_companion_llm_backend import TransformersVisionModelHandler, TransformersUnifiedModelHandler, GGUFCausalModelHandler, MlxVisionModelHandler, MlxUnifiedModelHandler
 
 from ai_companion_llm_backend.provider import AnthropicClientWrapper, GoogleAIClientWrapper, OpenAIClientWrapper, PerplexityClientWrapper, XAIClientWrapper, OpenRouterClientWrapper, HuggingfaceInferenceClientWrapper, LMStudioIntegrator, OllamaIntegrator
-from src.common.utils import ensure_model_available, build_model_cache_key, get_all_local_models, convert_folder_to_modelid
+from src.common.utils import build_model_cache_key
 
 from ai_companion_image_backend.provider.comfyui import ComfyUIProvider, Txt2ImgPipeline, Img2ImgPipeline, InpaintPipeline
 
 from ai_companion_core import logger
 
 from ai_companion_core.environ_manager import load_env_variables
+
+from ..common.utils import get_all_local_models
 
 LOCAL_MODELS_ROOT = "./models"
 
@@ -182,12 +181,12 @@ def load_model(
             #     model_type=model_type
             # )
             handler = GGUFCausalModelHandler(model_id=model_id, lora_model_id=lora_model_id, model_type=model_type, device=device, **kwargs)
-            cache_key = build_model_cache_key(model_id, model_type)
+            cache_key = build_model_cache_key(model_id, model_type, provider)
             models_cache[cache_key] = handler
             return handler
         elif model_type == "mlx":
             handler = MlxUnifiedModelHandler(model_id=model_id, lora_model_id=lora_model_id, model_type=model_type, image_input=image_input, audio_input=audio_input, video_input=video_input, **kwargs)
-            models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+            models_cache[build_model_cache_key(model_id, model_type, provider, lora_model_id)] = handler
             return handler
             # if vision_model:
             #     handler = MlxVisionModelHandler(
@@ -210,7 +209,7 @@ def load_model(
             #     return handler
         else:
             handler = TransformersUnifiedModelHandler(model_id=model_id, lora_model_id=lora_model_id, model_type=model_type, device=device, image_input=image_input, audio_input=audio_input, video_input=video_input, **kwargs)
-            models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+            models_cache[build_model_cache_key(model_id, model_type, provider, lora_model_id)] = handler
             return handler
             # if vision_model:
             #     handler = TransformersVisionModelHandler(
@@ -475,7 +474,7 @@ def generate_chat_title(first_message, selected_model, model_type, provider, sel
         return f"오류 발생: {str(e)}\n\n{traceback.format_exc()}"
 
 
-def create_comfyui_pipeline(image_to_image_mode: str, model: str, refiner_model: str = "None", loras: List[str] = None, vae: str = "Default", host: str = "127.0.0.1", port: int = 8188) -> Txt2ImgPipeline | Img2ImgPipeline | InpaintPipeline:
+def create_comfyui_pipeline(image_to_image_mode: str, model: str, refiner_model: str = "None", loras: Optional[List[str]] = None, vae: str = "Default", host: str = "127.0.0.1", port: int = 8188) -> Txt2ImgPipeline | Img2ImgPipeline | InpaintPipeline:
     """
     Create a ComfyUI pipeline based on the generation mode.
 
@@ -513,7 +512,7 @@ def create_comfyui_pipeline(image_to_image_mode: str, model: str, refiner_model:
     return pipeline
 
 
-def create_comfyui_provider(model: str, refiner_model: str = "None", loras: List[str] = None, vae: str = "Default", host: str = "127.0.0.1", port: int = 8188) -> ComfyUIProvider:
+def create_comfyui_provider(model: str, refiner_model: str = "None", loras: Optional[List[str]] = None, vae: str = "Default", host: str = "127.0.0.1", port: int = 8188) -> ComfyUIProvider:
     """
     Create a ComfyUI provider instance.
 
@@ -539,3 +538,6 @@ def create_comfyui_provider(model: str, refiner_model: str = "None", loras: List
     provider = ComfyUIProvider(model=model, model_type="checkpoint", refiner=refiner, loras=loras, vae=vae, host=host, port=port)
 
     return provider
+
+
+__all__ = ["get_all_local_models"]

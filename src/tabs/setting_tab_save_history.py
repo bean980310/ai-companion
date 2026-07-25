@@ -28,7 +28,7 @@ def create_save_history_tab():
                 return "채팅 이력이 없습니다."
             ok = save_chat_history_db(history, session_id="demo_session")
             if ok:
-                return f"✅ DB에 채팅 기록이 저장되었습니다 (session_id=demo_session)"
+                return "✅ DB에 채팅 기록이 저장되었습니다 (session_id=demo_session)"
             else:
                 return "❌ DB 저장 실패"
 

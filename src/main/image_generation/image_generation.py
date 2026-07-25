@@ -1,21 +1,14 @@
 # This is an example that uses the websockets api and the SaveImageWebsocket node to get images directly without
 # them being saved to disk
-import websocket  # NOTE: websocket-client (https://github.com/websocket-client/websocket-client)
-import uuid
 import json
-import urllib.request
-import urllib.parse
-from typing import List, Any, Callable, Literal
+from typing import List, Any, Callable, Optional
 import pandas as pd
-import random
-import traceback
-import os
 import datetime
 import gradio as gr
 
 import numpy as np
 
-from PIL import Image, ImageOps, ImageFile
+from PIL import Image, ImageFile
 
 from ai_companion_core import logger
 
@@ -25,8 +18,9 @@ from src.start_app.app_state_manager import app_state
 # Import models module for ComfyUI pipeline creation
 from src.models.models import create_comfyui_pipeline
 
-from src.common.utils import get_all_diffusion_models, detect_platform, get_diffusion_loras, get_diffusion_vae
-from src.models import diffusion_api_models, openai_image_api_models, google_genai_image_models, comfyui_image_models, comfyui_image_loras, comfyui_image_vae, diffusers_local, checkpoints_local, GPT_IMAGE_ALLOWED_SIZES
+from src.common.utils import get_all_diffusion_models, detect_platform
+from src.models import diffusers_local, checkpoints_local, loras_local, vae_local, GPT_IMAGE_ALLOWED_SIZES
+import src.models.provider_vision_models as pvm
 from src import os_name, arch
 
 from .upload import ComfyUIImageUpload
@@ -135,29 +129,35 @@ class ImageGeneration:
             return [], None
 
     def update_diffusion_model_list(self, provider: str, selected_type: str | None = None):
+        from src.models.provider_vision_models import initialize_image_provider
+        import src.models.provider_vision_models as pvm
+
+        # On-demand: 아직 초기화되지 않은 provider라면 지금 로딩
+        initialize_image_provider(provider)
+
         diffusion_models_data = get_all_diffusion_models()
         diffusers_local = diffusion_models_data["diffusers"]
         checkpoints_local = diffusion_models_data["checkpoints"]
 
         if provider != "self-provided":
             if provider == "openai":
-                updated_list = openai_image_api_models
+                updated_list = pvm.openai_image_api_models
             elif provider == "google-genai":
-                updated_list = google_genai_image_models
+                updated_list = pvm.google_genai_image_api_models
             elif provider == "comfyui":
-                updated_list = comfyui_image_models
+                updated_list = pvm.comfyui_models
 
             updated_list = sorted(list(dict.fromkeys(updated_list)))
-            app_state.diffusion_choices = updated_list
+            # app_state.diffusion_choices = updated_list
             return gr.update(visible="hidden"), gr.update(choices=updated_list, value=updated_list[0] if updated_list else None)
         else:
-            diffusion_choices, diffusion_type_choices = self.get_allowed_diffusion_models(os_name, arch)
+            diffusion_choices = self.update_allowed_models()
             if selected_type == "all":
                 all_models = diffusion_choices
                 # 중복 제거 후 정렬
                 all_models = sorted(list(dict.fromkeys(all_models)))
-                app_state.diffusion_choices = all_models
-                app_state.diffusion_type_choices = diffusion_type_choices
+                # app_state.diffusion_choices = all_models
+                # app_state.diffusion_type_choices = diffusion_type_choices
                 return gr.update(visible=True), gr.update(choices=all_models, value=all_models[0] if all_models else None)
 
             elif selected_type == "diffusers":
@@ -165,44 +165,54 @@ class ImageGeneration:
             elif selected_type == "checkpoints":
                 updated_list = checkpoints_local
             else:
-                updated_list = diffusers_local
+                updated_list = checkpoints_local
 
             updated_list = sorted(list(dict.fromkeys(updated_list)))
-            app_state.diffusion_choices = updated_list
-            app_state.diffusion_type_choices = selected_type
+            # app_state.diffusion_choices = updated_list
+            # app_state.diffusion_type_choices = selected_type
             return gr.update(visible=True), gr.update(choices=updated_list, value=updated_list[0] if updated_list else None)
 
     @staticmethod
-    def toggle_diffusion_api_key_visibility(provider: str | gr.Dropdown) -> bool:
+    def toggle_diffusion_api_key_visibility(provider: str):
         api_visible = any(x in provider.lower() for x in ["openai", "google-genai", "xai", "hf-inference"])
+        if not api_visible:
+            api_visible = "hidden"
         return gr.update(visible=api_visible)
 
-    def toggle_diffusion_lora_visible(self, provider: str | gr.Dropdown):
+    def toggle_diffusion_lora_visible(self, provider: str):
         lora_visible = any(x in provider.lower() for x in ["comfyui", "invokeai", "drawthings", "sd-webui", "self-provided"])
         if not lora_visible:
             lora_visible = "hidden"
-        updated_choices = self.get_allowed_diffusion_loras(provider)
+            return gr.update(visible=lora_visible), ""
+        updated_choices = loras_local if provider.lower() == "self-provided" else pvm.comfyui_loras
+        updated_choices = sorted(list(dict.fromkeys(updated_choices)))
         app_state.diffusion_lora_choices = updated_choices
         return gr.update(visible=lora_visible), gr.update(choices=updated_choices)
 
-    def toggle_diffusion_vae_visible(self, provider: str | gr.Dropdown):
+    def toggle_diffusion_vae_visible(self, provider: str):
         vae_visible = any(x in provider.lower() for x in ["comfyui", "invokeai", "drawthings", "sd-webui", "self-provided"])
         if not vae_visible:
             vae_visible = "hidden"
-        updated_choices = self.get_allowed_diffusion_vae(provider)
-        app_state.diffusion_vae_choices = updated_choices
+            return gr.update(visible=vae_visible), ""
+        updated_choices = vae_local if provider.lower() == "self-provided" else pvm.comfyui_vae
+
+        if "Default" not in updated_choices:
+            updated_choices.insert(0, "Default")
+
+        updated_choices = sorted(list(dict.fromkeys(updated_choices)))
+        app_state.vae_choices = updated_choices
         return gr.update(visible=vae_visible), gr.update(choices=updated_choices)
 
-    def toggle_diffusion_refiner_visible(self, provider: str | gr.Dropdown):
+    def toggle_diffusion_refiner_visible(self, provider: str):
         refiner_visible = any(x in provider.lower() for x in ["comfyui", "invokeai", "drawthings", "sd-webui", "self-provided"])
 
         if not refiner_visible:
             refiner_visible = "hidden"
             updated_choices = ["Not Supported"]
         else:
-            if provider == "comfyui":
-                updated_choices = comfyui_image_models
-            elif provider == "self-provided":
+            if provider.lower() == "comfyui":
+                updated_choices = pvm.comfyui_models
+            elif provider.lower() == "self-provided":
                 updated_choices = sorted(list(dict.fromkeys(diffusers_local + checkpoints_local)))
 
             if "None" not in updated_choices:
@@ -212,12 +222,15 @@ class ImageGeneration:
         return gr.update(visible=refiner_visible), gr.update(choices=updated_choices)
 
     @staticmethod
-    def get_allowed_diffusion_models(os_name, arch):
+    def get_allowed_diffusion_models():
         allowed = diffusers_local + checkpoints_local
         allowed_type = ["all", "diffusers", "checkpoints"]
 
         allowed = list(dict.fromkeys(allowed))
         return sorted(allowed), allowed_type
+
+    def update_allowed_models(self):
+        return diffusers_local + checkpoints_local
 
     @staticmethod
     def process_uploaded_image(image: str | ImageFile.ImageFile | Image.Image | np.ndarray | Callable | Any):
@@ -284,35 +297,29 @@ class ImageGeneration:
 
         return gr.update(value=image)
 
-    def get_allowed_diffusion_loras(self, provider: str | gr.Dropdown = "self-provided"):
-        if provider == "self-provided":
-            diffusion_lora_choices = get_diffusion_loras()
-        elif provider == "comfyui":
-            diffusion_lora_choices = comfyui_image_loras
+    def get_allowed_diffusion_loras(self, provider: str = "self-provided"):
+        if provider.lower() == "self-provided":
+            return loras_local
+        elif provider.lower() == "comfyui":
+            return comfyui_image_loras
         else:
-            diffusion_lora_choices = []
+            return []
 
-        diffusion_lora_choices = list(dict.fromkeys(diffusion_lora_choices))
-        diffusion_lora_choices = sorted(diffusion_lora_choices)
-        return diffusion_lora_choices
-
-    def get_allowed_diffusion_vae(self, provider: str | gr.Dropdown = "self-provided"):
-        if provider == "self-provided":
-            vae_choices = get_diffusion_vae()
-        elif provider == "comfyui":
+    def get_allowed_diffusion_vae(self, provider: str = "self-provided"):
+        if provider.lower() == "self-provided":
+            vae_choices = vae_local
+        elif provider.lower() == "comfyui":
             vae_choices = comfyui_image_vae
         else:
-            vae_choices = []
+            return []
 
-        vae_choices = list(dict.fromkeys(vae_choices))
-        vae_choices = sorted(vae_choices)
         if "Default" not in vae_choices:
             vae_choices.insert(0, "Default")
 
         return vae_choices
 
     @staticmethod
-    def api_image_generation(prompt: str, width: int, height: int, model: str, api_key: str = None):
+    def api_image_generation(prompt: str, width: int, height: int, model: str, api_key: Optional[str] = None):
         if "dall-e" in model.lower():
             import openai
 

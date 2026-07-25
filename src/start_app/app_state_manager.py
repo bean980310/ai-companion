@@ -59,4 +59,7 @@ class AppState:
 
     tts_choices: list[str] | None = None
 
+    default_llm_provider: str | None = None
+    default_image_provider: str | None = None
+
 app_state = AppState()

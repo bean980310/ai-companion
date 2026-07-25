@@ -1,8 +1,5 @@
-import os
-from typing import List
-import re
+from typing import Optional
 
-import httpx
 
 from ai_companion_core import logger
 from ai_companion_core.environ_manager import load_env_variables
@@ -79,7 +76,7 @@ def get_sglang_image_models(api_host: str = "http://localhost:30001/v1"):
         return ["sglang을 설치하고 서버를 실행해주세요."]
 
 
-def get_openai_image_models(api_key: str = None):
+def get_openai_image_models(api_key: Optional[str] = None):
     import openai
     from openai import OpenAI
 
@@ -109,7 +106,7 @@ def get_openai_image_models(api_key: str = None):
         return model_list
 
 
-# def get_openai_video_models(api_key: str = None):
+# def get_openai_video_models(api_key: Optional[str] = None):
 #     import openai
 #     from openai import OpenAI
 
@@ -137,10 +134,9 @@ def get_openai_image_models(api_key: str = None):
 #         return model_list
 
 
-def get_google_genai_image_models(api_key: str = None):
+def get_google_genai_image_models(api_key: Optional[str] = None):
     from google import genai
     from google.genai import errors
-    from google.api_core import exceptions
 
     model_list = []
 
@@ -181,10 +177,9 @@ def get_google_genai_image_models(api_key: str = None):
         return model_list
 
 
-def get_google_genai_video_models(api_key: str = None):
+def get_google_genai_video_models(api_key: Optional[str] = None):
     from google import genai
     from google.genai import errors
-    from google.api_core import exceptions
 
     model_list = []
 
@@ -228,30 +223,25 @@ def get_google_genai_video_models(api_key: str = None):
 image_api_models = []
 video_api_models = []
 
-comfyui_models = get_comfyui_image_models(folder="checkpoints")
-comfyui_loras = get_comfyui_image_models(folder="loras")
-comfyui_vae = get_comfyui_image_models(folder="vae")
-comfyui_controlnet = get_comfyui_image_models(folder="controlnet")
-comfyui_clip = get_comfyui_image_models(folder="clip_gguf")
-comfyui_clip_vision = get_comfyui_image_models(folder="clip_vision")
-comfyui_text_encoders = get_comfyui_image_models(folder="text_encoders")
-comfyui_embeddings = get_comfyui_image_models(folder="embeddings")
-comfyui_diffusion_models = get_comfyui_image_models(folder="diffusion_models")
-comfyui_pretrained_models = get_comfyui_image_models(folder="diffusers")
-comfyui_inpaint_models = get_comfyui_image_models(folder="inpaint")
-comfyui_ipadapter = get_comfyui_image_models(folder="ipadapter")
-comfyui_unet = get_comfyui_image_models(folder="unet_gguf")
+comfyui_models = []
+comfyui_loras = []
+comfyui_vae = []
+comfyui_controlnet = []
+comfyui_clip = []
+comfyui_clip_vision = []
+comfyui_text_encoders = []
+comfyui_embeddings = []
+comfyui_diffusion_models = []
+comfyui_pretrained_models = []
+comfyui_inpaint_models = []
+comfyui_ipadapter = []
+comfyui_unet = []
 
-openai_image_api_models = get_openai_image_models(load_env_variables("OPENAI_API_KEY"))
-# openai_video_api_models = get_openai_video_models(
-#     load_env_variables("OPENAI_API_KEY"))
+openai_image_api_models = []
+# openai_video_api_models = []
 
-google_genai_image_api_models = get_google_genai_image_models(
-    load_env_variables("GEMINI_API_KEY")
-)
-google_genai_video_api_models = get_google_genai_video_models(
-    load_env_variables("GEMINI_API_KEY")
-)
+google_genai_image_api_models = []
+google_genai_video_api_models = []
 
 huggingface_inference_image_api_models = [
     "stabilityai/stable-diffusion-xl-base-1.0",
@@ -292,8 +282,98 @@ huggingface_inference_image_to_video_api_models = [
     "Lightricks/LTX-2",
 ]
 
-image_api_models.extend(openai_image_api_models)
-image_api_models.extend(google_genai_image_api_models)
-image_api_models.extend(comfyui_models)
-# video_api_models.extend(openai_video_api_models)
-video_api_models.extend(google_genai_video_api_models)
+# --- Lazy Loading ---
+
+_initialized_image_providers: set = set()
+
+# ComfyUI 관련 폴더 목록
+_COMFYUI_FOLDERS = {
+    "comfyui_models": "checkpoints",
+    "comfyui_loras": "loras",
+    "comfyui_vae": "vae",
+    "comfyui_controlnet": "controlnet",
+    "comfyui_clip": "clip_gguf",
+    "comfyui_clip_vision": "clip_vision",
+    "comfyui_text_encoders": "text_encoders",
+    "comfyui_embeddings": "embeddings",
+    "comfyui_diffusion_models": "diffusion_models",
+    "comfyui_pretrained_models": "diffusers",
+    "comfyui_inpaint_models": "inpaint",
+    "comfyui_ipadapter": "ipadapter",
+    "comfyui_unet": "unet_gguf",
+}
+
+# 정적 리스트 provider (네트워크 호출 불필요)
+_STATIC_IMAGE_PROVIDERS = {"hf-inference", "self-provided"}
+
+
+def initialize_image_provider(provider: str) -> None:
+    """
+    특정 provider의 이미지 모델 목록을 로딩합니다.
+    이미 초기화된 provider는 스킵합니다.
+
+    Args:
+        provider: 초기화할 provider 이름
+    """
+    global comfyui_models, comfyui_loras, comfyui_vae, comfyui_controlnet
+    global comfyui_clip, comfyui_clip_vision, comfyui_text_encoders
+    global comfyui_embeddings, comfyui_diffusion_models, comfyui_pretrained_models
+    global comfyui_inpaint_models, comfyui_ipadapter, comfyui_unet
+    global openai_image_api_models, google_genai_image_api_models
+    global google_genai_video_api_models
+
+    if provider in _initialized_image_providers:
+        return
+
+    if provider in _STATIC_IMAGE_PROVIDERS:
+        _initialized_image_providers.add(provider)
+        return
+
+    if provider == "comfyui":
+        for var_name, folder in _COMFYUI_FOLDERS.items():
+            result = get_comfyui_image_models(folder=folder)
+            globals()[var_name] = result
+        logger.info(f"Image provider 'comfyui' 모델 목록 로딩 완료")
+    elif provider == "openai":
+        openai_image_api_models = get_openai_image_models(load_env_variables("OPENAI_API_KEY"))
+        globals()["openai_image_api_models"] = openai_image_api_models
+        logger.info(f"Image provider 'openai' 모델 목록 로딩 완료: {len(openai_image_api_models)}개")
+    elif provider == "google-genai":
+        google_genai_image_api_models = get_google_genai_image_models(load_env_variables("GEMINI_API_KEY"))
+        google_genai_video_api_models = get_google_genai_video_models(load_env_variables("GEMINI_API_KEY"))
+        globals()["google_genai_image_api_models"] = google_genai_image_api_models
+        globals()["google_genai_video_api_models"] = google_genai_video_api_models
+        logger.info(f"Image provider 'google-genai' 모델 목록 로딩 완료")
+    else:
+        logger.warning(f"알 수 없는 Image provider: {provider}")
+        return
+
+    _initialized_image_providers.add(provider)
+
+
+def refresh_image_provider(provider: str) -> None:
+    """
+    이미 초기화된 provider의 이미지 모델 목록을 강제로 갱신합니다.
+
+    Args:
+        provider: 갱신할 provider 이름
+    """
+    _initialized_image_providers.discard(provider)
+    initialize_image_provider(provider)
+
+
+def is_image_provider_initialized(provider: str) -> bool:
+    """provider가 이미 초기화되었는지 확인합니다."""
+    return provider in _initialized_image_providers
+
+
+def rebuild_image_api_models() -> None:
+    """초기화된 모든 provider의 모델을 image_api_models에 집계합니다."""
+    global image_api_models, video_api_models
+    image_api_models = []
+    video_api_models = []
+    image_api_models.extend(globals().get("openai_image_api_models", []))
+    image_api_models.extend(globals().get("google_genai_image_api_models", []))
+    image_api_models.extend(globals().get("comfyui_models", []))
+    # video_api_models.extend(globals().get("openai_video_api_models", []))
+    video_api_models.extend(globals().get("google_genai_video_api_models", []))

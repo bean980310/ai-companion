@@ -1,8 +1,5 @@
-import os
 import gradio as gr
 
-from src.common.translations import translation_manager, _
-from src.common_blocks import create_page_header, get_language_code
 
 from src.mcp.tools import (
     chat_completion,

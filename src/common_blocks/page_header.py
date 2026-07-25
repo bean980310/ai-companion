@@ -1,6 +1,8 @@
 # page_header.py
 # 멀티페이지 대응 공통 헤더 컴포넌트
-from dataclasses import dataclass, field
+from __future__ import annotations
+
+from dataclasses import dataclass
 from typing import Optional, Tuple, Callable, List
 
 import gradio as gr
@@ -21,10 +23,10 @@ LANGUAGE_CHOICES = ["한국어", "日本語", "中文(简体)", "中文(繁體)"
 class PageHeaderComponents:
     """페이지 헤더 컴포넌트들을 담는 데이터클래스"""
 
-    header_row: gr.Row = None
-    title: gr.Markdown = None
-    subtitle: gr.Markdown = None
-    language_dropdown: gr.Dropdown = None
+    header_row: Optional[gr.Row] = None
+    title: Optional[gr.Markdown] = None
+    subtitle: Optional[gr.Markdown] = None
+    language_dropdown: Optional[gr.Dropdown] = None
 
 
 def create_page_header(page_title_key: str = "main_title", show_subtitle: bool = True, subtitle_text: str = "### Beta Release") -> PageHeaderComponents:
@@ -93,7 +95,7 @@ def create_language_change_handler(components_to_update: List[Tuple[gr.Component
     return handle_language_change
 
 
-def setup_language_change_event(language_dropdown: gr.Dropdown, title: gr.Markdown, page_title_key: str = "main_title", additional_outputs: List[gr.Component] = None, additional_update_fn: Callable = None):
+def setup_language_change_event(language_dropdown: gr.Dropdown, title: gr.Markdown, page_title_key: str = "main_title", additional_outputs: Optional[List[gr.Component]] = None, additional_update_fn: Optional[Callable] = None):
     """
     언어 변경 이벤트를 설정합니다.
 

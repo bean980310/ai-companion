@@ -1,9 +1,7 @@
 # translations.py
 
-import locale
-from typing import Dict, Optional, Union, List
+from typing import Dict, Optional, List
 import json
-import os
 from pathlib import Path
 from ai_companion_core import logger
 

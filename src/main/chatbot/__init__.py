@@ -30,6 +30,15 @@ class ChatbotMain:
 
     @classmethod
     def share_allowed_llm_models(cls):
+        from ...common.default_providers import get_default_llm_provider
+        from ...models.provider_llm_models import initialize_llm_provider
+
+        # 설정 파일에서 기본 provider 읽기 및 해당 provider만 초기화
+        default_provider = get_default_llm_provider()
+        initialize_llm_provider(default_provider)
+
+        app_state.default_llm_provider = default_provider
+
         initial_choices, llm_type_choices = chat_bot.get_allowed_llm_models()
 
         app_state.initial_choices = initial_choices

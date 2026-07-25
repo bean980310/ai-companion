@@ -1,9 +1,6 @@
-import os
-from typing import List
-import re
+from typing import Optional
 
 from ai_companion_core import logger
-from ai_companion_core.environ_manager import load_env_variables
 
 
 class LocalModelNotFound(Exception):
@@ -15,7 +12,6 @@ class ServerNotRunning(Exception):
 
 
 def get_omnivoice_models(api_host: str = "http://localhost:8880/v1"):
-    import openai
     from openai import OpenAI
 
     model_list = []
@@ -43,7 +39,7 @@ def get_omnivoice_models(api_host: str = "http://localhost:8880/v1"):
         return ["Omnivoice 서버를 설치하고 실행해주세요."]
 
 
-def get_openai_asr_models(api_key: str = None):
+def get_openai_asr_models(api_key: Optional[str] = None):
     import openai
     from openai import OpenAI
 
@@ -73,7 +69,7 @@ def get_openai_asr_models(api_key: str = None):
         return model_list
 
 
-def get_openai_tts_models(api_key: str = None):
+def get_openai_tts_models(api_key: Optional[str] = None):
     import openai
     from openai import OpenAI
 
@@ -103,7 +99,7 @@ def get_openai_tts_models(api_key: str = None):
         return model_list
 
 
-def get_openai_audio_models(api_key: str = None):
+def get_openai_audio_models(api_key: Optional[str] = None):
     import openai
     from openai import OpenAI
 
@@ -133,7 +129,7 @@ def get_openai_audio_models(api_key: str = None):
         return model_list
 
 
-def get_openai_realtime_models(api_key: str = None):
+def get_openai_realtime_models(api_key: Optional[str] = None):
     import openai
     from openai import OpenAI
 
@@ -163,7 +159,7 @@ def get_openai_realtime_models(api_key: str = None):
         return model_list
 
 
-def get_google_genai_tts_models(api_key: str = None):
+def get_google_genai_tts_models(api_key: Optional[str] = None):
     from google import genai
     from google.api_core import exceptions
 

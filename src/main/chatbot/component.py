@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 
 import gradio as gr
 # from gradio_i18n import gettext as _, translate_blocks
@@ -21,51 +23,51 @@ MAX_VISIBLE_SESSIONS = 20
 
 @dataclass
 class ChatbotComponent:
-    session_select_dropdown: gr.Dropdown = None
-    chat_title_box: gr.Textbox = None
-    add_session_icon_btn: gr.Button = None
-    delete_session_icon_btn: gr.Button = None
+    session_select_dropdown: Optional[gr.Dropdown] = None
+    chat_title_box: Optional[gr.Textbox] = None
+    add_session_icon_btn: Optional[gr.Button] = None
+    delete_session_icon_btn: Optional[gr.Button] = None
 
     # New session list components
     session_rows: List[gr.Row] = field(default_factory=list)
     session_buttons: List[gr.Button] = field(default_factory=list)
     session_delete_buttons: List[gr.Button] = field(default_factory=list)
-    selected_session_id: gr.Textbox = None
+    selected_session_id: Optional[gr.Textbox] = None
 
-    model_provider_dropdown: gr.Dropdown = None
-    model_type_dropdown: gr.Radio = None
-    model_dropdown: gr.Dropdown = None
-    api_key_text: gr.Textbox = None
-    lora_dropdown: gr.Dropdown = None
-    refresh_button: gr.Button = None
-    clear_all_btn: gr.Button = None
+    model_provider_dropdown: Optional[gr.Dropdown] = None
+    model_type_dropdown: Optional[gr.Radio] = None
+    model_dropdown: Optional[gr.Dropdown] = None
+    api_key_text: Optional[gr.Textbox] = None
+    lora_dropdown: Optional[gr.Dropdown] = None
+    refresh_button: Optional[gr.Button] = None
+    clear_all_btn: Optional[gr.Button] = None
 
-    system_message_accordion: gr.Accordion = None
-    system_message_box: gr.Textbox = None
-    chatbot: gr.Chatbot = None
-    chat_interface: gr.ChatInterface = None
-    msg: gr.Textbox = None
-    multimodal_msg: gr.MultimodalTextbox = None
+    system_message_accordion: Optional[gr.Accordion] = None
+    system_message_box: Optional[gr.Textbox] = None
+    chatbot: Optional[gr.Chatbot] = None
+    chat_interface: Optional[gr.ChatInterface] = None
+    msg: Optional[gr.Textbox] = None
+    multimodal_msg: Optional[gr.MultimodalTextbox] = None
 
-    profile_image: gr.Image = None
-    character_dropdown: gr.Dropdown = None
+    profile_image: Optional[gr.Image] = None
+    character_dropdown: Optional[gr.Dropdown] = None
 
-    advanced_setting: gr.Accordion = None
-    seed_input: gr.Number = None
-    max_length_input: gr.Slider = None
-    temperature_slider: gr.Slider = None
-    top_k_slider: gr.Slider = None
-    top_p_slider: gr.Slider = None
-    repetition_penalty_slider: gr.Slider = None
-    enable_thinking_checkbox: gr.Checkbox = None
-    preset_dropdown: gr.Dropdown = None
-    change_preset_button: gr.Button = None
-    reset_btn: gr.Button = None
-    reset_all_btn: gr.Button = None
+    advanced_setting: Optional[gr.Accordion] = None
+    seed_input: Optional[gr.Number] = None
+    max_length_input: Optional[gr.Slider] = None
+    temperature_slider: Optional[gr.Slider] = None
+    top_k_slider: Optional[gr.Slider] = None
+    top_p_slider: Optional[gr.Slider] = None
+    repetition_penalty_slider: Optional[gr.Slider] = None
+    enable_thinking_checkbox: Optional[gr.Checkbox] = None
+    preset_dropdown: Optional[gr.Dropdown] = None
+    change_preset_button: Optional[gr.Button] = None
+    reset_btn: Optional[gr.Button] = None
+    reset_all_btn: Optional[gr.Button] = None
 
-    status_text: gr.Markdown = None
-    image_info: gr.Markdown = None
-    session_select_info: gr.Markdown = None
+    status_text: Optional[gr.Markdown] = None
+    image_info: Optional[gr.Markdown] = None
+    session_select_info: Optional[gr.Markdown] = None
 
     @classmethod
     def create_chatbot_side_session_container(cls):
@@ -123,7 +125,7 @@ class ChatbotComponent:
         with gr.Row(elem_classes="model-container"):
             with gr.Column():
                 gr.Markdown("### Model Selection")
-                model_provider_dropdown = gr.Dropdown(label=_("model_provider_label"), choices=PROVIDER_LIST, value=PROVIDER_LIST[0], interactive=True, elem_classes="model-dropdown")
+                model_provider_dropdown = gr.Dropdown(label=_("model_provider_label"), choices=PROVIDER_LIST, value=getattr(app_state, "default_llm_provider", PROVIDER_LIST[0]), interactive=True, elem_classes="model-dropdown")
                 model_type_dropdown = gr.Radio(label=_("model_type_label"), choices=app_state.llm_type_choices, value=app_state.llm_type_choices[0], elem_classes="model-dropdown")
                 model_dropdown = gr.Dropdown(label=_("model_select_label"), choices=app_state.initial_choices, value=app_state.initial_choices[0] if len(app_state.initial_choices) > 0 else None, elem_classes="model-dropdown")
                 api_key_text = gr.Textbox(label=_("api_key_label"), placeholder="sk-...", visible=False, elem_classes="api-key-input")

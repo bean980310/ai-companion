@@ -1,5 +1,4 @@
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, PreTrainedModel, GenerationMixin, PreTrainedTokenizerBase, TokenizersBackend
-from ai_companion_core import logger
 
 mbart_languages = {"English": "en_XX", "한국어(Korean)": "ko_KR", "日本語(Japanese)": "ja_XX", "简体中文(Simp. Chinese)": "zh_CN", "Français(French)": "fr_XX", "Deutsche(German)": "de_DE", "Español(Spanish)": "es_XX"}
 

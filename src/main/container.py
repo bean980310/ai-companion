@@ -6,7 +6,6 @@ from .translator import create_translate_container
 from ..tabs.download_tab import create_download_tab
 
 # from translations import i18n as _
-from ..common.translations import _
 
 
 def create_llm_intergrated_container():

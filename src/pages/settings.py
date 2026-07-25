@@ -10,8 +10,6 @@ from src.tabs.setting_tab_load_history import create_load_history_tab
 from src.tabs.setting_tab_session_manager import create_session_management_tab
 from src.tabs.device_setting import create_device_setting_tab
 from src.main.chatbot import chat_bot
-from src.common.translations import translation_manager, _
-from src.common_blocks import create_page_header, get_language_code
 from src.tabs.setting_tab_info import create_custom_gpu_monitor
 
 head_html = """<script src="https://unpkg.com/lucide@latest"></script>"""

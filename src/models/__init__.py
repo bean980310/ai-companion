@@ -9,6 +9,8 @@ from transformers.models.auto.modeling_auto import (
 
 from src.models.models import default_device
 from src.models import provider_llm_models, provider_vision_models
+from src.models.provider_llm_models import initialize_llm_provider, refresh_llm_provider, is_llm_provider_initialized
+from src.models.provider_vision_models import initialize_image_provider, refresh_image_provider, is_image_provider_initialized
 from src.models.api_models import api_models, diffusion_api_models, tts_api_models
 from src.models.local_llm_models import (
     transformers_local,
@@ -17,13 +19,15 @@ from src.models.local_llm_models import (
     mlx_local,
 )
 from src.models.known_hf_models import known_hf_models
-from src.models.local_diffusion_models import diffusers_local, checkpoints_local
+from src.models.local_diffusion_models import diffusers_local, checkpoints_local, loras_local, vae_local
 from src.models.local_tts_models import vits_local
 
 lmstudio_llm_models = provider_llm_models.lmstudio_models
 ollama_llm_models = provider_llm_models.ollama_models
 oobabooga_llm_models = provider_llm_models.oobabooga_models
 vllm_llm_api_models = provider_llm_models.vllm_api_models
+sglang_llm_models = provider_llm_models.sglang_llm_models
+omlx_llm_models = provider_llm_models.omlx_models
 openai_llm_api_models = provider_llm_models.openai_api_models
 anthropic_llm_api_models = provider_llm_models.anthropic_api_models
 google_genai_llm_api_models = provider_llm_models.google_genai_api_models
@@ -31,9 +35,7 @@ perplexity_llm_api_models = provider_llm_models.perplexity_api_models
 xai_llm_api_models = provider_llm_models.xai_api_models
 mistralai_llm_api_models = provider_llm_models.mistralai_api_models
 openrouter_llm_api_models = provider_llm_models.openrouter_api_models
-huggingface_inference_llm_api_models = (
-    provider_llm_models.huggingface_inference_api_models
-)
+huggingface_inference_llm_api_models = provider_llm_models.huggingface_inference_api_models
 llm_api_models = provider_llm_models.llm_api_models
 
 comfyui_image_models = provider_vision_models.comfyui_models
@@ -56,41 +58,39 @@ google_genai_video_models = provider_vision_models.google_genai_video_api_models
 openai_image_api_models = provider_vision_models.openai_image_api_models
 # openai_video_api_models = provider_vision_models.openai_video_api_models
 
-__all__ = [
-    "default_device",
-    "api_models",
-    "transformers_local",
-    "vllm_local",
-    "gguf_local",
-    "mlx_local",
-    "known_hf_models",
-    "diffusion_api_models",
-    "diffusers_local",
-    "checkpoints_local",
-    "tts_api_models",
-    "vits_local",
-]
+__all__ = ["default_device", "api_models", "transformers_local", "vllm_local", "gguf_local", "mlx_local", "known_hf_models", "diffusion_api_models", "diffusers_local", "checkpoints_local", "tts_api_models", "vits_local", "loras_local", "vae_local"]
 
 # PROVIDER_LIST = ["openai", "anthropic", "google-genai", "perplexity", "xai", 'mistralai', "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"]
 
 PROVIDER_LIST = [
-    "openai",
-    "google-genai",
-    "openrouter",
-    "hf-inference",
+    "self-provided",
     "ollama",
     "lmstudio",
+    "omlx",
     "vllm-api",
     "oobabooga",
+    "sglang",
     "local-ai",
-    "self-provided",
+    "openai",
+    "anthropic",
+    "google-genai",
+    "perplexity",
+    "xai",
+    "mistralai",
+    "openrouter",
+    "hf-inference",
 ]
 
 # IMAGE_PROVIDER_LIST = ["openai", 'google-genai', 'xai', 'hf-inference', 'comfyui', 'invokeai', 'drawthings', 'sd-webui', 'self-provided']
 
 GPT_IMAGE_ALLOWED_SIZES = ["1024x1024", "1024x1536", "1536x1024"]
 
-IMAGE_PROVIDER_LIST = ["openai", "google-genai", "comfyui", "self-provided"]
+IMAGE_PROVIDER_LIST = [
+    "self-provided",
+    "comfyui",
+    "openai",
+    "google-genai",
+]
 
 TTS_PROVIDER_LIST = ["gtts", "edgetts"]
 
@@ -124,10 +124,7 @@ REASONING_KWD = [
 ] + REASONING_CONTROLABLE
 
 IS_MULTIMODAL_LOCAL = list(MODEL_FOR_MULTIMODAL_LM_MAPPING_NAMES.values())
-IS_ANY_TO_ANY = list(
-    set(IS_MULTIMODAL_LOCAL)
-    - set(list(MODEL_FOR_IMAGE_TEXT_TO_TEXT_MAPPING_NAMES.values()))
-)
+IS_ANY_TO_ANY = list(set(IS_MULTIMODAL_LOCAL) - set(list(MODEL_FOR_IMAGE_TEXT_TO_TEXT_MAPPING_NAMES.values())))
 IS_IMAGE_TEXT_TO_TEXT = list(MODEL_FOR_IMAGE_TEXT_TO_TEXT_MAPPING_NAMES.values())
 IS_MULTIMODAL_API = [
     "gpt-4o",
