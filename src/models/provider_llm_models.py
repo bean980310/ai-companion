@@ -699,6 +699,8 @@ huggingface_inference_api_models = [
     "moonshotai/Kimi-K2.6:cheapest",
     "moonshotai/Kimi-K2.7-Code:fastest",
     "moonshotai/Kimi-K2.7-Code:cheapest",
+    "moonshotai/Kimi-K3:fastest",
+    "moonshotai/Kimi-K3:cheapest",
     "google/gemma-4-31B-it:fastest",
     "google/gemma-4-31B-it:cheapest",
     "google/gemma-4-26B-A4B-it:fastest",
@@ -838,4 +840,3 @@ def rebuild_llm_api_models() -> None:
     llm_api_models.extend(globals().get("xai_api_models", []))
     llm_api_models.extend(globals().get("mistralai_api_models", []))
     llm_api_models.extend(openrouter_api_models)
-
