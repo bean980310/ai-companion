@@ -14,7 +14,7 @@ class ServerNotRunning(Exception):
 
 
 def get_comfyui_image_models(url: str = "localhost:8188", folder: str = "checkpoints"):
-    from comfy_sdk import ComfyUI
+    from comfy_client import ComfyUI
 
     model_list = []
     client = ComfyUI(server_url=url)

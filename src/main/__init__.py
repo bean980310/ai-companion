@@ -23,7 +23,7 @@ from ..common.database import get_existing_sessions
 from ..common.character_info import characters
 from ..common.translations import translation_manager, _
 from . import header
-from comfy_sdk import ComfyUI
+from comfy_client import ComfyUI
 from .header import HeaderUIComponent
 from ..characters import PersonaSpeechManager
 from ..common.utils import clear_all_model_cache

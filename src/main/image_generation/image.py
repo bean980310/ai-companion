@@ -16,16 +16,15 @@ class ImageProcessor:
     def __init__(self):
         pass
 
-    @classmethod
-    def read_image(cls, img):
+    def read_image(self, img):
         if isinstance(img, Image.Image):
-            return cls.read_image_from_pil(img)
+            return self.read_image_from_pil(img)
         # if isinstance(img, (bytes, bytearray)):
-        #     return cls.read_image_from_bytes(img)
+        #     return self.read_image_from_bytes(img)
         if isinstance(img, str):
-            return cls.read_image_from_str(img)
+            return self.read_image_from_str(img)
         # if isinstance(img, (np.ndarray, torch.Tensor)):
-        #     return cls.read_image_from_array(img)
+        #     return self.read_image_from_array(img)
 
     # @classmethod
     # def read_image_for_inpaint(cls, img_list, original_img):
@@ -42,8 +41,9 @@ class ImageProcessor:
     def read_image_from_bytes(img_bytes: bytes | bytearray):
         return Image.open(BytesIO(img_bytes))
 
-    def read_image_from_str(self, img_path: str) -> tuple[str, bytes]:
-        im = self.open_image(img_path)
+    @staticmethod
+    def read_image_from_str(img_path: str) -> tuple[str, bytes]:
+        im = Image.open(img_path)
         im.filename = os.path.basename(img_path)
 
         return im.filename.strip(), im.fp.read()

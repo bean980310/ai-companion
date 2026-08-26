@@ -5,3 +5,11 @@ python-version = "3.12"
 # Gradio 컴포넌트의 동적 타입 패턴으로 인한 false positive가 많음
 invalid-assignment = "warn"       # 222개 → 대부분 dataclass 필드 = None
 invalid-argument-type = "warn"    # 221개 → Gradio 이벤트 핸들러 타입 불일치
+
+[src]
+include = [
+    "src",
+    "packages",
+    "workflows",
+    "presets"
+]

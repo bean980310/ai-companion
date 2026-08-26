@@ -6,6 +6,12 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = ["ai-companion-core>=0.1.0,<0.2", "torch>=2.11.0,<3", "torchvision>=0.26.0,<0.27", "torchaudio>=2.11.0,<3"]
 
+[project.optional-dependencies]
+llm = ["ai-companion-llm-backend"]
+image = ["ai-companion-image-backend"]
+audio = ["ai-companion-audio-backend"]
+langchain = ["ai-companion-langchain-integrator"]
+
 [errors]
 bad-assignment = false
 bad-return = false
@@ -22,11 +28,29 @@ ai-companion = { path = ".", editable = true }
 [tool.pixi.dependencies]
 python = "3.12.*"
 
+[tool.uv.sources]
+ai-companion-core = {workspace = true}
+ai-companion-llm-backend = {workspace = true}
+ai-companion-image-backend = {workspace = true}
+ai-companion-audio-backend = {workspace = true}
+ai-companion-langchain-integrator = {workspace = true}
+
 [tool.uv.workspace]
 members = [
     "packages/ai-companion-core",
     "packages/ai-companion-llm-backend",
     "packages/ai-companion-image-backend",
     "packages/ai-companion-audio-backend",
-    "packages/ai-companion-langchain-integator",
+    "packages/ai-companion-langchain-integrator",
+]
+
+[dependency-groups]
+dev = [
+  "pytest"
+]
+lint = [
+  "ruff"
+]
+typecheck = [
+    "ty"
 ]

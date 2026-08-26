@@ -685,6 +685,8 @@ huggingface_inference_api_models = [
     "meta-llama/Llama-4-Scout-17B-16E-Instruct:cheapest",
     "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8:fastest",
     "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8:cheapest",
+    "meta-models/Muse-Glimmer-30B:fastest",
+    "meta-models/Muse-Glimmer-30B:cheapest",
     "Qwen/Qwen3.5-397B-A17B:fastest",
     "Qwen/Qwen3.5-397B-A17B:cheapest",
     "Qwen/Qwen3.5-122B-A10B:fastest",

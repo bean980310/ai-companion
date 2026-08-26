@@ -10,7 +10,7 @@ from typing import Union, Dict, Any, Optional
 
 from PIL import Image, ImageOps
 
-from comfy_sdk import ComfyUI
+from comfy_client import ComfyUI
 
 from .image import ImageProcessor
 
@@ -30,12 +30,7 @@ class ComfyUIImageUpload:
         """
         self.host = host
         self.port = port
-        self._comfy = ComfyUI(host=host, port=port)
-
-    @property
-    def server_address(self) -> str:
-        """Get the server address."""
-        return f"{self.host}:{self.port}"
+        self._comfy = ComfyUI(server_url=f"{self.host}:{self.port}")
 
     def upload_image(self, input_img: Union[str, Image.Image, None], subfolder: str = "", overwrite: bool = False) -> Optional[str]:
         """
@@ -52,7 +47,7 @@ class ComfyUIImageUpload:
         if input_img is None:
             return None
 
-        file_name, file_data = ImageProcessor.read_image(input_img)
+        file_name, file_data = ImageProcessor().read_image(input_img)
 
         try:
             result = self._comfy.images.upload(file_data, file_name, overwrite)

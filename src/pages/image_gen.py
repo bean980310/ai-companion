@@ -1,7 +1,7 @@
 import gradio as gr
 from src.main.image_generation import diff_main, image_gen, diff_component
 from src.start_app import app_state
-from comfy_sdk import ComfyUI
+from comfy_client import ComfyUI
 from src.common.translations import translation_manager, _
 from src.common_blocks import get_language_code
 from typing import Any, List
