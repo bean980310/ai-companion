@@ -4,6 +4,7 @@ from src.start_app import ui_component
 from src.tabs.cache_tab import create_cache_tab
 from src.tabs.util_tab import create_util_tab
 from src.tabs.setting_tab_custom_model import create_custom_model_tab
+from src.tabs.setting_tab_custom_provider import create_custom_provider_tab
 from src.tabs.setting_tab_preset import create_system_preset_management_tab
 from src.tabs.setting_tab_save_history import create_save_history_tab
 from src.tabs.setting_tab_load_history import create_load_history_tab
@@ -28,6 +29,7 @@ with gr.Blocks() as demo:
             with gr.Tabs():
                 # 사용자 지정 모델 경로 설정 섹션
                 create_custom_model_tab()
+                create_custom_provider_tab()
                 create_system_preset_management_tab()
 
                 # 프리셋 Dropdown 초기화 (Wire this event here)

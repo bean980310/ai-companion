@@ -903,6 +903,9 @@ class Chatbot:
         """
         OpenAI API Key 입력 필드의 가시성을 제어합니다.
         """
+        provider = str(provider)
+        if provider.startswith("custom:"):
+            return gr.update(visible=False)
         api_visible = any(x in provider.lower() for x in ["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference"])
         return gr.update(visible=api_visible)
 
@@ -1019,7 +1022,7 @@ class Chatbot:
         """
         LORA 파일 경로 입력 필드의 가시성을 제어합니다.
         """
-        lora_visible = "self-provided" in provider.lower()
+        lora_visible = "self-provided" in str(provider).lower() and not str(provider).startswith("custom:")
         return gr.update(visible=lora_visible)
 
     @staticmethod
@@ -1036,6 +1039,8 @@ class Chatbot:
     def update_model_list(self, provider: str, selected_type: str | None = None):
         from src.models.provider_llm_models import initialize_llm_provider
         import src.models.provider_llm_models as plm
+        from src.common.custom_providers import CUSTOM_PREFIX, get_custom_provider
+        from src.models.custom_provider_handler import get_custom_provider_models
 
         # On-demand: 아직 초기화되지 않은 provider라면 지금 로딩
         initialize_llm_provider(provider)
@@ -1044,6 +1049,15 @@ class Chatbot:
         transformers_local = local_models_data["transformers"]
         gguf_local = local_models_data["gguf"]
         mlx_local = local_models_data["mlx"]
+
+        if provider.startswith(CUSTOM_PREFIX):
+            profile_name = provider[len(CUSTOM_PREFIX):]
+            profile = get_custom_provider(profile_name)
+            if not profile:
+                return gr.update(visible="hidden"), gr.update(choices=[], value=None)
+            updated_list = get_custom_provider_models(profile.get("base_url", ""), profile.get("api_key", ""))
+            updated_list = sorted(list(dict.fromkeys(updated_list)))
+            return gr.update(visible="hidden"), gr.update(choices=updated_list, value=updated_list[0] if updated_list else None)
 
         if provider != "self-provided":
             if provider == "openai":

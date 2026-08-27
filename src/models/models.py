@@ -19,6 +19,8 @@ from ai_companion_llm_backend import TransformersVisionModelHandler, Transformer
 
 from ai_companion_llm_backend.provider import AnthropicClientWrapper, GoogleAIClientWrapper, OpenAIClientWrapper, PerplexityClientWrapper, XAIClientWrapper, OpenRouterClientWrapper, HuggingfaceInferenceClientWrapper, LMStudioIntegrator, OllamaIntegrator
 from src.common.utils import build_model_cache_key
+from src.common.custom_providers import CUSTOM_PREFIX, get_custom_provider
+from src.models.custom_provider_handler import CustomOpenAIClientWrapper
 
 from ai_companion_image_backend.provider.comfyui import ComfyUIProvider, Txt2ImgPipeline, Img2ImgPipeline, InpaintPipeline
 
@@ -78,11 +80,24 @@ def load_model(
         logger.error(f"지원되지 않는 모델 유형: {model_type}")
         return None
 
-    if provider not in ["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"]:
+    if provider not in ["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"] and not provider.startswith(CUSTOM_PREFIX):
         logger.error(f"지원되지 않는 공급자: {provider}")
         return None
 
     # 각자 공급자에 따라 클라이언트 생성.
+    if provider.startswith(CUSTOM_PREFIX):
+        profile_name = provider[len(CUSTOM_PREFIX):]
+        profile = get_custom_provider(profile_name)
+        if not profile:
+            logger.error(f"사용자 정의 provider를 찾을 수 없습니다: {profile_name}")
+            return "사용자 정의 provider를 찾을 수 없습니다."
+        wrapper = CustomOpenAIClientWrapper(
+            selected_model,
+            api_key=profile.get("api_key") or "not-needed",
+            base_url=profile.get("base_url"),
+        )
+        return wrapper
+
     if provider == "openai":
         if not api_key:
             api_key = load_env_variables("OPENAI_API_KEY")

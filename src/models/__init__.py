@@ -11,6 +11,7 @@ from src.models.models import default_device
 from src.models import provider_llm_models, provider_vision_models
 from src.models.provider_llm_models import initialize_llm_provider, refresh_llm_provider, is_llm_provider_initialized
 from src.models.provider_vision_models import initialize_image_provider, refresh_image_provider, is_image_provider_initialized
+from src.common.custom_providers import get_custom_provider_choices
 from src.models.api_models import api_models, diffusion_api_models, tts_api_models
 from src.models.local_llm_models import (
     transformers_local,
@@ -81,6 +82,10 @@ PROVIDER_LIST = [
     "hf-inference",
 ]
 
+# 사용자 정의 provider를 포함한 전체 LLM provider 선택지
+def get_llm_provider_list() -> List[str]:
+    return PROVIDER_LIST + get_custom_provider_choices()
+
 # IMAGE_PROVIDER_LIST = ["openai", 'google-genai', 'xai', 'hf-inference', 'comfyui', 'invokeai', 'drawthings', 'sd-webui', 'self-provided']
 
 GPT_IMAGE_ALLOWED_SIZES = ["1024x1024", "1024x1536", "1536x1024"]
@@ -93,7 +98,6 @@ IMAGE_PROVIDER_LIST = [
 ]
 
 TTS_PROVIDER_LIST = ["gtts", "edgetts"]
-
 REASONING_BAN = ["non-reasoning"]
 REASONING_CONTROLABLE = [
     "qwen3",
