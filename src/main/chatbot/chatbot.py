@@ -387,10 +387,18 @@ class Chatbot:
             session_id = new_session_id
             self.chat_titles[session_id] = title
 
-        is_multimodal = AutoConfig.from_pretrained(os.path.join("./models/llm", selected_model)).architectures[0] in IS_MULTIMODAL_LOCAL or any(x in selected_model.lower() for x in IS_MULTIMODAL_API)
+        if provider == "self-provided":
+            try:
+                is_multimodal = AutoConfig.from_pretrained(os.path.join("./models/llm", selected_model)).architectures[0] in IS_MULTIMODAL_LOCAL or any(x in selected_model.lower() for x in IS_MULTIMODAL_API)
+            except Exception as e:
+                logger.warning(f"Failed to detect local model architecture for '{selected_model}': {e}")
+                is_multimodal = any(x in selected_model.lower() for x in IS_MULTIMODAL_API)
+        else:
+            is_multimodal = any(x in selected_model.lower() for x in IS_MULTIMODAL_API)
 
         # 사용자 메시지 구성
-        if is_multimodal:
+        # message는 gr.ChatInterface(type="messages")에서 dict({"text": ..., "files": [...]}) 또는 str 형태로 전달됨
+        if isinstance(message, dict):
             user_content = message.get("text", "")
             user_files = message.get("files", [])
         else:
