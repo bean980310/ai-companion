@@ -499,7 +499,7 @@ class MCPClientManager:
         auth = None
         http_client = None
         if config.oauth_enabled:
-            oauth[""]
+            # oauth[""]
             auth = await create_oauth_provider(config)
             # For PKCE provider, ensure token is acquired before connecting
             if isinstance(auth, PKCEAuth):
@@ -519,7 +519,7 @@ class MCPClientManager:
         try:
             if http_client:
                 await stack.enter_async_context(http_client)
-            read, write, _get_session_id = await stack.enter_async_context(streamable_http_client(config.url, http_client=http_client))
+            read, write = await stack.enter_async_context(streamable_http_client(config.url, http_client=http_client))
             session = await stack.enter_async_context(ClientSession(read, write))
             initialize_result = await session.initialize()
             self.sessions[server_id] = session
@@ -537,7 +537,7 @@ class MCPClientManager:
                 tools_result = await session.list_tools()
                 for tool in tools_result.tools:
                     params = []
-                    input_schema = tool.inputSchema or {}
+                    input_schema = tool.input_schema or {}
 
                     # Parse parameters from input schema
                     properties = input_schema.get("properties", {})

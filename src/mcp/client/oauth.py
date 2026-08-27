@@ -25,6 +25,7 @@ from pydantic import AnyUrl
 
 
 import httpx
+import httpx2
 
 from ai_companion_core import logger
 
@@ -37,6 +38,7 @@ try:
         OAuthClientInformationFull,
         PKCEParameters,
     )
+    from mcp.shared.auth import AuthorizationCodeResult
 
     OAUTH_AVAILABLE = True
 except ImportError:
@@ -296,8 +298,8 @@ class FileTokenStorage(TokenStorage):
 def _build_callback_handler(redirect_port: int):
     """Build a local HTTP server that captures the OAuth callback."""
 
-    async def callback_handler() -> tuple[str, str | None]:
-        auth_code_future: asyncio.Future[tuple[str, str | None]] = asyncio.get_event_loop().create_future()
+    async def callback_handler() -> AuthorizationCodeResult:
+        auth_code_future: asyncio.Future[AuthorizationCodeResult] = asyncio.get_event_loop().create_future()
 
         from aiohttp import web
 
@@ -320,7 +322,7 @@ def _build_callback_handler(redirect_port: int):
                     content_type="text/html",
                 )
 
-            auth_code_future.set_result((code, state))
+            auth_code_future.set_result(AuthorizationCodeResult(code=code, state=state))
             return web.Response(
                 text="<html><body><h1>Authentication Successful!</h1><p>You can close this window and return to the application.</p></body></html>",
                 content_type="text/html",
@@ -461,7 +463,9 @@ class PKCEOAuthProvider:
         webbrowser.open(auth_url)
 
         # Wait for callback
-        auth_code, returned_state = await self._callback_handler()
+        result = await self._callback_handler()
+        auth_code = result.code
+        returned_state = result.state
 
         # Validate state to prevent CSRF
         if returned_state != state:
@@ -557,11 +561,11 @@ class PKCEOAuthProvider:
 # ---------------------------------------------------------------------------
 
 
-class PKCEAuth(httpx.Auth):
+class PKCEAuth(httpx2.Auth):
     """
-    httpx.Auth adapter that injects a Bearer token obtained via PKCE flow.
+    httpx2.Auth adapter that injects a Bearer token obtained via PKCE flow.
 
-    Used by MCP SDK's SSE/HTTP transports which accept an httpx.Auth instance.
+    Used by MCP SDK's HTTP transports which accept an httpx2.Auth instance.
     """
 
     def __init__(self, provider: PKCEOAuthProvider):
@@ -571,7 +575,7 @@ class PKCEAuth(httpx.Auth):
     async def _ensure_token(self):
         self._token = await self._provider.get_valid_token()
 
-    def sync_auth_flow(self, request: httpx.Request):
+    def sync_auth_flow(self, request: httpx2.Request):
         """Synchronous auth flow — runs async token acquisition in a new loop."""
         import asyncio
 
@@ -592,7 +596,7 @@ class PKCEAuth(httpx.Auth):
             request.headers["Authorization"] = f"Bearer {self._token}"
         yield request
 
-    async def async_auth_flow(self, request: httpx.Request):
+    async def async_auth_flow(self, request: httpx2.Request):
         """Async auth flow — directly awaits token acquisition."""
         await self._ensure_token()
         if self._token:
@@ -628,7 +632,7 @@ def _urlencode(params: dict) -> str:
     return urlencode(params)
 
 
-async def create_oauth_provider(config) -> "httpx.Auth":
+async def create_oauth_provider(config) -> "httpx2.Auth":
     """
     Create an OAuth auth provider from an MCPServerConfig.
 
@@ -642,7 +646,7 @@ async def create_oauth_provider(config) -> "httpx.Auth":
         config: MCPServerConfig with oauth_enabled=True
 
     Returns:
-        httpx.Auth instance for use with MCP transports
+        httpx2.Auth instance for use with MCP transports
     """
     if not OAUTH_AVAILABLE:
         raise RuntimeError("MCP OAuth modules not available. Update mcp SDK: pip install --upgrade mcp")
@@ -696,7 +700,6 @@ async def create_oauth_provider(config) -> "httpx.Auth":
         storage=storage,
         redirect_handler=redirect_handler,
         callback_handler=callback_handler,
-        timeout=config.timeout,
     )
 
     return provider
