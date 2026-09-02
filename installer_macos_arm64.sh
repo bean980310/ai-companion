@@ -25,5 +25,8 @@ uv pip install "langchain-chroma>=0.1.2" "langchain-neo4j>=0.4.0"
 # uv pip install mlx_image
 uv pip install fsspec numpy psutil pandas --upgrade
 
+echo "Installing long-term memory (mem0)..."
+uv pip install mem0ai
+
 echo "Checking python package"
 uv pip check

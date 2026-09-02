@@ -59,6 +59,7 @@ gtts>=2.5.4
 coqui-tts
 edge-tts
 chromadb
+mem0ai
 # outetts==0.3.3
 pydub
 samplerate

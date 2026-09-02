@@ -16,6 +16,7 @@ from ai_companion_core import logger
 from src.models import IS_MULTIMODAL_API, IS_MULTIMODAL_LOCAL, IS_OMNI_API
 from src.models.models import get_all_local_models, generate_answer, generate_chat_title
 from src.common.database import save_chat_history_db, delete_session_history, delete_all_sessions, get_preset_choices, load_system_presets, get_existing_sessions, get_existing_sessions_with_names, update_session_name, load_chat_from_db, update_system_message_in_db, update_last_character_in_db
+from src.common.memory import add_memory, build_memory_context, is_memory_enabled, set_memory_enabled, get_all_memories, clear_character_memories
 from src.common.translations import translation_manager, _
 
 from src.characters.preset_images import PRESET_IMAGES
@@ -51,6 +52,7 @@ from src.common.utils import detect_platform
 from src.common.file_types import COMMON_FILE_TYPES, MULTIMODAL_VISION_FILE_TYPES, MULTIMODAL_OMNI_FILE_TYPES
 
 from src.characters.persona_speech_manager import PersonaSpeechManager
+from src.characters.user_persona import build_user_persona_context, get_active_user_name
 from src.common.character_info import characters
 
 # from src.common.translations import _
@@ -257,10 +259,39 @@ class Chatbot:
             model_type = self.determine_model_type(selected_model)
         else:
             model_type = None
+        # --- 유저 페르소나 & 장기기억 주입 ---
+        # 시스템 메시지에 유저 페르소나와 관련 장기기억을 추가한다.
+        persona_context = build_user_persona_context()
+        user_name = get_active_user_name()
+
+        memory_context = ""
+        if is_memory_enabled():
+            try:
+                last_user_text = ""
+                for msg in reversed(history):
+                    if msg["role"] == "user":
+                        last_user_text = self._extract_text(msg.get("content", ""))
+                        break
+                memory_context = build_memory_context(last_user_text, character=selected_character)
+            except Exception as e:
+                logger.warning(f"장기기억 검색 실패: {e}")
+
+        memory_history = history
+        if persona_context or memory_context:
+            memory_history = list(history)
+            if memory_history and memory_history[0]["role"] == "system":
+                system_content = str(memory_history[0].get("content", ""))
+                if user_name:
+                    system_content = system_content.replace("{{user}}", user_name)
+                memory_history[0] = {
+                    "role": "system",
+                    "content": system_content + persona_context + memory_context,
+                }
+
         try:
             # 봇 응답 생성
             answer = generate_answer(
-                history=history,
+                history=memory_history,
                 selected_model=selected_model,
                 provider=provider,
                 model_type=model_type,
@@ -288,6 +319,15 @@ class Chatbot:
 
             # 데이터베이스에 히스토리 저장
             save_chat_history_db(history, session_id=session_id)
+
+            # --- 장기기억 저장 ---
+            if is_memory_enabled() and memory_context is not None:
+                try:
+                    user_text = self._extract_text(history[-2].get("content", "")) if len(history) >= 2 else ""
+                    if user_text:
+                        add_memory(user_text, styled_answer, character=selected_character, session_id=session_id)
+                except Exception as e:
+                    logger.warning(f"장기기억 저장 실패: {e}")
 
             # 상태 메시지 초기화
             status = ""
@@ -467,9 +507,38 @@ class Chatbot:
         else:
             model_type = None
 
+        # --- 유저 페르소나 & 장기기억 주입 ---
+        # 시스템 메시지에 유저 페르소나와 관련 장기기억을 추가한다.
+        persona_context = build_user_persona_context()
+        user_name = get_active_user_name()
+
+        memory_context = ""
+        if is_memory_enabled():
+            try:
+                last_user_text = ""
+                for msg in reversed(current_history):
+                    if msg["role"] == "user":
+                        last_user_text = self._extract_text(msg.get("content", ""))
+                        break
+                memory_context = build_memory_context(last_user_text, character=selected_character)
+            except Exception as e:
+                logger.warning(f"장기기억 검색 실패: {e}")
+
+        memory_history = current_history
+        if persona_context or memory_context:
+            memory_history = list(current_history)
+            if memory_history and memory_history[0]["role"] == "system":
+                system_content = str(memory_history[0].get("content", ""))
+                if user_name:
+                    system_content = system_content.replace("{{user}}", user_name)
+                memory_history[0] = {
+                    "role": "system",
+                    "content": system_content + persona_context + memory_context,
+                }
+
         try:
             answer = generate_answer(
-                history=current_history,
+                history=memory_history,
                 selected_model=selected_model,
                 provider=provider,
                 model_type=model_type,
@@ -498,6 +567,15 @@ class Chatbot:
 
             # 데이터베이스에 히스토리 저장
             save_chat_history_db(current_history, session_id=session_id)
+
+            # --- 장기기억 저장 ---
+            if is_memory_enabled() and memory_context is not None:
+                try:
+                    user_text = self._extract_text(current_history[-2].get("content", "")) if len(current_history) >= 2 else ""
+                    if user_text:
+                        add_memory(user_text, styled_answer, character=selected_character, session_id=session_id)
+                except Exception as e:
+                    logger.warning(f"장기기억 저장 실패: {e}")
 
             status = ""
 
@@ -554,6 +632,24 @@ class Chatbot:
             return "mlx"
         else:
             return "transformers"
+
+    @staticmethod
+    def _extract_text(content: Any) -> str:
+        """멀티모달 content 에서 텍스트만 추출한다."""
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            texts = []
+            for item in content:
+                if isinstance(item, dict):
+                    if item.get("type") == "text":
+                        texts.append(item.get("text", ""))
+                    elif "text" in item:
+                        texts.append(item.get("text", ""))
+                elif isinstance(item, str):
+                    texts.append(item)
+            return " ".join(texts)
+        return str(content)
 
     @staticmethod
     def filter_messages_for_chatbot(history: list[dict[str, str | Any]]) -> list[dict[str, str | Any]]:
@@ -916,6 +1012,30 @@ class Chatbot:
             return gr.update(visible=False)
         api_visible = any(x in provider.lower() for x in ["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference"])
         return gr.update(visible=api_visible)
+
+    @staticmethod
+    def format_memory_list(character: str | None) -> str:
+        """캐릭터의 장기기억을 Markdown 목록으로 포맷한다."""
+        if not is_memory_enabled():
+            return "장기기억이 비활성화되어 있습니다."
+        memories = get_all_memories(character)
+        if not memories:
+            return _("memory_empty")
+        lines = [f"{i}. {m}" for i, m in enumerate(memories, start=1)]
+        return "\n".join(lines)
+
+    @staticmethod
+    def handle_memory_toggle(enabled: bool) -> None:
+        """장기기억 사용 여부를 런타임에 전환한다."""
+        set_memory_enabled(enabled)
+
+    @staticmethod
+    def handle_memory_clear(character: str | None) -> str:
+        """캐릭터의 장기기억을 모두 삭제하고 결과를 반환한다."""
+        deleted = clear_character_memories(character)
+        if deleted:
+            return f"✅ 장기기억 {deleted}개를 삭제했습니다."
+        return _("memory_empty")
 
     def handle_file_upload_type(self, provider: str | gr.Dropdown, model_type: str | gr.Dropdown, selected_model: str | gr.Dropdown):
         API_PROVIDERS = {"openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference"}

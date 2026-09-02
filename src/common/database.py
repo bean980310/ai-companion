@@ -187,6 +187,32 @@ def initialize_database() -> None:
                 )
             """)
 
+            # 유저 페르소나 테이블 생성
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS user_personas (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    description TEXT NOT NULL DEFAULT '',
+                    avatar_path TEXT,
+                    is_active INTEGER NOT NULL DEFAULT 0,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
+            # SillyTavern 형식 캐릭터 카드 테이블 생성
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS character_cards (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL UNIQUE,
+                    card_json TEXT NOT NULL,
+                    avatar_path TEXT,
+                    source TEXT NOT NULL DEFAULT 'import',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
             # 인덱스 생성
             cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_chat_history_session
@@ -431,6 +457,16 @@ def add_system_preset(name: str, language: str, content: str, overwrite: bool = 
                     (content, name, language),
                 )
                 operation = "updated"
+                if cursor.rowcount == 0:
+                    # 대상이 없으면 새로 삽입 (upsert 동작)
+                    cursor.execute(
+                        """
+                        INSERT INTO system_presets (name, language, content) 
+                        VALUES (?, ?, ?)
+                    """,
+                        (name, language, content),
+                    )
+                    operation = "added"
             else:
                 cursor.execute(
                     """

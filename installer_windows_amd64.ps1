@@ -24,6 +24,9 @@ echo "Installing requirements..."
 %HomePath%\.local\bin\uv.exe pip install "langchain-chroma>=0.1.2" "langchain-neo4j>=0.4.0"
 %HomePath%\.local\bin\uv.exe pip install fsspec numpy psutil pandas --upgrade
 
+echo "Installing long-term memory (mem0)..."
+%HomePath%\.local\bin\uv.exe pip install mem0ai
+
 echo "Checking python package"
 %HomePath%\.local\bin\uv.exe pip check
 

@@ -96,5 +96,11 @@
   "reset_confirm_current_message": "目前會話中的所有對話都將被刪除。是否繼續？",
   "reset_confirm_all_message": "所有會話中的所有對話都將被刪除。是否繼續？",
   "cancel": "消除",
-  "ok": "查看"
+  "ok": "查看",
+  "memory_toggle_label": "使用長期記憶",
+  "memory_toggle_info": "從對話中學習使用者資訊，即使更換會話也能記住你。",
+  "memory_manage_title": "長期記憶管理",
+  "memory_refresh_button": "重新整理記憶",
+  "memory_clear_button": "刪除此角色的所有記憶",
+  "memory_empty": "沒有已儲存的長期記憶。"
 }

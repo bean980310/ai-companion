@@ -32,3 +32,15 @@ Recent history favors short, imperative subjects such as `Fix AttributeError...`
 ## Security & Configuration Tips
 
 Do not commit secrets, model weights, local databases, or generated outputs. Runtime configuration is created under `~/.ai-companion/.env`; keep machine-specific values there, not in tracked files.
+
+## Long-Term Memory (mem0)
+
+Chatbot long-term memory lives in `src/common/memory.py` and is wired into the chat flow in `src/main/chatbot/chatbot.py` (`chat_wrapper` and `process_message_bot`). Before generating a reply it injects relevant memories into the system message; after a successful exchange it stores the turn. Memories are namespaced per character (persona) via mem0's `user_id`.
+
+Backends (configured in `~/.ai-companion/.env`):
+- The LLM (memory extraction) and embedder providers are configured independently: `MEMORY_LLM_PROVIDER` and `MEMORY_EMBEDDER_PROVIDER`. When either is unset it falls back to `MEMORY_PROVIDER` (default `ollama`). Supported providers match mem0's factories (LLM: ollama, openai, vllm, lmstudio, deepseek, anthropic, gemini, ...; embedder: ollama, openai, lmstudio, huggingface, gemini, ...). `custom` is an alias for `openai`.
+- Per-side settings: `MEMORY_LLM_BASE_URL`/`MEMORY_LLM_API_KEY`/`MEMORY_LLM_MODEL` and `MEMORY_EMBEDDER_BASE_URL`/`MEMORY_EMBEDDER_API_KEY`/`MEMORY_EMBEDDER_MODEL`/`MEMORY_EMBEDDER_DIMS`. Unset per-side values fall back to shared `MEMORY_BASE_URL`/`MEMORY_API_KEY`.
+- Default all-local setup (`MEMORY_PROVIDER=ollama`): Ollama embedder + LLM, ChromaDB vector store. Requires `nomic-embed-text` and `gemma4:12b` pulled. The LLM must follow mem0's `{"memory":[{"text":...}]}` JSON format.
+- Mixed example: local Ollama embedder + remote vLLM extraction LLM (`MEMORY_EMBEDDER_PROVIDER=ollama`, `MEMORY_LLM_PROVIDER=vllm`, `MEMORY_LLM_BASE_URL=http://localhost:8000/v1`).
+
+Set `MEMORY_ENABLED=false` to disable (or toggle at runtime via `set_memory_enabled` from the UI). The mem0 `Memory` instance is lazily initialized so a missing model/key does not crash startup.

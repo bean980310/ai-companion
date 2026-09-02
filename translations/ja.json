@@ -96,5 +96,11 @@
   "reset_confirm_current_message": "現在のセッションのすべての会話内容が削除されます。続行しますか？",
   "reset_confirm_all_message": "すべてのセッションの会話内容が削除されます。続行しますか？",
   "cancel": "キャンセル",
-  "ok": "確認"
+  "ok": "確認",
+  "memory_toggle_label": "長期記憶を使用",
+  "memory_toggle_info": "会話からユーザー情報を学習し、セッションを超えて記憶します。",
+  "memory_manage_title": "長期記憶の管理",
+  "memory_refresh_button": "記憶を更新",
+  "memory_clear_button": "このキャラクターの記憶をすべて削除",
+  "memory_empty": "保存された長期記憶はありません。"
 }

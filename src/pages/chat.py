@@ -114,6 +114,7 @@ with gr.Blocks() as demo:
 
     profile_image = chat_container_obj.side_panel.profile_image
     character_dropdown = chat_container_obj.side_panel.character_dropdown
+    user_persona_dropdown = chat_container_obj.side_panel.user_persona_dropdown
 
     text_advanced_settings = chat_container_obj.side_panel.advanced_setting
 
@@ -132,6 +133,11 @@ with gr.Blocks() as demo:
     status_text = chat_container_obj.status_bar.status_text
     image_info = chat_container_obj.status_bar.image_info
     session_select_info = chat_container_obj.status_bar.session_select_info
+
+    memory_toggle = chat_container_obj.side_panel.memory_toggle
+    memory_list = chat_container_obj.side_panel.memory_list
+    memory_refresh_btn = chat_container_obj.side_panel.memory_refresh_btn
+    memory_clear_btn = chat_container_obj.side_panel.memory_clear_btn
 
     # Modals from chat_bot (these were in create_main_container)
     reset_modal, single_reset_content, all_reset_content, cancel_btn, confirm_btn = chat_bot.create_reset_confirm_modal()
@@ -319,10 +325,33 @@ with gr.Blocks() as demo:
     text_repetition_penalty_slider.change(lambda repetition_penalty: repetition_penalty if repetition_penalty is not None else 1.1, inputs=[text_repetition_penalty_slider], outputs=[app_state.repetition_penalty_state])
     text_enable_thinking_checkbox.change(lambda enable: enable if enable is True else False, inputs=[text_enable_thinking_checkbox], outputs=[app_state.enable_thinking_state])
 
+    # Long-term Memory (mem0)
+    memory_toggle.change(fn=chat_bot.handle_memory_toggle, inputs=[memory_toggle])
+    memory_toggle.change(fn=chat_bot.format_memory_list, inputs=[character_dropdown], outputs=[memory_list])
+    memory_refresh_btn.click(fn=chat_bot.format_memory_list, inputs=[character_dropdown], outputs=[memory_list])
+    memory_clear_btn.click(fn=chat_bot.handle_memory_clear, inputs=[character_dropdown], outputs=[memory_list])
+    character_dropdown.change(fn=chat_bot.format_memory_list, inputs=[character_dropdown], outputs=[memory_list])
+
     # Preset & Character
     character_dropdown.change(fn=chat_bot.update_system_message_and_profile, inputs=[character_dropdown, header.language_dropdown, app_state.session_id_state], outputs=[system_message_box, profile_image, preset_dropdown])
 
     character_dropdown.change(fn=chat_bot.handle_change_preset, inputs=[preset_dropdown, app_state.history_state, app_state.selected_language_state], outputs=[app_state.history_state, system_message_box, profile_image])
+
+    # User Persona selection (activates persona in DB; injected at generation time)
+    def handle_user_persona_change(persona_value: str):
+        from src.characters.user_persona import set_active_persona, get_persona_choices, get_persona_by_id, NO_PERSONA_VALUE
+
+        if persona_value == NO_PERSONA_VALUE or not persona_value:
+            success, message = set_active_persona(None)
+        else:
+            persona = get_persona_by_id(persona_value)
+            if persona:
+                success, message = set_active_persona(persona.id)
+            else:
+                success, message = False, f"❌ 페르소나를 찾을 수 없습니다: {persona_value}"
+        return message, gr.update(choices=get_persona_choices())
+
+    user_persona_dropdown.change(fn=handle_user_persona_change, inputs=[user_persona_dropdown], outputs=[status_text, user_persona_dropdown])
 
     # character_dropdown.change(
     #     fn=chat_bot.update_system_message_and_profile,

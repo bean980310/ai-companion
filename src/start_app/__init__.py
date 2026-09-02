@@ -26,6 +26,7 @@ from ..models import default_device
 from ..common.default_language import default_language
 
 from ..characters.persona_speech_manager import PersonaSpeechManager
+from ..characters.card_registry import register_all_on_startup
 
 from .app_state_manager import app_state
 from .ui_component_manager import ui_component
@@ -41,6 +42,7 @@ def load_initial_data():
     initialize_database()
     ensure_demo_session()
     insert_default_presets(translation_manager, overwrite=True)
+    register_all_on_startup()
     
     # Load initial values
     session_id, loaded_history, session_dropdown, last_character, last_preset, system_message, session_label = on_app_start()
@@ -215,6 +217,7 @@ def initialize_app():
     initialize_database()
     ensure_demo_session()
     insert_default_presets(translation_manager, overwrite=True)
+    register_all_on_startup()
     return on_app_start(default_language)
 
 def on_app_start(language=None):  # language 매개변수에 기본값 설정

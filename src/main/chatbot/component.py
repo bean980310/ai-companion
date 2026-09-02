@@ -16,6 +16,7 @@ from ...common.default_language import default_language
 from ...common.character_info import characters
 from ...common.database import get_preset_choices
 from ...common.file_types import COMMON_FILE_TYPES
+from ...characters.user_persona import get_persona_choices, get_active_persona, NO_PERSONA_VALUE
 
 # Maximum number of sessions to display in the sidebar
 MAX_VISIBLE_SESSIONS = 20
@@ -51,6 +52,7 @@ class ChatbotComponent:
 
     profile_image: Optional[gr.Image] = None
     character_dropdown: Optional[gr.Dropdown] = None
+    user_persona_dropdown: Optional[gr.Dropdown] = None
 
     advanced_setting: Optional[gr.Accordion] = None
     seed_input: Optional[gr.Number] = None
@@ -68,6 +70,12 @@ class ChatbotComponent:
     status_text: Optional[gr.Markdown] = None
     image_info: Optional[gr.Markdown] = None
     session_select_info: Optional[gr.Markdown] = None
+
+    memory_toggle: Optional[gr.Checkbox] = None
+    memory_accordion: Optional[gr.Accordion] = None
+    memory_list: Optional[gr.Markdown] = None
+    memory_refresh_btn: Optional[gr.Button] = None
+    memory_clear_btn: Optional[gr.Button] = None
 
     @classmethod
     def create_chatbot_side_session_container(cls):
@@ -225,6 +233,15 @@ class ChatbotComponent:
         with gr.Column(scale=3, elem_classes="side-panel"):
             profile_image = gr.Image(label=_("profile_image_label"), visible=True, interactive=False, show_label=True, width="auto", height="auto", value=characters[app_state.initial_last_character]["profile_image"], elem_classes="profile-image")
             character_dropdown = gr.Dropdown(label=_("character_select_label"), choices=list(characters.keys()), value=app_state.initial_last_character, interactive=True, info=_("character_select_info"), elem_classes="character-dropdown")
+            active_persona = get_active_persona()
+            user_persona_dropdown = gr.Dropdown(
+                label="유저 페르소나 (User Persona)",
+                choices=get_persona_choices(),
+                value=str(active_persona.id) if active_persona else NO_PERSONA_VALUE,
+                interactive=True,
+                info="채팅에 주입할 유저 페르소나를 선택하세요. (설정에서 관리)",
+                elem_classes="user-persona-dropdown",
+            )
             with gr.Accordion(_("advanced_setting"), open=False, elem_classes="accordion-container") as advanced_setting:
                 seed_input = gr.Number(label=_("seed_label"), value=42, precision=0, step=1, interactive=True, info=_("seed_info"), elem_classes="seed-input")
                 max_length_input = gr.Slider(label="Max Length", minimum=-1, maximum=4096, value=-1, step=1, interactive=True, info="Set the maximum length of the generated response.", elem_classes="max-length-input")
@@ -246,8 +263,21 @@ class ChatbotComponent:
                     scale=1,
                 )
 
+                memory_toggle = gr.Checkbox(
+                    label=_("memory_toggle_label"),
+                    value=True,
+                    info=_("memory_toggle_info"),
+                    elem_classes="memory-toggle",
+                )
+                with gr.Accordion(_("memory_manage_title"), open=False, elem_classes="accordion-container") as memory_accordion:
+                    memory_list = gr.Markdown(_("memory_empty"), elem_classes="memory-list")
+                    with gr.Row():
+                        memory_refresh_btn = gr.Button(_("memory_refresh_button"), variant="secondary")
+                        memory_clear_btn = gr.Button(_("memory_clear_button"), variant="stop")
+
         ui_component.profile_image = profile_image
         ui_component.character_dropdown = character_dropdown
+        ui_component.user_persona_dropdown = user_persona_dropdown
         ui_component.text_advanced_settings = advanced_setting
         ui_component.text_seed_input = seed_input
         ui_component.text_max_length_input = max_length_input
@@ -260,23 +290,34 @@ class ChatbotComponent:
         ui_component.text_change_preset_button = change_preset_button
         ui_component.text_reset_btn = reset_btn
         ui_component.text_reset_all_btn = reset_all_btn
+        ui_component.memory_toggle = memory_toggle
+        ui_component.memory_accordion = memory_accordion
+        ui_component.memory_list = memory_list
+        ui_component.memory_refresh_btn = memory_refresh_btn
+        ui_component.memory_clear_btn = memory_clear_btn
 
         return cls(
-            profile_image=profile_image,
-            character_dropdown=character_dropdown,
-            advanced_setting=advanced_setting,
-            seed_input=seed_input,
-            max_length_input=max_length_input,
-            temperature_slider=temperature_slider,
-            top_k_slider=top_k_slider,
-            top_p_slider=top_p_slider,
-            repetition_penalty_slider=repetition_penalty_slider,
-            enable_thinking_checkbox=enable_thinking_checkbox,
-            preset_dropdown=preset_dropdown,
-            change_preset_button=change_preset_button,
-            reset_btn=reset_btn,
-            reset_all_btn=reset_all_btn,
-        )
+        profile_image=profile_image,
+        character_dropdown=character_dropdown,
+        user_persona_dropdown=user_persona_dropdown,
+        advanced_setting=advanced_setting,
+        seed_input=seed_input,
+        max_length_input=max_length_input,
+        temperature_slider=temperature_slider,
+        top_k_slider=top_k_slider,
+        top_p_slider=top_p_slider,
+        repetition_penalty_slider=repetition_penalty_slider,
+        enable_thinking_checkbox=enable_thinking_checkbox,
+        preset_dropdown=preset_dropdown,
+        change_preset_button=change_preset_button,
+        reset_btn=reset_btn,
+        reset_all_btn=reset_all_btn,
+        memory_toggle=memory_toggle,
+        memory_accordion=memory_accordion,
+        memory_list=memory_list,
+        memory_refresh_btn=memory_refresh_btn,
+        memory_clear_btn=memory_clear_btn,
+    )
 
     @classmethod
     def create_chat_container_status_bar(cls, render=True):
