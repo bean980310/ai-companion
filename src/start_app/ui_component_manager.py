@@ -67,6 +67,8 @@ class UIComponent:
     profile_image: Optional[gr.Image] = None
     character_dropdown: Optional[gr.Dropdown] = None
 
+    user_persona_dropdown: Optional[gr.Dropdown] = None
+
     text_advanced_settings: Optional[gr.Accordion] = None
     text_seed_input: Optional[gr.Number] = None
     text_max_length_input: Optional[gr.Slider] = None
@@ -79,6 +81,12 @@ class UIComponent:
     text_change_preset_button: Optional[gr.Button] = None
     text_reset_btn: Optional[gr.Button] = None
     text_reset_all_btn: Optional[gr.Button] = None
+
+    memory_toggle: Optional[gr.Checkbox] = None
+    memory_accordion: Optional[gr.Accordion] = None
+    memory_list: Optional[gr.Markdown] = None
+    memory_refresh_btn: Optional[gr.Button] = None
+    memory_clear_btn: Optional[gr.Button] = None
 
     status_text: Optional[gr.Markdown] = None
     image_info: Optional[gr.Markdown] = None
