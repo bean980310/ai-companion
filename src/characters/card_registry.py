@@ -21,6 +21,7 @@ from src.common.database import get_db_connection, add_system_preset, delete_sys
 from src.common.translations import translation_manager
 from src.common.default_language import default_language
 from src.characters.character_card import parse_character_card, build_system_prompt, CharacterCardError
+from src.characters.lorebook import normalize_lorebook, build_lorebook_context
 from src.characters.preset_images import PRESET_IMAGES
 
 IMPORTED_AVATAR_DIR = Path("assets/imported_cards")
@@ -216,10 +217,90 @@ def import_card_file(path: str) -> Tuple[bool, str, Optional[str]]:
         "spec_version": card_data.get("spec_version", ""),
         "data": card_data,
     }
+
+    # 카드에 character_book(로어북)이 포함되어 있으면 내부 표준 스키마로 정규화
+    extensions = card_data.get("extensions")
+    if isinstance(extensions, dict) and isinstance(extensions.get("character_book"), dict) and extensions["character_book"]:
+        try:
+            extensions["character_book"] = normalize_lorebook(extensions["character_book"], name=name)
+            card_data["extensions"] = extensions
+            logger.info(f"카드 로어북 정규화 완료: {name} ({len(extensions['character_book'].get('entries', []))}개 엔트리)")
+        except Exception as e:
+            logger.warning(f"카드 로어북 정규화 실패 (원본 유지): {e}")
+
     save_card(name, bundle, avatar_path, source="import")
     register_card_runtime(name, bundle, avatar_path)
     logger.info(f"SillyTavern 카드 임포트 완료: {name} (spec={bundle['spec']})")
     return True, f"✅ '{name}' 캐릭터가 임포트되었습니다. (spec: {bundle['spec']})", name
+
+
+# ---------------------------------------------------------------------------
+# 캐릭터 로어북 (카드 extensions.character_book)
+# ---------------------------------------------------------------------------
+
+def get_character_lorebook(name: str) -> Optional[Dict[str, Any]]:
+    """캐릭터 카드에 포함된 로어북을 정규화된 형태로 조회합니다. 없으면 None."""
+    bundle = get_card_bundle(name)
+    if not bundle:
+        return None
+    extensions = ((bundle.get("data") or {}).get("extensions")) or {}
+    raw_book = extensions.get("character_book")
+    if not isinstance(raw_book, dict) or not raw_book:
+        return None
+    try:
+        return normalize_lorebook(raw_book, name=name)
+    except Exception as e:
+        logger.warning(f"캐릭터 로어북 정규화 실패 (name={name}): {e}")
+        return None
+
+
+def update_character_lorebook(name: str, book: Dict[str, Any]) -> Tuple[bool, str]:
+    """캐릭터 카드의 extensions.character_book 을 갱신합니다."""
+    bundle = get_card_bundle(name)
+    if not bundle:
+        return False, f"❌ '{name}' 카드를 찾을 수 없습니다."
+
+    try:
+        normalized = normalize_lorebook(book, name=name)
+    except Exception as e:
+        return False, f"❌ 로어북 정규화 실패: {e}"
+
+    data = bundle.get("data") or {}
+    extensions = data.get("extensions") if isinstance(data.get("extensions"), dict) else {}
+    extensions["character_book"] = normalized
+    data["extensions"] = extensions
+    bundle["data"] = data
+
+    with get_db_connection() as conn:
+        _ensure_table(conn)
+        row = conn.execute("SELECT avatar_path, source FROM character_cards WHERE name = ?", (name,)).fetchone()
+    if not row:
+        return False, f"❌ '{name}' 카드를 찾을 수 없습니다."
+
+    save_card(name, bundle, row[0], source=row[1])
+    logger.info(f"캐릭터 로어북 갱신 완료: {name} ({len(normalized.get('entries', []))}개 엔트리)")
+    return True, f"✅ '{name}' 캐릭터의 로어북이 저장되었습니다. ({len(normalized.get('entries', []))}개 엔트리)"
+
+
+def get_character_lorebook_context(
+    character_name: Optional[str],
+    message_texts: List[str],
+    user_name: str = "",
+) -> str:
+    """활성 캐릭터의 로어북을 대화 텍스트에 대해 활성화해 컨텍스트 문자열을 반환합니다.
+
+    로어북이 없거나 활성화된 엔트리가 없으면 빈 문자열. 채팅 플로우에서 호출됩니다.
+    """
+    if not character_name:
+        return ""
+    book = get_character_lorebook(character_name)
+    if not book:
+        return ""
+    try:
+        return build_lorebook_context(book, message_texts, char_name=character_name, user_name=user_name)
+    except Exception as e:
+        logger.warning(f"로어북 컨텍스트 생성 실패 (character={character_name}): {e}")
+        return ""
 
 
 # ---------------------------------------------------------------------------

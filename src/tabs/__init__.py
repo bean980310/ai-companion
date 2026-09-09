@@ -6,6 +6,7 @@ from .cache_tab import create_cache_tab
 from .util_tab import create_util_tab
 from .setting_tab_custom_model import create_custom_model_tab
 from .setting_tab_preset import create_system_preset_management_tab
+from .setting_tab_lorebook import create_lorebook_tab
 from .setting_tab_save_history import create_save_history_tab
 from .setting_tab_load_history import create_load_history_tab
 from .setting_tab_session_manager import create_session_management_tab
@@ -35,6 +36,7 @@ def create_settings_popup(demo):
                     # 사용자 지정 모델 경로 설정 섹션
                     create_custom_model_tab()
                     create_system_preset_management_tab()
+                    create_lorebook_tab()
                     # # 프리셋 Dropdown 초기화
                     demo.load(fn=chat_bot.initial_load_presets, inputs=[], outputs=[ui_component.text_preset_dropdown], queue=False)
                     create_save_history_tab()

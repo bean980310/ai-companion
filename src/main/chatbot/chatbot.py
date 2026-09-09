@@ -20,6 +20,7 @@ from src.common.memory import add_memory, build_memory_context, is_memory_enable
 from src.common.translations import translation_manager, _
 
 from src.characters.preset_images import PRESET_IMAGES
+from src.characters.card_registry import get_character_lorebook_context
 from src.models import (
     openai_llm_api_models,
     anthropic_llm_api_models,
@@ -277,7 +278,8 @@ class Chatbot:
                 logger.warning(f"장기기억 검색 실패: {e}")
 
         memory_history = history
-        if persona_context or memory_context:
+        lorebook_context = self._build_lorebook_context(selected_character, history, user_name)
+        if persona_context or memory_context or lorebook_context:
             memory_history = list(history)
             if memory_history and memory_history[0]["role"] == "system":
                 system_content = str(memory_history[0].get("content", ""))
@@ -285,7 +287,7 @@ class Chatbot:
                     system_content = system_content.replace("{{user}}", user_name)
                 memory_history[0] = {
                     "role": "system",
-                    "content": system_content + persona_context + memory_context,
+                    "content": system_content + persona_context + memory_context + lorebook_context,
                 }
 
         try:
@@ -525,7 +527,8 @@ class Chatbot:
                 logger.warning(f"장기기억 검색 실패: {e}")
 
         memory_history = current_history
-        if persona_context or memory_context:
+        lorebook_context = self._build_lorebook_context(selected_character, current_history, user_name)
+        if persona_context or memory_context or lorebook_context:
             memory_history = list(current_history)
             if memory_history and memory_history[0]["role"] == "system":
                 system_content = str(memory_history[0].get("content", ""))
@@ -533,7 +536,7 @@ class Chatbot:
                     system_content = system_content.replace("{{user}}", user_name)
                 memory_history[0] = {
                     "role": "system",
-                    "content": system_content + persona_context + memory_context,
+                    "content": system_content + persona_context + memory_context + lorebook_context,
                 }
 
         try:
@@ -621,6 +624,25 @@ class Chatbot:
             session_id,  # Return the (possibly new) session_id
             is_temp_after,  # Return the updated is_temp_session state
         )
+
+    @staticmethod
+    def _build_lorebook_context(selected_character: str | None, history: list, user_name: str) -> str:
+        """활성 캐릭터의 로어북을 최근 대화에 대해 활성화해 컨텍스트를 빌드합니다.
+
+        실패해도 채팅이 중단되지 않도록 빈 문자열로 폴백합니다.
+        """
+        if not selected_character:
+            return ""
+        try:
+            recent_texts = [
+                Chatbot._extract_text(msg.get("content", ""))
+                for msg in history
+                if isinstance(msg, dict) and msg.get("role") in ("user", "assistant")
+            ]
+            return get_character_lorebook_context(selected_character, recent_texts, user_name=user_name)
+        except Exception as e:
+            logger.warning(f"로어북 컨텍스트 생성 실패: {e}")
+            return ""
 
     @staticmethod
     def determine_model_type(selected_model: str) -> str:

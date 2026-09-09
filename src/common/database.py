@@ -213,6 +213,17 @@ def initialize_database() -> None:
                 )
             """)
 
+            # 스토리 로어북(월드 인포) 테이블 생성
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS lorebooks (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL UNIQUE,
+                    book_json TEXT NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
             # 인덱스 생성
             cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_chat_history_session
@@ -242,6 +253,74 @@ def initialize_database() -> None:
     except Exception as e:
         logger.error(f"Unexpected error during database initialization: {e}")
         raise DatabaseInitError(f"Unexpected error: {e}")
+
+
+# ---------------------------------------------------------------------------
+# 스토리 로어북 (월드 인포) CRUD
+# ---------------------------------------------------------------------------
+
+def save_lorebook(name: str, book: Dict[str, Any]) -> Tuple[bool, str]:
+    """스토리 로어북을 저장합니다 (없으면 생성, 있으면 갱신)."""
+    if not name or not str(name).strip():
+        return False, "❌ 로어북 이름이 비어 있습니다."
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT INTO lorebooks (name, book_json)
+                VALUES (?, ?)
+                ON CONFLICT(name) DO UPDATE SET
+                    book_json = excluded.book_json,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                (str(name).strip(), json.dumps(book, ensure_ascii=False)),
+            )
+            conn.commit()
+        return True, f"✅ 로어북 '{name}'이(가) 저장되었습니다."
+    except sqlite3.Error as e:
+        logger.error(f"로어북 저장 실패 (name={name}): {e}")
+        return False, f"❌ 로어북 저장 실패: {e}"
+
+
+def get_lorebook(name: str) -> Optional[Dict[str, Any]]:
+    """이름으로 스토리 로어북을 조회합니다. 없으면 None."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT book_json FROM lorebooks WHERE name = ?", (name,))
+            row = cursor.fetchone()
+            return json.loads(row[0]) if row else None
+    except (sqlite3.Error, json.JSONDecodeError) as e:
+        logger.error(f"로어북 조회 실패 (name={name}): {e}")
+        return None
+
+
+def list_lorebooks() -> List[str]:
+    """저장된 스토리 로어북 이름 목록을 반환합니다."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM lorebooks ORDER BY name ASC")
+            return [row[0] for row in cursor.fetchall()]
+    except sqlite3.Error as e:
+        logger.error(f"로어북 목록 조회 실패: {e}")
+        return []
+
+
+def delete_lorebook(name: str) -> Tuple[bool, str]:
+    """스토리 로어북을 삭제합니다."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM lorebooks WHERE name = ?", (name,))
+            conn.commit()
+            if cursor.rowcount == 0:
+                return False, f"❌ '{name}' 로어북을 찾을 수 없습니다."
+        return True, f"✅ '{name}' 로어북이 삭제되었습니다."
+    except sqlite3.Error as e:
+        logger.error(f"로어북 삭제 실패 (name={name}): {e}")
+        return False, f"❌ 로어북 삭제 실패: {e}"
 
 
 def ensure_demo_session() -> None:

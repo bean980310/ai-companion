@@ -48,6 +48,16 @@ def handle_preview_card(file):
     if not card_data:
         return "❌ 파일에서 캐릭터 카드 데이터를 찾을 수 없습니다. (PNG의 tEXt 'chara'/'ccv3' 청크 또는 ST 형식 JSON 필요)", None
 
+    extensions = card_data.get("extensions") if isinstance(card_data.get("extensions"), dict) else {}
+    character_book = extensions.get("character_book") if isinstance(extensions.get("character_book"), dict) else None
+    lorebook_entries = character_book.get("entries") if character_book else None
+    if isinstance(lorebook_entries, dict):
+        lorebook_count = len(lorebook_entries)
+    elif isinstance(lorebook_entries, list):
+        lorebook_count = len(lorebook_entries)
+    else:
+        lorebook_count = 0
+
     summary = {
         "name": card_data.get("name"),
         "spec": card_data.get("spec"),
@@ -60,6 +70,7 @@ def handle_preview_card(file):
         "first_mes": (card_data.get("first_mes") or "")[:300],
         "system_prompt": (card_data.get("system_prompt") or "")[:300],
         "alternate_greetings_count": len(card_data.get("alternate_greetings") or []),
+        "lorebook_entries_count": lorebook_count,
     }
     return f"✅ 카드 파싱 성공: {card_data.get('name')} ({card_data.get('spec')})", summary
 
