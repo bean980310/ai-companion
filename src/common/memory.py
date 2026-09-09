@@ -293,6 +293,19 @@ def reset_memory() -> None:
     _memory_enabled = False
 
 
+def _memory_namespace(character: Optional[str]) -> Optional[str]:
+    """mem0 user_id 로 사용할 안전한 식별자로 변환한다.
+
+    mem0 는 user_id 에 공백을 포함한 식별자를 허용하지 않으므로
+    (Invalid user_id: cannot contain whitespace), 공백을 언더스코어로 치환한다.
+    add/search/get_all/clear 모두 이 헬퍼를 거치므로 네임스페이스가 일관되게 유지된다.
+    """
+    if not character:
+        return None
+    sanitized = "_".join(str(character).split())
+    return sanitized or None
+
+
 def add_memory(
     user_message: str,
     assistant_message: str,
@@ -323,7 +336,7 @@ def add_memory(
         metadata["session_id"] = session_id
 
     try:
-        mem.add(messages, user_id=character, metadata=metadata)
+        mem.add(messages, user_id=_memory_namespace(character), metadata=metadata)
         return True
     except Exception as e:
         logger.error(f"장기기억 저장 실패: {e}")
@@ -352,7 +365,7 @@ def search_memory(
         return []
 
     try:
-        filters = {"user_id": character} if character else None
+        filters = {"user_id": _memory_namespace(character)} if character else None
         raw = mem.search(query, filters=filters, top_k=top_k, threshold=threshold)
         results = raw.get("results", raw) if isinstance(raw, dict) else raw
         memories = []
@@ -373,7 +386,7 @@ def get_all_memories(character: Optional[str] = None) -> list[str]:
         return []
 
     try:
-        filters = {"user_id": character} if character else None
+        filters = {"user_id": _memory_namespace(character)} if character else None
         raw = mem.get_all(filters=filters)
         results = raw.get("results", raw) if isinstance(raw, dict) else raw
         return [r.get("memory") if isinstance(r, dict) else r for r in results if r]
@@ -403,7 +416,7 @@ def clear_character_memories(character: Optional[str] = None) -> int:
         return 0
 
     try:
-        filters = {"user_id": character} if character else None
+        filters = {"user_id": _memory_namespace(character)} if character else None
         raw = mem.get_all(filters=filters, top_k=1000)
         results = raw.get("results", raw) if isinstance(raw, dict) else raw
         deleted = 0

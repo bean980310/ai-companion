@@ -15,11 +15,14 @@ class ServerNotRunning(Exception):
 
 def get_comfyui_image_models(url: str = "localhost:8188", folder: str = "checkpoints"):
     from comfy_client import ComfyUI
+    from comfy_sdk import Comfy
 
     model_list = []
+    comfy = Comfy()
     client = ComfyUI(server_url=url)
 
     try:
+        comfy.models.base_url
         model = client.models.list(folder=folder)
 
         if len(model) == 0:

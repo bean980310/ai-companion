@@ -6,7 +6,7 @@ from src.tabs.util_tab import create_util_tab
 from src.tabs.setting_tab_custom_model import create_custom_model_tab
 from src.tabs.setting_tab_custom_provider import create_custom_provider_tab
 from src.tabs.setting_tab_preset import create_system_preset_management_tab
-from src.tabs.setting_tab_persona import create_persona_management_tab
+from src.tabs.setting_tab_persona import create_persona_management_tab, refresh_card_dropdowns
 from src.tabs.setting_tab_save_history import create_save_history_tab
 from src.tabs.setting_tab_load_history import create_load_history_tab
 from src.tabs.setting_tab_session_manager import create_session_management_tab
@@ -36,6 +36,9 @@ with gr.Blocks() as demo:
 
                 # 프리셋 Dropdown 초기화 (Wire this event here)
                 demo.load(fn=chat_bot.initial_load_presets, inputs=[], outputs=[ui_component.text_preset_dropdown], queue=False)
+
+                # 새로고침 시 임포트 카드/캐릭터 목록을 최신 상태로 복원
+                demo.load(fn=refresh_card_dropdowns, inputs=[], outputs=[ui_component.imported_card_dropdown, ui_component.character_dropdown], queue=False)
 
                 create_save_history_tab()
                 create_load_history_tab()

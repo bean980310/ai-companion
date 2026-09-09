@@ -66,6 +66,7 @@ class UIComponent:
 
     profile_image: Optional[gr.Image] = None
     character_dropdown: Optional[gr.Dropdown] = None
+    imported_card_dropdown: Optional[gr.Dropdown] = None
 
     user_persona_dropdown: Optional[gr.Dropdown] = None
 

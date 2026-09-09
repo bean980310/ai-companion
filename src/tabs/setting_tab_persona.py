@@ -68,6 +68,15 @@ def _imported_card_names():
     return [c["name"] for c in list_cards() if c["source"] == "import"]
 
 
+def refresh_card_dropdowns():
+    """페이지 로드 시 임포트 카드/캐릭터 드롭다운을 최신 상태로 갱신합니다.
+
+    브라우저 새로고침 시 컴포넌트가 앱 시작 시점의 choices 스냅샷으로 돌아가므로,
+    세션 중 임포트한 카드가 목록에서 사라지는 문제를 방지합니다.
+    """
+    return gr.update(choices=_imported_card_names()), _refresh_character_dropdown()
+
+
 def handle_import_card(file):
     """카드 파일을 임포트하여 캐릭터로 등록합니다."""
     if not file:
@@ -193,6 +202,7 @@ def create_persona_management_tab():
             with gr.Row():
                 imported_card_dropdown = gr.Dropdown(label="임포트된 카드 목록", choices=_imported_card_names(), value=None, interactive=True)
                 delete_card_btn = gr.Button("임포트 카드 삭제", variant="stop")
+            ui_component.imported_card_dropdown = imported_card_dropdown
 
         # ----- Section B: 카드 익스포트 -----
         with gr.Accordion("SillyTavern 카드 익스포트", open=False):
