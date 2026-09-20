@@ -188,9 +188,9 @@ css="""
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0,0,0,0.2);
     z-index: 1000;
-    width: 80%;
-    max-width: 800px;
-    max-height: 80vh;
+    width: 92%;
+    max-width: 1200px;
+    max-height: 85vh;
     overflow-y: auto;
 }
 

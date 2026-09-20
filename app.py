@@ -25,6 +25,7 @@ import gradio as gr
 # from src.common.html import css
 
 from ai_companion_core import logger
+from ai_companion_core.environ_manager import load_env_variables
 
 from translations import i18n
 
@@ -243,6 +244,9 @@ with gr.Blocks(title="Super AI Agent Companion", fill_height=True, fill_width=Tr
 #     # initialize_app()
 #     app.demo.render()
 
+ssl_keyfile = load_env_variables("SSL_KEY_PATH") or None
+ssl_certfile = load_env_variables("SSL_CERT_PATH") or None
+
 if __name__ == "__main__":
     if os_name == "Darwin" and arch == "x86_64":
         raise EnvironmentError(
@@ -269,6 +273,10 @@ if __name__ == "__main__":
         pwa=args.pwa,
         css_paths="html/css/style.css",
         i18n=i18n,
+        allowed_paths=[str(config_dir)],
+        ssl_keyfile=ssl_keyfile,
+        ssl_certfile=ssl_certfile,
+        ssl_verify=False,
     )
 else:
     if os_name == "Darwin" and arch == "x86_64":

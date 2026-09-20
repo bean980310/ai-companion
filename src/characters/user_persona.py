@@ -5,15 +5,67 @@
 활성화된 페르소나는 매 응답 생성 시 시스템 메시지에 주입됩니다.
 """
 
+import re
+import shutil
 import sqlite3
+import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import List, Optional, Tuple
 
 from ai_companion_core import logger
 
+from src.common.apppath import APPDATA_PATH
 from src.common.database import get_db_connection
 
 NO_PERSONA_VALUE = "__none__"
+
+# 유저 페르소나 아바타 영구 저장 폴더 (유저 데이터 폴더 하위)
+USER_AVATAR_DIR: Path = APPDATA_PATH / "user_avatars"
+
+
+def save_avatar_file(avatar_path: Optional[str], persona_name: Optional[str] = None) -> Optional[str]:
+    """업로드된 아바타 파일을 유저 데이터 폴더(USER_AVATAR_DIR)로 복사합니다.
+
+    Gradio 임시 캐시 경로가 DB에 저장되어 캐시 정리 시 사라지는 문제를 방지합니다.
+    이미 USER_AVATAR_DIR 안의 파일이면 그대로 사용합니다.
+
+    Returns:
+        복사된 영구 경로. 복사 실패 시 원본 경로를 그대로 반환합니다.
+    """
+    if not avatar_path:
+        return None
+    src = Path(avatar_path)
+    if not src.is_file():
+        return avatar_path
+    try:
+        if src.resolve().is_relative_to(USER_AVATAR_DIR.resolve()):
+            return str(src)
+    except (OSError, ValueError):
+        pass
+    try:
+        USER_AVATAR_DIR.mkdir(parents=True, exist_ok=True)
+        safe_name = re.sub(r"[^\w-]", "_", (persona_name or "persona").strip()) or "persona"
+        dest = USER_AVATAR_DIR / f"{safe_name}_{int(time.time() * 1000)}{src.suffix.lower() or '.png'}"
+        shutil.copy2(src, dest)
+        logger.info(f"유저 페르소나 아바타 저장됨: {dest}")
+        return str(dest)
+    except OSError as e:
+        logger.error(f"유저 페르소나 아바타 저장 실패: {e}")
+        return avatar_path
+
+
+def _delete_avatar_file_if_managed(avatar_path: Optional[str]) -> None:
+    """아바타 파일이 USER_AVATAR_DIR 안에 있을 때만 삭제합니다."""
+    if not avatar_path:
+        return
+    try:
+        path = Path(avatar_path)
+        if path.is_file() and path.resolve().is_relative_to(USER_AVATAR_DIR.resolve()):
+            path.unlink()
+            logger.info(f"유저 페르소나 아바타 파일 삭제됨: {path}")
+    except OSError as e:
+        logger.error(f"유저 페르소나 아바타 파일 삭제 실패: {e}")
 
 
 @dataclass
@@ -131,7 +183,11 @@ def add_user_persona(name: str, description: str, avatar_path: Optional[str] = N
 
 
 def update_user_persona(persona_id: int, name: str, description: str, avatar_path: Optional[str] = None) -> Tuple[bool, str]:
-    """기존 유저 페르소나를 수정합니다."""
+    """기존 유저 페르소나를 수정합니다.
+
+    avatar_path 가 None 이면 기존 아바타를 유지하고,
+    새 경로가 지정되면 기존 아바타 파일(USER_AVATAR_DIR 관리 하위)을 삭제합니다.
+    """
     name = (name or "").strip()
     if not name:
         return False, "❌ 페르소나 이름을 입력해주세요."
@@ -141,6 +197,10 @@ def update_user_persona(persona_id: int, name: str, description: str, avatar_pat
             dup = conn.execute("SELECT COUNT(*) FROM user_personas WHERE name = ? AND id != ?", (name, persona_id)).fetchone()[0]
             if dup:
                 return False, f"⚠️ '{name}' 이름의 페르소나가 이미 존재합니다."
+            old_avatar_path = None
+            if avatar_path is not None:
+                row = conn.execute("SELECT avatar_path FROM user_personas WHERE id = ?", (persona_id,)).fetchone()
+                old_avatar_path = row[0] if row else None
             if avatar_path is None:
                 conn.execute(
                     "UPDATE user_personas SET name = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
@@ -152,6 +212,8 @@ def update_user_persona(persona_id: int, name: str, description: str, avatar_pat
                     (name, (description or "").strip(), avatar_path, persona_id),
                 )
             conn.commit()
+        if avatar_path is not None and old_avatar_path and old_avatar_path != avatar_path:
+            _delete_avatar_file_if_managed(old_avatar_path)
         return True, f"✅ '{name}' 페르소나가 수정되었습니다."
     except sqlite3.Error as e:
         logger.error(f"유저 페르소나 수정 실패: {e}")
@@ -159,15 +221,16 @@ def update_user_persona(persona_id: int, name: str, description: str, avatar_pat
 
 
 def delete_user_persona(persona_id: int) -> Tuple[bool, str]:
-    """유저 페르소나를 삭제합니다."""
+    """유저 페르소나를 삭제합니다. 관리 폴더의 아바타 파일도 함께 삭제합니다."""
     try:
         with get_db_connection() as conn:
             _ensure_table(conn)
-            row = conn.execute("SELECT name FROM user_personas WHERE id = ?", (persona_id,)).fetchone()
+            row = conn.execute("SELECT name, avatar_path FROM user_personas WHERE id = ?", (persona_id,)).fetchone()
             if not row:
                 return False, "❌ 삭제할 페르소나를 찾을 수 없습니다."
             conn.execute("DELETE FROM user_personas WHERE id = ?", (persona_id,))
             conn.commit()
+        _delete_avatar_file_if_managed(row[1])
         logger.info(f"유저 페르소나 삭제됨: {row[0]}")
         return True, f"✅ '{row[0]}' 페르소나가 삭제되었습니다."
     except sqlite3.Error as e:

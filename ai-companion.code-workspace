@@ -27,6 +27,13 @@
 		"python-envs.defaultPackageManager": "ms-python.python:conda",
 		"extensions.experimental.deferredStartupFinishedActivation": true,
 		"terminal.integrated.bellDuration": 1000,
-		"python.languageServer": "None"
+		"python.defaultInterpreterPath": "/opt/miniconda3/envs/ai",
+		"python.languageServer": "Default",
+		"python.analysis.diagnosticMode": "workspace",
+		"python.analysis.exclude": [
+			"**/__pycache__",
+			"**/node_modules",
+			".git"
+		]
 	}
 }

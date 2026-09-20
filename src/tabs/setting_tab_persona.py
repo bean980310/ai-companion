@@ -19,6 +19,7 @@ from ..characters.user_persona import (
     delete_user_persona,
     get_persona_by_id,
     get_persona_choices,
+    save_avatar_file,
     set_active_persona,
     update_user_persona,
 )
@@ -165,6 +166,7 @@ def _sync_chat_persona_dropdown():
 
 
 def handle_add_persona(name, description, avatar, activate):
+    avatar = save_avatar_file(avatar, name)
     success, message = add_user_persona(name, description, avatar, activate=bool(activate))
     return message, _refresh_persona_dropdown(), _sync_chat_persona_dropdown()
 
@@ -175,6 +177,7 @@ def handle_update_persona(persona_value, name, description, avatar):
     persona = get_persona_by_id(persona_value)
     if not persona:
         return "❌ 페르소나를 찾을 수 없습니다.", _refresh_persona_dropdown(), gr.update()
+    avatar = save_avatar_file(avatar, name)
     success, message = update_user_persona(persona.id, name, description, avatar)
     return message, _refresh_persona_dropdown(), _sync_chat_persona_dropdown()
 

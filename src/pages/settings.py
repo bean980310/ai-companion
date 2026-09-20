@@ -11,6 +11,7 @@ from src.tabs.setting_tab_save_history import create_save_history_tab
 from src.tabs.setting_tab_load_history import create_load_history_tab
 from src.tabs.setting_tab_session_manager import create_session_management_tab
 from src.tabs.device_setting import create_device_setting_tab
+from src.tabs.setting_tab_lorebook import create_lorebook_tab
 from src.main.chatbot import chat_bot
 from src.tabs.setting_tab_info import create_custom_gpu_monitor
 
@@ -33,7 +34,7 @@ with gr.Blocks() as demo:
                 create_custom_provider_tab()
                 create_system_preset_management_tab()
                 create_persona_management_tab()
-
+                create_lorebook_tab()
                 # 프리셋 Dropdown 초기화 (Wire this event here)
                 demo.load(fn=chat_bot.initial_load_presets, inputs=[], outputs=[ui_component.text_preset_dropdown], queue=False)
 
