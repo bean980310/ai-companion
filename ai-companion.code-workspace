@@ -27,13 +27,23 @@
 		"python-envs.defaultPackageManager": "ms-python.python:conda",
 		"extensions.experimental.deferredStartupFinishedActivation": true,
 		"terminal.integrated.bellDuration": 1000,
-		"python.defaultInterpreterPath": "/opt/miniconda3/envs/ai",
+		"python.defaultInterpreterPath": "/Volumes/EXDATA/ai-companion/.venv/bin/python",
 		"python.languageServer": "Default",
 		"python.analysis.diagnosticMode": "workspace",
 		"python.analysis.exclude": [
 			"**/__pycache__",
 			"**/node_modules",
 			".git"
+		],
+		"ty.interpreter": "/Volumes/EXDATA/ai-companion/.venv/bin/python",
+		"ruff.interpreter": [
+			"/Volumes/EXDATA/ai-companion/.venv/bin/python"
+		],
+		"ruff.path": [
+			"/Volumes/EXDATA/ai-companion/.venv/bin/ruff"
+		],
+		"ty.path": [
+			"/Volumes/EXDATA/ai-companion/.venv/bin/ty"
 		]
 	}
 }
