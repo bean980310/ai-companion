@@ -48,6 +48,10 @@ with gr.Blocks() as demo:
         # Temporary session state
         app_state.is_temp_session_state = gr.State(False)
 
+        # MCP tool calling state
+        app_state.mcp_tools_enabled_state = gr.State(False)
+        app_state.mcp_selected_tools_state = gr.State([])
+
         # We also need these if they were formerly global
         # selected_language_state is GLOBAL (in app.py)
         # selected_device_state is GLOBAL (in app.py)
@@ -138,6 +142,10 @@ with gr.Blocks() as demo:
     memory_list = chat_container_obj.side_panel.memory_list
     memory_refresh_btn = chat_container_obj.side_panel.memory_refresh_btn
     memory_clear_btn = chat_container_obj.side_panel.memory_clear_btn
+
+    mcp_tools_toggle = chat_container_obj.side_panel.mcp_tools_toggle
+    mcp_tools_multiselect = chat_container_obj.side_panel.mcp_tools_multiselect
+    mcp_tools_refresh_btn = chat_container_obj.side_panel.mcp_tools_refresh_btn
 
     # Modals from chat_bot (these were in create_main_container)
     reset_modal, single_reset_content, all_reset_content, cancel_btn, confirm_btn = chat_bot.create_reset_confirm_modal()
@@ -331,6 +339,21 @@ with gr.Blocks() as demo:
     memory_refresh_btn.click(fn=chat_bot.format_memory_list, inputs=[character_dropdown], outputs=[memory_list])
     memory_clear_btn.click(fn=chat_bot.handle_memory_clear, inputs=[character_dropdown], outputs=[memory_list])
     character_dropdown.change(fn=chat_bot.format_memory_list, inputs=[character_dropdown], outputs=[memory_list])
+
+    # MCP tool calling
+    def get_mcp_tool_choices():
+        from src.mcp.agent import list_selectable_mcp_tools
+
+        return [t["value"] for t in list_selectable_mcp_tools()]
+
+    def refresh_mcp_tools():
+        choices = get_mcp_tool_choices()
+        return gr.update(choices=choices, value=choices), choices
+
+    mcp_tools_toggle.change(fn=lambda v: v if v is True else False, inputs=[mcp_tools_toggle], outputs=[app_state.mcp_tools_enabled_state])
+    mcp_tools_multiselect.change(fn=lambda tools: tools or [], inputs=[mcp_tools_multiselect], outputs=[app_state.mcp_selected_tools_state])
+    mcp_tools_refresh_btn.click(fn=refresh_mcp_tools, inputs=[], outputs=[mcp_tools_multiselect, app_state.mcp_selected_tools_state])
+    demo.load(fn=refresh_mcp_tools, inputs=[], outputs=[mcp_tools_multiselect, app_state.mcp_selected_tools_state])
 
     # Preset & Character
     character_dropdown.change(fn=chat_bot.update_system_message_and_profile, inputs=[character_dropdown, header.language_dropdown, app_state.session_id_state], outputs=[system_message_box, profile_image, preset_dropdown])

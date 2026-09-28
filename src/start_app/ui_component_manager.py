@@ -89,6 +89,11 @@ class UIComponent:
     memory_refresh_btn: Optional[gr.Button] = None
     memory_clear_btn: Optional[gr.Button] = None
 
+    mcp_tools_toggle: Optional[gr.Checkbox] = None
+    mcp_tools_accordion: Optional[gr.Accordion] = None
+    mcp_tools_multiselect: Optional[gr.Dropdown] = None
+    mcp_tools_refresh_btn: Optional[gr.Button] = None
+
     status_text: Optional[gr.Markdown] = None
     image_info: Optional[gr.Markdown] = None
     session_select_info: Optional[gr.Markdown] = None

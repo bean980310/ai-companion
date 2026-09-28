@@ -77,6 +77,11 @@ class ChatbotComponent:
     memory_refresh_btn: Optional[gr.Button] = None
     memory_clear_btn: Optional[gr.Button] = None
 
+    mcp_tools_toggle: Optional[gr.Checkbox] = None
+    mcp_tools_accordion: Optional[gr.Accordion] = None
+    mcp_tools_multiselect: Optional[gr.Dropdown] = None
+    mcp_tools_refresh_btn: Optional[gr.Button] = None
+
     @classmethod
     def create_chatbot_side_session_container(cls):
         session_buttons = []
@@ -275,6 +280,24 @@ class ChatbotComponent:
                         memory_refresh_btn = gr.Button(_("memory_refresh_button"), variant="secondary")
                         memory_clear_btn = gr.Button(_("memory_clear_button"), variant="stop")
 
+                mcp_tools_toggle = gr.Checkbox(
+                    label=_("mcp_tools_toggle_label"),
+                    value=False,
+                    info=_("mcp_tools_toggle_info"),
+                    elem_classes="mcp-tools-toggle",
+                )
+                with gr.Accordion(_("mcp_tools_manage_title"), open=False, elem_classes="accordion-container") as mcp_tools_accordion:
+                    mcp_tools_multiselect = gr.Dropdown(
+                        label=_("mcp_tools_select_label"),
+                        choices=[],
+                        value=[],
+                        multiselect=True,
+                        interactive=True,
+                        info=_("mcp_tools_select_info"),
+                        elem_classes="mcp-tools-multiselect",
+                    )
+                    mcp_tools_refresh_btn = gr.Button(_("mcp_tools_refresh_button"), variant="secondary")
+
         ui_component.profile_image = profile_image
         ui_component.character_dropdown = character_dropdown
         ui_component.user_persona_dropdown = user_persona_dropdown
@@ -295,6 +318,10 @@ class ChatbotComponent:
         ui_component.memory_list = memory_list
         ui_component.memory_refresh_btn = memory_refresh_btn
         ui_component.memory_clear_btn = memory_clear_btn
+        ui_component.mcp_tools_toggle = mcp_tools_toggle
+        ui_component.mcp_tools_accordion = mcp_tools_accordion
+        ui_component.mcp_tools_multiselect = mcp_tools_multiselect
+        ui_component.mcp_tools_refresh_btn = mcp_tools_refresh_btn
 
         return cls(
         profile_image=profile_image,
@@ -317,6 +344,10 @@ class ChatbotComponent:
         memory_list=memory_list,
         memory_refresh_btn=memory_refresh_btn,
         memory_clear_btn=memory_clear_btn,
+        mcp_tools_toggle=mcp_tools_toggle,
+        mcp_tools_accordion=mcp_tools_accordion,
+        mcp_tools_multiselect=mcp_tools_multiselect,
+        mcp_tools_refresh_btn=mcp_tools_refresh_btn,
     )
 
     @classmethod

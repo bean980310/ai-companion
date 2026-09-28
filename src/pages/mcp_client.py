@@ -2,7 +2,6 @@
 # Provides UI for managing MCP server connections and calling external tools
 
 import gradio as gr
-import asyncio
 import json
 from typing import List
 
@@ -15,25 +14,12 @@ from src.common_blocks import get_language_code
 # Import MCP client components
 from src.mcp.client.manager import get_mcp_client_manager
 from src.mcp.client.oauth import OAUTH_PRESETS
+from src.mcp.runtime import run_mcp_coro
 
 
-def run_async(coro):
-    """Helper to run async functions in sync context"""
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-    if loop.is_running():
-        # Create a new thread for the coroutine
-        import concurrent.futures
-
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(asyncio.run, coro)
-            return future.result()
-    else:
-        return loop.run_until_complete(coro)
+def run_async(coro, timeout: float = 300.0):
+    """Run MCP coroutines on the shared runtime loop so sessions persist."""
+    return run_mcp_coro(coro, timeout=timeout)
 
 
 # Initialize MCP client manager
