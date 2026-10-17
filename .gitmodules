@@ -22,3 +22,6 @@
 [submodule "packages/ai-companion-agent-connector"]
 	path = packages/ai-companion-agent-connector
 	url = https://github.com/bean980310/ai-companion-agent-connector.git
+[submodule "packages/ai-companion-gateway"]
+	path = packages/ai-companion-gateway
+	url = https://github.com/bean980310/ai-companion-gateway.git

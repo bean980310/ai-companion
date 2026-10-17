@@ -17,20 +17,48 @@ from src.common.cache import models_cache
 
 from ai_companion_llm_backend import TransformersVisionModelHandler, TransformersUnifiedModelHandler, GGUFCausalModelHandler, MlxVisionModelHandler, MlxUnifiedModelHandler
 
-from ai_companion_llm_backend.provider import AnthropicClientWrapper, GoogleAIClientWrapper, OpenAIClientWrapper, PerplexityClientWrapper, XAIClientWrapper, OpenRouterClientWrapper, HuggingfaceInferenceClientWrapper, LMStudioIntegrator, OllamaIntegrator
+import ai_companion_gateway as gateway
+
 from src.common.utils import build_model_cache_key
-from src.common.custom_providers import CUSTOM_PREFIX, get_custom_provider
+from src.common.custom_providers import CUSTOM_PREFIX, get_custom_provider, get_custom_provider_names
 from src.models.custom_provider_handler import CustomOpenAIClientWrapper
 
 from ai_companion_image_backend.provider.comfyui import ComfyUIProvider, Txt2ImgPipeline, Img2ImgPipeline, InpaintPipeline
 
 from ai_companion_core import logger
 
-from ai_companion_core.environ_manager import load_env_variables
-
 from ..common.utils import get_all_local_models
 
 LOCAL_MODELS_ROOT = "./models"
+
+# 로컬 추론(transformers/gguf/mlx 핸들러)을 사용하는 프로바이더.
+# 그 외 프로바이더는 전부 ai-companion-gateway의 클라이언트 팩토리로 위임된다.
+LOCAL_MODEL_PROVIDERS = ("self-provided",)
+
+
+def _register_custom_gateway_providers():
+    """~/.ai-companion/custom_providers.yaml 의 프로필을 gateway에 등록한다.
+
+    이미 등록된 프로필은 건너뛴다. 프로필을 추가/수정하면
+    gateway.unregister_client_builder() 후 다시 호출해 갱신할 수 있다.
+    """
+    for profile_name in get_custom_provider_names():
+        provider_id = f"{CUSTOM_PREFIX}{profile_name}"
+        if provider_id in gateway.supported_providers():
+            continue
+        profile = get_custom_provider(profile_name)
+        if not profile:
+            continue
+
+        def _build(selected_model, api_key, _profile=profile, **kwargs):
+            return CustomOpenAIClientWrapper(
+                selected_model,
+                api_key=api_key or _profile.get("api_key") or "not-needed",
+                base_url=_profile.get("base_url"),
+                **kwargs,
+            )
+
+        gateway.register_client_builder(provider_id, _build, requires_api_key=False)
 
 
 def get_default_device():
@@ -55,7 +83,7 @@ logger.info(f"Default device set to: {default_device}")
 
 def load_model(
     selected_model: str,
-    provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"],
+    provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "vllm", "oobabooga", "self-provided"],
     model_type: str | None = None,
     selected_lora: str | None = None,
     quantization_bit: str = "Q8_0",
@@ -69,184 +97,104 @@ def load_model(
     **kwargs,
 ):
     """
-    모델 로드 함수. 특정 모델에 대한 로드 로직을 외부 핸들러로 분리.
+    모델 로드 함수.
+
+    - API/서버 프로바이더: ai-companion-gateway의 클라이언트 팩토리로 위임.
+      (프로바이더별 if/elif 분기 대신 gateway.create_client()가 단일 진입점)
+    - self-provided(로컬 추론): transformers / gguf / mlx 핸들러를 직접 생성.
     """
     model_id = selected_model
     lora_model_id = selected_lora if selected_lora else None
-    vision_model = True if image_input else False
 
-    # Pass the device to the handler
-    if provider == "self-provided" and model_type != "transformers" and model_type != "gguf" and model_type != "mlx":
+    # 커스텀 OpenAI 호환 프로필(custom:<name>)은 gateway에 빌더로 등록해 사용한다.
+    if provider.startswith(CUSTOM_PREFIX):
+        _register_custom_gateway_providers()
+        profile_name = provider[len(CUSTOM_PREFIX):]
+        if not get_custom_provider(profile_name):
+            logger.error(f"사용자 정의 provider를 찾을 수 없습니다: {profile_name}")
+            return "사용자 정의 provider를 찾을 수 없습니다."
+
+    if provider == "oobabooga":
+        # API 모델은 별도의 로드가 필요 없으므로 핸들러 생성 안함
+        return None
+
+    if provider not in LOCAL_MODEL_PROVIDERS:
+        # gateway가 처리하는 프로바이더 (openai/anthropic/ollama/lmstudio/vllm/custom:* 등)
+        try:
+            return gateway.create_client(selected_model, provider, api_key=api_key, **kwargs)
+        except ValueError as e:
+            logger.error(str(e))
+            return str(e)
+
+    # 이하: self-provided 로컬 추론 핸들러
+    if model_type not in ("transformers", "gguf", "mlx"):
         logger.error(f"지원되지 않는 모델 유형: {model_type}")
         return None
 
-    if provider not in ["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"] and not provider.startswith(CUSTOM_PREFIX):
-        logger.error(f"지원되지 않는 공급자: {provider}")
-        return None
+    vision_model = True if image_input else False
 
-    # 각자 공급자에 따라 클라이언트 생성.
-    if provider.startswith(CUSTOM_PREFIX):
-        profile_name = provider[len(CUSTOM_PREFIX):]
-        profile = get_custom_provider(profile_name)
-        if not profile:
-            logger.error(f"사용자 정의 provider를 찾을 수 없습니다: {profile_name}")
-            return "사용자 정의 provider를 찾을 수 없습니다."
-        wrapper = CustomOpenAIClientWrapper(
-            selected_model,
-            api_key=profile.get("api_key") or "not-needed",
-            base_url=profile.get("base_url"),
-        )
-        return wrapper
-
-    if provider == "openai":
-        if not api_key:
-            api_key = load_env_variables("OPENAI_API_KEY")
-
-        if not api_key:
-            logger.error("OpenAI API Key가 missing.")
-            return "OpenAI API Key가 필요합니다."
-
-        wrapper = OpenAIClientWrapper(selected_model, api_key=api_key)
-        return wrapper
-
-    elif provider == "anthropic":
-        if not api_key:
-            api_key = load_env_variables("ANTHROPIC_API_KEY")
-
-        if not api_key:
-            logger.error("Anthropic API Key가 missing.")
-            return "Anthropic API Key가 필요합니다."
-
-        wrapper = AnthropicClientWrapper(selected_model, api_key=api_key)
-        return wrapper
-
-    elif provider == "google-genai":
-        if not api_key:
-            api_key = load_env_variables("GEMINI_API_KEY")
-
-        if not api_key:
-            logger.error("Google AI API Key가 missing.")
-            return "Google AI API Key가 필요합니다."
-
-        wrapper = GoogleAIClientWrapper(selected_model, api_key=api_key)
-        return wrapper
-
-    elif provider == "perplexity":
-        if not api_key:
-            api_key = load_env_variables("PERPLEXITY_API_KEY")
-
-        if not api_key:
-            logger.error("Perplexity API Key가 missing.")
-            return "Perplexity API Key가 필요합니다."
-
-        wrapper = PerplexityClientWrapper(selected_model, api_key=api_key)
-        return wrapper
-
-    elif provider == "xai":
-        if not api_key:
-            api_key = load_env_variables("XAI_API_KEY")
-
-        if not api_key:
-            logger.error("XAI API Key가 missing.")
-            return "XAI API Key가 필요합니다."
-
-        wrapper = XAIClientWrapper(selected_model, api_key=api_key)
-        return wrapper
-
-    elif provider == "openrouter":
-        if not api_key:
-            api_key = load_env_variables("OPENROUTER_API_KEY")
-
-        if not api_key:
-            logger.error("OpenRouter API Key가 missing.")
-            return "OpenRouter API Key가 필요합니다."
-
-        wrapper = OpenRouterClientWrapper(selected_model, api_key=api_key)
-        return wrapper
-
-    elif provider == "hf-inference":
-        if not api_key:
-            api_key = load_env_variables("HF_TOKEN")
-
-        if not api_key:
-            logger.error("Huggingface Token Key가 missing.")
-            return "Huggingface Token Key가 필요합니다."
-
-        wrapper = HuggingfaceInferenceClientWrapper(selected_model, api_key=api_key)
-        return wrapper
-    elif provider == "ollama":
-        # API 모델은 별도의 로드가 필요 없으므로 핸들러 생성 안함
-        wrapper = OllamaIntegrator(selected_model)
-        return wrapper
-    elif provider == "lmstudio":
-        # API 모델은 별도의 로드가 필요 없으므로 핸들러 생성 안함
-        wrapper = LMStudioIntegrator(selected_model)
-        return wrapper
-    elif provider == "oobabooga":
-        # API 모델은 별도의 로드가 필요 없으므로 핸들러 생성 안함
-        return None
+    # Pass the device to the handler
+    # 자체 공급은 클라이언트 대신 핸들러를 생성.
+    handler = None
+    if model_type == "gguf":
+        # GGUF 모델 로딩 로직
+        # handler = GGUFModelHandler(
+        #     model_id=model_id,
+        #     local_model_path=local_model_path,
+        #     model_type=model_type
+        # )
+        handler = GGUFCausalModelHandler(model_id=model_id, lora_model_id=lora_model_id, model_type=model_type, device=device, **kwargs)
+        cache_key = build_model_cache_key(model_id, model_type, provider)
+        models_cache[cache_key] = handler
+        return handler
+    elif model_type == "mlx":
+        handler = MlxUnifiedModelHandler(model_id=model_id, lora_model_id=lora_model_id, model_type=model_type, image_input=image_input, audio_input=audio_input, video_input=video_input, **kwargs)
+        models_cache[build_model_cache_key(model_id, model_type, provider, lora_model_id)] = handler
+        return handler
+        # if vision_model:
+        #     handler = MlxVisionModelHandler(
+        #         model_id=model_id,
+        #         lora_model_id=lora_model_id,
+        #         model_type=model_type,
+        #         image_input=image_input,
+        #         **kwargs
+        #     )
+        #     models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+        #     return handler
+        # else:
+        #     handler = MlxCausalModelHandler(
+        #         model_id=model_id,
+        #         lora_model_id=lora_model_id,
+        #         model_type=model_type,
+        #         **kwargs
+        #     )
+        #     models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+        #     return handler
     else:
-        # 자체 공급은 클라이언트 대신 핸들러를 생성.
-        handler = None
-        if model_type == "gguf":
-            # GGUF 모델 로딩 로직
-            # handler = GGUFModelHandler(
-            #     model_id=model_id,
-            #     local_model_path=local_model_path,
-            #     model_type=model_type
-            # )
-            handler = GGUFCausalModelHandler(model_id=model_id, lora_model_id=lora_model_id, model_type=model_type, device=device, **kwargs)
-            cache_key = build_model_cache_key(model_id, model_type, provider)
-            models_cache[cache_key] = handler
-            return handler
-        elif model_type == "mlx":
-            handler = MlxUnifiedModelHandler(model_id=model_id, lora_model_id=lora_model_id, model_type=model_type, image_input=image_input, audio_input=audio_input, video_input=video_input, **kwargs)
-            models_cache[build_model_cache_key(model_id, model_type, provider, lora_model_id)] = handler
-            return handler
-            # if vision_model:
-            #     handler = MlxVisionModelHandler(
-            #         model_id=model_id,
-            #         lora_model_id=lora_model_id,
-            #         model_type=model_type,
-            #         image_input=image_input,
-            #         **kwargs
-            #     )
-            #     models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
-            #     return handler
-            # else:
-            #     handler = MlxCausalModelHandler(
-            #         model_id=model_id,
-            #         lora_model_id=lora_model_id,
-            #         model_type=model_type,
-            #         **kwargs
-            #     )
-            #     models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
-            #     return handler
-        else:
-            handler = TransformersUnifiedModelHandler(model_id=model_id, lora_model_id=lora_model_id, model_type=model_type, device=device, image_input=image_input, audio_input=audio_input, video_input=video_input, **kwargs)
-            models_cache[build_model_cache_key(model_id, model_type, provider, lora_model_id)] = handler
-            return handler
-            # if vision_model:
-            #     handler = TransformersVisionModelHandler(
-            #         model_id=model_id   ,
-            #         lora_model_id=lora_model_id,
-            #         model_type=model_type,
-            #         device=device,
-            #         image_input=image_input,
-            #         **kwargs
-            #     )
-            #     models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
-            #     return handler
-            # else:
-            #     handler = TransformersCausalModelHandler(
-            #         model_id=model_id,
-            #         lora_model_id=lora_model_id,
-            #         model_type=model_type,
-            #         device=device,
-            #         **kwargs
-            #     )
-            #     models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
-            #     return handler
+        handler = TransformersUnifiedModelHandler(model_id=model_id, lora_model_id=lora_model_id, model_type=model_type, device=device, image_input=image_input, audio_input=audio_input, video_input=video_input, **kwargs)
+        models_cache[build_model_cache_key(model_id, model_type, provider, lora_model_id)] = handler
+        return handler
+        # if vision_model:
+        #     handler = TransformersVisionModelHandler(
+        #         model_id=model_id   ,
+        #         lora_model_id=lora_model_id,
+        #         model_type=model_type,
+        #         device=device,
+        #         image_input=image_input,
+        #         **kwargs
+        #     )
+        #     models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+        #     return handler
+        # else:
+        #     handler = TransformersCausalModelHandler(
+        #         model_id=model_id,
+        #         lora_model_id=lora_model_id,
+        #         model_type=model_type,
+        #         device=device,
+        #         **kwargs
+        #     )
+        #     models_cache[build_model_cache_key(model_id, model_type, lora_model_id)] = handler
+        #     return handler
 
 
 def generate_answer(

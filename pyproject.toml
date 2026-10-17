@@ -8,6 +8,7 @@ dependencies = ["ai-companion-core>=0.1.0,<0.2", "torch>=2.11.0,<3", "torchvisio
 
 [project.optional-dependencies]
 llm = ["ai-companion-llm-backend"]
+gateway = ["ai-companion-gateway"]
 image = ["ai-companion-image-backend"]
 audio = ["ai-companion-audio-backend"]
 langchain = ["ai-companion-langchain-integrator"]
@@ -31,6 +32,7 @@ python = "3.12.*"
 [tool.uv.sources]
 ai-companion-core = {workspace = true}
 ai-companion-llm-backend = {workspace = true}
+ai-companion-gateway = {workspace = true}
 ai-companion-image-backend = {workspace = true}
 ai-companion-audio-backend = {workspace = true}
 ai-companion-langchain-integrator = {workspace = true}
@@ -39,6 +41,7 @@ ai-companion-langchain-integrator = {workspace = true}
 members = [
     "packages/ai-companion-core",
     "packages/ai-companion-llm-backend",
+    "packages/ai-companion-gateway",
     "packages/ai-companion-image-backend",
     "packages/ai-companion-audio-backend",
     "packages/ai-companion-langchain-integrator",

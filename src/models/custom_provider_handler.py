@@ -11,7 +11,7 @@ from typing import Any, Optional
 from openai import OpenAI
 
 from ai_companion_core import logger
-from ai_companion_llm_backend.base_handlers import BaseAPIClientWrapper
+from ai_companion_gateway.base_handlers import BaseAPIClientWrapper
 
 
 class CustomOpenAIClientWrapper(BaseAPIClientWrapper):
