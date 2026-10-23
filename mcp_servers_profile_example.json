@@ -10,14 +10,14 @@
         "github": {
             "name": "GitHub",
             "transport": "streamable-http",
-            "description": "GitHub's official MCP Server",
+            "description": "GitHub's official MCP Server - Access GitHub repositories, issues, and pull requests",
             "oauth_enabled": true,
             "url": "https://api.githubcopilot.com/mcp/"
         },
         "notion": {
             "name": "Notion",
             "transport": "streamable-http",
-            "description": "Official Notion MCP Server",
+            "description": "Official Notion MCP Server - View, search, create, and update Notion pages and databases.",
             "oauth_enabled": true,
             "url": "https://mcp.notion.com/mcp"
         },
@@ -41,6 +41,21 @@
             "description": "Access to Google Calendar MCP Server",
             "oauth_enabled": true,
             "url": "https://calendarmcp.googleapis.com/mcp/v1"
+        },
+        "box": {
+            "name": "Box",
+            "transport": "streamable-http",
+            "description": "Securely connect AI agents to your enterprise content in Box",
+            "oauth_enabled": true,
+            "url": "https://mcp.box.com/"
+        },
+        "canva": {
+            "name": "Canva",
+            "transport": "streamable-http",
+            "description": "Canva MCP server for AI agents and assistants.",
+            "oauth_enabled": true,
+            "url": "https://mcp.canva.com/mcp"
         }
+        
     }
 }
