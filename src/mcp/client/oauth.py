@@ -307,22 +307,30 @@ def _build_callback_handler(redirect_port: int):
             code = request.query.get("code")
             state = request.query.get("state")
             error = request.query.get("error")
+            # RFC 9207 authorization-response issuer. Must be forwarded verbatim: the MCP SDK
+            # rejects the flow when the server advertises
+            # authorization_response_iss_parameter_supported but the callback drops `iss`.
+            iss = request.query.get("iss")
 
             if error:
-                auth_code_future.set_exception(RuntimeError(f"OAuth error: {error} - {request.query.get('error_description', '')}"))
+                if not auth_code_future.done():
+                    auth_code_future.set_exception(RuntimeError(f"OAuth error: {error} - {request.query.get('error_description', '')}"))
                 return web.Response(
                     text=f"<html><body><h1>Authentication Failed</h1><p>Error: {error}</p><p>You can close this window.</p></body></html>",
                     content_type="text/html",
                 )
 
             if not code:
-                auth_code_future.set_exception(RuntimeError("No authorization code received"))
+                # Ignore stray requests (favicon, link prefetch) instead of failing the flow.
+                logger.debug(f"Ignoring callback without authorization code: {request.rel_url}")
                 return web.Response(
                     text="<html><body><h1>Error</h1><p>No authorization code received.</p></body></html>",
                     content_type="text/html",
+                    status=400,
                 )
 
-            auth_code_future.set_result(AuthorizationCodeResult(code=code, state=state))
+            if not auth_code_future.done():
+                auth_code_future.set_result(AuthorizationCodeResult(code=code, state=state, iss=iss))
             return web.Response(
                 text="<html><body><h1>Authentication Successful!</h1><p>You can close this window and return to the application.</p></body></html>",
                 content_type="text/html",
