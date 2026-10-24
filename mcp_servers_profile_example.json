@@ -55,6 +55,20 @@
             "description": "Canva MCP server for AI agents and assistants.",
             "oauth_enabled": true,
             "url": "https://mcp.canva.com/mcp"
+        },
+        "figma": {
+            "name": "Figma",
+            "transport": "streamable-http",
+            "description": "The Figma MCP server brings Figma design context directly into your AI workflow.",
+            "oauth_enabled": true,
+            "url": "https://mcp.figma.com/mcp"
+        },
+        "asana": {
+            "name": "Asana",
+            "transport": "streamable-http",
+            "description": "Accessible via app integration, which allows AI assistants and other applications to access the Asana Work Graph from beyond the Asana platform.",
+            "oauth_enabled": true,
+            "url": "https://mcp.asana.com/v2/mcp"
         }
         
     }

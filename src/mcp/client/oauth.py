@@ -90,6 +90,24 @@ OAUTH_PRESETS = {
         "default_scopes": "root_readonly",
         "issuer": "https://api.box.com",
     },
+    "figma": {
+        "authorization_endpoint": "https://www.figma.com/oauth",
+        "token_endpoint": "https://api.figma.com/v1/oauth/token",
+        "default_scopes": "file_content:read",
+        "issuer": "https://www.figma.com",
+    },
+    "canva": {
+        "authorization_endpoint": "https://www.canva.com/api/oauth/authorize",
+        "token_endpoint": "https://api.canva.com/rest/v1/oauth/token",
+        "default_scopes": "design:content:read design:meta:read",
+        "issuer": "https://www.canva.com",
+    },
+    "asana": {
+        "authorization_endpoint": "https://app.asana.com/-/oauth_authorize",
+        "token_endpoint": "https://app.asana.com/-/oauth_token",
+        "default_scopes": "default",
+        "issuer": "https://app.asana.com",
+    },
 }
 
 
