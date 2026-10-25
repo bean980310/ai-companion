@@ -20,8 +20,8 @@ from ai_companion_llm_backend import TransformersVisionModelHandler, Transformer
 import ai_companion_gateway as gateway
 
 from src.common.utils import build_model_cache_key
-from src.common.custom_providers import CUSTOM_PREFIX, get_custom_provider, get_custom_provider_names
-from src.models.custom_provider_handler import CustomOpenAIClientWrapper
+from src.common.custom_providers import CUSTOM_PREFIX, get_custom_provider
+from src.models.gateway_providers import register_custom_gateway_providers
 
 from ai_companion_image_backend.provider.comfyui import ComfyUIProvider, Txt2ImgPipeline, Img2ImgPipeline, InpaintPipeline
 
@@ -34,31 +34,6 @@ LOCAL_MODELS_ROOT = "./models"
 # 로컬 추론(transformers/gguf/mlx 핸들러)을 사용하는 프로바이더.
 # 그 외 프로바이더는 전부 ai-companion-gateway의 클라이언트 팩토리로 위임된다.
 LOCAL_MODEL_PROVIDERS = ("self-provided",)
-
-
-def _register_custom_gateway_providers():
-    """~/.ai-companion/custom_providers.yaml 의 프로필을 gateway에 등록한다.
-
-    이미 등록된 프로필은 건너뛴다. 프로필을 추가/수정하면
-    gateway.unregister_client_builder() 후 다시 호출해 갱신할 수 있다.
-    """
-    for profile_name in get_custom_provider_names():
-        provider_id = f"{CUSTOM_PREFIX}{profile_name}"
-        if provider_id in gateway.supported_providers():
-            continue
-        profile = get_custom_provider(profile_name)
-        if not profile:
-            continue
-
-        def _build(selected_model, api_key, _profile=profile, **kwargs):
-            return CustomOpenAIClientWrapper(
-                selected_model,
-                api_key=api_key or _profile.get("api_key") or "not-needed",
-                base_url=_profile.get("base_url"),
-                **kwargs,
-            )
-
-        gateway.register_client_builder(provider_id, _build, requires_api_key=False)
 
 
 def get_default_device():
@@ -108,7 +83,7 @@ def load_model(
 
     # 커스텀 OpenAI 호환 프로필(custom:<name>)은 gateway에 빌더로 등록해 사용한다.
     if provider.startswith(CUSTOM_PREFIX):
-        _register_custom_gateway_providers()
+        register_custom_gateway_providers()
         profile_name = provider[len(CUSTOM_PREFIX):]
         if not get_custom_provider(profile_name):
             logger.error(f"사용자 정의 provider를 찾을 수 없습니다: {profile_name}")

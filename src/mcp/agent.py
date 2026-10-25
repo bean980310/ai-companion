@@ -1,34 +1,25 @@
 # MCP Tool-Calling Agent
-# Bridges MCP client tools into the ai-companion-llm-backend tool-calling loop.
-# The heavy lifting (schema conversion, OpenAI-compatible tool loop) lives in
-# the backend; this module only resolves clients and adapts MCP tool results.
+# Bridges MCP client tools into the ai-companion-gateway tool-calling loop.
+# Provider endpoint knowledge (base_url / env keys) lives in the gateway; this
+# module only resolves clients and adapts MCP tool results.
 
 from typing import Any, Dict, List, Optional
 
-from ai_companion_core import logger
-from ai_companion_core.environ_manager import load_env_variables
-
-from ai_companion_llm_backend import (
+from ai_companion_gateway import (
     ToolResult,
     build_tool_specs_from_mcp,
-    provider_supports_tools,
+    resolve_openai_endpoint,
     run_tool_loop,
     run_tool_loop_responses,
+    supports_openai_tools,
 )
+
+from src.common.custom_providers import CUSTOM_PREFIX
+from src.models.gateway_providers import register_custom_gateway_providers
 
 from .client.manager import MCPClientManager, get_mcp_client_manager
 from .client.models import MCPToolResult
 from .runtime import run_mcp_coro
-
-# Providers that expose an OpenAI-compatible chat.completions tool-calling API.
-_OPENAI_COMPATIBLE_PROVIDERS: Dict[str, Dict[str, Any]] = {
-    "openai": {"base_url": None, "env": "OPENAI_API_KEY"},
-    "xai": {"base_url": "https://api.x.ai/v1", "env": "XAI_API_KEY"},
-    "openrouter": {"base_url": "https://openrouter.ai/api/v1", "env": "OPENROUTER_API_KEY"},
-    "mistralai": {"base_url": "https://api.mistral.ai/v1", "env": "MISTRAL_API_KEY"},
-    "lmstudio": {"base_url": "http://localhost:1234/v1", "env": "LM_API_KEY", "default_key": "not-needed"},
-    "vllm-api": {"base_url": "http://localhost:8000/v1", "env": "VLLM_API_KEY", "default_key": "not-needed"},
-}
 
 MAX_TOOL_ITERATIONS = 6
 
@@ -39,26 +30,17 @@ _TOOL_USAGE_HINT = (
 )
 
 
-def _normalize_provider(provider: str) -> str:
-    """Map the app's provider ids onto backend provider ids."""
-    if provider == "vllm":
-        return "vllm-api"
-    return provider
-
-
 def supports_mcp_tools(provider: str) -> bool:
     """Whether the given provider can drive MCP tool calling.
 
-    True when either the app's OpenAI-compatible client map handles it or the
-    backend advertises native tool support.
+    True for ``custom:*`` profiles and providers the gateway registers as
+    OpenAI-compatible endpoints.
     """
     if not provider:
         return False
-    if provider.startswith("custom:"):
+    if provider.startswith(CUSTOM_PREFIX):
         return True
-    if provider in _OPENAI_COMPATIBLE_PROVIDERS:
-        return True
-    return provider_supports_tools(_normalize_provider(provider))
+    return supports_openai_tools(provider)
 
 
 def _content_to_openai(content: Any) -> Any:
@@ -110,33 +92,15 @@ def _mcp_result_to_tool_result(result: MCPToolResult) -> ToolResult:
 
 
 def _resolve_client(provider: str, api_key: Optional[str]):
+    """Build an OpenAI-compatible client using gateway endpoint metadata."""
     import openai
 
-    base_url: Optional[str] = None
-    key = api_key
+    if provider.startswith(CUSTOM_PREFIX):
+        # Make sure the profile from custom_providers.yaml is registered.
+        register_custom_gateway_providers()
 
-    if provider.startswith("custom:"):
-        from src.common.custom_providers import get_custom_provider
-
-        profile = get_custom_provider(provider[len("custom:") :])
-        if not profile:
-            raise ValueError(f"Unknown custom provider: {provider}")
-        base_url = profile.get("base_url")
-        key = profile.get("api_key") or key
-    else:
-        spec = _OPENAI_COMPATIBLE_PROVIDERS.get(provider)
-        if spec is None:
-            raise ValueError(f"Provider '{provider}' does not support MCP tool calling")
-        base_url = spec.get("base_url")
-        if not key:
-            key = load_env_variables(spec["env"])
-        if not key:
-            key = spec.get("default_key")
-
-    if not key and provider not in ("lmstudio", "vllm-api"):
-        raise ValueError(f"API key is required for provider '{provider}'")
-
-    return openai.OpenAI(api_key=key or "not-needed", base_url=base_url)
+    base_url, key = resolve_openai_endpoint(provider, api_key)
+    return openai.OpenAI(api_key=key, base_url=base_url)
 
 
 def _make_executor(manager: MCPClientManager):
@@ -167,7 +131,7 @@ def run_tool_agent(
     manager: Optional[MCPClientManager] = None,
 ) -> str:
     """
-    Run the backend tool-calling loop using MCP tools.
+    Run the gateway tool-calling loop using MCP tools.
 
     Args:
         history: Conversation history in the app's internal message format.
