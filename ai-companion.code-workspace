@@ -20,6 +20,9 @@
 		},
 		{
 			"path": "packages/ai-companion-agent-connector"
+		},
+		{
+			"path": "packages/ai-companion-gateway"
 		}
 	],
 	"settings": {
