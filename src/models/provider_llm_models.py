@@ -795,6 +795,11 @@ def initialize_llm_provider(provider: str) -> None:
     if provider in _initialized_llm_providers:
         return
 
+    # "All"은 gateway가 전체 provider 목록을 조회하므로 개별 초기화가 필요 없다.
+    if provider == "All":
+        _initialized_llm_providers.add(provider)
+        return
+
     if provider in _STATIC_LLM_PROVIDERS:
         _initialized_llm_providers.add(provider)
         return

@@ -442,8 +442,16 @@ def create_main_container(demo: gr.Blocks):
             text_model_type_dropdown.change,
         ],
         fn=chat_bot.update_model_list,
-        inputs=[text_model_provider_dropdown, text_model_type_dropdown],
+        inputs=[text_model_provider_dropdown, text_model_type_dropdown, text_model_dropdown],
         outputs=[text_model_type_dropdown, text_model_dropdown],
+    )
+
+    # "All" 목록에서 모델을 고르면 해당 모델의 provider로 자동 전환한다.
+    gr.on(
+        triggers=[text_model_dropdown.input],
+        fn=chat_bot.sync_provider_from_all,
+        inputs=[text_model_provider_dropdown, text_model_dropdown],
+        outputs=[text_model_provider_dropdown],
     )
 
     gr.on(

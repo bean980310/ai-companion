@@ -13,8 +13,13 @@ import gradio as gr
 
 from ai_companion_core import logger
 
-from src.models import IS_MULTIMODAL_API, IS_MULTIMODAL_LOCAL, IS_OMNI_API
+from src.models import ALL_PROVIDERS, IS_MULTIMODAL_API, IS_MULTIMODAL_LOCAL, IS_OMNI_API
 from src.models.models import get_all_local_models, generate_answer, generate_chat_title
+from src.models.gateway_model_catalog import (
+    list_all_models as list_all_gateway_models,
+    resolve_effective_provider,
+    resolve_model_provider,
+)
 from src.common.database import save_chat_history_db, delete_session_history, delete_all_sessions, get_preset_choices, load_system_presets, get_existing_sessions, get_existing_sessions_with_names, update_session_name, load_chat_from_db, update_system_message_in_db, update_last_character_in_db
 from src.common.memory import add_memory, build_memory_context, is_memory_enabled, set_memory_enabled, get_all_memories, clear_character_memories
 from src.common.translations import translation_manager, _
@@ -66,6 +71,14 @@ from src.common.character_info import characters
 # logger.setLevel(logging.INFO)
 
 DEFAULT_PROFILE_IMAGE = None
+
+
+def _pick_model_value(models: list[str], current_model: str | None = None) -> str | None:
+    """새 모델 목록에 현재 선택 모델이 있으면 유지하고, 없으면 첫 항목을 고른다."""
+    if current_model and current_model in models:
+        return current_model
+    return models[0] if models else None
+
 
 # os_name, arch = detect_platform()
 
@@ -245,6 +258,9 @@ class Chatbot:
         enable_thinking: bool,
         language: str,
     ):
+        # provider가 "All"이면 선택된 모델의 실제 provider로 해석한다.
+        provider = resolve_effective_provider(provider, str(selected_model))
+
         image = None
         if isinstance(user_input, dict):
             files = user_input.get("files", [])
@@ -386,6 +402,9 @@ class Chatbot:
         """
         gr.ChatInterface를 위한 래퍼 함수
         """
+        # provider가 "All"이면 선택된 모델의 실제 provider로 해석한다.
+        provider = resolve_effective_provider(provider, str(selected_model))
+
         # 1. 사용자 메시지 처리
         # history는 gr.ChatInterface에서 관리하는 list[dict] (type="messages"일 경우)
         # 하지만 우리는 내부 DB와 app_state.history_state를 동기화해야 함.
@@ -1211,11 +1230,16 @@ class Chatbot:
 
         return gr.update(value=enable_thinking, visible=thinking_visible, interactive=thinking_visible)
 
-    def update_model_list(self, provider: str, selected_type: str | None = None):
+    def update_model_list(self, provider: str, selected_type: str | None = None, current_model: str | None = None):
         from src.models.provider_llm_models import initialize_llm_provider
         import src.models.provider_llm_models as plm
         from src.common.custom_providers import CUSTOM_PREFIX, get_custom_provider
         from src.models.custom_provider_handler import get_custom_provider_models
+
+        # "All": gateway에 등록된 모든 provider의 모델을 합쳐서 보여준다.
+        if provider == ALL_PROVIDERS:
+            all_models = list_all_gateway_models()
+            return gr.update(visible="hidden"), gr.update(choices=all_models, value=_pick_model_value(all_models, current_model))
 
         # On-demand: 아직 초기화되지 않은 provider라면 지금 로딩
         initialize_llm_provider(provider)
@@ -1232,7 +1256,7 @@ class Chatbot:
                 return gr.update(visible="hidden"), gr.update(choices=[], value=None)
             updated_list = get_custom_provider_models(profile.get("base_url", ""), profile.get("api_key", ""))
             updated_list = sorted(list(dict.fromkeys(updated_list)))
-            return gr.update(visible="hidden"), gr.update(choices=updated_list, value=updated_list[0] if updated_list else None)
+            return gr.update(visible="hidden"), gr.update(choices=updated_list, value=_pick_model_value(updated_list, current_model))
 
         if provider != "self-provided":
             if provider == "openai":
@@ -1265,7 +1289,7 @@ class Chatbot:
             #     updated_list = oobabooga_llm_models
 
             updated_list = sorted(list(dict.fromkeys(updated_list)))
-            return gr.update(visible="hidden"), gr.update(choices=updated_list, value=updated_list[0] if updated_list else None)
+            return gr.update(visible="hidden"), gr.update(choices=updated_list, value=_pick_model_value(updated_list, current_model))
 
         else:  # elif provider == "self-provided"
             # "전체 목록"이면 => API 모델 + 모든 로컬 모델 + "사용자 지정 모델 경로 변경"
@@ -1273,7 +1297,7 @@ class Chatbot:
                 all_models = self.update_allowed_models()
                 all_models = sorted(list(dict.fromkeys(all_models)))
                 # 중복 제거 후 정렬
-                return gr.update(visible=True), gr.update(choices=all_models, value=all_models[0] if all_models else None)
+                return gr.update(visible=True), gr.update(choices=all_models, value=_pick_model_value(all_models, current_model))
 
             # 개별 로컬 모델 유형 선택
             elif selected_type == "transformers":
@@ -1288,7 +1312,19 @@ class Chatbot:
                 updated_list = transformers_local
 
             updated_list = sorted(list(dict.fromkeys(updated_list)))
-            return gr.update(visible=True), gr.update(choices=updated_list, value=updated_list[0] if updated_list else None)
+            return gr.update(visible=True), gr.update(choices=updated_list, value=_pick_model_value(updated_list, current_model))
+
+    @staticmethod
+    def sync_provider_from_all(provider: str, selected_model: str):
+        """"All"에서 모델을 고르면 해당 모델의 provider로 드롭다운을 전환한다."""
+        if provider != ALL_PROVIDERS:
+            return gr.update()
+
+        resolved = resolve_model_provider(selected_model)
+        if not resolved:
+            logger.warning(f"'All' 모델 목록에서 provider를 찾지 못했습니다: {selected_model}")
+            return gr.update()
+        return gr.update(value=resolved)
 
     def update_allowed_models(self):
         if self.os_name == "Darwin":

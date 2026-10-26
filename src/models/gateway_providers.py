@@ -32,6 +32,22 @@ def _build_custom_client(profile: Dict[str, Any]):
     return _build
 
 
+def _build_custom_lister(profile: Dict[str, Any]):
+    """프로필 하나에 대한 gateway 모델 목록 lister를 만든다."""
+
+    def _list(api_key: str | None = None, base_url: str | None = None):
+        from openai import OpenAI
+
+        client = OpenAI(
+            api_key=api_key or profile.get("api_key") or "not-needed",
+            base_url=base_url or profile.get("base_url"),
+            timeout=15.0,
+        )
+        return [m.id for m in client.models.list().data]
+
+    return _list
+
+
 def register_custom_gateway_providers(*, refresh: bool = False) -> list[str]:
     """yaml 프로필을 gateway에 등록하고 등록된 provider id 목록을 반환한다.
 
@@ -52,11 +68,15 @@ def register_custom_gateway_providers(*, refresh: bool = False) -> list[str]:
     for provider_id in gateway.list_openai_endpoints():
         if provider_id.startswith(CUSTOM_PREFIX) and provider_id not in profiles:
             gateway.unregister_openai_endpoint(provider_id)
+    for provider_id in gateway.list_model_providers():
+        if provider_id.startswith(CUSTOM_PREFIX) and provider_id not in profiles:
+            gateway.unregister_model_lister(provider_id)
 
     for provider_id, profile in profiles.items():
         if refresh:
             gateway.unregister_client_builder(provider_id)
             gateway.unregister_openai_endpoint(provider_id)
+            gateway.unregister_model_lister(provider_id)
 
         if provider_id not in gateway.supported_providers():
             gateway.register_client_builder(provider_id, _build_custom_client(profile), requires_api_key=False)
@@ -69,6 +89,9 @@ def register_custom_gateway_providers(*, refresh: bool = False) -> list[str]:
                 requires_api_key=False,
                 default_key=profile.get("api_key") or "not-needed",
             )
+
+        if not gateway.supports_model_listing(provider_id):
+            gateway.register_model_lister(provider_id, _build_custom_lister(profile))
 
     return list(profiles)
 

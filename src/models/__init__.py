@@ -83,8 +83,10 @@ PROVIDER_LIST = [
 ]
 
 # 사용자 정의 provider를 포함한 전체 LLM provider 선택지
+ALL_PROVIDERS = "All"
+
 def get_llm_provider_list() -> List[str]:
-    return PROVIDER_LIST + get_custom_provider_choices()
+    return PROVIDER_LIST + get_custom_provider_choices() + [ALL_PROVIDERS]
 
 # IMAGE_PROVIDER_LIST = ["openai", 'google-genai', 'xai', 'hf-inference', 'comfyui', 'invokeai', 'drawthings', 'sd-webui', 'self-provided']
 
