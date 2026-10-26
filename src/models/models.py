@@ -58,7 +58,7 @@ logger.info(f"Default device set to: {default_device}")
 
 def load_model(
     selected_model: str,
-    provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "vllm", "oobabooga", "self-provided"],
+    provider: Literal["openai", "anthropic", "google-genai", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "vllm", "omlx", "sglang", "oobabooga", "self-provided"],
     model_type: str | None = None,
     selected_lora: str | None = None,
     quantization_bit: str = "Q8_0",
@@ -175,7 +175,7 @@ def load_model(
 def generate_answer(
     history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]],
     selected_model: str,
-    provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"],
+    provider: Literal["openai", "anthropic", "google-genai", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "vllm", "omlx", "sglang", "oobabooga", "self-provided"],
     model_type: str | None = None,
     selected_lora: str | None = None,
     local_model_path: str | None = None,

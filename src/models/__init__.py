@@ -75,7 +75,6 @@ PROVIDER_LIST = [
     "openai",
     "anthropic",
     "google-genai",
-    "perplexity",
     "xai",
     "mistralai",
     "openrouter",

@@ -31,7 +31,6 @@ from src.models import (
     openai_llm_api_models,
     anthropic_llm_api_models,
     google_genai_llm_api_models,
-    perplexity_llm_api_models,
     xai_llm_api_models,
     mistralai_llm_api_models,
     openrouter_llm_api_models,
@@ -243,7 +242,7 @@ class Chatbot:
         session_id: str,
         history: list[dict[str, str | list[dict[str, str | Image.Image | Any]] | Any]],
         selected_model: str | gr.Dropdown,
-        provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"] | gr.Dropdown,
+        provider: Literal["openai", "anthropic", "google-genai", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "vllm", "omlx", "sglang", "oobabooga", "self-provided"] | gr.Dropdown,
         selected_lora: str | gr.Dropdown,
         custom_path: str,
         user_input: str | dict[str, str | Image.Image | Any] | Any,
@@ -383,7 +382,7 @@ class Chatbot:
         selected_character: str,
         language: str,
         selected_model: str,
-        provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"],
+        provider: Literal["openai", "anthropic", "google-genai", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "vllm", "omlx", "sglang", "oobabooga", "self-provided"],
         selected_lora: str,
         custom_path: str,
         api_key: str,
@@ -932,7 +931,7 @@ class Chatbot:
         selected_character: str,
         selected_model: str,
         model_type: str,
-        provider: Literal["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "oobabooga", "self-provided"],
+        provider: Literal["openai", "anthropic", "google-genai", "xai", "mistralai", "openrouter", "hf-inference", "ollama", "lmstudio", "vllm", "omlx", "sglang", "oobabooga", "self-provided"],
         selected_lora: str,
         custom_path: str,
         device: str,
@@ -1076,7 +1075,7 @@ class Chatbot:
         provider = str(provider)
         if provider.startswith("custom:"):
             return gr.update(visible=False)
-        api_visible = any(x in provider.lower() for x in ["openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference"])
+        api_visible = any(x in provider.lower() for x in ["openai", "anthropic", "google-genai", "xai", "mistralai", "openrouter", "hf-inference"])
         return gr.update(visible=api_visible)
 
     @staticmethod
@@ -1104,7 +1103,7 @@ class Chatbot:
         return _("memory_empty")
 
     def handle_file_upload_type(self, provider: str | gr.Dropdown, model_type: str | gr.Dropdown, selected_model: str | gr.Dropdown):
-        API_PROVIDERS = {"openai", "anthropic", "google-genai", "perplexity", "xai", "mistralai", "openrouter", "hf-inference"}
+        API_PROVIDERS = {"openai", "anthropic", "google-genai", "xai", "mistralai", "openrouter", "hf-inference"}
         LOCAL_PROVIDERS = {"ollama", "lmstudio", "vllm-api", "oobabooga", "local-ai"}
 
         file_types = COMMON_FILE_TYPES
@@ -1265,8 +1264,6 @@ class Chatbot:
                 updated_list = plm.anthropic_api_models
             elif provider == "google-genai":
                 updated_list = plm.google_genai_api_models
-            elif provider == "perplexity":
-                updated_list = plm.perplexity_api_models
             elif provider == "xai":
                 updated_list = plm.xai_api_models
             elif provider == "mistralai":
